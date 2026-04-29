@@ -1,0 +1,836 @@
+id: list-item
+name: List Item
+description: >-
+  A single row in a list — settings rows, contact lists, file
+  browsers, transactions, message threads, search results.
+  Distinct from Card (standalone object with no implicit
+  siblings) by living inside an explicit list (`<ul>`, `<ol>`,
+  or `<dl>`) and cooperating with sibling rows for keyboard
+  navigation, selection semantics, and visual rhythm. Distinct
+  from Tile (image-led, 2D grid) by being one-dimensional and
+  text/metadata-led.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded row container. Carries the list semantics
+      (`<li>` inside `<ul>`/`<ol>`, or `<div role="listitem">`
+      inside `role="list"` for non-semantic-list compositions
+      like Carbon's `<StructuredList>`). Width fills the
+      parent list; height intrinsic to content density.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: List row component instance with leading + primary + trailing layout
+    code:
+      slot: root
+      semantic: listitem
+    a11y:
+      hint: >-
+        Always wrap inside a real list (`<ul>` / `<ol>`) for
+        the canonical list semantic. For interactive variants,
+        the row may be wrapped in a `<button>` or `<a>` (whole-
+        row clickable). For selectable variants, the row
+        carries `aria-selected` and lives inside
+        `role="listbox"` (single-select) or has a leading
+        checkbox (multi-select). For current-page variants
+        (in navigation lists), the row carries `aria-current`.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.sm
+
+  - id: leading-icon
+    required: false
+    purpose: >-
+      Optional icon at the inline-start of the row. Used for
+      file-type indicators, status icons, category markers.
+      Mutually exclusive with avatar (a row may have one or
+      the other, not both — the same slot position).
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; visibility per "has icon" property
+    code:
+      slot: leading-icon
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative when paired with a primary text label
+        (`aria-hidden="true"`). For information-carrying icons
+        (a verified-account checkmark, a syncing-status
+        indicator), surface the meaning via visually-hidden
+        text composed into the row's accessible name.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: avatar
+    required: false
+    purpose: >-
+      Optional avatar at the inline-start — typically a person
+      or organisation image, alternative to a leading icon.
+      Same slot position; mutually exclusive with
+      leading-icon.
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Avatar component instance with image, initials, or icon fallback
+    code:
+      slot: avatar
+      semantic: img
+    a11y:
+      hint: >-
+        For person avatars, alt text is the person's name (often
+        redundant with the primary label — set `alt=""` then,
+        with the avatar as decorative). For status-indicating
+        avatars (presence dots overlaid on the avatar), surface
+        status via visually-hidden text in the row's accessible
+        name ("Alice (online)").
+    tokens:
+      radius:
+        corner: radius.full
+
+  - id: primary
+    required: true
+    purpose: >-
+      The main label or title of the row. Acts as the row's
+      accessible name (composed via aria-labelledby or as the
+      direct text content of the activator). Single line by
+      canon; longer text indicates two-line or three-line
+      variant.
+    layout:
+      row: 1
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Primary text style; truncates with ellipsis when single-line variant overflows
+    code:
+      slot: primary
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. The row's primary identifier for SR users.
+        Avoid visually-hidden modifiers in the primary slot —
+        the visible text and the accessible name should match.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.medium
+      color:
+        foreground: color.text.primary
+
+  - id: secondary
+    required: false
+    purpose: >-
+      Optional supporting text below the primary label. One
+      or two lines depending on variant. Used for metadata,
+      timestamps, brief descriptions, status text.
+    layout:
+      row: 2
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Secondary text style; muted; visibility bound to two-line / three-line variant
+    code:
+      slot: secondary
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. SR users hear primary then secondary in
+        DOM order when navigating into the row. Avoid
+        embedding inline interactive elements (links, buttons)
+        in secondary text — they break the row's
+        whole-row-clickable contract; put them in the action
+        slot instead.
+    tokens:
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.muted
+
+  - id: trailing-icon
+    required: false
+    purpose: >-
+      Optional icon at the inline-end of the row — a chevron
+      indicating navigation, a status indicator, a sort
+      direction marker. Decorative or status-bearing depending
+      on context.
+    layout:
+      row: 1
+      col: 7
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; visibility per "has trailing icon" property
+    code:
+      slot: trailing-icon
+      semantic: presentational-or-status
+    a11y:
+      hint: >-
+        Decorative when communicating affordance (chevron
+        signalling "tap for more"); status-bearing when
+        carrying meaning not in the primary text (a
+        "syncing" indicator). For status, surface via
+        visually-hidden text in the row's accessible name.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: badge
+    required: false
+    purpose: >-
+      Optional indicator at the inline-end of the row,
+      typically between secondary text and trailing-icon (or
+      replacing trailing-icon for high-attention rows). Used
+      for unread counts, attention markers, "new" pulses.
+    layout:
+      row: 1
+      col: 6
+      span: 1
+    figma:
+      type: instance
+      hint: Badge component instance; visibility bound to "has badge" state
+    code:
+      slot: badge
+      semantic: presentational-or-status
+    a11y:
+      hint: >-
+        For numeric badges, append the count to the row's
+        accessible name via visually-hidden text ("Inbox, 3
+        unread"). Decorative-only badges (a pulse for "new")
+        use `aria-hidden="true"` with the meaning conveyed in
+        primary text or via composed accessible name.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.pill
+      typography:
+        size: text.xs
+        weight: weight.semibold
+      color:
+        background: color.accent.bg
+        foreground: color.accent.fg
+
+  - id: action
+    required: false
+    purpose: >-
+      Optional inline action at the inline-end — typically an
+      icon button (more-options menu, quick-action) or a
+      single button. Distinct from the row's whole-row click
+      affordance; the action takes a different action than
+      activating the row.
+    layout:
+      row: 1
+      col: 8
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button or button instance at the inline-end of the row
+    code:
+      slot: action
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button>` with accessible name. For
+        whole-row-clickable rows, the action button's click
+        must `event.stopPropagation()` to prevent activating
+        the parent row. The action button is reachable via
+        Tab; for selectable list rows, ArrowKeys do NOT
+        navigate to the action — only Tab does.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        ring: color.border.focus
+
+axes:
+  variants:
+    - standard
+    - two-line
+    - three-line
+  properties:
+    - { name: interactive, kind: primitive, of: boolean }
+    - { name: selectable, kind: primitive, of: boolean }
+    - { name: swipeable, kind: primitive, of: boolean }
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+    - name: leadingType
+      kind: enum
+      values: [none, icon, avatar]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - idle
+      - selected
+      - current
+    transitions:
+      - from: idle
+        to: selected
+        trigger: >-
+          User toggles selection — clicking the leading
+          checkbox (multi-select) or activating the whole row
+          in single-select mode (`role="listbox"` parent).
+          `aria-selected="true"` set; visual treatment
+          changes.
+      - from: selected
+        to: idle
+        trigger: >-
+          User toggles selection again or clears via
+          programmatic update.
+      - from: idle
+        to: current
+        trigger: >-
+          User navigates to the route owned by this row (for
+          ListItem-as-nav usage). `aria-current="page"` set;
+          visual treatment changes. Other rows in the same
+          list lose their current state.
+      - from: current
+        to: idle
+        trigger: >-
+          User navigates away. The row loses
+          `aria-current="page"`.
+
+mismatches:
+  - figma: ListItem drawn as a Card-like surface
+    code: A `<li>` row inside a list, not a standalone Card surface
+    consequence: >-
+      Designers may compose ListItem mocks with Card-like
+      treatment (rounded corners, shadow, elevated surface).
+      Implementations following the design ship rows that
+      look like cards but live inside lists with dense
+      vertical rhythm — visual hierarchy is confused, the
+      list feels noisy, and the canonical Card-vs-ListItem
+      distinction is lost.
+    correct: >-
+      ListItem is a row in a list — visual treatment is
+      restrained, separation between rows is via dividers or
+      negative space, not via independent card-like surfaces.
+      For Card-like surfaces in a layout, use Card or Tile
+      directly; do not style ListItem as Card.
+
+  - figma: Whole-row click affordance + nested action button
+    code: Row click + action button click both work, with action's `event.stopPropagation`
+    consequence: >-
+      Designers compose mocks with both a whole-row click
+      target AND an inline action button. Implementations
+      may forget the `stopPropagation` — clicking the action
+      activates both the action AND the row's click
+      handler; users get unexpected double-effects (delete
+      a message AND navigate to it). Or developers may
+      remove the action button entirely to avoid the
+      conflict.
+    correct: >-
+      Both whole-row click and action button are valid
+      simultaneously — the action's onClick must call
+      `event.stopPropagation()` to prevent row activation.
+      Document the canonical pattern; the action is a
+      separate target in the row's tab order, distinct from
+      the row activation.
+
+  - figma: Selected state shown only by background colour
+    code: Selected state shown by background + leading checkbox checked + `aria-selected="true"`
+    consequence: >-
+      Designers use a single visual change for selection.
+      Implementations following the design ship colour-only
+      selection, fail WCAG 1.4.1, and SR users hear no
+      selection cue. The leading checkbox is omitted; users
+      may not realise rows are selectable.
+    correct: >-
+      Triple-layer selection: visual (background + accent
+      strip), accessible state (`aria-selected="true"` on
+      row, `aria-checked` on checkbox), and visible
+      checkbox (the canonical multi-select affordance for
+      ListItem). For single-select listbox-pattern rows,
+      the visible checkbox may be omitted in favour of
+      visual-state-only-plus-aria-selected.
+
+  - figma: Inline links in secondary text
+    code: Inline interactive elements move to the action slot or break the row activation
+    consequence: >-
+      Designers compose secondary text with embedded inline
+      links ("View profile, Edit, Delete"). Implementations
+      following the design either ship the embedded links
+      (which break whole-row click — clicking a link does
+      not activate the row) or hoist them out (the design
+      and production diverge).
+    correct: >-
+      Inline interactive elements in row content are an
+      antipattern. Move them to the action slot as a single
+      action button (typically more-options menu) or split
+      the row into multiple list items. Document this as
+      mistake `listitem-secondary-as-link`.
+
+mistakes:
+  - id: listitem-not-in-list
+    title: ListItem used standalone outside a list
+    description: >-
+      The component is rendered without a `<ul>` / `<ol>`
+      parent. SR users hear the content but lose the list
+      structure — no "list of N items" announcement, no
+      list-item position cue. Standalone usage breaks the
+      semantic contract.
+    fix: >-
+      Always render ListItem inside a real list. For
+      single-row use cases (just one row), reconsider whether
+      the canonical pattern is ListItem or some other
+      component (a section header, a Card, a settings row
+      grouped as part of a fieldset).
+
+  - id: listitem-action-no-stop-propagation
+    title: Action button click activates parent row
+    description: >-
+      The whole row is clickable; the action button is
+      nested inside. Action click bubbles to the row's
+      handler; users invoking the action get the row's
+      activation as a side effect.
+    fix: >-
+      Action button's onClick calls `event.stopPropagation()`
+      to prevent bubbling. Document the pattern in the
+      action slot's a11y hint and in the canonical
+      reference.
+
+  - id: listitem-no-aria-selected
+    title: Selectable rows missing `aria-selected`
+    description: >-
+      Visual selected state is shown but `aria-selected` is
+      missing. SR users hear nothing about selection state.
+      Or `aria-selected` is on the wrong element (the
+      checkbox, not the row).
+    fix: >-
+      For listbox-pattern selection, `aria-selected` is on
+      the row (`<li>`). For multi-select with checkbox,
+      `aria-checked` is on the checkbox AND
+      `aria-selected` is on the row — both communicate
+      selection redundantly. Pair with visible visual
+      treatment.
+
+  - id: listitem-swipe-no-keyboard
+    title: Mobile swipe-to-delete with no keyboard equivalent
+    description: >-
+      Swipeable rows expose actions on mobile via swipe
+      gestures. Keyboard users on desktop cannot perform
+      the swipe-revealed actions; they remain hidden.
+    fix: >-
+      Every swipe-revealed action also reachable via Tab
+      and Enter. Common pattern: the action button is
+      always in the DOM but visually hidden (or visible
+      on hover) on desktop; swipe reveals the same buttons
+      on mobile. Both input modalities have access.
+
+  - id: listitem-no-roving-tabindex
+    title: Selectable list with every row tabindex="0"
+    description: >-
+      Tab cycles through every row in a selectable list
+      (could be 100+ rows). APG listbox / grid pattern uses
+      roving tabindex — only one row is in the tab order,
+      ArrowKeys navigate within.
+    fix: >-
+      Roving tabindex per APG listbox or grid pattern. Only
+      the currently-focused row has `tabindex="0"`; others
+      have `tabindex="-1"`. ArrowKeys move focus within;
+      Tab moves focus out of the list to the next document
+      focusable.
+
+  - id: listitem-secondary-text-as-link
+    title: Inline links embedded in secondary text
+    description: >-
+      Secondary text contains "View · Edit · Delete" as
+      inline links. The whole-row click handler conflicts
+      with link clicks; or the action slot becomes
+      redundant; or developers omit the action slot
+      entirely and rely on embedded links (breaking
+      keyboard reachability).
+    fix: >-
+      Inline interactions move to the action slot as a
+      single action button (typically a more-options
+      MenuButton). Secondary text remains plain prose.
+      Document the pattern; reject inline-link mocks at
+      design review.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-list-item>` host wrapping `<li>`; named slots for leading-icon, avatar, primary, secondary, trailing-icon, badge, action; light DOM for content
+    variantMechanism: attributes (`variant="two-line"`, `interactive`, `selectable`, `density="comfortable"`, `leading-type="avatar"`); `data-state="idle|selected|current"` for CSS
+  react:
+    structureMechanism: Compound components (`<List>`, `<ListItem>` with subcomponents like `<ListItem.Avatar>`, `<ListItem.Primary>`, `<ListItem.Secondary>`); React Aria `useListBox` plus `useOption` for selectable variant; integrates with virtualization libraries (react-window) for long lists
+    variantMechanism: props with class-variance-authority for variant / density; controlled or uncontrolled selection state; `aria-current` on items when used as nav
+  angularSignals:
+    structureMechanism: >-
+      `<ui-list>` plus `<ui-list-item>` components with content
+      projection; Angular CDK Listbox (`cdk-listbox`) for the
+      selectable variant
+    variantMechanism: input<'standard' | 'two-line' | 'three-line'>(); `[interactive]`, `[selectable]`, `[swipeable]` host bindings; `[(selected)]` two-way binding
+  vue:
+    structureMechanism: Custom `<List>` plus `<ListItem>` SFCs with named slots; integrates with manual list keyboard composition
+    variantMechanism: defineProps with literal-union types; `:variant`, `:interactive`, `:selectable` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    hoverState: motion.duration.fast
+    swipeReveal: motion.duration.base
+    selectToggle: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, density compact becomes the canonical
+        default. Three-line variant collapses to two-line
+        (third line moves into a "more details" disclosure).
+        Swipeable variant becomes the dominant action-reveal
+        pattern (replaces hover-reveal). Action slot may
+        collapse into the swipe-revealed actions for the
+        primary case.
+    - at: breakpoint.md
+      change: >-
+        Above this width, variants render as authored.
+        Hover-reveal patterns engage; swipe is mobile-only
+        unless the consumer enables it explicitly.
+
+events:
+  - name: clickActivate
+    payload: >-
+      `{ itemId: string }`. Fires when the user activates the
+      row via click or Enter / Space (for `interactive: true`
+      rows). For nav-style usage where activation navigates,
+      the consumer's router handles navigation.
+    frameworkNotes:
+      webComponents: >-
+        `clickActivate` CustomEvent on the host with
+        `event.detail = { itemId }`.
+      react: >-
+        `onClick(event)` standard or `onActivate(itemId)` for
+        the canonical event shape.
+      angularSignals: >-
+        `output<string>('clickActivate')`.
+      vue: >-
+        `@click-activate` event with payload `{ itemId }`.
+
+  - name: selectedChange
+    payload: >-
+      `{ itemId: string, selected: boolean }`. Fires when the
+      row's selection state changes — checkbox click, row
+      click in `selectable` mode, or programmatic change.
+    frameworkNotes:
+      webComponents: >-
+        `selectedChange` CustomEvent with
+        `event.detail = { itemId, selected }`.
+      react: >-
+        `onSelectionChange(set: Set<string>)` at the list
+        level (React Aria `useListBox` aggregates per-item
+        events).
+      angularSignals: >-
+        `output<{ itemId: string, selected: boolean }>('selectedChange')`.
+      vue: >-
+        `@update:selected` per-item or `@update:selection`
+        on the parent list.
+
+  - name: swipeAction
+    payload: >-
+      `{ itemId: string, action: string, direction: 'start' | 'end' }`.
+      Fires when the user completes a swipe gesture
+      revealing an action and activating it. The `action`
+      value identifies which swipe-revealed action was
+      triggered (typical values: `delete`, `archive`,
+      `flag`).
+    frameworkNotes:
+      webComponents: >-
+        `swipeAction` CustomEvent with
+        `event.detail = { itemId, action, direction }`.
+      react: >-
+        Per-direction callbacks (`onSwipeLeft`, `onSwipeRight`)
+        are common; consumers wrap to recover the canonical
+        shape.
+      angularSignals: >-
+        `output<{ itemId: string, action: string, direction: SwipeDirection }>('swipeAction')`.
+      vue: >-
+        `@swipe-action` event.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        For interactive list, Tab enters the first item
+        (roving tabindex when in selectable / current-page
+        mode). Subsequent Tab moves to the action button
+        on the focused row (if present), then to the next
+        list region or the next document focusable.
+    - keys: ArrowDown / ArrowUp (focus on a row)
+      expected: >-
+        For selectable list (`role="listbox"`) or current-
+        page nav list, moves focus to the next / previous
+        row. Wraps at boundaries per APG. Tab does NOT
+        move between rows in this mode — ArrowKeys do.
+    - keys: Home / End (focus on a row)
+      expected: >-
+        Moves focus to the first / last row.
+    - keys: Enter (focus on interactive row)
+      expected: >-
+        Activates the row — fires the click handler. For
+        nav-style rows, navigates to the route.
+    - keys: Space (focus on selectable row)
+      expected: >-
+        Toggles the row's selected state. `aria-selected`
+        flips; visible checkbox state flips.
+    - keys: Tab from row to action button
+      expected: >-
+        Moves focus to the row's action button without
+        activating the row. Action button has its own Tab
+        stop separate from the row's tabindex.
+  announcements:
+    - trigger: Focus enters interactive row
+      expected: >-
+        SR announces "<primary text>, button" (or "link" for
+        nav-style rows). Two-line variant adds the secondary
+        text after the primary in DOM order. Avatar /
+        leading-icon are decoratively skipped if
+        aria-hidden.
+    - trigger: Focus enters selectable row
+      expected: >-
+        SR announces "<primary>, list item, X of N, selected"
+        (or "not selected"). Position cue X-of-N comes from
+        the listbox's implicit collection semantics or
+        from explicit `aria-posinset` / `aria-setsize`.
+    - trigger: Focus enters current-page row
+      expected: >-
+        SR announces "<primary>, current page, link". Driven
+        by `aria-current="page"` on the row's anchor.
+    - trigger: Selection toggles (Space pressed)
+      expected: >-
+        SR announces the new state ("selected" or "not
+        selected"). Some SR / screen-reader-mode
+        combinations announce only on focus change, not on
+        Space press; the visual state change is the
+        complement.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - aria-valid-attr-value
+    - color-contrast
+    - link-name
+    - button-name
+    - image-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / two-line / three-line. Drives layout — single-line is height-collapsed, two-line and three-line stack secondary text below primary.
+  - figma: Density
+    code: density
+    type: Variant
+    notes: comfortable / compact.
+  - figma: Leading Type
+    code: leadingType
+    type: Variant
+    notes: none / icon / avatar. Mutually exclusive — leading-icon and avatar share the same slot position.
+  - figma: Interactive
+    code: interactive
+    type: Boolean
+    notes: Whole row is clickable. Wraps row content in `<button>` or `<a>` activator.
+  - figma: Selectable
+    code: selectable
+    type: Boolean
+    notes: Whole row is selectable; visible leading checkbox appears. Drives `aria-selected` and `aria-checked`.
+  - figma: Swipeable
+    code: swipeable
+    type: Boolean
+    notes: Mobile swipe-to-reveal-actions enabled. Pairs with action slot for parity on desktop.
+  - figma: Has Trailing Icon
+    code: trailingIcon
+    type: Boolean
+  - figma: Has Badge
+    code: badge
+    type: Boolean
+  - figma: Has Action
+    code: action
+    type: Boolean
+  - figma: Primary
+    code: primary
+    type: Text
+  - figma: Secondary
+    code: secondary
+    type: Text
+  - figma: Avatar
+    code: avatar
+    type: Instance Swap
+  - figma: Leading Icon
+    code: leadingIcon
+    type: Instance Swap
+
+formIntegration:
+  name: >-
+    For selectable list-item usage in forms, the leading
+    checkbox carries the form `name` and `value`. Common
+    pattern: a list of items rendered as ListItem with
+    selectable variant, wrapped in a `<fieldset>` with
+    `<legend>` describing the multi-select intent. Each
+    selected item contributes a FormData entry under the
+    fieldset's name.
+  formData: >-
+    Multi-select list produces one FormData entry per
+    selected item (matching `<input type="checkbox">`
+    behaviour). Canonical: `name=item-ids[]&value=<itemId>`
+    per selected row. For single-select listbox-pattern,
+    the form value is the single selected itemId; the
+    list's underlying control is a hidden input synced
+    with selection state.
+  reset: >-
+    `form.reset()` restores items to their `defaultChecked`
+    state. Visual selected state clears; `aria-selected`
+    reverts on each row. Framework state held outside the
+    DOM needs an `onReset` listener.
+  validation: >-
+    For required selectable lists ("select at least one"),
+    the first checkbox in the list carries
+    `setCustomValidity('Select at least one item')` plus
+    `aria-invalid` until selection occurs. For single-
+    select listbox with required, the underlying hidden
+    input drives validation.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Leading position (icon / avatar) moves from inline-
+      start (visual left in LTR) to inline-start (visual
+      right in RTL). Trailing position (badge / trailing-icon
+      / action) mirrors. Primary and secondary text inherit
+      document direction. Swipe-to-reveal direction
+      reverses: in LTR, swipe-left exposes the inline-end
+      actions; in RTL, swipe-right exposes the same
+      logical-end actions. ArrowKey navigation is
+      direction-neutral (vertical lists; ArrowDown / Up
+      same in both directions).
+  textExpansion: >-
+    Primary text follows single-line truncation with
+    ellipsis (full text via `aria-label` for SR fallback).
+    Secondary text wraps on two-line and three-line
+    variants. Long-text languages may force two-line variant
+    where one-line was authored — the canonical guideline
+    is to choose the variant per the longest-expected
+    locale, not the average. Density compact risks crowding
+    long-text labels; density comfortable is safer for
+    international list layouts.
+
+performance:
+  - name: virtualisationThreshold
+    metric: row-count
+    threshold: 100
+    unit: rows
+    rationale: >-
+      Above ~100 rows in a single list, render virtualisation
+      becomes necessary. Keeping all rows in the DOM at once
+      degrades scroll performance and SR navigation. Mature
+      libraries (react-window, react-virtualized,
+      @tanstack/react-virtual) handle this; canonical
+      reference documents the threshold.
+  - name: itemPaintBudget
+    metric: per-row-paint-cost
+    threshold: 1
+    unit: ms
+    rationale: >-
+      Each row's paint cost should stay under 1ms to keep
+      the total list paint within the 16ms 60fps frame
+      budget at typical viewport-row-counts (10–30 visible
+      rows). Rows with rich content (avatars, badges,
+      multi-line text) may exceed this; profile and
+      simplify if list paint dominates initial render.
+
+whenToUse:
+  use: >-
+    For a one-dimensional list of related rows where each
+    row carries primary identity plus optional supporting
+    metadata — settings rows, contact lists, file
+    browsers, message threads, search results,
+    notification feeds. Rows cooperate via list semantics
+    (sibling-aware keyboard navigation, selection,
+    current-state).
+  avoid: >-
+    For standalone content surfaces with hierarchical
+    composition — that is `Card`. For image-led 2D grid
+    items — that is `Tile`. For table-like data with
+    multiple sortable columns — that is `Table`. For
+    floating selection from a fixed list — that is
+    `Select`. For navigation between top-level pages with
+    icons and sections — that is `SidebarNav`.
+  vsRelated:
+    - id: card
+      difference: >-
+        `Card` is a standalone object with no implicit
+        siblings; `ListItem` lives inside an explicit list
+        and cooperates with siblings. Visual treatment
+        differs (Card is elevated/outlined surface;
+        ListItem is dense row separated by dividers or
+        spacing). Decision test: is each item independent
+        (Card) or part of a sibling-aware collection
+        (ListItem)?
+    - id: tile
+      difference: >-
+        `Tile` is image-led and arranges in a 2D grid;
+        `ListItem` is text/metadata-led and arranges in a
+        1D list. ListItem suits dense metadata layouts;
+        Tile suits image-led visual layouts.
+    - id: table
+      difference: >-
+        `Table` shows tabular data with sortable columns
+        and column-aligned cells; `ListItem` is a
+        free-form row with semantic slots (leading,
+        primary, secondary, trailing). For data with
+        multiple comparable attributes (price, date, sku,
+        stock), use Table. For data where each row's
+        content is heterogeneous or where visual variety
+        matters per-row, use ListItem.
+
+notes: >-
+  ListItem vocabulary varies: Material 3 calls this "List
+  item" (with single-line / two-line / three-line variants
+  matching the canonical taxonomy); Polaris uses
+  "ResourceList" with "ResourceItem" sub-component; Carbon
+  uses "StructuredList"; Atlassian's design system has
+  "List" patterns layered on multiple base primitives. The
+  canonical "ListItem" name and variant taxonomy here
+  matches Material 3 most closely. The list-vs-card
+  distinction is the highest-load-bearing canonical
+  decision and the most-overlooked in implementations
+  (designers often style ListItem-as-Card, breaking the
+  list rhythm).
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/li
+  - https://www.w3.org/TR/wai-aria-1.2/#aria-current
+  - https://m3.material.io/components/lists/overview
+  - https://carbondesignsystem.com/components/structured-list/usage/
+  - https://atlassian.design/components/avatar/examples
+  - https://polaris.shopify.com/components/lists/resource-list
+  - https://react-spectrum.adobe.com/react-aria/ListBox.html
+
+lastReviewed: '2026-04-29'

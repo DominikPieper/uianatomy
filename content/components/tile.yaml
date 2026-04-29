@@ -1,0 +1,716 @@
+id: tile
+name: Tile
+description: >-
+  An image-led grid item with minimal supporting text. Used for
+  galleries, asset grids, image picker grids, and any layout where
+  visual content is primary and text is supplementary or absent.
+  Distinct from Card (content-led with hierarchical
+  title+body+media+actions); a wall of Tiles reads as a gallery, a
+  wall of Cards reads as a feed. Tiles are commonly arranged in a
+  grid with consistent aspect ratios and may be interactive
+  (whole-tile activates) or selectable (whole-tile multi-selects).
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded surface that holds the tile content. Sized to a
+      consistent aspect ratio (canonical default 1:1 square; portrait
+      and landscape are property-driven). Carries the selection or
+      activation affordance for the whole surface.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Aspect-ratio-locked frame; corner radius and shadow from variant
+    code:
+      slot: root
+      semantic: container-or-button-or-checkbox
+    a11y:
+      hint: >-
+        For `variant: standard`, root has no role (just a visual
+        container). For `variant: interactive`, root is a `<button>`
+        (or `<a href>` for tiles that navigate) carrying the
+        accessible name from the label slot. For `variant:
+        selectable`, root carries `aria-selected` plus
+        `role="option"` when nested in a `role="listbox"` parent
+        grid; for grid-pattern selectable tiles (canonical for
+        bulk selection workflows) use `role="gridcell"` inside a
+        `role="grid"`.
+    tokens:
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.bg
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.sm
+
+  - id: media
+    required: true
+    purpose: >-
+      The primary visual content — image, video, or rendered
+      preview. Full-bleed at the surface or inset with consistent
+      padding. Sized to fill the tile's aspect-ratio box.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Aspect-ratio-locked image fill; cover or contain by variant
+    code:
+      slot: media
+      semantic: img-or-video
+    a11y:
+      hint: >-
+        Provide alt text for informative images; `alt=""` for
+        purely decorative tiles where the label carries the
+        meaning. Avoid duplicating the label in alt text — SR
+        users would hear the same text twice. For video, provide
+        captions or a transcript link.
+    tokens:
+      radius:
+        corner: radius.md
+
+  - id: overlay
+    required: false
+    purpose: >-
+      Optional gradient or scrim layered between media and label
+      to ensure text legibility against arbitrary image
+      backgrounds. Decorative — communicates no information of
+      its own.
+    layout:
+      row: 1
+      col: 1
+      span: full
+      overlay: true
+    figma:
+      type: rectangle
+      hint: Gradient fill from transparent to dark at the bottom edge for label legibility
+    code:
+      slot: overlay
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative; do not put role on it. The overlay's job is
+        contrast, not content. SR users do not encounter it.
+    tokens:
+      color:
+        background: color.surface.scrim
+
+  - id: label
+    required: false
+    purpose: >-
+      Optional caption — a short title or descriptor for the
+      tile. Placed at the bottom edge over the overlay (text-on-
+      image pattern) or below the media (separated-caption
+      pattern, more accessible for long labels). One line by
+      canon; longer text indicates Card may be the right
+      pattern.
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Caption text style; truncates with ellipsis when overflowing
+    code:
+      slot: label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. For interactive tiles, the label is the
+        accessible name (composed via `aria-labelledby` or
+        wrapping inside the activator element). For text-on-
+        image label position, ensure WCAG 1.4.3 (Contrast
+        Minimum) against the image is met via the overlay scrim
+        — never rely on a single image's local contrast.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.primary
+
+  - id: badge
+    required: false
+    purpose: >-
+      Optional indicator at one corner of the tile — a status
+      pill, a count, a "new" pulse, a verification checkmark.
+      Decorative when paired with semantic state elsewhere
+      (selected state, current page); informational when carrying
+      unique meaning (verified-content checkmark on a profile
+      tile).
+    layout:
+      row: 1
+      col: 1
+      span: 1
+      overlay: true
+    figma:
+      type: instance
+      hint: Badge component instance; positioned absolutely at one corner of the tile
+    code:
+      slot: badge
+      semantic: presentational-or-status
+    a11y:
+      hint: >-
+        Decorative when state is also conveyed via aria-state
+        (selected, current). Informational when carrying unique
+        meaning — append the meaning to the tile's accessible
+        name via visually-hidden text ("Verified profile").
+        Never rely on the badge alone for state communication.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.pill
+      color:
+        background: color.accent.bg
+        foreground: color.accent.fg
+
+  - id: select-affordance
+    required: false
+    purpose: >-
+      Optional visible checkbox or selection indicator for the
+      `selectable` variant. Conventionally at the inline-start
+      top corner. Visible only in selectable mode (or on hover
+      for hover-to-reveal selection patterns).
+    layout:
+      row: 1
+      col: 1
+      span: 1
+      overlay: true
+    figma:
+      type: instance
+      hint: Checkbox component instance; visibility bound to selectable variant + selected state
+    code:
+      slot: select
+      semantic: checkbox
+    a11y:
+      hint: >-
+        Visible checkbox is the canonical form (preferred over
+        click-anywhere-to-select-without-affordance). The
+        checkbox carries its own `aria-checked`; the tile's
+        `aria-selected` mirrors the checked state. Some
+        implementations skip the visible checkbox and rely on
+        the tile's selection-state visual treatment alone — the
+        canonical recommendation is to render the checkbox so
+        the affordance is discoverable.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        background: color.surface.raised
+
+axes:
+  variants:
+    - standard
+    - interactive
+    - selectable
+  properties:
+    - name: aspect
+      kind: enum
+      values: [square, portrait, landscape, free]
+    - { name: hasOverlay, kind: primitive, of: boolean }
+    - { name: hasLabel, kind: primitive, of: boolean }
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - idle
+      - selected
+    transitions:
+      - from: idle
+        to: selected
+        trigger: >-
+          User activates the tile (click on `selectable` variant,
+          or click on the visible select-affordance checkbox).
+          `aria-selected="true"` on the tile; `aria-checked="true"`
+          on the checkbox; visual treatment changes.
+      - from: selected
+        to: idle
+        trigger: >-
+          User activates the tile or checkbox again, or
+          consumer programmatically clears selection. Visual
+          treatment returns to default.
+
+mismatches:
+  - figma: A tile drawn with substantial body text and a header
+    code: A Tile component with minimal label only
+    consequence: >-
+      Designers may compose tiles with rich text content,
+      multiple lines of body, and headers. Implementations
+      following the design ship a Card semantically — the tile
+      becomes content-led, not image-led. The grid loses its
+      gallery-feel; the canonical reference is misapplied.
+    correct: >-
+      Tile is image-led with minimal supporting text. If the
+      surface needs a hierarchical title+body+media composition,
+      use Card. The decision test: is the user scanning for
+      visual content (Tile, gallery) or for textual hierarchy
+      (Card, feed)?
+
+  - figma: Selected tile drawn with a subtle border colour change
+    code: Selected tile with border + filled inner overlay + visible checkbox
+    consequence: >-
+      Designers use a subtle border colour for selection.
+      Implementations following the design ship colour-only
+      selection — fails WCAG 1.4.1 (Use of Color), and the
+      visible-checkbox affordance is missing so selection
+      discoverability breaks (users may not realise tiles are
+      selectable).
+    correct: >-
+      Selected state is communicated via three layers: the
+      tile root (border + inner-overlay tint), the visible
+      checkbox at one corner (checked state), and the
+      `aria-selected="true"` accessible state. Each layer is
+      reinforcement; remove any one and the others still
+      communicate selection.
+
+  - figma: Text label drawn directly on image without a contrast scrim
+    code: Text label rendered with WCAG-passing contrast via overlay scrim
+    consequence: >-
+      Designers compose text-on-image mocks against
+      idealised dark or light backgrounds. Implementations
+      following the design ship arbitrary user-uploaded
+      images; some have low-contrast regions and the label
+      text becomes unreadable. WCAG 1.4.3 (Contrast Minimum)
+      fails for those images.
+    correct: >-
+      For text-on-image labels (label inside the tile,
+      overlaying media), always include the overlay scrim.
+      Document in the canonical reference that the overlay is
+      a contrast-affordance, not a stylistic choice. Allow
+      implementations to skip the overlay only for
+      separated-caption labels (label below media, no
+      overlap).
+
+  - figma: Aspect ratio drawn at fixed pixels rather than as a ratio property
+    code: Aspect ratio modelled as a property with logical values
+    consequence: >-
+      Designers fix tile pixel dimensions in mocks (240×240,
+      240×320). Implementations following the design hard-code
+      pixel values; tile grids do not scale to viewport changes
+      (zoom, screen size, density variations). Or developers
+      ignore the design and ship CSS aspect-ratio; the design
+      and production diverge on tile shape.
+    correct: >-
+      Document `aspect` as a first-class property with logical
+      values (`square`, `portrait`, `landscape`, `free`). The
+      Figma component carries it as a Variant; CSS uses
+      `aspect-ratio` plus auto inline-size. Pixel dimensions
+      are not canonical.
+
+mistakes:
+  - id: tile-as-card
+    title: Tile used for content-led layout
+    description: >-
+      The component is used to render a hierarchical
+      title+body+media composition (a feed of articles, a list
+      of products with descriptions). Semantically this is
+      Card; using Tile collapses the visual hierarchy and the
+      grid feels like a wall of unread content rather than a
+      gallery.
+    fix: >-
+      Use Card for content-led compositions. Tile is for
+      image-first content where the visual is the message and
+      text is at most a label. The "wall of Tiles vs wall of
+      Cards" test from `whenToUse.vsRelated[card]` is the
+      canonical guide.
+
+  - id: tile-no-aspect-ratio
+    title: Tile sized intrinsically by image dimensions
+    description: >-
+      Implementation does not enforce aspect ratio; tiles
+      take their natural image dimensions. Grid layout
+      breaks — tiles vary in height (or width), the gallery
+      becomes ragged, and visual scanning is harder.
+    fix: >-
+      Enforce aspect ratio via CSS `aspect-ratio: 1`,
+      `aspect-ratio: 3/4`, etc. matching the `aspect` property.
+      Inside, image fits via `object-fit: cover` (or
+      `contain` for non-cropping tiles). The grid stays
+      regular regardless of source image dimensions.
+
+  - id: tile-selected-color-only
+    title: Selection differentiated by colour alone
+    description: >-
+      Selected tiles have a coloured border or background
+      tint; nothing else changes. Colour-vision deficient
+      users miss the state; SR users hear no `aria-selected`
+      cue.
+    fix: >-
+      Triple-layer selection (visual + checkbox-affordance +
+      `aria-selected`). The visible checkbox at one corner is
+      the canonical discoverability affordance — without it
+      users may not realise tiles are selectable.
+
+  - id: tile-text-overlay-no-contrast
+    title: Text label on image without contrast scrim
+    description: >-
+      Label rendered directly on the image with no
+      intermediate gradient or scrim. Against varied user-
+      uploaded images, contrast falls below WCAG 1.4.3 (4.5:1
+      for normal text); some images render the label
+      effectively invisible.
+    fix: >-
+      Include the overlay scrim for any text-on-image label
+      pattern. The scrim is a constant gradient (transparent
+      → dark at the bottom edge) that guarantees minimum
+      contrast against any image. Document the scrim as
+      mandatory for text-on-image; optional or omitted for
+      separated-caption variants.
+
+  - id: tile-keyboard-no-roving-tabindex
+    title: Selectable tile grid with no roving tabindex
+    description: >-
+      Implementation puts `tabindex="0"` on every tile in a
+      selectable grid. Tab cycles through every tile; for a
+      grid of 50 photos, that is 50 extra tab stops. APG
+      grid pattern uses roving tabindex — only one tile is
+      in the tab order, ArrowKeys navigate between tiles.
+    fix: >-
+      Apply roving tabindex per APG grid pattern — only the
+      currently-focused tile has `tabindex="0"`, others
+      have `tabindex="-1"`. ArrowLeft / Right / Up / Down
+      move focus between tiles in 2D grid coordinates.
+      Tab moves focus out of the grid to the next document
+      focusable.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-tile>` host with named slots for media, label, badge, select; light DOM for the media (consumer provides `<img>` or `<video>`); root may be `<button>` or styled element depending on variant
+    variantMechanism: attributes (`variant="selectable"`, `aspect="square"`, `density="comfortable"`); `data-state="idle|selected"` for CSS
+  react:
+    structureMechanism: Single `<Tile>` component with compound subcomponents (`Tile.Media`, `Tile.Label`, `Tile.Badge`, `Tile.Select`) or named props for content; integrates with `useGridList` (React Aria) for grid-pattern selectable usage
+    variantMechanism: props with class-variance-authority for variant / aspect / density; controlled or uncontrolled selected state
+  angularSignals:
+    structureMechanism: >-
+      `<ui-tile>` component with content projection for media,
+      label, badge slots; signal-based selected state; integrates
+      with Angular CDK Listbox or custom grid composition
+    variantMechanism: input<'standard' | 'interactive' | 'selectable'>(); input<'square' | 'portrait' | 'landscape' | 'free'>(); `[(selected)]` two-way binding
+  vue:
+    structureMechanism: Custom `<Tile>` SFC with named slots for media, label, badge, select; integrates with manual grid keyboard composition
+    variantMechanism: defineProps with literal-union types; `:variant`, `:aspect` props; emits `update:selected`
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    hoverLift: motion.duration.fast
+    selectToggle: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, tile grid drops from 4-or-more columns
+        to 2 columns; aspect ratio remains as authored. Tile
+        density compact becomes the default to fit smaller
+        screens. Hover-reveal selection affordance becomes
+        always-visible (touch devices have no hover state).
+    - at: breakpoint.md
+      change: >-
+        At this width, grid columns scale to 3-4 by default
+        (consumer-configurable). Tile aspect renders as
+        authored.
+    - at: breakpoint.lg
+      change: >-
+        Above this width, full grid density (5-6+ columns)
+        for image-heavy galleries. Hover-reveal patterns
+        re-engage.
+
+events:
+  - name: clickActivate
+    payload: >-
+      `{ tileId: string }`. Fires when the user activates the
+      tile (click on `interactive` variant, Enter / Space on
+      keyboard-focused tile). For tiles wrapping a navigation
+      anchor, the consumer's router handles navigation and
+      this event is informational.
+    frameworkNotes:
+      webComponents: >-
+        `clickActivate` CustomEvent on the host with
+        `event.detail = { tileId }`.
+      react: >-
+        `onClick(event)` standard DOM event; `onActivate(tileId)`
+        when consumers prefer the canonical event shape.
+      angularSignals: >-
+        `output<string>('clickActivate')`.
+      vue: >-
+        `@click-activate` event with payload `{ tileId }`.
+
+  - name: selectedChange
+    payload: >-
+      `{ tileId: string, selected: boolean }`. Fires when the
+      tile's selected state changes — by checkbox click,
+      whole-tile click on selectable variant, or programmatic
+      change. Consumers managing multi-select state aggregate
+      these events into the selection set.
+    frameworkNotes:
+      webComponents: >-
+        `selectedChange` CustomEvent with
+        `event.detail = { tileId, selected }`.
+      react: >-
+        `onSelectedChange(selected: boolean)` per-tile callback
+        or aggregated `onSelectionChange(set: Set<string>)` at
+        the grid level.
+      angularSignals: >-
+        `output<{ tileId: string, selected: boolean }>('selectedChange')`.
+      vue: >-
+        `@update:selected` on the tile or
+        `@update:selection` on the grid wrapper.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        For a single tile, focus enters and exits via Tab in
+        document order. For selectable tile grids, Tab focuses
+        the currently-focused tile (roving tabindex) and
+        subsequent Tab leaves the grid — ArrowKeys navigate
+        within.
+    - keys: Enter or Space (focus on interactive or selectable tile)
+      expected: >-
+        Activates the tile — fires the click handler (interactive
+        variant) or toggles selection (selectable variant).
+        For tiles wrapping `<a>`, Enter only (Spacebar is
+        button-only convention).
+    - keys: ArrowKeys (focus inside selectable grid)
+      expected: >-
+        Move focus to neighbouring tiles in 2D grid coordinates
+        per APG grid pattern. ArrowDown jumps a row; ArrowRight
+        jumps a column; Home / End move to the row's start /
+        end; Ctrl+Home / Ctrl+End jump to grid start / end.
+    - keys: 'Space (selectable variant, focus on tile)'
+      expected: >-
+        Toggles selected state. `aria-selected` flips on the
+        tile; `aria-checked` flips on the visible checkbox if
+        present.
+  announcements:
+    - trigger: Focus enters interactive tile
+      expected: >-
+        SR announces the tile's accessible name (composed
+        from label + optional badge meaning) followed by
+        "button" or "link" depending on the activator
+        element. Selectable tiles announce additionally
+        "selected" or "not selected".
+    - trigger: Selected state toggles
+      expected: >-
+        SR announces the new state ("<tile name>, selected"
+        or "<tile name>, not selected"). Driven by
+        `aria-selected` flipping on the tile or
+        `aria-checked` on the checkbox.
+    - trigger: Tile activated (interactive variant)
+      expected: >-
+        SR announces what the activation does — typically the
+        next page's title (for navigation tiles) or the
+        confirmation of the action (for action tiles).
+        Implementation detail: focus management may move
+        focus to a detail panel or to a route-target heading.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - color-contrast
+    - image-alt
+    - role-img-alt
+    - link-name
+    - button-name
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / interactive / selectable. Drives root semantic (container vs button vs option).
+  - figma: Aspect
+    code: aspect
+    type: Variant
+    notes: square / portrait / landscape / free. Drives CSS `aspect-ratio` on the media slot.
+  - figma: Density
+    code: density
+    type: Variant
+    notes: comfortable / compact.
+  - figma: Has Overlay
+    code: hasOverlay
+    type: Boolean
+    notes: Toggles the contrast-scrim overlay. Required when label is text-on-image; optional for separated-caption layouts.
+  - figma: Has Label
+    code: hasLabel
+    type: Boolean
+    notes: Toggles the label slot. Tiles in image-only galleries (artwork grids) may omit labels entirely.
+  - figma: Has Badge
+    code: hasBadge
+    type: Boolean
+  - figma: Selected
+    code: selected
+    type: Boolean
+    notes: For selectable variant. Drives `aria-selected` plus the visible checkbox state.
+  - figma: Media
+    code: media
+    type: Instance Swap
+    notes: Swap the media component instance — image, video, or rendered preview.
+  - figma: Badge
+    code: badge
+    type: Instance Swap
+    notes: Swap the badge component instance — status pill, count, "new" pulse.
+
+formIntegration:
+  name: >-
+    Tile itself does not carry a form `name` attribute. The
+    visible select-affordance checkbox (when selectable variant
+    is used inside a form) carries the `name` and `value` —
+    typically `name=`tile-ids[]`, value=<tileId>` for multi-
+    select forms. Consumers wrap the selectable tile grid in a
+    `<fieldset>` with a `<legend>` describing the multi-select
+    purpose.
+  formData: >-
+    Multi-select tile grid produces one FormData entry per
+    selected tile (matching `<input type="checkbox">` and
+    `<select multiple>` behaviour). Canonical serialization is
+    `name=tile-ids[]&value=<tileId>` for each selected tile.
+    Avoid comma-joining tile ids into a single FormData entry.
+  reset: >-
+    `form.reset()` restores tiles to their `defaultChecked`
+    state (typically all unchecked). The visual selected state
+    clears alongside; `aria-selected` reverts. Framework state
+    held outside the DOM needs an `onReset` listener to sync.
+  validation: >-
+    Tile grids with `required: true` (at least one must be
+    selected, e.g. avatar picker) trigger HTML5 validation on
+    submit via the inner checkboxes. The first checkbox in the
+    grid acts as the validation target; `setCustomValidity()`
+    on it surfaces "select at least one" via `aria-invalid`.
+    For more sophisticated validation (exactly N, between
+    M and N), use form-state libraries with custom validators.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Tile content is direction-neutral when image-only.
+      Labels inherit document direction. Select-affordance
+      checkbox moves from inline-start (visual left in LTR)
+      to inline-start (visual right in RTL). Badge position
+      (one of four corners) is consumer-configured; the
+      canonical default places it at inline-end-top, which
+      mirrors visually. Hover-lift animation is direction-
+      neutral.
+  textExpansion: >-
+    Tile labels grow with translation; canonical convention
+    is single-line truncation with ellipsis, full text in
+    `aria-label` for SR fallback. For tile galleries with
+    long labels, consider switching to Card (which
+    accommodates multi-line title + body). Tile aspect ratios
+    are unchanged by text expansion.
+
+performance:
+  - name: lazyLoadOffscreenThreshold
+    metric: viewport-distance
+    threshold: 200
+    unit: px
+    rationale: >-
+      Tiles in the viewport (and within ~200px of viewport
+      edges) load eagerly; tiles further away load lazily
+      via `loading="lazy"` on the image element or
+      IntersectionObserver-driven loading. The 200px buffer
+      avoids visible "popping in" at the viewport edge while
+      saving bandwidth and initial render cost.
+  - name: tilesPerRowMobile
+    metric: column-count
+    threshold: 2
+    unit: columns
+    rationale: >-
+      Below `breakpoint.sm`, the canonical maximum is 2 tiles
+      per row regardless of authored grid configuration.
+      Beyond 2 on narrow viewports tiles become too small to
+      preview meaningfully; the gallery loses its image-led
+      character.
+  - name: tilesPerRowDesktop
+    metric: column-count
+    threshold: 6
+    unit: columns
+    rationale: >-
+      Above `breakpoint.md` for image-heavy galleries, up to
+      ~6 tiles per row at typical desktop widths (1280-1920px)
+      maintain visual scannability. Beyond 6 tiles preview
+      content becomes too small; consumers either reduce
+      column count or design at smaller-tile-density. The
+      threshold is canonical-recommended, not hard-enforced.
+
+whenToUse:
+  use: >-
+    For image-led grid items where the visual content is
+    primary — photo galleries, asset pickers, album / playlist
+    grids, profile-picture pickers, document-thumbnail grids,
+    avatar selection. Text is supplementary or absent. Tiles
+    arrange in a regular grid with consistent aspect ratios.
+  avoid: >-
+    For content-led layouts with hierarchical title+body+media
+    — that is `Card`. For dense list rows with metadata — that
+    is `ListItem`. For floating selection of a value from a
+    fixed list — that is `Select`. For interactive inline
+    actions — that is `Button` directly.
+  vsRelated:
+    - id: card
+      difference: >-
+        `Card` is content-led with hierarchical title + body +
+        media + actions; `Tile` is image-led with minimal text.
+        A wall of Cards reads as a feed (each card is read
+        sequentially); a wall of Tiles reads as a gallery
+        (the whole grid is scanned visually). The decision
+        test: is the user scanning for visual content or
+        textual hierarchy?
+    - id: list-item
+      difference: >-
+        `ListItem` is a horizontal row in a list with leading
+        icon + primary + secondary + trailing affordances;
+        `Tile` is a 2D grid item with media at primary
+        position. List is one-dimensional; tile grid is
+        two-dimensional. ListItem favours dense metadata
+        layouts; Tile favours image-led visual layouts.
+    - id: image-gallery
+      difference: >-
+        An "image gallery" pattern is the composed
+        arrangement of multiple Tiles with consistent
+        layout, lazy-loading, and (optionally) lightbox
+        navigation. Tile is the atomic unit; the gallery is
+        the compositional pattern. Document the gallery as
+        a usage pattern of Tile, not as a separate
+        component.
+
+notes: >-
+  Tile vocabulary varies: Material 3 calls this "Carousel"
+  (for horizontal-scrolling tile rows) or "Cards / Image
+  list"; Polaris uses "Thumbnail" for similar purposes;
+  Carbon uses "Tile" with sub-types (clickable, selectable,
+  expandable). The canonical "Tile" name and the variant
+  taxonomy here matches Carbon and Atlassian; the
+  image-led-vs-content-led distinction with Card is the
+  most-load-bearing canonical decision and the most-overlooked
+  in implementations.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/
+  - https://www.w3.org/TR/WCAG22/#contrast-minimum
+  - https://www.w3.org/TR/WCAG22/#use-of-color
+  - https://m3.material.io/components/image-list/overview
+  - https://carbondesignsystem.com/components/tile/usage/
+  - https://atlassian.design/components/avatar/examples
+  - https://polaris.shopify.com/components/images-and-icons/thumbnail
+  - https://react-spectrum.adobe.com/react-aria/GridList.html
+
+lastReviewed: '2026-04-29'
