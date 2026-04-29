@@ -252,6 +252,69 @@ export const whenToUseSchema = z
   })
   .strict();
 
+const canonicalRefPath = z
+  .string()
+  .regex(
+    /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*|\[[a-zA-Z0-9-]+\])+$/,
+    'canonical reference must be a dotted path with optional [index] suffix, e.g. anatomy[eyebrow], axes.properties[size], events[openChange]',
+  );
+
+const omittedDivergenceSchema = z
+  .object({
+    from: canonicalRefPath,
+    type: z.literal('omitted'),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+const renamedDivergenceSchema = z
+  .object({
+    from: canonicalRefPath,
+    type: z.literal('renamed'),
+    to: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+const extendedDivergenceSchema = z
+  .object({
+    from: canonicalRefPath,
+    type: z.literal('extended'),
+    addition: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+const reshapedDivergenceSchema = z
+  .object({
+    from: canonicalRefPath,
+    type: z.literal('reshaped'),
+    to: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+export const divergenceSchema = z.discriminatedUnion('type', [
+  omittedDivergenceSchema,
+  renamedDivergenceSchema,
+  extendedDivergenceSchema,
+  reshapedDivergenceSchema,
+]);
+
+export const implementationSchema = z
+  .object({
+    componentId: slug,
+    libraryId: slug,
+    componentName: z.string().min(1),
+    exampleCode: z.string().min(1).optional(),
+    divergence: z.array(divergenceSchema).min(1).optional(),
+    rationale: z.string().min(1).optional(),
+    lastReviewed: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD'),
+  })
+  .strict();
+
 export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
@@ -292,4 +355,6 @@ export type EventFrameworkNotes = z.infer<typeof eventFrameworkNotesSchema>;
 export type ComponentEvent = z.infer<typeof eventSchema>;
 export type VsRelatedEntry = z.infer<typeof vsRelatedEntrySchema>;
 export type WhenToUse = z.infer<typeof whenToUseSchema>;
+export type Divergence = z.infer<typeof divergenceSchema>;
+export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

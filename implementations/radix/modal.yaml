@@ -1,0 +1,223 @@
+componentId: modal
+libraryId: radix
+componentName: Dialog
+
+exampleCode: |
+  import * as Dialog from '@radix-ui/react-dialog';
+
+  <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Trigger asChild>
+      <Button>Open</Button>
+    </Dialog.Trigger>
+    <Dialog.Portal>
+      <Dialog.Overlay className="DialogOverlay" />
+      <Dialog.Content className="DialogContent">
+        <Dialog.Title>Edit profile</Dialog.Title>
+        <Dialog.Description>Make changes to your profile here.</Dialog.Description>
+        {/* body content */}
+        <div className="DialogActions">
+          <Dialog.Close asChild>
+            <Button variant="ghost">Cancel</Button>
+          </Dialog.Close>
+          <Button>Save</Button>
+        </div>
+        <Dialog.Close asChild>
+          <IconButton aria-label="Close" className="DialogCloseIcon">
+            <Cross2Icon />
+          </IconButton>
+        </Dialog.Close>
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>
+
+divergence:
+  # Anatomy: Radix splits the canonical container into Root + Portal + Content,
+  # has no header slot at all, and treats footer as consumer-composed prose.
+  - from: anatomy[backdrop]
+    type: renamed
+    to: Dialog.Overlay
+    rationale: >-
+      Same role (presentational scrim that intercepts pointer events). Radix
+      uses "Overlay" terminology; canonical uses "backdrop" because the term
+      is more widely understood across design tools.
+
+  - from: anatomy[container]
+    type: reshaped
+    to: Dialog.Root + Dialog.Portal + Dialog.Content
+    rationale: >-
+      Canonical container is one slot bearing both the dialog role and the
+      focus trap. Radix splits this across three components: Root owns
+      controlled-state and accessibility wiring, Portal owns the DOM
+      relocation, Content owns the rendered surface and `role="dialog"`. A
+      consumer composing the canonical anatomy uses all three together.
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      Radix has no header slot. Title and Close are placed directly inside
+      Content without a wrapping region. The canonical "header" concept maps
+      to a consumer-composed `<div>` containing Dialog.Title and Dialog.Close
+      side by side; the layout is the consumer's job.
+
+  - from: anatomy[title]
+    type: renamed
+    to: Dialog.Title
+    rationale: >-
+      Same role; Radix renders an `<h2>` by default and wires
+      `aria-labelledby` automatically. Canonical anatomy says "title"; Radix
+      uses the ARIA-aligned name.
+
+  - from: anatomy[close-button]
+    type: renamed
+    to: Dialog.Close
+    rationale: >-
+      Same role. Note that Dialog.Close is an `asChild`-friendly wrapper —
+      consumers pass their own button (`<IconButton>` for the canonical
+      "× in trailing edge of header" pattern). The accessible name comes
+      from the consumer's button, not from Dialog.Close itself.
+
+  - from: anatomy[body]
+    type: reshaped
+    to: Dialog.Description plus free children
+    rationale: >-
+      Canonical body is one slot for the dialog payload. Radix splits the
+      semantic description (Dialog.Description, wired to
+      `aria-describedby`) from arbitrary body content (free children of
+      Dialog.Content). For non-prose bodies — forms, lists, custom
+      layouts — Description may be omitted or hidden visually while still
+      providing the accessible description.
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      Radix has no footer slot. Action buttons are placed as free children
+      of Dialog.Content. The canonical footer's purpose (group commit/
+      cancel actions) maps to a consumer-composed `<div>` typically with
+      Tailwind / class-variance-authority styling; alignment and spacing
+      are not part of Radix.
+
+  # Variants: canonical declares dialog / alertdialog / fullscreen.
+  - from: axes.variants[fullscreen]
+    type: omitted
+    rationale: >-
+      Radix Dialog has no built-in fullscreen variant. Consumers achieve
+      fullscreen via CSS on Dialog.Content (`width: 100vw; height: 100vh;
+      max-width: none;`); Radix does not bundle this as a first-class
+      option. The canonical responsive block already documents that
+      narrow viewports degrade non-fullscreen dialogs to fullscreen — at
+      the consumer's CSS layer, not the library's.
+
+  - from: axes.variants[alertdialog]
+    type: renamed
+    to: AlertDialog (separate Radix package @radix-ui/react-alert-dialog)
+    rationale: >-
+      Radix splits Dialog and AlertDialog into two packages. AlertDialog
+      forces `role="alertdialog"`, requires Action and Cancel sub-components
+      explicitly, and disables outside-click dismissal. The canonical
+      `alertdialog` variant maps to AlertDialog, not to a Dialog prop.
+
+  # Properties:
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix Dialog has no size prop. Width / max-width / height are
+      consumer CSS on Dialog.Content. Canonical `size: sm | md | lg | xl`
+      is a design-system convention layered above Radix; not a primitive
+      concern.
+
+  - from: axes.properties[dismissible]
+    type: reshaped
+    to: onPointerDownOutside / onEscapeKeyDown / onInteractOutside callbacks (preventDefault to suppress)
+    rationale: >-
+      Canonical models `dismissible: boolean` as a single switch covering
+      Escape + backdrop + close button. Radix does not expose a single
+      flag — instead, Dialog.Content takes three callbacks
+      (onPointerDownOutside, onEscapeKeyDown, onInteractOutside) and a
+      consumer suppresses dismissal by calling `event.preventDefault()`
+      inside the relevant handler. The canonical boolean maps to
+      "preventDefault on all three", not to a single library prop.
+
+  - from: axes.properties[scrollBehavior]
+    type: omitted
+    rationale: >-
+      Radix has no `scrollBehavior` prop. Consumers achieve "scroll inside
+      content" via CSS overflow on Dialog.Content; "scroll outside content"
+      (the page scrolls behind the dialog) requires not setting `inert` on
+      the page, which Radix toggles automatically. Canonical
+      `inside | outside` is a design-system layer above the primitive.
+
+  # Events:
+  - from: events[openChange]
+    type: renamed
+    to: onOpenChange (Dialog.Root prop)
+    rationale: >-
+      One-to-one match. `onOpenChange(open: boolean)` fires after Radix
+      transitions settle. The canonical event payload contract holds.
+
+  - from: events[dismiss]
+    type: reshaped
+    to: onPointerDownOutside / onEscapeKeyDown handlers on Dialog.Content
+    rationale: >-
+      Canonical `dismiss` event carries `{ reason: 'escape' | 'backdrop' |
+      'closeButton' }`. Radix does not surface a unified dismiss event —
+      escape and pointer-down-outside fire on Dialog.Content,
+      close-button click is a regular click on the consumer's button
+      inside Dialog.Close. Recovering the canonical reason requires
+      listening on three separate handlers and synthesising the union
+      type at the consumer layer.
+
+  # Motion: Radix exposes data-state attributes for animation but ships
+  # no durations or easing values — consumers wire CSS transitions with
+  # their own design tokens.
+  - from: motion.durations
+    type: reshaped
+    to: data-state="open" | "closed" CSS attribute selectors on Dialog.Content and Dialog.Overlay
+    rationale: >-
+      Radix does not ship motion durations. Consumers write CSS that
+      transitions on `[data-state='open']` and `[data-state='closed']`
+      with their own duration tokens. The canonical motion.durations.open
+      / close / backdrop are achievable but the values are entirely
+      consumer-side — the library exposes the state-machine attribute,
+      not the timing.
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix does not implement a reduced-motion behaviour. Consumers
+      apply `@media (prefers-reduced-motion: reduce)` themselves; Radix's
+      data-state mechanism still flips, but no animation is suppressed
+      automatically. The canonical `instant` fallback is implementable
+      but not bundled.
+
+  # State transitions: Radix matches the canonical four-state graph
+  # (closed → opening → open → closing → closed) via data-state attribute
+  # but exposes the transition lifecycle implicitly through CSS animation
+  # events, not a programmatic event surface.
+  - from: axes.states.transitions
+    type: reshaped
+    to: data-state attribute toggled at the canonical-graph edges; consumer observes via CSS animation events
+    rationale: >-
+      The canonical transitions specify the graph and triggers in prose.
+      Radix realises the graph but does not expose entry/exit events;
+      consumers that need to fire side effects on, e.g., the
+      `opening → open` edge listen to `animationend` on Dialog.Content or
+      poll `data-state`. The graph is honoured; the observability is
+      reshaped.
+
+rationale: |
+  Radix Dialog is a low-level, unstyled primitive that implements the
+  canonical Modal's accessibility contract (focus trap, aria-modal, focus
+  restoration, Escape handling) but deliberately stops short of styling,
+  motion timing, and design-system conventions like size scales or
+  dismissible flags. Most divergence rows are *reshaping*, not omission:
+  Radix exposes a structurally different surface (Root/Portal/Content,
+  three-callback dismissal, data-state attributes for motion) that
+  realises the canonical concept through a different shape.
+
+  The audit's overall pattern: Radix is the implementation layer for the
+  canonical Modal's accessibility primitives; design-system specifics
+  (variant catalogue, motion timing, size scale) are a layer above
+  Radix that consumers compose themselves. AlertDialog is a separate
+  package and a separate audit.
+
+lastReviewed: '2026-04-29'

@@ -398,6 +398,40 @@ This is descriptive, not prescriptive. We document what's idiomatic, not what's 
 - **Visual mockups beyond the generated wireframe SVG.** Real-world screenshots are better served by [component.gallery](https://component.gallery).
 - **Library-specific behavior tables.** A separate `implementations/` directory (see ADR-004) holds these, keyed by component ID.
 
+## Phase-2 implementation schema (`implementations/<lib>/<id>.yaml`)
+
+Phase-2 audits live in `implementations/<lib>/<id>.yaml`. Each file records how a specific library implements a canonical component. The schema (`implementationSchema` in `shared/src/schema.ts`) is a small metadata record plus a structured `divergence` array. The full rationale is in [ADR-013](./adr/013-implementation-schema.md).
+
+```yaml
+componentId: modal                # references content/components/<id>.yaml
+libraryId: radix                  # matches the parent directory name
+componentName: Dialog             # the actual name in the implementation
+exampleCode: |                    # optional multi-line code sample
+  import * as Dialog from '@radix-ui/react-dialog';
+  ...
+divergence:                       # optional, non-empty when present
+  - from: anatomy[backdrop]
+    type: renamed                 # omitted | renamed | extended | reshaped
+    to: Dialog.Overlay
+    rationale: Same role; Radix uses "Overlay" terminology.
+rationale: |                      # optional free-text overall summary
+  Radix Dialog is a low-level unstyled primitive ...
+lastReviewed: 2026-04-29          # required ISO date
+```
+
+**Divergence types (discriminated by `type`):**
+
+- **`omitted`** — `{ from, type, rationale }`. The canonical thing is not present in this implementation.
+- **`renamed`** — `{ from, type, to, rationale }`. Same role under a different name.
+- **`extended`** — `{ from, type, addition, rationale }`. Canonical thing plus an implementation-specific addition.
+- **`reshaped`** — `{ from, type, to, rationale }`. Canonical thing realised through a structurally different form.
+
+`from` is a dotted-path reference into the canonical schema, with optional `[index]` suffix for array entries: `anatomy[backdrop]`, `axes.variants[fullscreen]`, `axes.properties[size]`, `events[openChange]`, `motion.durations`, `axes.states.transitions`. The regex enforces shape (`identifier(.identifier|[index])+`) but does not validate that the path resolves against the canonical schema; that cross-validation is a future refine.
+
+**Bindings (deferred):** `tokenBindings`, `motionBindings`, `transitionBindings`, `eventBindings` are reserved by ADRs 006/007/009/011 as Phase-2 follow-ups. Each lands in its own ADR (ADR-014+) when a real audit needs it. P5-26 ships divergence-first MVP only.
+
+**Loader:** `loadImplementations({ implementationsDir })` returns `Map<libraryId, Map<componentId, Implementation>>`. The loader enforces `libraryId === parentDirectoryName` and rejects duplicate componentIds within a library.
+
 ## Schema evolution
 
 The schema will evolve. When it does:

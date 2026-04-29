@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadComponent, loadComponents } from '../src/loader.js';
-import { componentSchema, propertySchema } from '../src/schema.js';
+import { loadComponent, loadComponents, loadImplementation, loadImplementations } from '../src/loader.js';
+import { componentSchema, implementationSchema, propertySchema } from '../src/schema.js';
 import { renderAnatomySVG, validateOverride } from '../src/svg.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
+const implementationsDir = join(here, '..', '..', 'implementations');
 
 describe('component schema', () => {
   it('parses card.yaml', async () => {
@@ -225,6 +226,96 @@ describe('responsive field', () => {
       },
     };
     const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('implementation schema', () => {
+  it('parses radix/modal.yaml', async () => {
+    const impl = await loadImplementation(join(implementationsDir, 'radix', 'modal.yaml'));
+    expect(impl.componentId).toBe('modal');
+    expect(impl.libraryId).toBe('radix');
+    expect(impl.componentName).toBe('Dialog');
+    expect((impl.divergence ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('radix/modal covers all four divergence types', async () => {
+    const impl = await loadImplementation(join(implementationsDir, 'radix', 'modal.yaml'));
+    const types = new Set((impl.divergence ?? []).map((d) => d.type));
+    expect(types.has('omitted')).toBe(true);
+    expect(types.has('renamed')).toBe(true);
+    expect(types.has('extended') || types.has('reshaped')).toBe(true);
+    expect(types.has('reshaped')).toBe(true);
+  });
+
+  it('loadImplementations groups by libraryId', async () => {
+    const byLibrary = await loadImplementations({ implementationsDir });
+    expect(byLibrary.has('radix')).toBe(true);
+    const radix = byLibrary.get('radix')!;
+    expect(radix.has('modal')).toBe(true);
+  });
+
+  it('rejects implementation missing lastReviewed', () => {
+    const bad = {
+      componentId: 'modal',
+      libraryId: 'radix',
+      componentName: 'Dialog',
+    };
+    const result = implementationSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects divergence with unknown type', () => {
+    const bad = {
+      componentId: 'modal',
+      libraryId: 'radix',
+      componentName: 'Dialog',
+      lastReviewed: '2026-04-29',
+      divergence: [
+        { from: 'anatomy[backdrop]', type: 'mutated', rationale: 'whatever' },
+      ],
+    };
+    const result = implementationSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects renamed divergence missing the `to` payload', () => {
+    const bad = {
+      componentId: 'modal',
+      libraryId: 'radix',
+      componentName: 'Dialog',
+      lastReviewed: '2026-04-29',
+      divergence: [
+        { from: 'anatomy[backdrop]', type: 'renamed', rationale: 'no target named' },
+      ],
+    };
+    const result = implementationSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects from path that does not match the canonical-ref regex', () => {
+    const bad = {
+      componentId: 'modal',
+      libraryId: 'radix',
+      componentName: 'Dialog',
+      lastReviewed: '2026-04-29',
+      divergence: [
+        { from: 'NOT A PATH', type: 'omitted', rationale: 'whatever' },
+      ],
+    };
+    const result = implementationSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown top-level field (strict)', () => {
+    const bad = {
+      componentId: 'modal',
+      libraryId: 'radix',
+      componentName: 'Dialog',
+      lastReviewed: '2026-04-29',
+      somethingElse: 'extra',
+    };
+    const result = implementationSchema.safeParse(bad);
     expect(result.success).toBe(false);
   });
 });
