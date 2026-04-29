@@ -45,8 +45,14 @@ describe('mcp server', () => {
         'get_common_mistakes',
         'get_component',
         'get_component_view',
+        'get_events',
         'get_framework_map',
         'get_mismatches',
+        'get_motion',
+        'get_responsive',
+        'get_tokens',
+        'get_transitions',
+        'get_when_to_use',
         'list_components',
         'search_components',
       ].sort(),
@@ -104,6 +110,84 @@ describe('mcp server', () => {
     const result = await client.callTool({ name: 'search_components', arguments: { query: 'elevated' } });
     const parsed = parseJson(result as any);
     expect(parsed.some((c: any) => c.id === 'card')).toBe(true);
+  });
+
+  it('get_tokens returns slot-keyed token entries for Button', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_tokens', arguments: { id: 'button' } });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    const root = parsed.find((s: any) => s.slotId === 'root');
+    expect(root?.tokens?.color?.background).toBe('color.accent.bg');
+  });
+
+  it('get_motion returns the modal motion block', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'modal' } });
+    const parsed = parseJson(result as any);
+    expect(parsed.easing).toBe('motion.easing.standard');
+    expect(parsed.reducedMotionFallback).toBe('instant');
+  });
+
+  it('get_motion returns null for components without motion', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'card' } });
+    const parsed = parseJson(result as any);
+    expect(parsed).toBeNull();
+  });
+
+  it('get_responsive returns the modal breakpoints', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_responsive', arguments: { id: 'modal' } });
+    const parsed = parseJson(result as any);
+    expect(parsed.breakpoints[0].at).toBe('breakpoint.sm');
+  });
+
+  it('get_responsive returns null for Button', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_responsive', arguments: { id: 'button' } });
+    const parsed = parseJson(result as any);
+    expect(parsed).toBeNull();
+  });
+
+  it('get_transitions returns Modal transitions', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_transitions', arguments: { id: 'modal' } });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBe(4);
+    expect(parsed[0].from).toBe('closed');
+  });
+
+  it('get_transitions returns null for Card', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_transitions', arguments: { id: 'card' } });
+    const parsed = parseJson(result as any);
+    expect(parsed).toBeNull();
+  });
+
+  it('get_events returns Combobox events with three entries', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_events', arguments: { id: 'combobox' } });
+    const parsed = parseJson(result as any);
+    expect(parsed.length).toBe(3);
+    expect(parsed.map((e: any) => e.name)).toContain('selectionChange');
+  });
+
+  it('get_events returns null for Button', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_events', arguments: { id: 'button' } });
+    const parsed = parseJson(result as any);
+    expect(parsed).toBeNull();
+  });
+
+  it('get_when_to_use returns Card whenToUse with vsRelated ids', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_when_to_use', arguments: { id: 'card' } });
+    const parsed = parseJson(result as any);
+    expect(parsed.use.length).toBeGreaterThan(0);
+    expect(parsed.avoid.length).toBeGreaterThan(0);
+    expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item']);
   });
 
   it('returns an error result for unknown component id', async () => {

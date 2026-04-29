@@ -154,6 +154,81 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    'get_tokens',
+    'Return the per-slot token bindings (spacing/radius/color/elevation/typography) for a component. Slots without tokens are omitted from the result.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      const slotsWithTokens = c.anatomy
+        .filter((s) => s.tokens !== undefined)
+        .map((s) => ({ slotId: s.id, tokens: s.tokens }));
+      return jsonResult(slotsWithTokens);
+    },
+  );
+
+  server.tool(
+    'get_motion',
+    'Return the motion block (durations/easing/reducedMotionFallback) for a component. Returns null when the component declares no motion.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      return jsonResult(c.motion ?? null);
+    },
+  );
+
+  server.tool(
+    'get_responsive',
+    'Return the responsive block (breakpoints) for a component. Returns null when the component declares no responsive behaviour.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      return jsonResult(c.responsive ?? null);
+    },
+  );
+
+  server.tool(
+    'get_transitions',
+    'Return the state-machine transitions (from/to/trigger) for a component. Returns null when the component declares no transitions.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      return jsonResult(c.axes.states.transitions ?? null);
+    },
+  );
+
+  server.tool(
+    'get_events',
+    'Return the events array (name/payload/per-framework notes) for a component. Returns null when the component declares no events.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      return jsonResult(c.events ?? null);
+    },
+  );
+
+  server.tool(
+    'get_when_to_use',
+    'Return the whenToUse block (use/avoid prose plus per-related differentiators) for a component. Returns null when the component declares no whenToUse.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      return jsonResult(c.whenToUse ?? null);
+    },
+  );
+
+  server.tool(
     'search_components',
     'Case-insensitive substring search across component id, name, description, and anatomy slot ids.',
     { query: z.string().min(1) },
