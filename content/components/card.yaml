@@ -377,6 +377,26 @@ responsive:
         authored. Density `compact` becomes the default for cards rendered
         in multi-column grids; `comfortable` for full-width detail cards.
 
+i18n:
+  rtl:
+    mirroring: >-
+      Horizontal-orientation cards flip their leading-edge media to the
+      right side via logical `inline-start` properties. Eyebrow / title /
+      subtitle / body inherit document direction; numerals and dates
+      should follow the locale's preferred numeral system. Action button
+      order reverses: the primary action moves from inline-end (right in
+      LTR) to inline-end (left in RTL) — the *logical* position is
+      unchanged, the visual position mirrors. Decorative media that
+      carries directionality (left-pointing arrow icons, before/after
+      photo pairs) needs explicit alt-text or composition handling.
+  textExpansion: >-
+    Title is clamped to 2 lines (`-webkit-line-clamp: 2`) by canonical
+    convention; subtitle to 3; body free-flow. Eyebrow may wrap to a
+    second line under heavy expansion (DE/RU). Action labels follow
+    Button's expansion rules. Multi-column card grids may need to
+    re-flow at narrower widths for languages with longer-than-average
+    text.
+
 propertyMap:
   - figma: Variant
     code: variant

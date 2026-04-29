@@ -492,6 +492,28 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
+i18n:
+  rtl:
+    mirroring: >-
+      Container alignment stays centered (modal centering is
+      direction-neutral). Close button moves from inline-end of the
+      header (visual right in LTR, visual left in RTL) — implemented via
+      `inset-inline-end` on the close-button slot, not hard-coded
+      `right`. Footer button order reverses logically: the primary
+      commit action stays on inline-end (visual right in LTR, visual
+      left in RTL); cancel on inline-start. Backdrop scrim is
+      direction-neutral. Title and body inherit document direction; a
+      mixed-direction document (e.g. Hebrew title with English body)
+      still renders correctly because each text node carries its own
+      `dir` attribute.
+  textExpansion: >-
+    Title can grow into a second line; body has natural overflow with
+    inside-scroll behaviour. Footer buttons may wrap to a second row on
+    narrow viewports under heavy expansion (German "Veröffentlichen"
+    next to "Abbrechen" forces wrap on `breakpoint.sm`). Size variant
+    `xl` accommodates the longest expansions; alert-dialog title should
+    favour shorter phrasing to avoid wrap on small viewports.
+
 formIntegration:
   name: >-
     Modal is a container, not a form control — it has no `name`

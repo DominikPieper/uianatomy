@@ -273,6 +273,19 @@ export const announcementEntrySchema = z
   })
   .strict();
 
+export const i18nRtlSchema = z
+  .object({
+    mirroring: z.string().min(1),
+  })
+  .strict();
+
+export const i18nSchema = z
+  .object({
+    rtl: i18nRtlSchema,
+    textExpansion: z.string().min(1),
+  })
+  .strict();
+
 export const formIntegrationSchema = z
   .object({
     name: z.string().min(1).optional(),
@@ -414,6 +427,7 @@ export const componentSchema = z.object({
   a11yAcceptance: a11yAcceptanceSchema.optional(),
   propertyMap: propertyMapSchema.optional(),
   formIntegration: formIntegrationSchema.optional(),
+  i18n: i18nSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -442,6 +456,8 @@ export type FigmaPropertyType = z.infer<typeof figmaPropertyTypeSchema>;
 export type PropertyMapEntry = z.infer<typeof propertyMapEntrySchema>;
 export type PropertyMap = z.infer<typeof propertyMapSchema>;
 export type FormIntegration = z.infer<typeof formIntegrationSchema>;
+export type I18nRtl = z.infer<typeof i18nRtlSchema>;
+export type I18n = z.infer<typeof i18nSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

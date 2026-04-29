@@ -250,6 +250,31 @@ events:                                            # optional
 
 `frameworkNotes` is reference data, not a binding contract. Phase-2 implementations (`implementations/<lib>/<id>.yaml`) record the actual handler signatures via a future `eventBindings` field. The canonical notes describe what is *idiomatic*, not what is shipped in any specific library version.
 
+## `i18n` (optional, top-level)
+
+Per-component internationalisation acceptance prose. Two required facets when present: `rtl.mirroring` and `textExpansion`. The full rationale is in [ADR-017](./adr/017-i18n-section.md).
+
+```yaml
+i18n:                                   # optional
+  rtl:                                  # required when i18n present
+    mirroring: >-                       # required prose
+      What mirrors and what does not under RTL — icon swap, indicator
+      direction, button-order reversal, focus-ring direction-neutrality.
+  textExpansion: >-                     # required prose
+    How text labels behave under translation expansion (German /
+    Russian / Finnish +30–50%). Truncation policy, max-width
+    constraints, alt-text for translatable surfaces.
+```
+
+**Shape rules:**
+
+- `i18n` itself is optional. Components without canonical i18n acceptance vocabulary omit the field.
+- When present, both `rtl.mirroring` and `textExpansion` are required prose, both non-empty.
+- `rtl` is nested as a sub-namespace to allow future facets (`numerals`, `dates`, `dir-attribute-handling`) without flat-namespace churn. Phase 1 ships `mirroring` only.
+- `textExpansion` is component-wide prose covering label growth, truncation policy, and density-token impact in long-text languages.
+
+**Render:** `I18nSection.astro` renders in Designer view (after Responsive, before Axes) and Bridge view (after FormIntegration, before Accessibility). Dev view does not render the section — i18n is primarily visual / cross-team content; dev-side guidance lives in `mistakes`, `a11y.hint`, and `frameworkMap`.
+
 ## `formIntegration` (optional, top-level)
 
 Per-component HTML-form participation prose. Four orthogonal sub-fields — `name`, `formData`, `reset`, `validation` — each independently optional, at least one required when the field is present. The full rationale is in [ADR-016](./adr/016-form-integration.md).

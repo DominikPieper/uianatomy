@@ -509,6 +509,26 @@ events:
         `@update:open` for `v-model:open`; suppressed when the open
         state is computed and not externally controlled.
 
+i18n:
+  rtl:
+    mirroring: >-
+      Clear-button and trigger-button move from inline-end of the input
+      to inline-start (visual right→left flip) via logical positioning.
+      Chevron rotation is *not* mirrored — the rotation indicates
+      open/closed state, not direction. Listbox aligns to the input's
+      inline-start edge (same logical anchor in both directions). Input
+      caret follows document direction; mixed-direction input (typing
+      Hebrew into a Latin-default field) honours the input's own `dir`
+      attribute.
+  textExpansion: >-
+    Option labels can grow significantly; listbox width matches the
+    input by default and may need a max-width override when option
+    labels exceed the input width. Truncation with ellipsis is the
+    canonical fallback for option labels exceeding the listbox width;
+    aria-label on the option provides the full text for SR users.
+    Placeholder text is the riskiest expansion target — many locales'
+    "Search…" translations exceed 30% length.
+
 formIntegration:
   name: >-
     The inner `<input>` carries the form `name` attribute; the combobox

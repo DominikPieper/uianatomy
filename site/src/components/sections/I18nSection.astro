@@ -1,0 +1,39 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const i = component.i18n;
+---
+{i && (
+  <div class="i18n">
+    <section class="i18n__block">
+      <h4>RTL · mirroring</h4>
+      <p>{i.rtl.mirroring}</p>
+    </section>
+    <section class="i18n__block">
+      <h4>Text expansion</h4>
+      <p>{i.textExpansion}</p>
+    </section>
+  </div>
+)}
+
+<style>
+  .i18n {
+    display: grid;
+    gap: 18px;
+    margin: 0 0 24px;
+  }
+  .i18n__block h4 {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    margin: 0 0 6px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+  .i18n__block p {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

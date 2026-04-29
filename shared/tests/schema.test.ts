@@ -230,6 +230,55 @@ describe('responsive field', () => {
   });
 });
 
+describe('i18n field', () => {
+  it('parses i18n on all five components', async () => {
+    const ids = ['button', 'card', 'modal', 'tabs', 'combobox'];
+    for (const id of ids) {
+      const c = await loadComponent(join(contentDir, `${id}.yaml`));
+      expect(c.i18n?.rtl?.mirroring?.length ?? 0).toBeGreaterThan(0);
+      expect(c.i18n?.textExpansion?.length ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it('rejects i18n missing rtl', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, i18n: { textExpansion: 'real prose' } };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects i18n missing textExpansion', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, i18n: { rtl: { mirroring: 'real prose' } } };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty rtl.mirroring', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, i18n: { rtl: { mirroring: '' }, textExpansion: 'x' } };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty textExpansion', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, i18n: { rtl: { mirroring: 'x' }, textExpansion: '' } };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown extra field on rtl (strict)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      i18n: { rtl: { mirroring: 'x', numerals: 'extra' }, textExpansion: 'x' },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('formIntegration field', () => {
   it('parses button formIntegration with all four prose fields', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));

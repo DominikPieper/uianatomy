@@ -310,6 +310,24 @@ frameworkMap:
     structureMechanism: a `<Button>` SFC with named slots for leading and trailing icons and a default slot for the label
     variantMechanism: defineProps with literal-union types; `:loading` boolean prop drives `aria-busy`
 
+i18n:
+  rtl:
+    mirroring: >-
+      Leading and trailing icons swap visual position via logical
+      `inline-start` / `inline-end` properties — what was on the left in
+      LTR appears on the right in RTL. Directional icons (chevrons, arrows
+      indicating progression) flip horizontally to preserve their semantic
+      direction. Loading-spinner rotation does *not* mirror — circular
+      motion is direction-neutral. The focus ring, padding, and
+      typography render identically in both directions.
+  textExpansion: >-
+    Labels can grow 30–50% longer in German, Russian, or Finnish. The
+    canonical Button does not enforce a max-width — buttons grow with
+    their label. Truncation is a last resort and requires a `title`
+    attribute carrying the full label so SR users still hear it.
+    Icon-only buttons are immune (the icon does not translate); the
+    aria-label is the translation surface.
+
 formIntegration:
   name: >-
     `<button>` with a `name` attribute participates in form submission

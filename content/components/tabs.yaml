@@ -427,6 +427,28 @@ events:
         `@activate` event in manual mode; `automatic` mode collapses it
         into `@update:modelValue`.
 
+i18n:
+  rtl:
+    mirroring: >-
+      Horizontal tablist renders right-to-left — the first tab in source
+      order appears on the inline-start (visual right in RTL).
+      Arrow-key navigation reverses per APG: ArrowRight moves to the
+      *previous* tab in RTL, ArrowLeft to the *next* — the keys follow
+      visual direction, not source order. Vertical tablists are
+      direction-neutral (Up/Down keys unchanged). Selected-tab
+      indicator slides along the inline axis using logical
+      properties (`inset-inline-start`); slide direction reverses
+      naturally. Overflow scrolling reverses direction too — Home
+      scrolls to the inline-start (visual right in RTL).
+  textExpansion: >-
+    Tab labels can grow 30–50% in DE/RU/FI; tablist may overflow the
+    viewport earlier in those languages. Horizontal-scroll handling
+    (per the existing mistake `tabs-overflow-no-scroll-into-view`)
+    accommodates expansion without wrapping. Vertical orientation
+    naturally accommodates expansion via fixed inline-size on the
+    tablist column. Density `compact` is risky for long-text languages
+    — consider `comfortable` as the default in heavy-expansion locales.
+
 propertyMap:
   - figma: Variant
     code: variant

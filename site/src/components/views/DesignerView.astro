@@ -6,6 +6,7 @@ import TokensTable from '../sections/TokensTable.astro';
 import PropertyMapTable from '../sections/PropertyMapTable.astro';
 import MotionTable from '../sections/MotionTable.astro';
 import ResponsiveTable from '../sections/ResponsiveTable.astro';
+import I18nSection from '../sections/I18nSection.astro';
 import AxesTable from '../sections/AxesTable.astro';
 import TransitionsTable from '../sections/TransitionsTable.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
@@ -40,6 +41,13 @@ const { component } = Astro.props;
     <>
       <SectionHeader role="designer" title="Responsive behaviour" id="responsive" />
       <ResponsiveTable component={component} />
+    </>
+  )}
+
+  {component.i18n && (
+    <>
+      <SectionHeader role="both" title="Internationalisation" id="i18n" />
+      <I18nSection component={component} />
     </>
   )}
 

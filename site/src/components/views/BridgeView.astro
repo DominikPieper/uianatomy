@@ -10,6 +10,7 @@ import EventsTable from '../sections/EventsTable.astro';
 import PropertyMapTable from '../sections/PropertyMapTable.astro';
 import A11yAcceptanceTable from '../sections/A11yAcceptanceTable.astro';
 import FormIntegrationSection from '../sections/FormIntegrationSection.astro';
+import I18nSection from '../sections/I18nSection.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
 import MistakesList from '../sections/MistakesList.astro';
 import A11yTable from '../sections/A11yTable.astro';
@@ -59,6 +60,13 @@ const { component } = Astro.props;
     <>
       <SectionHeader role="both" title="Form integration" id="form-integration" />
       <FormIntegrationSection component={component} />
+    </>
+  )}
+
+  {component.i18n && (
+    <>
+      <SectionHeader role="both" title="Internationalisation" id="i18n" />
+      <I18nSection component={component} />
     </>
   )}
 
