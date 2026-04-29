@@ -1,0 +1,732 @@
+id: tag-input
+name: Tag Input
+description: >-
+  An input that accepts multiple discrete values, rendering each
+  committed value inline as a removable token next to a text input.
+  Distinct from Combobox by emphasising visible accumulated state
+  (the user sees all selected values as tokens), distinct from
+  Select-multi by rendering tokens inline rather than as a count or
+  comma-list, distinct from plain Input by structuring multi-value
+  semantics. Used for email-recipient pickers, label/topic editors,
+  filter-tag composers, multi-attribute search inputs.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded surface containing the tags and the input. Acts
+      visually as a single text-input field, but internally holds a
+      tag-list and an `<input>`. Carries the focus ring; accepts
+      pointer focus that delegates to the input.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; wraps tags plus input across multiple rows when overflowing
+    code:
+      slot: root
+      semantic: composite-form-control
+    a11y:
+      hint: >-
+        Root is a layout container; no required ARIA role. The
+        focusable element inside is the `<input>` — clicking the
+        root delegates focus to the input. Wrap with a `<label>`
+        or pair via `aria-labelledby` so SR users hear a name
+        when focus enters.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.bg
+        border: color.border.strong
+        ring: color.border.focus
+
+  - id: tag
+    required: true
+    purpose: >-
+      Individual committed value rendered as an inline token.
+      Carries a label and an optional remove affordance. One
+      anatomy slot describes the role; multiple instances render
+      per committed value.
+    layout:
+      parent: root
+      row: 1
+      span: 3
+      repeats: 3
+    figma:
+      type: instance
+      hint: Tag/chip component instance with optional remove button; size and color from parent input
+    code:
+      slot: tag
+      semantic: list-item
+    a11y:
+      hint: >-
+        Each tag is a list item inside an implicit list (the
+        tag-list region of the input). For SR users, the tag's
+        accessible name is its label; the remove affordance is
+        an additional button labelled "Remove <tag label>".
+        Tags themselves are not buttons — clicking the tag
+        focuses or selects it, depending on consumer choice;
+        clicking the remove affordance removes the tag.
+    tokens:
+      spacing:
+        padding: spacing.tight
+        gap: spacing.tight
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.sm
+      color:
+        background: color.surface.sunken
+        foreground: color.text.primary
+
+  - id: tag-remove
+    required: false
+    purpose: >-
+      Optional close affordance on each tag — typically an "×"
+      icon at the inline-end of the tag. Activation removes the
+      tag from the value list. Omitted on read-only tag inputs
+      where tokens cannot be removed by the user.
+    layout:
+      parent: tag
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance inside the tag; visibility bound to "removable" property
+    code:
+      slot: tag-remove
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button>` with accessible name "Remove <tag label>"
+        (composed via aria-label). Activation removes the tag and
+        moves focus to the next tag (or to the input if it was
+        the last tag). Tab from the input lands here only when
+        the input is empty and Backspace navigation has selected
+        the tag for removal.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+  - id: input
+    required: true
+    purpose: >-
+      The text input where new tags are typed. Sized to remaining
+      inline space after tags. Carries the form `name` attribute
+      (or hidden form-state) and the typeahead behaviour for
+      constrained / creatable variants.
+    layout:
+      parent: root
+      row: 1
+      col: 4
+      span: 4
+    figma:
+      type: instance
+      hint: Text input component instance; min-width drives input visibility when many tags present
+    code:
+      slot: input
+      semantic: textbox
+    a11y:
+      hint: >-
+        For free-text variant, plain `<input type="text">`. For
+        constrained / creatable variants, the input is wired as a
+        Combobox (`role="combobox"`, `aria-controls` referencing
+        the suggestion listbox, `aria-activedescendant` for the
+        highlighted suggestion). The accessible name comes from
+        the wrapping label; the input's value is the in-flight
+        text only — committed values live in the tag list.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      typography:
+        size: text.md
+      color:
+        background: color.surface.bg
+        foreground: color.text.primary
+
+  - id: placeholder
+    required: false
+    purpose: >-
+      Optional placeholder text shown in the input when both the
+      input is empty AND the tag list is empty. Disappears when
+      the user types or commits a tag.
+    layout:
+      parent: input
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Placeholder text style; only visible in zero-tag empty-input state
+    code:
+      slot: placeholder
+      semantic: presentational
+    a11y:
+      hint: >-
+        Placeholder is not the input's accessible name (the
+        wrapping label is). Avoid placeholder-only labelling
+        — when typing or after committing tags the placeholder
+        disappears and SR users have nothing to identify the
+        field from.
+    tokens:
+      typography:
+        size: text.md
+      color:
+        foreground: color.text.muted
+
+axes:
+  variants:
+    - free-text
+    - constrained
+    - creatable
+  properties:
+    - { name: removable, kind: primitive, of: boolean }
+    - { name: duplicates, kind: primitive, of: boolean }
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - name: maxTags
+      kind: enum
+      values: [none, low, medium, high]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - empty
+      - filled
+      - busy
+      - invalid
+    transitions:
+      - from: empty
+        to: filled
+        trigger: >-
+          User commits the first tag — by typing into the input
+          and pressing Enter, comma, or losing focus (consumer-
+          configured commit triggers). The placeholder
+          disappears; the tag-list begins rendering tokens.
+      - from: filled
+        to: empty
+        trigger: >-
+          User removes the last tag (via the tag's remove
+          button, Backspace at empty input, or programmatic
+          clear). The placeholder reappears.
+      - from: filled
+        to: busy
+        trigger: >-
+          For constrained / creatable variants with async
+          suggestions, the user types; the suggestion request is
+          in flight. The input shows a busy indicator; the tag
+          list is unaffected.
+      - from: busy
+        to: filled
+        trigger: >-
+          Async suggestions return; the input shows the listbox
+          with results.
+      - from: filled
+        to: invalid
+        trigger: >-
+          User attempts to commit a value that violates a
+          constraint (already-present in `duplicates: false`
+          mode, exceeds maxTags, fails a custom validator). The
+          input surfaces an inline error and sets
+          `aria-invalid="true"`.
+      - from: invalid
+        to: filled
+        trigger: >-
+          User clears the in-flight value or successfully commits
+          a valid alternative. `aria-invalid` is removed.
+
+mismatches:
+  - figma: Tags drawn as static text-with-border decorations next to an input
+    code: Tags as live DOM elements with remove buttons, accumulated into the form value
+    consequence: >-
+      Designers may treat tags as visual decoration. Implementations
+      following the Figma file ship tags as styled spans with no
+      remove affordance and no keyboard contract; users cannot
+      remove tags except by retyping the entire value, and
+      keyboard users cannot remove at all.
+    correct: >-
+      Tags are interactive elements with remove buttons; the
+      tag-list is part of the form value, not decoration. The
+      Figma component must encode the remove affordance and the
+      removable state; the canonical reference documents the
+      keyboard contract (Backspace at empty input deletes last
+      tag).
+
+  - figma: Tag remove button drawn but no keyboard navigation between tags
+    code: ArrowLeft / ArrowRight from input navigates between tags; Backspace deletes selected tag
+    consequence: >-
+      Designers draw the remove × on each tag without
+      considering keyboard navigation. Developers shipping
+      mouse-only remove break a11y for keyboard users — they
+      must Tab through every tag's remove button, with no
+      "select tag, then delete" canonical pattern.
+    correct: >-
+      Document the canonical keyboard model: ArrowLeft from
+      empty input selects the last tag (visual highlight),
+      ArrowLeft / ArrowRight navigate between selected tags,
+      Backspace / Delete removes the selected tag. The remove
+      buttons remain mouse-targets; keyboard users use the
+      navigation pattern.
+
+  - figma: Pasted comma-separated string drawn as a single tag
+    code: Pasted "a, b, c" splits into three separate tags by canon
+    consequence: >-
+      Designers compose mock pastes as single tags; developers
+      following the design ship literal-paste behaviour. Users
+      pasting from spreadsheets or comma-separated lists get a
+      single tag containing the entire pasted string;
+      retyping each tag manually defeats the input's purpose.
+    correct: >-
+      Document the canonical paste-split behaviour: pasted text
+      containing commas, semicolons, or newlines splits into
+      multiple tags on commit. Splitter characters are
+      consumer-configurable but the default is `[,;\n]`.
+
+  - figma: Tag overflow drawn as truncating with ellipsis at the end of the input
+    code: Tags wrap to multiple rows; the input grows in block-size to accommodate
+    consequence: >-
+      Designers draw tag overflow as horizontal-truncate (the
+      input has fixed inline-size and tags clip). Implementations
+      following the design hide tags beyond a count; users
+      cannot see what they have selected. Or developers ignore
+      the design and ship multi-row wrap; the design and
+      production diverge.
+    correct: >-
+      Tags wrap naturally to multiple rows; the input grows in
+      block-size. The wrapped layout is canonical because tags
+      represent committed values that must remain visible. For
+      space-constrained contexts, document `maxTags` plus a
+      "+N more" affordance — but never silent clipping.
+
+mistakes:
+  - id: taginput-no-keyboard-token-removal
+    title: Tags cannot be removed by keyboard
+    description: >-
+      Each tag has a × button reachable only via Tab through
+      the entire tag list, plus there is no Backspace-at-
+      empty-input canonical removal. Keyboard users must
+      laboriously Tab through every tag's remove button; the
+      a11y experience is significantly worse than mouse.
+    fix: >-
+      Implement the canonical keyboard model: Backspace at
+      empty input selects (highlights) the last tag without
+      removing; second Backspace removes it. ArrowLeft from
+      empty input also selects the last tag for navigation.
+      Once a tag is selected, ArrowLeft / ArrowRight navigate
+      between tags; Backspace / Delete remove the selected
+      tag.
+
+  - id: taginput-paste-no-split
+    title: Pasting comma-separated text creates a single tag
+    description: >-
+      User pastes "alice@x, bob@y, carol@z" expecting three
+      tags; gets one tag containing the entire string.
+      Spreadsheet imports and quick-fill flows break.
+    fix: >-
+      On paste, split the pasted text on canonical separator
+      characters (`,`, `;`, newline by default) and commit
+      each segment as a separate tag. Validate each segment
+      individually; segments that fail validation surface as
+      a single "X invalid entries" error rather than aborting
+      the entire paste.
+
+  - id: taginput-duplicates-silent
+    title: Duplicate tags accepted silently
+    description: >-
+      `duplicates: false` is set but committing an already-
+      present value silently no-ops. The input clears, but no
+      error is shown; users do not know their attempted
+      addition was rejected.
+    fix: >-
+      On duplicate-rejection, surface inline-error feedback:
+      the input briefly highlights with an error tone,
+      `aria-invalid="true"` is set, and a hidden status region
+      announces "<value> already added". Avoid silent rejection;
+      document the user-feedback contract canonically.
+
+  - id: taginput-no-aria-on-tags
+    title: Tags rendered as styled `<span>`s with no SR label structure
+    description: >-
+      Tag list is a `<div>` of styled spans. SR users hear
+      everything as plain text; the structure (this is a list
+      of values, this is a remove button) is invisible. Worse,
+      tag count and "X of Y selected" are not announced.
+    fix: >-
+      Render the tag list as a `<ul>` (or `<div role="list">`)
+      with each tag as `<li>`. Each tag's accessible name is
+      its label; the remove button is a real `<button>` with
+      `aria-label="Remove <label>"`. SR navigates by list-item
+      structure and hears each tag plus the remove option.
+
+  - id: taginput-tokens-clipped
+    title: Tag overflow silently clipped at input edge
+    description: >-
+      Input has fixed inline-size; tags accumulate horizontally
+      and clip at the inline-end. Users cannot see what they
+      have committed beyond the visible tags; SR users hear
+      everything but pointer users with vision rely on what
+      they see.
+    fix: >-
+      Tags wrap to multiple rows by canon; the input grows in
+      block-size. For dense layouts, document `maxTags` plus a
+      "+N more" affordance — never silent clipping. Mature
+      primitives (Radix, React Aria) wrap by default;
+      implementations should not override.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-tag-input>` host wrapping a list of `<ui-tag>` children plus an internal `<input>`; light DOM for tag content; events fire on the host
+    variantMechanism: attributes (`variant="constrained"`, `removable`, `duplicates`, `size="md"`, `max-tags="medium"`); `data-state="empty|filled|invalid|busy"` for CSS
+  react:
+    structureMechanism: React Aria `useTagGroup` plus a paired text input; or third-party libraries (react-tag-input, downshift composed with custom tag rendering); Radix does not ship a TagInput primitive as of 2026-04
+    variantMechanism: props with class-variance-authority for variant / size; `removable`, `allowDuplicates` boolean props; controlled or uncontrolled value (string array)
+  angularSignals:
+    structureMechanism: Angular Material `MatChipGrid` / `MatChipRow` plus `<input>`; or Angular CDK `cdk-listbox`-based custom composition
+    variantMechanism: input<'free-text' | 'constrained' | 'creatable'>(); `[removable]`, `[duplicates]` host bindings; `output<string[]>('valueChange')`
+  vue:
+    structureMechanism: Headless UI does not ship TagInput as of 2026-04; third-party (vue-tags-input, primevue Chips) or custom composable around an `<input>` plus `<ul>` of tag components
+    variantMechanism: defineProps with literal-union types; `:variant`, `:removable`, `:duplicates` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    tagEnter: motion.duration.fast
+    tagExit: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the input expands to full inline-size of
+        its container (typical mobile pattern). Tags wrap to
+        many rows naturally; consider switching `maxTags` to a
+        lower threshold to surface a "+N more" affordance
+        earlier. For constrained variant, the suggestion
+        listbox may degrade to a bottom-anchored sheet (same
+        pattern as Combobox at this breakpoint).
+    - at: breakpoint.md
+      change: >-
+        Above this width, the input renders as authored — fixed
+        inline-size with tags wrapping inside.
+
+events:
+  - name: tagAdd
+    payload: >-
+      `{ value: string }`. Fires when a new tag is committed —
+      by Enter, comma, blur, or programmatic add. For paste
+      operations that split into multiple tags, fires once per
+      tag.
+    frameworkNotes:
+      webComponents: >-
+        `tagAdd` CustomEvent on the host with
+        `event.detail = { value }`.
+      react: >-
+        `onTagAdd(value: string)` callback. React Aria's
+        `useTagGroup` does not provide this directly; consumers
+        wrap their own state.
+      angularSignals: >-
+        `output<string>('tagAdd')`.
+      vue: >-
+        `@tag-add` event with payload `{ value }`.
+
+  - name: tagRemove
+    payload: >-
+      `{ value: string, source: 'removeButton' | 'backspace' | 'programmatic' }`.
+      Distinguishes how the tag was removed. The `backspace`
+      source covers both Backspace-at-empty-input deletion
+      and Delete on a selected tag.
+    frameworkNotes:
+      webComponents: >-
+        `tagRemove` CustomEvent with
+        `event.detail = { value, source }`.
+      react: >-
+        `onTagRemove(value, source)` callback.
+      angularSignals: >-
+        `output<{ value: string, source: TagRemoveSource }>('tagRemove')`.
+      vue: >-
+        `@tag-remove` event with payload `{ value, source }`.
+
+  - name: valueChange
+    payload: >-
+      The complete current value array. Fires after every
+      `tagAdd` and `tagRemove`. Useful for `v-model`-style
+      controlled-pattern or for syncing form state.
+    frameworkNotes:
+      webComponents: >-
+        `valueChange` CustomEvent with `event.detail = { value: string[] }`.
+      react: >-
+        `onValueChange(value: string[])` controlled-pattern
+        callback.
+      angularSignals: >-
+        `output<string[]>('valueChange')`.
+      vue: >-
+        `@update:modelValue` for `v-model`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the input. The tag list itself is not in
+        the tab order (tags are reached via ArrowKeys from the
+        input, not via Tab). Tab from the input moves to the
+        next document focusable.
+    - keys: Enter or comma (focus on input with non-empty value)
+      expected: >-
+        Commits the current input text as a tag. Input clears;
+        focus stays on input ready for next typing. Comma may
+        be replaced by other separator characters per
+        consumer configuration (semicolon, newline).
+    - keys: 'Backspace (focus on input, input empty)'
+      expected: >-
+        First press: selects the last tag (visual highlight via
+        `aria-selected` or `data-selected`). Second press:
+        removes the selected tag. Some implementations remove
+        on first Backspace (faster but accident-prone);
+        canonical APG-aligned behaviour is two-step.
+    - keys: ArrowLeft (focus on input, input empty)
+      expected: >-
+        Selects the last tag. Subsequent ArrowLeft moves
+        selection to the previous tag; ArrowRight moves toward
+        the input.
+    - keys: 'Delete (selected tag)'
+      expected: >-
+        Removes the selected tag immediately. Focus moves to
+        the next tag (or to input if last tag removed).
+    - keys: 'Escape (selected tag)'
+      expected: >-
+        Deselects the tag without removing. Focus returns to
+        the input.
+  announcements:
+    - trigger: Tag added
+      expected: >-
+        SR announces "<value> added" via a polite live region
+        (`aria-live="polite"` on a hidden status element). The
+        tag-list itself is announced as a list when navigated;
+        the live region carries the transient confirmation.
+    - trigger: Tag selected via Backspace or ArrowLeft
+      expected: >-
+        SR announces "<value>, selected, list item, X of Y"
+        where X is position. The selection state comes from
+        `aria-selected="true"` on the tag.
+    - trigger: Tag removed
+      expected: >-
+        SR announces "<value> removed" via the live region.
+        The tag list updates; subsequent navigation no longer
+        encounters the removed tag.
+    - trigger: Duplicate value rejected
+      expected: >-
+        SR announces "<value> already added" via the
+        polite live region; `aria-invalid="true"` set
+        on the input briefly. The rejection is audibly
+        explicit, not silent.
+  axeRules:
+    - aria-required-attr
+    - aria-valid-attr-value
+    - aria-input-field-name
+    - color-contrast
+    - duplicate-id-active
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps free-text / constrained / creatable.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg.
+  - figma: Removable
+    code: removable
+    type: Boolean
+    notes: Toggles the per-tag remove button slot. Read-only inputs (display historical tags) set false.
+  - figma: Duplicates
+    code: duplicates
+    type: Boolean
+    notes: >-
+      Default false (reject duplicates). True for use cases
+      where the same value may legitimately appear multiple
+      times (rare; typically false).
+  - figma: Max Tags
+    code: maxTags
+    type: Variant
+    notes: >-
+      none / low / medium / high. Drives the "+N more"
+      affordance threshold and surfaces an inline error when
+      the user attempts to exceed.
+  - figma: Has Suggestions
+    code: suggestions
+    type: Boolean
+    notes: For constrained / creatable variants. Toggles the suggestion listbox below the input.
+  - figma: Placeholder
+    code: placeholder
+    type: Text
+  - figma: Tag Label
+    code: tagLabel
+    type: Text
+    notes: Per-tag content; typically the same as the underlying value but may differ (e.g. value=user-id, label=display-name).
+  - figma: Tag Icon
+    code: tagIcon
+    type: Instance Swap
+    notes: Optional leading icon per tag (avatar for user-tags, color swatch for label-tags).
+
+formIntegration:
+  name: >-
+    The internal `<input>` carries the form `name` attribute when
+    free-text variant is used and the input value should
+    contribute (rare); more commonly the consumer wires a hidden
+    `<input type="hidden">` per tag with the same `name`,
+    matching `<select multiple>` native behaviour. Or the
+    consumer wires form-state via React Hook Form / Vue v-model.
+  formData: >-
+    Multi-value commits as multiple FormData entries with the
+    same key (one entry per tag), matching `<select multiple>`
+    and `<input multiple>` native behaviours. The canonical
+    serialization is `value[]=tag1&value[]=tag2&value[]=tag3`
+    or `value=tag1&value=tag2&value=tag3` depending on backend
+    expectation. Avoid comma-joining tags into a single FormData
+    entry — backends would have to re-split.
+  reset: >-
+    `form.reset()` restores the tag list to its `defaultValue`
+    (typically empty). Selected-tag highlight clears; input
+    value clears; `aria-invalid` clears. Consumers managing
+    framework state outside the DOM need an explicit reset
+    hook (`onReset` listener on the form syncs).
+  validation: >-
+    `required: true` triggers HTML5 validation when the tag
+    list is empty (canonical via the inner input's
+    `required`). `maxTags` violations use `setCustomValidity()`
+    plus `aria-invalid` on the input. The inline-error pattern
+    surfaces user-facing messages via `aria-describedby`. For
+    constrained variant, custom validators per-tag (e.g.
+    "must be valid email") are consumer-configured; failed tags
+    are not committed and surface inline error.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Tag-list inline order reverses logically — first-added tag
+      appears at the inline-start (visual right in RTL).
+      ArrowLeft / ArrowRight keyboard navigation follows logical
+      direction (ArrowLeft moves toward inline-start in both
+      LTR and RTL; canonical model; in RTL contexts SR users
+      may experience this as "moving toward the visual right",
+      which is correct because tag order is also visually-
+      right-first). The remove button on each tag moves to the
+      inline-end of the tag (visual left in RTL).
+  textExpansion: >-
+    Tag labels grow with translation; tags wrap to additional
+    rows naturally. Long-text labels (DE / RU / FI) may force
+    wider tags than designed; allow tag inline-size to grow
+    intrinsically. Avoid fixed tag widths. The placeholder text
+    expansion follows Input's expansion rules; consider longer
+    placeholders ("Add tag…" → "Schlagwort hinzufügen…")
+    forcing the input to a minimum inline-size sufficient to
+    show full placeholder.
+
+performance:
+  - name: tagCountVisibleThreshold
+    metric: tag-count
+    threshold: 50
+    unit: tags
+    rationale: >-
+      Above ~50 visible tags, render performance degrades
+      (each tag is a DOM subtree with its own remove button)
+      and visual scannability collapses. For inputs that
+      legitimately hold many tags (a CRM contact's labels
+      across years), implement a "+N more" affordance with
+      modal/popover expansion of the full list, virtualize
+      the tag list, or paginate. Below 50, render all
+      visible.
+  - name: pasteSplitBudget
+    metric: paste-character-count
+    threshold: 10000
+    unit: characters
+    rationale: >-
+      Pasting >10k characters (a CSV column dump) into
+      TagInput is a misuse signal — likely the user wants a
+      bulk-import flow rather than per-tag entry. Above the
+      threshold, surface a "Paste detected — open bulk
+      import?" prompt instead of attempting to split into
+      tags. Below the threshold, split-and-validate inline.
+
+whenToUse:
+  use: >-
+    For multi-value inputs where the user benefits from seeing
+    all selected values inline as removable tokens — email
+    recipient pickers, label / topic editors, filter-tag
+    composers, multi-attribute search inputs. The visible-state
+    feedback is the canonical advantage over Combobox-multi
+    (count-display) and Select-multi (no-typeahead).
+  avoid: >-
+    For single-value selection — that is `Combobox`, `Select`,
+    or `Input`. For free-text without multi-value semantics —
+    plain `Input`. For multi-select where the count is
+    sufficient and inline tokens would crowd the layout —
+    `Combobox[multi-select]` with count display. For very
+    long lists (50+ tags) where wrapping breaks the layout —
+    redesign with bulk-import flow.
+  vsRelated:
+    - id: combobox
+      difference: >-
+        `Combobox[multi-select]` displays the selection count
+        in the input ("3 selected") rather than as inline
+        tokens. `TagInput` shows the tokens. Use Combobox when
+        screen real estate is constrained or the selection
+        count is bounded; use TagInput when the user benefits
+        from continuously seeing what they have selected.
+    - id: select
+      difference: >-
+        `Select[multi]` is a fixed-list multi-picker without
+        text input; `TagInput` may accept free text (creatable
+        variant) and renders selected values as inline tokens.
+        Select is for bounded fixed lists; TagInput is for
+        open-ended or visible-accumulation use cases.
+    - id: input
+      difference: >-
+        `Input` accepts free-text without structured multi-
+        value semantics — the user types one value. `TagInput`
+        structures multi-value input with explicit per-value
+        tokens, paste-split, and per-value validation.
+
+notes: >-
+  TagInput vocabulary varies: Material 3 calls this "Chip
+  input"; Atlassian uses "Tag picker"; Polaris uses "Tag" but
+  documents tag-input separately. Radix and Headless UI do
+  not ship TagInput as a primitive; consumers compose it from
+  Combobox plus Tag rendering, or use third-party libraries
+  (react-tag-input, downshift). The canonical "TagInput" here
+  matches the Material / Atlassian shape — input plus
+  inline-token list. The keyboard contract (Backspace at
+  empty input deletes last tag) is the most-overlooked APG-
+  aligned behaviour and the most-frequently broken.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+  - https://react-spectrum.adobe.com/react-aria/TagGroup.html
+  - https://react-spectrum.adobe.com/react-aria/ComboBox.html
+  - https://m3.material.io/components/chips/overview
+  - https://atlassian.design/components/tag-group/examples
+  - https://carbondesignsystem.com/components/tag/usage/
+  - https://polaris.shopify.com/components/selection-and-input/tag
+
+lastReviewed: '2026-04-29'
