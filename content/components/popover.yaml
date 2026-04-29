@@ -1,0 +1,738 @@
+id: popover
+name: Popover
+description: >-
+  A non-modal floating surface anchored to a trigger element, used to
+  surface contextual content the user reads or acts on without leaving
+  the underlying view. Distinct from Modal (always centred and
+  blocking), Drawer (edge-anchored, may be modal), and Tooltip
+  (non-interactive, hover-driven, descriptive only). Popover content is
+  interactive — buttons, forms, lists — and the user may tab into it.
+
+anatomy:
+  - id: trigger
+    required: true
+    purpose: >-
+      Consumer-provided activator that owns the popover. Not rendered
+      by the Popover component itself — the consumer wires their own
+      Button (or other interactive element) and the Popover component
+      attaches the open/close behaviour and ARIA wiring
+      (aria-haspopup, aria-expanded, aria-controls) to it. The
+      anatomy diagram shows the trigger to clarify the
+      anchor-and-floating-surface relationship.
+    layout:
+      row: 1
+      col: 1
+      span: 4
+    figma:
+      type: instance
+      hint: Consumer's Button or other activator; in Figma the Popover frame is anchored to but does not contain the trigger
+    code:
+      slot: trigger
+      semantic: consumer-provided
+    a11y:
+      hint: >-
+        Trigger carries `aria-haspopup="dialog"` (or "menu" for
+        menu-style popovers), `aria-expanded` reflecting the popover
+        state, and `aria-controls` referencing the container's id.
+        Focus stays on the trigger after open by default; some
+        patterns move focus into the popover content (e.g. when the
+        popover hosts a form). The trigger is not part of the
+        Popover component's own DOM — the consumer renders it.
+
+  - id: container
+    required: true
+    purpose: >-
+      The popover panel itself — the bounded floating surface that
+      renders header, body, and footer. Positioned relative to the
+      trigger via the `side` and `align` properties; auto-flips to
+      the opposite side when the authored placement collides with the
+      viewport edge (when `flip: true`).
+    layout:
+      floating:
+        anchor: trigger
+        position: below
+        offset: 8
+      span: 8
+    figma:
+      type: frame
+      hint: Floating frame with optional tip; positioned via Auto-Layout offset relative to the anchor
+    code:
+      slot: container
+      semantic: dialog-or-region
+    a11y:
+      hint: >-
+        Apply `role="dialog"` for popovers that contain interactive
+        content. Label via `aria-labelledby` pointing at the title
+        slot, or `aria-label` when no visible title exists.
+        `aria-modal` is `false` (popovers are non-modal); focus is
+        not trapped, the user may tab out of the popover into the
+        rest of the page.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.lg
+
+  - id: arrow
+    required: false
+    purpose: >-
+      Optional tip indicator pointing from the popover container back
+      to the trigger. Visual reinforcement of the anchor relationship.
+      Always rendered for the `tip` variant, never for the `standard`
+      variant. Position auto-tracks the trigger when the popover
+      flips or shifts.
+    layout:
+      parent: container
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: rectangle
+      hint: 8×8 triangle clipped from a rotated square; position bound to container edge
+    code:
+      slot: arrow
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative; do not put `role` on it. The relationship between
+        trigger and popover is communicated by `aria-controls` and
+        focus order, not by the arrow.
+    tokens:
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+
+  - id: header
+    required: false
+    purpose: >-
+      Top region grouping title and close affordance. Optional —
+      smaller popovers (single-paragraph helper text, single-action
+      menus) often skip the header in favour of inline content.
+    layout:
+      parent: container
+      row: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; padding from container token
+    code:
+      slot: header
+      semantic: heading-region
+    a11y:
+      hint: >-
+        Header is a layout region, not a heading. The actual heading
+        semantics live on the title element inside.
+    tokens:
+      spacing:
+        padding: spacing.tight
+        gap: spacing.tight
+
+  - id: body
+    required: true
+    purpose: >-
+      Primary payload — the content the popover exists to surface.
+      May contain prose, forms, lists, or any interactive content.
+      Scrolls internally only when content exceeds the popover's
+      max-height; the canonical surface is sized to its content.
+    layout:
+      parent: container
+      row: 2
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; intrinsic-size by default
+    code:
+      slot: body
+      semantic: prose-or-form-or-list
+    a11y:
+      hint: >-
+        Body retains its native semantics. Interactive children
+        receive focus via Tab when the popover opens (after the
+        first focusable child if focus-on-open is configured).
+    tokens:
+      spacing:
+        padding: spacing.compact
+      typography:
+        size: text.sm
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
+
+  - id: close-button
+    required: false
+    purpose: >-
+      Optional explicit close affordance for popovers without
+      light-dismiss (`dismissible: false`) or for popovers whose
+      content discourages outside-click dismissal (forms with
+      unsaved input). Conventionally an "×" icon in the inline-end
+      corner of the header.
+    layout:
+      parent: header
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to dismissible vs explicit-close pattern
+    code:
+      slot: close
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Close" or "Close popover").
+        Escape always dismisses regardless of close-button presence;
+        click-outside dismisses when `dismissible` is true.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+axes:
+  variants:
+    - standard
+    - tip
+  properties:
+    - name: side
+      kind: enum
+      values: [top, right, bottom, left]
+    - name: align
+      kind: enum
+      values: [start, center, end]
+    - { name: dismissible, kind: primitive, of: boolean }
+    - { name: flip, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - focus-visible
+      - hover
+    data:
+      - closed
+      - opening
+      - open
+      - closing
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          User activates the trigger that owns the popover (button
+          click, keyboard activation). The popover is positioned
+          relative to the trigger before paint; aria-expanded flips
+          to true.
+      - from: opening
+        to: open
+        trigger: >-
+          The enter animation completes (or, under
+          prefers-reduced-motion reduce, immediately after
+          closed-to-opening). Focus may move into the popover for
+          form-style popovers; for menu-style or info-style popovers
+          focus typically stays on the trigger.
+      - from: open
+        to: closing
+        trigger: >-
+          User presses Escape, clicks outside the popover (when
+          dismissible is true), tabs focus past the popover content
+          and trigger together, or activates an action inside that
+          programmatically closes.
+      - from: closing
+        to: closed
+        trigger: >-
+          The exit animation completes (or immediately under reduced
+          motion). aria-expanded flips to false; focus restores to
+          the trigger if focus was inside the popover, otherwise
+          stays where it was.
+
+mismatches:
+  - figma: A popover drawn as a static panel adjacent to its trigger
+    code: A portal-mounted floating panel positioned by Floating UI / Popper / CSS anchor positioning, with light-dismiss handlers
+    consequence: >-
+      The Figma artifact captures position and visual treatment but
+      encodes none of the floating positioning, the auto-flip
+      behaviour, or the light-dismiss contract. Designers
+      approximating the canonical popover may not realise the
+      panel must escape its DOM container; developers shipping a
+      DOM-nested div lose z-index control, get clipped by parent
+      `overflow: hidden`, and fight stacking-context issues.
+    correct: >-
+      Document the portal mount and floating-positioning contract in
+      the canonical reference. The Figma file shows the visual
+      panel anchored to its trigger; the canonical reference
+      documents the DOM portal, the positioning library expectation,
+      and the light-dismiss / focus contract.
+
+  - figma: Auto-flip drawn as a separate side variant for each viewport edge
+    code: 'A single `flip: true` property that auto-positions when the authored side overflows'
+    consequence: >-
+      Designers see four distinct popovers (top, right, bottom, left)
+      in the design file; developers ship one with `flip: true`. The
+      mock at viewport-bottom shows the bottom-anchored variant
+      because the design file froze it; in production the popover
+      auto-flips to top and the design no longer represents reality.
+    correct: >-
+      Model `flip` as a property the consumer toggles. The Figma
+      component carries `side` as the authored preference; the
+      canonical reference documents that production rendering
+      flips when needed. Designers reviewing the rendered page
+      should expect the popover to land on the authored side
+      *unless* viewport collision forces a flip.
+
+  - figma: Tip arrow drawn as a separate decorative shape disconnected from the panel
+    code: An arrow rendered as a positioned pseudo-element or sub-component whose `inset-inline` updates with the trigger's bounding box
+    consequence: >-
+      Designers move the arrow manually when re-anchoring the
+      popover in mocks; developers wire the arrow to the trigger
+      programmatically. The mock and the production render disagree
+      on arrow placement when the popover shifts due to flip or
+      align changes.
+    correct: >-
+      Document the arrow as a slot whose position derives from the
+      trigger's bounding box. In Figma, parent the arrow inside the
+      Popover frame so it moves with the panel; in code, the
+      positioning library tracks both the panel and the arrow.
+
+  - figma: Modal popover variant drawn alongside the standard popover
+    code: There is no canonical "modal popover" — that pattern collapses to a Modal with edge-anchored positioning, which is just a Drawer
+    consequence: >-
+      Designers may invent a "popover with backdrop and focus trap"
+      variant; developers either ship it (creating a modal panel
+      that masquerades as a popover, confusing assistive tech) or
+      reject it (forcing a redesign late). The vocabulary blurs
+      between Popover, Drawer, and Modal.
+    correct: >-
+      Treat modal-vs-non-modal as a structural pattern boundary, not
+      a popover variant. If the surface is non-modal, it's a
+      Popover. If it's modal and edge-anchored, it's a Drawer with
+      `variant: modal`. If it's modal and centred, it's a Modal.
+      Document the three components with explicit
+      `whenToUse.vsRelated` pointers.
+
+mistakes:
+  - id: popover-as-modal
+    title: Popover with focus trap installed
+    description: >-
+      The popover is non-modal by canon, but the implementation
+      installs a focus trap (often copy-pasted from Modal). Tab
+      cycles within the popover; users cannot reach the rest of the
+      page without dismissing first. Behaviour matches Modal while
+      semantics claim Popover.
+    fix: >-
+      Remove the focus trap. Popover allows Tab to leave the panel;
+      the user may tab through the popover content, then continue
+      tabbing out into the page beneath. Light-dismiss (Escape +
+      outside-click) handles closure. If the surface genuinely needs
+      modality, redesign as a Modal or modal Drawer.
+
+  - id: popover-no-light-dismiss
+    title: Popover does not close on outside click or Escape
+    description: >-
+      The popover only closes when the trigger is re-activated.
+      Users learn to expect light-dismiss from the popover surface;
+      a popover that traps interaction without modality feels
+      broken. Escape unhandled also breaks the canonical dialog
+      contract.
+    fix: >-
+      Implement light-dismiss when `dismissible: true` (the canonical
+      default). Document-level Escape handler and outside-click
+      handler both close. The `dismissible: false` variant is
+      reserved for popovers hosting in-flight commits where
+      accidental dismissal would lose data.
+
+  - id: popover-positioning-broken-on-scroll
+    title: Popover does not reposition when the page scrolls
+    description: >-
+      The popover is positioned once on open with absolute
+      coordinates. When the user scrolls, the popover stays
+      anchored to its initial position while the trigger moves —
+      visual disconnect.
+    fix: >-
+      Use a positioning library that tracks the trigger's
+      bounding-box on scroll and resize (Floating UI's autoUpdate,
+      Popper's eventListeners). For minimal cases, listen to scroll
+      events on ancestors of the trigger and reposition; for
+      production, the library is the right answer.
+
+  - id: popover-z-index-clipping
+    title: 'Popover clipped by parent `overflow: hidden`'
+    description: >-
+      The popover is rendered as a child of its trigger's DOM
+      ancestor. A parent with `overflow: hidden` (a Card, a
+      scrollable container) clips the popover when it extends
+      beyond. Z-index does not help because the clipping is at
+      paint time.
+    fix: >-
+      Render the popover via a portal at the document root (or a
+      dedicated overlay container). Native `popover` attribute and
+      `dialog` element with `popover="auto"` auto-portal in
+      Baseline 2024+ browsers. For older support, use a
+      `Portal` / `Teleport` primitive.
+
+  - id: popover-no-aria-expanded
+    title: Trigger missing `aria-expanded` toggle
+    description: >-
+      The trigger is a styled button with no `aria-expanded`. SR
+      users have no signal whether the popover is currently open.
+      `aria-haspopup` may also be missing.
+    fix: >-
+      Trigger always carries `aria-haspopup="dialog"` (or "menu"
+      for menu-style popovers) and `aria-expanded` toggled in sync
+      with the open/closed state. `aria-controls` references the
+      popover container's id.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-popover>` host plus the native HTML `popover` attribute on `<dialog popover>` for browsers that support it; named slots for `header` / `body` / `arrow` / `close`; trigger declared via `id` reference
+    variantMechanism: attributes (`variant="tip"`, `side="bottom"`, `align="start"`, `dismissible`, `flip`); `data-state="open|closed|opening|closing"` for CSS
+  react:
+    structureMechanism: Radix `Popover.Root` / `Popover.Trigger` / `Popover.Portal` / `Popover.Content` compositing the slots; positioning via Floating UI; React Aria `usePopover` provides an alternative composition
+    variantMechanism: props with class-variance-authority for variant; `side`, `align`, `sideOffset`, `alignOffset` props on `Popover.Content`; `data-state` attribute exposed for styling
+  angularSignals:
+    structureMechanism: Angular CDK Overlay with FlexibleConnectedPositionStrategy; `<cdk-overlay>` template plus content projection for header / body / arrow
+    variantMechanism: input<'standard' | 'tip'>(); input<'top' | 'right' | 'bottom' | 'left'>(); `[align]` input maps to overlay's connected-position prefs
+  vue:
+    structureMechanism: Headless UI `<Popover>` / `<PopoverButton>` / `<PopoverPanel>`; positioning via Floating UI's `useFloating` composable
+    variantMechanism: defineProps with literal-union types; `:side`, `:align` props; `data-state` for CSS
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.instant
+    flip: motion.duration.fast
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, popovers with rich body content (forms,
+        multi-paragraph prose) may degrade to a bottom-anchored
+        Drawer pattern — the `side` and `align` properties are
+        ignored, the panel slides up from the bottom edge, and a
+        backdrop appears. Lightweight tip-variant popovers continue
+        to render anchored to their trigger.
+    - at: breakpoint.md
+      change: >-
+        Above this width, all variants render as authored. The
+        floating positioning honours `side` plus `align`; auto-flip
+        and shift work as designed.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` after the popover has finished entering, `false`
+      after it has finished exiting. Fires after the transition
+      settles, not at the start.
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent on the host with
+        `event.detail = { open: boolean }`; native `<dialog popover>`
+        emits `toggle` event with old/new states.
+      react: >-
+        `onOpenChange(open: boolean)` controlled-pattern callback
+        (Radix Popover, Headless UI Popover).
+      angularSignals: >-
+        `output<boolean>('openChange')`; pair with `[(open)]`
+        two-way binding.
+      vue: >-
+        `@update:open` for `v-model:open`. Headless UI also exposes
+        a `<PopoverGroup>` parent to coordinate sibling popovers.
+
+  - name: dismiss
+    payload: >-
+      `{ reason: 'escape' | 'outsideClick' | 'closeButton' | 'focusOutside' }`.
+      Distinguishes user-initiated dismissal paths. The
+      `focusOutside` reason fires when Tab moves focus past the
+      popover and trigger, completing the canonical "tab past to
+      dismiss" pattern.
+    frameworkNotes:
+      webComponents: >-
+        Native `<dialog popover>` fires a single `toggle` event;
+        bespoke wrappers re-emit a `dismiss` CustomEvent with
+        reason-discrimination from the source event.
+      react: >-
+        Radix Popover does not expose a unified dismiss event;
+        consumers wire `onPointerDownOutside`, `onEscapeKeyDown`,
+        and `onFocusOutside` separately and synthesise the union.
+        React Aria's `useOverlayTrigger` exposes `onClose(event)`
+        with the source event.
+      angularSignals: >-
+        `output<DismissReason>('dismiss')` paralleling `openChange`.
+      vue: >-
+        `@dismiss` event with payload `{ reason }`; consumers needing
+        the reason wrap `@close` from the underlying library.
+
+  - name: positionChange
+    payload: >-
+      `{ side, align }` with the actual rendered placement after
+      auto-flip and shift. Differs from the authored `side` and
+      `align` props when viewport collision triggers a flip. Lets
+      consumers re-anchor satellite UI (toasts, secondary popovers)
+      to the actual rendered position.
+    frameworkNotes:
+      webComponents: >-
+        `positionChange` CustomEvent with `event.detail = { side, align }`.
+        Optional event — many hosts do not surface the actual rendered
+        placement.
+      react: >-
+        Floating UI's `useFloating` returns the `placement` value;
+        Radix Popover does not emit a discrete event but the
+        `data-side` / `data-align` attributes on `Popover.Content`
+        reflect the actual rendered placement.
+      angularSignals: >-
+        `output<{ side: PopoverSide, align: PopoverAlign }>('positionChange')`.
+      vue: >-
+        `@position-change` event; alternative is to bind `:side` and
+        `:align` and read them in the parent.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (with focus on trigger, popover closed)
+      expected: >-
+        Focus moves to the next focusable in the document order. The
+        trigger does not auto-open the popover on focus; Enter or
+        Space activates.
+    - keys: Enter or Space (with focus on trigger)
+      expected: >-
+        Activates the trigger; popover opens. Focus stays on the
+        trigger by default for menu-style and info-style popovers;
+        moves into the popover body for form-style popovers
+        (consumer-configured).
+    - keys: Tab (with popover open, focus on trigger)
+      expected: >-
+        Focus moves into the popover body, landing on the first
+        focusable child. The popover does NOT trap focus — further
+        Tab cycles eventually moves focus past the popover into the
+        rest of the page, and the popover closes via the
+        `focusOutside` dismiss path.
+    - keys: 'Escape (with popover open)'
+      expected: >-
+        Closes the popover regardless of where focus is (inside or
+        on the trigger). Focus restores to the trigger.
+    - keys: Shift+Tab (with focus inside popover, on the first focusable)
+      expected: >-
+        Focus returns to the trigger. Continued Shift+Tab moves to
+        the previous document focusable; the popover closes via
+        `focusOutside`.
+  announcements:
+    - trigger: Popover opens
+      expected: >-
+        SR announces the popover content via the dialog labelling
+        relationship (`aria-labelledby` if present, or
+        `aria-label`). The trigger's `aria-expanded` flips to true,
+        announced as state change. Focus may stay on the trigger
+        (menu / info style) or move into the popover (form style);
+        the announcement follows focus.
+    - trigger: Popover closes
+      expected: >-
+        Trigger's `aria-expanded` flips to false; the trigger's
+        accessible name is re-announced when focus restores there.
+        No automatic close announcement is required for the popover
+        itself.
+    - trigger: Popover auto-flips on viewport collision
+      expected: >-
+        No SR announcement — the auto-flip is purely visual. Focus
+        is unaffected; the popover content remains the same.
+  axeRules:
+    - aria-dialog-name
+    - aria-required-attr
+    - aria-allowed-role
+    - color-contrast
+    - focus-order-semantics
+    - aria-hidden-focus
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / tip. Tip variant always renders the arrow.
+  - figma: Side
+    code: side
+    type: Variant
+    notes: top / right / bottom / left. Authored placement preference; auto-flips when flip=true and viewport collides.
+  - figma: Align
+    code: align
+    type: Variant
+    notes: start / center / end. Aligns the popover along the perpendicular axis to side.
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: >-
+      Toggles light-dismiss handlers (outside-click + focus-outside).
+      Escape always dismisses regardless of this property.
+  - figma: Flip
+    code: flip
+    type: Boolean
+    notes: >-
+      Auto-flips to opposite side when authored placement collides
+      with viewport. Generally true; disable for popovers whose
+      visual context requires a fixed side.
+  - figma: Has Arrow
+    code: arrow
+    type: Boolean
+    notes: >-
+      Auto-true when variant=tip. May be true on standard variant for
+      design systems that ship arrow-on-everything; canonical default
+      is false on standard.
+  - figma: Has Header
+    code: header
+    type: Boolean
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Body
+    code: body
+    type: Instance Swap
+    notes: Swap the body content slot (form, prose, list, custom layout).
+  - figma: Has Close Button
+    code: close
+    type: Boolean
+
+formIntegration:
+  name: >-
+    Popover is a container, not a form control — it has no `name`
+    attribute. Forms hosted inside the popover carry their own
+    `name` attributes on their fields. Popover-hosted forms are
+    common (filter pickers, inline edit forms); the form lifecycle
+    is independent of the popover's open state.
+  formData: >-
+    Forms inside the popover submit normally via their own `<form>`
+    element. The popover itself contributes nothing to FormData.
+    Submit-and-close patterns commonly call the popover close
+    handler from the form's onSubmit; submit-without-close patterns
+    keep the popover open after a successful submit.
+  reset: >-
+    Forms inside the popover respond to `form.reset()` independently
+    of the popover's open state. Closing via Escape, outside-click,
+    or focus-outside does not reset the form. Consumers wanting
+    "discard on dismiss" call `form.reset()` from the popover's
+    onClose handler.
+  validation: >-
+    Forms inside the popover use HTML5 validation as normal.
+    Validation failures focus the first invalid field — the field
+    is reachable because Popover does not trap focus, so focus
+    lands naturally; the popover stays open until the user
+    explicitly dismisses or successfully submits.
+
+i18n:
+  rtl:
+    mirroring: >-
+      The `side` property is direction-neutral (top / right / bottom
+      / left are physical directions, not logical). The `align`
+      property *is* logical: start aligns to the inline-start of the
+      perpendicular axis (visual left in LTR, visual right in RTL).
+      Tip-arrow position follows the align logical axis. Close-button
+      position inside the header follows the existing logical
+      pattern (close on inline-end). Auto-flip behaviour is
+      symmetric — flipping from right to left in LTR mirrors
+      flipping from left to right in RTL.
+  textExpansion: >-
+    Popover panels size to their content by default; long titles
+    and labels grow naturally within the panel's max-inline-size.
+    For `variant: tip` with constrained width, German and Russian
+    titles risk wrap — `variant: standard` with a larger inline-size
+    budget is the canonical default in long-text locales. Body
+    content scrolls within the popover's max-block-size; footer
+    buttons may wrap to two rows under heavy expansion.
+
+performance:
+  - name: stackDepth
+    metric: open-popover-count
+    threshold: 3
+    unit: popovers
+    rationale: >-
+      Multiple popovers may legitimately be open simultaneously on
+      desktop (e.g. a primary popover plus a secondary popover
+      anchored to a button inside it). The canonical practical
+      maximum is 3; above this the visual hierarchy becomes
+      confusing and focus management complexity exceeds the design
+      benefit. Most real-world use stays at 1.
+  - name: positionUpdateBudget
+    metric: per-frame-cost
+    threshold: 4
+    unit: ms
+    rationale: >-
+      The positioning library updates the popover's transform on
+      every scroll and resize frame. Position computation must stay
+      under 4ms (one quarter of the 16ms 60fps budget) to leave
+      headroom for the rest of the page. Floating UI hits this
+      budget by default; bespoke implementations should profile
+      against it on low-tier mobile.
+
+whenToUse:
+  use: >-
+    When the user needs interactive contextual content anchored to a
+    specific trigger — filter pickers, inline edit forms,
+    contextual help with actions, action menus, color pickers. The
+    user reads or acts on the content without leaving the
+    underlying view; the popover dismisses on Escape or
+    outside-click without ceremony.
+  avoid: >-
+    For blocking decisions or destructive confirmations — that is
+    `Modal` (or `Modal` with `variant: alertdialog`). For
+    edge-anchored content alongside the underlying view — that is
+    `Drawer`. For non-interactive descriptive hover-text — that is
+    `Tooltip`. For navigation menus with multiple destinations —
+    that is `MenuButton` plus a list of `Link`s, although
+    menu-style popovers with `aria-haspopup="menu"` are a
+    legitimate adjacent pattern.
+  vsRelated:
+    - id: modal
+      difference: >-
+        `Modal` is always centred and always blocking (focus trap +
+        inert siblings). `Popover` is anchored to a trigger and
+        non-modal (focus may leave). Modal severs the spatial
+        relationship to the underlying view; Popover preserves it.
+    - id: drawer
+      difference: >-
+        `Drawer` is anchored to a *viewport edge*; `Popover` is
+        anchored to a *trigger element*. Drawer can be modal or
+        non-modal; Popover is always non-modal. Drawer is for
+        substantial content that accompanies the page; Popover is
+        for contextual content tied to a specific trigger.
+    - id: tooltip
+      difference: >-
+        `Tooltip` is non-interactive (hover or focus reveals
+        descriptive text). `Popover` is interactive (the user may
+        tab into the body and click controls). Tooltip dismisses
+        on blur or pointer-leave automatically; Popover dismisses
+        on explicit user action (Escape, outside-click).
+    - id: menu-button
+      difference: >-
+        `MenuButton` opens a `role="menu"` with menu-keyboard
+        semantics (ArrowKeys navigate, typeahead, single-action
+        commit). `Popover` opens a `role="dialog"` containing
+        arbitrary interactive content. The aria-haspopup value
+        differentiates: "menu" for MenuButton, "dialog" for
+        Popover.
+
+notes: >-
+  Popover sits between Modal (always modal) and Tooltip (never
+  interactive) and shares a positioning library lineage with both
+  Tooltip and (some) MenuButton implementations. The native HTML
+  `popover` attribute (Baseline 2024) provides a portal-and-stacking
+  primitive that all three patterns can build on; the canonical
+  Popover documents the ARIA contract layered above the primitive.
+  Bespoke implementations diverge most on (a) auto-flip behaviour and
+  (b) which dismiss reasons emit a unified event versus separate
+  callbacks.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+  - https://developer.mozilla.org/en-US/docs/Web/API/Popover_API
+  - https://floating-ui.com/
+  - https://www.radix-ui.com/primitives/docs/components/popover
+  - https://react-spectrum.adobe.com/react-aria/usePopover.html
+  - https://headlessui.com/react/popover
+  - https://polaris.shopify.com/components/overlays/popover
+  - https://carbondesignsystem.com/components/popover/usage/
+  - https://atlassian.design/components/popup/examples
+  - https://m3.material.io/components/menus/overview
+
+lastReviewed: '2026-04-29'
