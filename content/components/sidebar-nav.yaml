@@ -1,0 +1,756 @@
+id: sidebar-nav
+name: Sidebar Nav
+description: >-
+  A persistent navigation region pinned to a viewport edge —
+  typically the inline-start (visual left in LTR) on desktop,
+  collapsing to a drawer on mobile. Holds links to independent
+  pages or top-level sections of an application. Distinct from
+  Tabs (in-page content switching), MenuButton (transient action
+  surface), and Drawer-as-navigation (the modal on-demand variant
+  of this pattern). SidebarNav is the canonical pattern for
+  multi-section apps with persistent global navigation.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded navigation region. Spans the block-size of its
+      parent (typically the full viewport block-size for app
+      shells). Carries the `<nav>` landmark with an
+      `aria-label`. Visual treatment: distinct background or
+      border separating it from main content.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Full-block-size auto-layout vertical frame; pinned to inline-start of viewport
+    code:
+      slot: root
+      semantic: nav-landmark
+    a11y:
+      hint: >-
+        Apply `<nav>` element with `aria-label="Primary"` (or
+        equivalent — for apps with multiple navigations, label
+        each distinctly). The nav landmark allows SR users to
+        jump here via landmark navigation. Avoid stacking
+        multiple `aria-label="Navigation"` regions on the same
+        page; each should have a distinguishing label.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+      color:
+        background: color.surface.sunken
+        border: color.border.subtle
+
+  - id: group
+    required: false
+    purpose: >-
+      Optional grouping of related items with a non-interactive
+      label. Used for categorising long item lists (Account,
+      Settings, Help). One anatomy slot describes the role;
+      multiple instances render per group.
+    layout:
+      parent: root
+      row: 1
+      span: full
+      repeats: 2
+    figma:
+      type: frame
+      hint: Vertical frame with optional label heading and items inside
+    code:
+      slot: group
+      semantic: group-region
+    a11y:
+      hint: >-
+        Group is a structural grouping. The group label inside
+        is a heading element (commonly h3 or h4 depending on
+        document outline) when the label conveys hierarchical
+        structure; or `aria-labelledby` referencing a
+        non-heading label.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: group-label
+    required: false
+    purpose: >-
+      Heading or label for a group of items. Visible in expanded
+      variant; visually-hidden in collapsed variant (kept in
+      DOM for SR users).
+    layout:
+      parent: group
+      row: 1
+      span: full
+    figma:
+      type: text
+      hint: Heading text style; uppercase or small-caps for category dividers
+    code:
+      slot: group-label
+      semantic: heading-or-strong
+    a11y:
+      hint: >-
+        Heading element when the label carries hierarchical
+        meaning. Visually-hidden in collapsed variant via
+        clip-path or sr-only class — never `display: none`
+        (which removes from SR tree).
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.medium
+        tracking: tracking.wide
+      color:
+        foreground: color.text.muted
+
+  - id: item
+    required: true
+    purpose: >-
+      Individual navigation link. Carries the `<a href>` to its
+      target page, the accessible name (link text), and the
+      current-page state via `aria-current="page"` when active.
+      One anatomy slot describes the role; multiple instances
+      render per nav item.
+    layout:
+      parent: root
+      row: 2
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Nav item component instance with active and inactive variants
+    code:
+      slot: item
+      semantic: link
+    a11y:
+      hint: >-
+        Real `<a href="...">` with the target route. The
+        currently-active item carries `aria-current="page"` —
+        SR announces "current page" before the link text.
+        Avoid `aria-current="true"` (less specific) or
+        bespoke `data-active` (no SR signal). Disabled links
+        are rendered as plain text or as `<a>` with
+        `aria-disabled="true"` plus removed `href`.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+        ring: color.border.focus
+
+  - id: item-icon
+    required: false
+    purpose: >-
+      Optional leading icon per nav item. Required for
+      collapsed variant (where the icon is the only visible
+      element). Decorative when paired with a visible label;
+      meaningful in collapsed variant where it must
+      communicate the destination.
+    layout:
+      parent: item
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance per item; required in collapsed variant
+    code:
+      slot: item-icon
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative when paired with a visible label
+        (`aria-hidden="true"`). For collapsed variant where
+        the label is visually-hidden, the icon is still
+        decorative because the visually-hidden label remains
+        in the DOM for SR users — the icon never needs an
+        aria-label for collapsed-variant nav items.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: item-label
+    required: true
+    purpose: >-
+      The text content of each nav item. Visible in expanded
+      variant; visually-hidden in collapsed variant (kept in
+      DOM for SR users). Acts as the link's accessible name.
+    layout:
+      parent: item
+      row: 1
+      col: 2
+      span: 4
+    figma:
+      type: text
+      hint: Item text style; visibility property bound to expanded state
+    code:
+      slot: item-label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. The nav item's accessible name. In
+        collapsed variant, hide visually with sr-only / clip-
+        path technique — NEVER `display: none` (which removes
+        from accessible tree, leaving an icon-only link with
+        no accessible name).
+    tokens:
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+
+  - id: badge
+    required: false
+    purpose: >-
+      Optional notification count or status indicator at the
+      inline-end of the item label. Shows unread counts,
+      attention-required indicators, or new-feature pulses.
+    layout:
+      parent: item
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Badge component instance; visibility bound to "has notification" state
+    code:
+      slot: badge
+      semantic: presentational-or-status
+    a11y:
+      hint: >-
+        For numeric badges, append the count to the link's
+        accessible name via visually-hidden text or `aria-label`
+        composition ("Inbox, 3 unread"). Decorative-only
+        badges (a pulse for "new") use `aria-hidden="true"`
+        with the link's accessible name carrying the meaning
+        explicitly ("Settings (new)").
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.pill
+      typography:
+        size: text.xs
+        weight: weight.semibold
+      color:
+        background: color.accent.bg
+        foreground: color.accent.fg
+
+  - id: footer
+    required: false
+    purpose: >-
+      Optional region pinned at the inline-end of the sidebar
+      (visual bottom for vertical sidebars). Hosts user-account
+      controls, sign-out, theme toggles, version info — content
+      that should remain accessible regardless of scroll
+      position in the main item list.
+    layout:
+      parent: root
+      row: 3
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame pinned to bottom of sidebar
+    code:
+      slot: footer
+      semantic: contentinfo-region
+    a11y:
+      hint: >-
+        Footer content is part of the sidebar's nav landmark
+        but acts as a sub-region. For user-account flyouts,
+        the footer typically hosts a MenuButton (avatar +
+        dropdown). For static info, plain content is
+        sufficient.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+
+axes:
+  variants:
+    - expanded
+    - collapsed
+  properties:
+    - { name: collapsible, kind: primitive, of: boolean }
+    - { name: hasFooter, kind: primitive, of: boolean }
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+    data:
+      - idle
+      - current-page
+    transitions:
+      - from: idle
+        to: current-page
+        trigger: >-
+          Page navigation lands the user on the route owned by
+          this nav item. The item's `aria-current="page"`
+          is set; visual treatment changes to indicate
+          current-page state. Other items in the sidebar lose
+          their current-page state (only one can be active at
+          a time).
+      - from: current-page
+        to: idle
+        trigger: >-
+          User navigates to a different page. The previously-
+          current item loses `aria-current="page"`; the new
+          current item gains it.
+
+mismatches:
+  - figma: SidebarNav drawn looking like vertical Tabs
+    code: A nav landmark with anchor links navigating to URL routes
+    consequence: >-
+      Designers may use SidebarNav and Tabs interchangeably for
+      "vertical list of links". Implementations following the
+      Figma file may ship `role="tablist"` for what is
+      semantically navigation; SR users hear "tab" and expect
+      in-page panel switching, but activating navigates to a
+      different URL. The mental model breaks.
+    correct: >-
+      Distinguish at the canonical level: SidebarNav navigates
+      between independent pages (URLs change); Tabs switch
+      between content panels in the same page (URL stays).
+      The semantic distinction drives the role (`<nav>` vs
+      `tablist`) and the DOM (anchors vs buttons-with-aria-
+      controls).
+
+  - figma: Collapsed variant drawn with icons but no tooltip on hover
+    code: Each item in collapsed variant has a Tooltip showing the label on hover or focus
+    consequence: >-
+      Designers compose collapsed-variant mocks with icon-only
+      items. Implementations following the design ship without
+      hover tooltips; pointer users hovering an icon see no
+      label, must guess from the icon glyph. Keyboard users
+      see no label either (focus does not reveal anything
+      beyond the visible icon).
+    correct: >-
+      Collapsed-variant items always have a Tooltip on hover/
+      focus revealing the full label. The label remains in
+      the DOM (visually-hidden) for SR users; the Tooltip is
+      a sighted-user affordance that surfaces it visually.
+      Document the pairing canonically.
+
+  - figma: Active page indicated by font-weight change alone
+    code: Active page indicated by `aria-current="page"` PLUS background fill PLUS leading accent strip
+    consequence: >-
+      Designers use a single visual change (bold text) to mark
+      active. Implementations following the design fail
+      WCAG 1.4.1 (Use of Color and 1.3.3 Sensory Characteristics)
+      — bold-only differentiation is not enough for SR users
+      (without `aria-current`) and is unreliable for users
+      with dyslexia or reduced contrast vision.
+    correct: >-
+      Triple-layer active-state differentiation: visual
+      (background fill + leading accent stripe + text colour
+      shift), accessible state (`aria-current="page"`), and
+      typography (font-weight increase). The
+      `aria-current="page"` is the source of truth; visuals
+      reinforce.
+
+  - figma: Sidebar drawn at fixed-width with no overflow handling
+    code: Sidebar with internal scroll for overflow; main content scrolls independently
+    consequence: >-
+      Designers fix the sidebar at one screen-height (typical
+      desktop mock at 1080p). Implementations following the
+      design break on shorter viewports — items below the
+      fold are clipped, with no scroll affordance. Mobile
+      especially affected.
+    correct: >-
+      Sidebar's internal item region scrolls independently
+      from main content. Footer (when present) pins to the
+      bottom; items between header (if present) and footer
+      scroll. Document the canonical scroll-behaviour: never
+      truncate items silently.
+
+mistakes:
+  - id: sidebar-no-aria-current
+    title: Active page not marked with `aria-current`
+    description: >-
+      The visual current-page state is shown (highlight,
+      icon-fill change, accent stripe) but `aria-current` is
+      missing from the active link. SR users hear no
+      indication of which page they are currently on; users
+      relying on screen reader for orientation are lost.
+    fix: >-
+      The active item carries `aria-current="page"` (most
+      specific value for navigation links). SR announces
+      "current page" before the link text. Update on every
+      navigation.
+
+  - id: sidebar-collapsed-display-none-label
+    title: 'Collapsed variant uses `display: none` to hide labels'
+    description: >-
+      Implementation hides labels in collapsed variant via
+      `display: none`. The labels are removed from the
+      accessibility tree; SR users hear icon-only links with
+      no accessible name (the icon's aria-hidden is correct
+      but now there is nothing else for the link's name).
+    fix: >-
+      Hide labels via the `sr-only` / clip-path technique that
+      keeps content in the accessibility tree but visually
+      removes it. The link's accessible name remains the
+      label text; SR users hear "Settings, link" while
+      pointer users see only the icon.
+
+  - id: sidebar-as-menubutton
+    title: Sidebar implemented as a Menu (role="menu")
+    description: >-
+      Implementation uses `role="menu"` and `role="menuitem"`
+      on the sidebar items. SR users hear "menu" and expect
+      menu-keyboard semantics (ArrowKeys auto-activate);
+      activation navigates to a URL, breaking the menu's
+      "select one command" mental model. Tab is captured by
+      menu semantics rather than allowing escape.
+    fix: >-
+      SidebarNav uses `<nav>` with anchor links (or a `<ul>`
+      of `<li>` containing `<a>`). Not menu, not menuitem,
+      not menubutton. Tab navigates through items as
+      independent links; ArrowKeys are not bound canonically
+      (Polaris and Spectrum do bind them as an enhancement,
+      but it is optional, not required by APG).
+
+  - id: sidebar-no-skip-link
+    title: Sidebar precedes main content without skip-to-main
+    description: >-
+      Sidebar appears first in the DOM. Keyboard users tabbing
+      into the page must traverse every sidebar link before
+      reaching main content. On a sidebar with 20+ items, this
+      adds 20+ Tab presses for every interaction with main
+      content.
+    fix: >-
+      Document-level "Skip to main content" link as the first
+      focusable element on the page (typically visually-hidden
+      until focused). Document this as a sibling of the
+      SidebarNav; it is the page's responsibility, not the
+      sidebar's, but the sidebar amplifies the need.
+
+  - id: sidebar-mobile-no-collapse
+    title: Sidebar always rendered on mobile
+    description: >-
+      Sidebar takes 240px of viewport width on a 360px-wide
+      mobile device. Main content gets 120px and is unusable.
+      Or sidebar collapses to icon-only without trigger to
+      re-expand.
+    fix: >-
+      On mobile (and below `breakpoint.md`), sidebar collapses
+      to an off-canvas Drawer pattern — invisible by default,
+      summoned via a trigger (typically a hamburger
+      menu-button in the page header). The Drawer becomes the
+      sidebar at narrow widths. Document the responsive
+      transition to Drawer in `responsive.breakpoints`.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-sidebar>` host wrapping a `<nav>` with internal `<ul>` of items; named slots for groups, footer, and the optional collapsible toggle
+    variantMechanism: attributes (`variant="collapsed"`, `collapsible`, `density="comfortable"`, `has-footer`); `data-state="expanded|collapsed"` for CSS
+  react:
+    structureMechanism: Custom `<Sidebar>` component composing `<nav>`, item lists, and footer; React Aria does not ship a SidebarNav primitive but provides `useNavigationItem` for nav-item semantics; routing libraries (Next.js, React Router) integrate via active-route-aware item components
+    variantMechanism: props with class-variance-authority for variant / density; `collapsible` boolean drives the toggle; controlled expansion state for animations
+  angularSignals:
+    structureMechanism: Angular Material `MatSidenav` plus `MatSidenavContainer` provides the layout pattern; or a custom directive on `<nav>` plus signal-based state
+    variantMechanism: input<'expanded' | 'collapsed'>(); `[collapsible]`, `[density]` host bindings
+  vue:
+    structureMechanism: Custom `<SidebarNav>` SFC composing `<nav>` with named slots for groups and footer; Vue Router's `<router-link>` provides active-route handling
+    variantMechanism: defineProps with literal-union types; `:variant`, `:collapsible` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    expandToggle: motion.duration.base
+    itemHover: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.md
+      change: >-
+        At and below, the sidebar collapses to an off-canvas
+        Drawer pattern — invisible by default, summoned via a
+        hamburger MenuButton trigger in the page header. The
+        Drawer's `variant: navigation` is the canonical
+        modal-mobile-sidebar pattern. Above `breakpoint.md`
+        the sidebar is persistent.
+    - at: breakpoint.lg
+      change: >-
+        Above this width, the authored variant (expanded vs
+        collapsed) renders persistently. Some apps use
+        breakpoint.xl as the auto-expand threshold (compact
+        sidebars on tablet, expanded on desktop); others
+        leave it as a user preference toggled via the
+        collapsible affordance.
+
+events:
+  - name: variantChange
+    payload: >-
+      `{ variant: 'expanded' | 'collapsed' }`. Fires when the
+      user toggles the sidebar variant via the collapsible
+      affordance (when `collapsible: true`). Lets consumers
+      persist the preference to localStorage.
+    frameworkNotes:
+      webComponents: >-
+        `variantChange` CustomEvent on the host with
+        `event.detail = { variant }`.
+      react: >-
+        `onVariantChange(variant)` controlled-pattern
+        callback. Most implementations expose `expanded:
+        boolean` instead of the variant enum.
+      angularSignals: >-
+        `output<SidebarVariant>('variantChange')`; pair with
+        `[(variant)]` two-way binding.
+      vue: >-
+        `@update:variant` for `v-model:variant`.
+
+  - name: itemActivate
+    payload: >-
+      `{ itemId: string, href: string }`. Fires when the user
+      activates an item (click, Enter on focused link). For
+      route-driven sidebars wired to a router (React Router,
+      Vue Router), the consumer typically does not handle
+      this directly — the router handles navigation.
+      Useful for analytics or for in-app routing without a
+      router.
+    frameworkNotes:
+      webComponents: >-
+        `itemActivate` CustomEvent with
+        `event.detail = { itemId, href }`.
+      react: >-
+        Per-item `onClick` callbacks. Aggregate event uncommon
+        because routing libraries already provide
+        navigation-event hooks.
+      angularSignals: >-
+        `output<{ itemId: string, href: string }>('itemActivate')`.
+      vue: >-
+        `@item-activate` event with payload `{ itemId, href }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: F6 (when supported by browser/OS)
+      expected: >-
+        Cycles focus to landmark regions including the nav.
+        Allows keyboard users to reach the sidebar without
+        tabbing through earlier content.
+    - keys: Tab
+      expected: >-
+        Focus enters the first item in the sidebar. Subsequent
+        Tab moves to the next focusable item; continues
+        through the entire sidebar (groups, items, footer)
+        in DOM order, then exits to the next document
+        focusable.
+    - keys: Enter (focus on item)
+      expected: >-
+        Activates the link — navigates to the `href`.
+        Spacebar does not activate (anchors are Enter-only by
+        native convention).
+    - keys: ArrowDown / ArrowUp (focus on item)
+      expected: >-
+        Optional per APG — Polaris and Spectrum bind
+        ArrowKeys for sidebar navigation; canonical reference
+        marks this as enhancement, not required. Tab is the
+        canonical key for moving between items.
+    - keys: 'Escape (focus inside sidebar, mobile drawer mode)'
+      expected: >-
+        Closes the drawer-variant sidebar; focus restores to
+        the trigger that opened it. For non-drawer
+        (persistent desktop) sidebar, Escape is a no-op.
+  announcements:
+    - trigger: Focus enters the sidebar
+      expected: >-
+        SR announces "Primary navigation" (or whatever the
+        nav's `aria-label` is) followed by the focused item.
+        For F6 landmark navigation, the announcement
+        precedes any item interaction.
+    - trigger: Focus enters the current-page item
+      expected: >-
+        SR announces "<item label>, current page, link". The
+        current-page portion comes from `aria-current="page"`.
+        Other items announce as "<label>, link" without the
+        current-page prefix.
+    - trigger: Item activated, navigation occurs
+      expected: >-
+        New page loads; focus typically returns to the
+        sidebar item that was clicked (browsers vary). SR
+        announces the new page's title and main heading;
+        navigation is implicit.
+    - trigger: Item with notification badge
+      expected: >-
+        SR announces "<item label>, <count> unread, link" or
+        "<item label> (new), link" depending on whether the
+        badge is numeric or pulse-only. Driven by visually-
+        hidden text composed into the link's accessible
+        name, not by `aria-label` (which would lose the link
+        text).
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-current
+    - color-contrast
+    - link-name
+    - landmark-unique
+    - region
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps expanded / collapsed.
+  - figma: Collapsible
+    code: collapsible
+    type: Boolean
+    notes: Toggles the user-facing collapse affordance (typically a chevron-button at the sidebar's inline-end edge).
+  - figma: Density
+    code: density
+    type: Variant
+    notes: comfortable / compact.
+  - figma: Has Footer
+    code: footer
+    type: Boolean
+  - figma: Has Header
+    code: header
+    type: Boolean
+    notes: Optional top region for logo / app name. Separate from anatomy because it is not always present and is not a single canonical slot.
+  - figma: Item Count
+    code: 'items.length'
+    type: Variant
+    notes: Figma exposes 4/8/12/16+ item counts for preview; code accepts arbitrary item arrays.
+  - figma: Has Groups
+    code: groups
+    type: Boolean
+    notes: Toggles whether items render as flat list or are categorised into labelled groups.
+  - figma: Active Item
+    code: activeItemId
+    type: Variant
+    notes: Figma exposes "first / second / third item active" as Variant for preview; in code this is route-derived (current URL) or controlled prop.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Sidebar pinning moves from inline-start (visual left in
+      LTR) to inline-start (visual right in RTL). Item icon
+      position reverses logically. Collapse-toggle chevron
+      points away from the sidebar (right in LTR, left in
+      RTL); the chevron glyph itself rotates to follow.
+      Notification badges remain at inline-end of items
+      (visual right in LTR, visual left in RTL).
+  textExpansion: >-
+    Item labels grow significantly in DE / RU / FI — German
+    "Einstellungen" is twice as wide as English "Settings".
+    Sidebar inline-size grows to fit the longest label or
+    truncates with ellipsis (full text in `aria-label` or
+    via Tooltip). Collapsed variant is unaffected by text
+    expansion (icons are direction-neutral and same width).
+    Group labels follow item-label expansion patterns.
+
+performance:
+  - name: maxItemsBeforeScroll
+    metric: visible-item-count
+    threshold: 12
+    unit: items
+    rationale: >-
+      Above ~12 items visible without scrolling, the sidebar
+      becomes scannable only by reading top-to-bottom; users
+      cannot recall the structure. For deep navigation
+      hierarchies, group items into collapsible sections
+      (using nested Disclosure or Accordion patterns inside
+      the sidebar) or split into multiple navs. Above 12
+      items, internal scroll is required; the canonical
+      reference recommends scrollable item region with
+      pinned header/footer.
+  - name: navItemPaintBudget
+    metric: per-item-paint-cost
+    threshold: 1
+    unit: ms
+    rationale: >-
+      Each sidebar item's paint cost should stay under 1ms
+      to keep the total sidebar paint within the 16ms 60fps
+      frame budget at typical item counts (12–40 items).
+      Items with rich content (avatars, badges, multi-line
+      labels) may exceed this; profile and simplify if
+      sidebar paint dominates initial render.
+
+whenToUse:
+  use: >-
+    For persistent global navigation in multi-section apps —
+    dashboards, admin panels, content management systems,
+    documentation sites with multi-page topics. The user
+    sees all top-level destinations at all times (or
+    reveals them via the collapsible toggle), navigates
+    between them via clicks/Enter, and the URL changes on
+    activation.
+  avoid: >-
+    For in-page content switching — that is `Tabs`. For
+    transient action menus — that is `MenuButton`. For
+    contextual disclosure of secondary content — that is
+    `Disclosure` or `Accordion`. For mobile-only navigation
+    — combine with `Drawer[variant=navigation]` for the
+    collapsible-on-narrow-viewports pattern.
+  vsRelated:
+    - id: tabs
+      difference: >-
+        `SidebarNav` navigates between independent pages
+        (URLs change, content reloads); `Tabs` switches
+        between content panels in the same page (URL stays
+        the same in canonical implementations). The
+        semantic distinction drives the role and the DOM:
+        sidebar uses `<nav>` with anchor links; tabs use
+        `tablist` with buttons.
+    - id: drawer
+      difference: >-
+        `Drawer[variant=navigation]` is the temporary
+        modal-on-mobile counterpart of SidebarNav. They
+        compose: persistent SidebarNav on desktop, Drawer
+        for the same nav on mobile (collapses below
+        `breakpoint.md`). The drawer-variant is invoked by a
+        trigger (hamburger MenuButton).
+    - id: menu-button
+      difference: >-
+        `MenuButton` is a transient action surface invoked
+        on demand; `SidebarNav` is a persistent navigation
+        region always visible (or collapsibly visible).
+        The role differentiates: `role="menu"` for
+        MenuButton, `<nav>` for SidebarNav. Sidebar styled as
+        menu-button is a common antipattern.
+    - id: accordion
+      difference: >-
+        `Accordion` discloses content within a single page;
+        `SidebarNav` navigates between independent pages.
+        Sidebars may contain accordion-style collapsible
+        groups for nested navigation, but the leaf items are
+        still anchor links — the accordion is structural
+        within the sidebar, not the sidebar itself.
+
+notes: >-
+  SidebarNav vocabulary varies: Material 3 calls this
+  "Navigation drawer" (with persistent / dismissible /
+  modal sub-types), Polaris uses "Navigation", Carbon uses
+  "Side navigation", Atlassian uses "Side navigation". The
+  canonical "SidebarNav" name is used here for clarity; the
+  Drawer-as-mobile-nav relationship is canonical and
+  documented via `whenToUse.vsRelated`. The most-overlooked
+  contract is `aria-current="page"` on the active item —
+  visual current-state is routinely shown without the
+  accessible counterpart, breaking SR orientation.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/regions.html
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nav
+  - https://www.w3.org/TR/wai-aria-1.2/#aria-current
+  - https://m3.material.io/components/navigation-drawer/overview
+  - https://carbondesignsystem.com/components/UI-shell-side-nav/usage/
+  - https://atlassian.design/components/side-navigation
+  - https://polaris.shopify.com/components/navigation/navigation
+  - https://react-spectrum.adobe.com/react-aria/Tree.html
+  - https://www.gov.uk/service-manual/design/navigation
+  - https://inclusive-components.design/menus-menu-buttons/
+
+lastReviewed: '2026-04-29'
