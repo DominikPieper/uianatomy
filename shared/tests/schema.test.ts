@@ -230,6 +230,58 @@ describe('responsive field', () => {
   });
 });
 
+describe('formIntegration field', () => {
+  it('parses button formIntegration with all four prose fields', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    expect(button.formIntegration?.name?.length ?? 0).toBeGreaterThan(0);
+    expect(button.formIntegration?.formData?.length ?? 0).toBeGreaterThan(0);
+    expect(button.formIntegration?.reset?.length ?? 0).toBeGreaterThan(0);
+    expect(button.formIntegration?.validation?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it('parses modal formIntegration as a container surface', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    expect(modal.formIntegration?.name).toMatch(/container/i);
+    expect(modal.formIntegration?.validation).toMatch(/focus trap/i);
+  });
+
+  it('parses combobox formIntegration with strict-mode validation prose', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    expect(combobox.formIntegration?.validation).toMatch(/setCustomValidity/);
+  });
+
+  it('omits formIntegration on Card and Tabs', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
+    expect(card.formIntegration).toBeUndefined();
+    expect(tabs.formIntegration).toBeUndefined();
+  });
+
+  it('rejects formIntegration with no fields declared', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bad = { ...button, formIntegration: {} };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty validation prose when present', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bad = { ...button, formIntegration: { validation: '' } };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown extra field on formIntegration (strict)', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bad = {
+      ...button,
+      formIntegration: { name: 'x', somethingElse: 'extra' },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('propertyMap field', () => {
   it('parses button propertyMap with mixed Figma types', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));

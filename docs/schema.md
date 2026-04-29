@@ -250,6 +250,33 @@ events:                                            # optional
 
 `frameworkNotes` is reference data, not a binding contract. Phase-2 implementations (`implementations/<lib>/<id>.yaml`) record the actual handler signatures via a future `eventBindings` field. The canonical notes describe what is *idiomatic*, not what is shipped in any specific library version.
 
+## `formIntegration` (optional, top-level)
+
+Per-component HTML-form participation prose. Four orthogonal sub-fields — `name`, `formData`, `reset`, `validation` — each independently optional, at least one required when the field is present. The full rationale is in [ADR-016](./adr/016-form-integration.md).
+
+```yaml
+formIntegration:                              # optional
+  name: >-                                    # optional prose
+    `<button>` with a `name` attribute participates in form submission.
+  formData: >-                                # optional prose
+    Only the activating submit button's `[name]=[value]` pair is
+    appended on submit.
+  reset: >-                                   # optional prose
+    `<button type="reset">` calls `form.reset()`.
+  validation: >-                              # optional prose
+    `type="submit"` triggers `form.checkValidity()`; first invalid
+    field gets focus.
+```
+
+**Shape rules:**
+
+- `formIntegration` itself is optional. Components that do not participate in HTML forms (Card, Tabs in Phase 1) omit the field.
+- When present, at least one of `name`, `formData`, `reset`, `validation` must be declared (Zod refine catches `formIntegration: {}`).
+- Each sub-field is free prose, non-empty when present.
+- The four sub-fields are the universal-core HTML-form concerns: name attribute behaviour, FormData serialization, `form.reset()` interaction, HTML5 validation. Extension with `autocomplete`, `enctype`, etc. is reserved for a follow-up ADR if a concrete component needs them.
+
+**Render:** `FormIntegrationSection.astro` renders in Dev view (after Events, before Accessibility) and Bridge view (after Events, before Accessibility). Designer view does not render the section.
+
 ## `propertyMap` (optional, top-level)
 
 The vocabulary bridge between Figma component properties and code-side prop names. Designers reading the Figma file can locate the corresponding code prop; developers can reverse-look-up the Figma property name. The full rationale is in [ADR-015](./adr/015-property-map.md).

@@ -273,6 +273,26 @@ export const announcementEntrySchema = z
   })
   .strict();
 
+export const formIntegrationSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    formData: z.string().min(1).optional(),
+    reset: z.string().min(1).optional(),
+    validation: z.string().min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      v.name !== undefined ||
+      v.formData !== undefined ||
+      v.reset !== undefined ||
+      v.validation !== undefined,
+    {
+      message:
+        'formIntegration must declare at least one of name, formData, reset, validation',
+    },
+  );
+
 export const figmaPropertyTypeSchema = z.enum([
   'Boolean',
   'Variant',
@@ -393,6 +413,7 @@ export const componentSchema = z.object({
   events: z.array(eventSchema).min(1).optional(),
   a11yAcceptance: a11yAcceptanceSchema.optional(),
   propertyMap: propertyMapSchema.optional(),
+  formIntegration: formIntegrationSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -420,6 +441,7 @@ export type A11yAcceptance = z.infer<typeof a11yAcceptanceSchema>;
 export type FigmaPropertyType = z.infer<typeof figmaPropertyTypeSchema>;
 export type PropertyMapEntry = z.infer<typeof propertyMapEntrySchema>;
 export type PropertyMap = z.infer<typeof propertyMapSchema>;
+export type FormIntegration = z.infer<typeof formIntegrationSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

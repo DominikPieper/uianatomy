@@ -1,0 +1,65 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const f = component.formIntegration;
+
+const ROWS: Array<{ key: keyof NonNullable<typeof f>; label: string }> = [
+  { key: 'name', label: 'name attribute' },
+  { key: 'formData', label: 'FormData serialization' },
+  { key: 'reset', label: 'form.reset()' },
+  { key: 'validation', label: 'HTML5 validation' },
+];
+---
+{f && (
+  <div class="form-integration">
+    <dl class="form-integration__list">
+      {ROWS.map(({ key, label }) =>
+        f[key] !== undefined ? (
+          <div class="form-integration__row">
+            <dt>{label}</dt>
+            <dd>{f[key]}</dd>
+          </div>
+        ) : null,
+      )}
+    </dl>
+  </div>
+)}
+
+<style>
+  .form-integration {
+    margin: 0 0 24px;
+  }
+  .form-integration__list {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+  }
+  .form-integration__row {
+    display: grid;
+    grid-template-columns: minmax(160px, 200px) 1fr;
+    gap: 16px;
+    align-items: baseline;
+  }
+  @media (max-width: 640px) {
+    .form-integration__row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+  .form-integration__row dt {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    margin: 0;
+    font-family: var(--font-mono);
+  }
+  .form-integration__row dd {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

@@ -492,6 +492,32 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
+formIntegration:
+  name: >-
+    Modal is a container, not a form control — it has no `name`
+    attribute. Forms hosted inside the dialog carry their own `name`
+    attributes on their fields. Native `<dialog>` cooperates with
+    `<form method="dialog">` to submit-and-close in a single user
+    action.
+  formData: >-
+    Forms inside the dialog submit normally via their own `<form>`.
+    The dialog itself contributes nothing to FormData. The
+    `<form method="dialog">` pattern is special: the form's submitter
+    button populates `dialog.returnValue` instead of issuing a network
+    request — useful for in-page commit semantics where the dialog
+    closes itself on submit.
+  reset: >-
+    Forms inside the dialog respond to `form.reset()` independently
+    of the dialog's open/closed state. Closing the dialog via Escape
+    or backdrop click does not reset the form; consumers that want
+    "discard on cancel" semantics call `form.reset()` explicitly in
+    the close handler before unmounting the form.
+  validation: >-
+    Forms inside the dialog use HTML5 validation as normal.
+    Validation failures focus the first invalid field — focus stays
+    inside the dialog because of the focus trap, so the user lands on
+    the field naturally without escaping the modal context.
+
 propertyMap:
   - figma: Variant
     code: variant

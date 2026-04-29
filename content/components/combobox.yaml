@@ -509,6 +509,35 @@ events:
         `@update:open` for `v-model:open`; suppressed when the open
         state is computed and not externally controlled.
 
+formIntegration:
+  name: >-
+    The inner `<input>` carries the form `name` attribute; the combobox
+    wrapper does not. Submitting a form writes the input's current
+    value to FormData under the configured name — the typed string for
+    free-input variants, the canonical value of the selected option
+    for strict mode.
+  formData: >-
+    Single-select strict mode submits the selected option's *canonical
+    value* (id or token), not the *display label*. Multi-select
+    variants submit one entry per selected value (multiple FormData
+    entries with the same `name` key) to match `<select multiple>`
+    native behaviour. Creatable variants submit user-created values
+    verbatim.
+  reset: >-
+    `form.reset()` restores the inner input value to its
+    `defaultValue`, closes the popup, and clears `aria-invalid` plus
+    any `setCustomValidity()` message. Selected-value state held in
+    framework state outside the DOM needs an explicit reset hook (an
+    `onReset` listener on the parent form syncs the framework
+    state).
+  validation: >-
+    The inner `<input>` participates in HTML5 validation: `required`
+    triggers the `:invalid` pseudo-class when empty;
+    `setCustomValidity('Pick a value from the list')` is the canonical
+    hook for strict-mode "must select from list" enforcement on blur.
+    The error message is announced via the inline-error pattern
+    referenced through `aria-describedby`.
+
 propertyMap:
   - figma: Variant
     code: variant

@@ -310,6 +310,32 @@ frameworkMap:
     structureMechanism: a `<Button>` SFC with named slots for leading and trailing icons and a default slot for the label
     variantMechanism: defineProps with literal-union types; `:loading` boolean prop drives `aria-busy`
 
+formIntegration:
+  name: >-
+    `<button>` with a `name` attribute participates in form submission
+    — the button's `[name]=[value]` is appended to the form's FormData
+    when this button is the submitter. Buttons without `name` do not
+    contribute to FormData. The canonical reference treats `name` as a
+    passthrough to the underlying `<button>`.
+  formData: >-
+    On submit, only the activating submit button's `[name]=[value]`
+    pair is appended (not all buttons in the form). This makes Button
+    useful for multi-action forms — `<button name="action" value="save">`
+    and `<button name="action" value="discard">` distinguish via the
+    submitted value of the same key.
+  reset: >-
+    `<button type="reset">` calls `form.reset()` on the parent form,
+    restoring controls to their default values and clearing any
+    `setCustomValidity()` state. Programmatic `form.reset()` triggers
+    the same path. Reset does not submit and does not navigate.
+  validation: >-
+    `<button type="submit">` triggers HTML5 validation
+    (`form.checkValidity()`); the first invalid field receives focus
+    and the form's `:invalid` pseudo-class state propagates. The
+    `formnovalidate` attribute on the submit button suppresses
+    validation for that specific submit path — useful for "save draft"
+    patterns where partial input is allowed.
+
 propertyMap:
   - figma: Variant
     code: variant
