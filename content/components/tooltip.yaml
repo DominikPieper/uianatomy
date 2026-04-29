@@ -1,0 +1,542 @@
+id: tooltip
+name: Tooltip
+description: >-
+  A non-interactive floating panel that surfaces brief descriptive
+  text about its trigger, revealed on hover or focus and dismissed on
+  blur, pointer-leave, or Escape. Distinct from Popover (interactive)
+  and Modal (blocking): tooltip content is read-only, the user never
+  enters the tooltip, and Tab moves past the trigger without entering
+  the tooltip body. Used for icon labels, abbreviation expansions,
+  short helper text — never for essential information.
+
+anatomy:
+  - id: trigger
+    required: true
+    purpose: >-
+      Consumer-provided element that owns the tooltip — typically a
+      Button, IconButton, abbreviation, or any focusable surface.
+      Not rendered by the Tooltip component itself; the consumer
+      wires the element and the Tooltip attaches the
+      describedby relationship plus hover and focus listeners.
+    layout:
+      row: 1
+      col: 1
+      span: 4
+    figma:
+      type: instance
+      hint: Consumer-provided trigger; in Figma the Tooltip frame is anchored to but does not contain the trigger
+    code:
+      slot: trigger
+      semantic: consumer-provided
+    a11y:
+      hint: >-
+        Trigger element carries `aria-describedby` referencing the
+        tooltip container's id (NOT `aria-labelledby` — the tooltip
+        is supplementary description, not the accessible name).
+        For triggers without their own accessible name (e.g. an
+        IconButton), the tooltip text duplicates as the
+        `aria-label` plus the `aria-describedby` reference, so SR
+        users hear the label first then the description.
+
+  - id: container
+    required: true
+    purpose: >-
+      The tooltip panel itself — a floating non-interactive surface
+      anchored to the trigger. Sized to its content with a sensible
+      max-inline-size (commonly 240–320px) to prevent paragraph-
+      length tooltips. Auto-flips when the authored side collides
+      with the viewport.
+    layout:
+      floating:
+        anchor: trigger
+        position: below
+        offset: 6
+      span: 6
+    figma:
+      type: frame
+      hint: Floating frame with optional tip; max-inline-size cap
+    code:
+      slot: container
+      semantic: tooltip
+    a11y:
+      hint: >-
+        Apply `role="tooltip"`. The container has no interactive
+        children — buttons, links, form controls inside a tooltip
+        violate the APG contract. Sized to text; do not host
+        layouts. The container does NOT receive focus; tabindex is
+        absent.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        background: color.surface.sunken
+        foreground: color.text.primary
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.md
+      typography:
+        size: text.sm
+        lineHeight: leading.snug
+
+  - id: arrow
+    required: false
+    purpose: >-
+      Optional tip indicator pointing from the tooltip container
+      back to the trigger. Visual reinforcement of the anchor
+      relationship. Position auto-tracks the trigger when the
+      tooltip flips or shifts.
+    layout:
+      parent: container
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: rectangle
+      hint: 6×6 triangle clipped from a rotated square
+    code:
+      slot: arrow
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative; do not put `role` on it. The trigger-to-tooltip
+        relationship is communicated by `aria-describedby`, not by
+        the arrow.
+    tokens:
+      color:
+        background: color.surface.sunken
+        border: color.border.subtle
+
+axes:
+  variants:
+    - standard
+    - inline-help
+  properties:
+    - name: side
+      kind: enum
+      values: [top, right, bottom, left]
+    - name: align
+      kind: enum
+      values: [start, center, end]
+    - name: delay
+      kind: enum
+      values: [instant, short, base, long]
+    - { name: arrow, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - closed
+      - opening
+      - open
+      - closing
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          Pointer enters the trigger or focus moves to the trigger.
+          The configured delay timer starts; the tooltip is not yet
+          visually revealed.
+      - from: opening
+        to: open
+        trigger: >-
+          The delay timer completes (or, under
+          prefers-reduced-motion reduce, the tooltip appears
+          immediately at the canonical instant fallback).
+          aria-describedby is wired and the SR-announceable
+          description is present.
+      - from: open
+        to: closing
+        trigger: >-
+          Pointer leaves the trigger AND focus is not on the
+          trigger; or focus leaves the trigger AND pointer is not
+          over it; or the user presses Escape to dismiss
+          persistently. The canonical OR-conjunction prevents
+          flicker when the user moves focus while hovering.
+      - from: closing
+        to: closed
+        trigger: >-
+          The exit animation completes (or immediately under
+          reduced motion). aria-describedby remains on the trigger
+          but the container is removed from the DOM (or hidden
+          via CSS).
+
+mismatches:
+  - figma: A tooltip drawn with a button inside ("Got it" or "Learn more")
+    code: A tooltip with role=tooltip, which APG forbids interactive content
+    consequence: >-
+      Designers may treat tooltip as a small popover and add
+      dismiss buttons or links. Implementations that follow the
+      Figma file create something with `role="tooltip"` plus a
+      button — SR users cannot reach the button (focus does not
+      enter tooltips), and the visual affordance suggests
+      interaction that does not work. The pattern collapses to
+      Popover.
+    correct: >-
+      Treat the boundary as canonical: tooltips contain only
+      non-interactive content. If the surface needs a dismiss
+      button or any interaction, redesign as a Popover. Document
+      this distinction prominently in the canonical reference and
+      in `whenToUse`.
+
+  - figma: A tooltip drawn that only appears on hover
+    code: A tooltip that fires on hover but not on focus
+    consequence: >-
+      Designers think tooltips are a hover affordance; developers
+      shipping hover-only break keyboard accessibility — keyboard
+      users tab to the trigger but never see the description.
+      Touch devices fall back to long-press; without focus-trigger
+      they have no canonical reveal at all on touch keyboards.
+    correct: >-
+      Tooltip MUST trigger on both pointer-enter and focus.
+      Document this as a non-negotiable a11y rule in the canonical
+      reference. Touch devices use long-press by convention; the
+      reveal happens via the same focus event pattern when the
+      trigger is focusable.
+
+  - figma: Tooltip drawn carrying essential information
+    code: Tooltip used as the primary descriptor for a control
+    consequence: >-
+      Designers may use tooltip text as the only descriptor for
+      icon-only controls; developers shipping this lose the
+      description for SR users (who hear the icon's
+      `aria-label` only) and for users on slow connections (who
+      may not see the tooltip render before activating). The
+      essential information is locked behind a hover-only reveal.
+    correct: >-
+      Essential information is in the trigger's accessible name
+      (`aria-label`, visible text, etc.), never in the tooltip.
+      The tooltip supplements with details that are useful but
+      not required to operate the control. Document the
+      canonical contract: tooltip is supplementary description,
+      not primary label.
+
+  - figma: A tooltip drawn pointing at a passive area (a label, a static word)
+    code: A tooltip wired to a non-focusable element with `aria-describedby`
+    consequence: >-
+      Designers anchor tooltips to non-interactive surfaces;
+      developers wire them with no focus-trigger because the
+      element is not focusable. Keyboard users miss the tooltip
+      entirely; pointer users see it on hover but the experience
+      is incomplete.
+    correct: >-
+      If the element needs a tooltip, it must be focusable —
+      either it's already an interactive control, or wrap it in a
+      focusable element (a button, a `<dfn>` or `<abbr>` with
+      `tabindex="0"`). The tooltip's reveal contract requires
+      both pointer and keyboard reachability.
+
+mistakes:
+  - id: tooltip-with-interactive-content
+    title: Tooltip containing buttons or links
+    description: >-
+      The tooltip body has interactive elements (a "Learn more"
+      link, a "Got it" button). APG forbids this — tooltip content
+      is non-interactive, focus does not enter the tooltip, and SR
+      users cannot reach the interactive children.
+    fix: >-
+      If the surface needs interaction, use a Popover. The
+      distinction is canonical: Tooltip = non-interactive
+      descriptive text; Popover = interactive contextual content.
+      No "tooltip with a button" middle ground.
+
+  - id: tooltip-no-focus-trigger
+    title: Tooltip only reveals on pointer hover
+    description: >-
+      The tooltip fires on `mouseenter` but not on `focus` events.
+      Keyboard users tab to the trigger; the tooltip never appears.
+      Touch devices that surface the focus event also lose the
+      tooltip.
+    fix: >-
+      Always pair pointer-enter with focus-enter as reveal
+      triggers, and pointer-leave with focus-leave as dismiss
+      triggers (with the OR-conjunction documented in the
+      transitions block — tooltip stays open while either
+      pointer or focus remains).
+
+  - id: tooltip-essential-info
+    title: Essential information in tooltip
+    description: >-
+      The tooltip text is the only descriptor for an icon-only
+      control. SR users who skip the tooltip via verbose-mode-off
+      get just the icon's `aria-label`; pointer users on slow
+      connections may activate before the tooltip renders.
+    fix: >-
+      Essential info goes in the trigger's accessible name. The
+      tooltip supplements with non-essential details. The test:
+      remove the tooltip — does the control still operate
+      correctly with full meaning? If no, the tooltip held
+      essential info that belongs in the label.
+
+  - id: tooltip-paragraph-length
+    title: Tooltip with multi-paragraph content
+    description: >-
+      The tooltip body grows beyond a brief sentence — multiple
+      sentences, lists, or paragraph-length prose. Hover dismisses
+      while the user is reading; SR description fires the entire
+      paragraph as one announcement.
+    fix: >-
+      Cap tooltip content at one or two short sentences. Anything
+      longer should live in body prose, a Popover, or a
+      Disclosure. Document the canonical length convention and
+      enforce it in design review.
+
+  - id: tooltip-pointer-events-block
+    title: Tooltip captures pointer events from underlying content
+    description: >-
+      The tooltip's container has `pointer-events: auto` — the
+      user's mouse enters the tooltip area on its way to another
+      control, the tooltip blocks the click, and the trigger
+      cannot be reached again. Or worse, the tooltip itself
+      becomes hoverable and traps the cursor in a hover loop.
+    fix: >-
+      Tooltip container has `pointer-events: none` by default.
+      The tooltip is a non-interactive overlay that text can be
+      read from but not clicked into. Pointer events pass through
+      to the underlying content. The trigger handles all hover
+      logic; the container is purely visual.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-tooltip>` host element that wires the trigger via `id` reference and renders a `[role=tooltip]` container; positioning via Floating UI or CSS anchor positioning; arrow as a slot or pseudo-element
+    variantMechanism: attributes (`variant="inline-help"`, `side="top"`, `align="center"`, `delay="base"`, `arrow`); `data-state="open|closed|opening|closing"` for CSS
+  react:
+    structureMechanism: Radix `Tooltip.Root` / `Tooltip.Trigger` / `Tooltip.Portal` / `Tooltip.Content` compositing the slots; positioning via Floating UI; React Aria `useTooltip` provides an alternative
+    variantMechanism: props with class-variance-authority for variant; `side`, `align`, `sideOffset`, `delayDuration` props on `Tooltip.Content`; `data-state` exposed
+  angularSignals:
+    structureMechanism: Angular CDK `cdkTooltip` directive plus `OverlayModule` for positioning; signal-based `[uiTooltip]` content input; consumer wires it on focusable elements
+    variantMechanism: input<'standard' | 'inline-help'>(), input<'top' | 'right' | 'bottom' | 'left'>(); `[delay]` input for the show-delay
+  vue:
+    structureMechanism: third-party (Radix Vue, Headless UI does not ship Tooltip as of 2026-04, vue-floating); custom composable `useTooltip` wires aria-describedby plus pointer/focus listeners
+    variantMechanism: defineProps with literal-union types; `:side`, `:align`, `:delay`, `:arrow` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.instant
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, hover-driven tooltips are unreliable because
+        most touch devices do not surface persistent hover events.
+        The canonical fallback is long-press (~500ms) plus focus
+        on tap-and-hold; some implementations replace tooltip with
+        a contextual Popover triggered on tap. Inline-help variant
+        switches to tap-to-toggle automatically (the icon becomes
+        a button with aria-haspopup).
+    - at: breakpoint.md
+      change: >-
+        Above this width, hover and focus reveal as authored. The
+        floating positioning honours `side` and `align`; auto-flip
+        and shift work as designed.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` after the tooltip has finished entering
+      (delay completed and visible), `false` after it has finished
+      exiting. Mostly internal — consumers rarely observe tooltip
+      open/close events because the surface is non-interactive,
+      but the event exists for analytics ("tooltip view rate") and
+      for orchestrating linked tooltips in instructional flows.
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent on the host with
+        `event.detail = { open: boolean }`.
+      react: >-
+        `onOpenChange(open: boolean)` controlled-pattern callback
+        (Radix Tooltip exposes this on `Tooltip.Root`).
+      angularSignals: >-
+        `output<boolean>('openChange')`; rarely consumed.
+      vue: >-
+        `@update:open` for `v-model:open` if controlled; usually
+        the tooltip is uncontrolled and this event is unused.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (focus enters trigger)
+      expected: >-
+        Trigger receives focus; tooltip reveals after the configured
+        delay. The trigger remains focused — Tab does NOT move
+        focus into the tooltip (tooltip is non-interactive).
+    - keys: Tab (focus on trigger, tooltip open)
+      expected: >-
+        Focus moves to the next focusable in the document (NOT
+        into the tooltip). Tooltip closes (focus leaves the
+        trigger).
+    - keys: 'Escape (focus on trigger, tooltip open)'
+      expected: >-
+        Tooltip dismisses persistently; pointer-leave or focus-leave
+        does not re-reveal it until focus leaves the trigger and
+        returns. APG canonical behaviour to allow keyboard users
+        to suppress the tooltip when it obscures content.
+    - keys: 'Enter or Space (focus on trigger)'
+      expected: >-
+        Activates the trigger's primary action (the tooltip is
+        supplementary; activating the trigger does not interact
+        with the tooltip). Some triggers (an abbreviation `<abbr>`)
+        have no primary action; Enter is a no-op.
+  announcements:
+    - trigger: Trigger receives focus, tooltip opens
+      expected: >-
+        SR announces the trigger's accessible name followed by
+        the tooltip text via `aria-describedby`. Verbose-mode-off
+        users may hear the description as a separate
+        announcement; verbose mode reads it inline with the
+        trigger announcement.
+    - trigger: Trigger pointer-hovers (no focus)
+      expected: >-
+        Pointer-only users see the tooltip visually; SR users
+        without focus on the trigger receive no announcement (no
+        focus, no announcement). This is correct — the tooltip
+        is supplementary, not essential.
+    - trigger: Tooltip dismissed by Escape
+      expected: >-
+        Tooltip disappears visually; SR users hear no
+        announcement (the description simply unwires from
+        aria-describedby for the duration of the focus session).
+  axeRules:
+    - aria-tooltip-name
+    - aria-required-attr
+    - aria-allowed-role
+    - color-contrast
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / inline-help.
+  - figma: Side
+    code: side
+    type: Variant
+    notes: top / right / bottom / left. Authored placement preference; auto-flips when colliding with viewport.
+  - figma: Align
+    code: align
+    type: Variant
+    notes: start / center / end along the perpendicular axis.
+  - figma: Delay
+    code: delay
+    type: Variant
+    notes: instant / short / base / long. Maps to library-specific milliseconds (Radix uses 0/200/700/1500 by default).
+  - figma: Has Arrow
+    code: arrow
+    type: Boolean
+    notes: Toggles the arrow slot. True by default for standard variant; false for inline-help.
+  - figma: Content
+    code: children
+    type: Text
+    notes: The tooltip text. Capped at one to two short sentences by canon.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Side property is direction-neutral (top/right/bottom/left are
+      physical). Align is logical (start/center/end follow inline
+      direction). Tooltip text inherits document direction;
+      mixed-direction text (Arabic content with English code
+      snippets in the tooltip) follows the inner spans' `dir`
+      attributes. Auto-flip is symmetric across directions. Arrow
+      glyph is a triangle — direction-neutral.
+  textExpansion: >-
+    Tooltip text expansion is constrained by the canonical
+    max-inline-size (commonly 240–320px). Long-text languages
+    (German, Russian, Finnish) may wrap to two or three lines;
+    above three lines, the canonical mistake `tooltip-paragraph-
+    length` applies — the content belongs in a Popover or body
+    prose. Allow soft-wrap; never truncate with ellipsis (the
+    truncated description loses meaning).
+
+performance:
+  - name: openDelay
+    metric: pointer-or-focus-hold
+    threshold: 700
+    unit: ms
+    rationale: >-
+      Default open delay before the tooltip reveals. Below ~200ms
+      tooltips feel jumpy on mouse-traversal across multiple
+      triggers; above ~1500ms they feel laggy when the user hovers
+      intentionally. Radix and React Aria converge on ~700ms as the
+      `base` delay; the canonical `delay` enum maps to this scale
+      (instant=0, short=200, base=700, long=1500).
+  - name: closeDelay
+    metric: pointer-leave-grace
+    threshold: 100
+    unit: ms
+    rationale: >-
+      Brief grace period after pointer-leave before dismiss, to
+      prevent flicker when the user briefly moves the cursor
+      across a child element of the trigger (e.g. an icon inside
+      a wrapping button). 100ms is the canonical convention; any
+      higher and the dismiss feels delayed.
+
+whenToUse:
+  use: >-
+    When a control's accessible name benefits from a brief
+    supplementary description that does not need to be permanently
+    visible — icon-only buttons, abbreviations, status badges,
+    column headers in dense tables. The description is
+    non-essential (the control operates correctly without it) and
+    short (one or two sentences).
+  avoid: >-
+    For interactive content (buttons, links, forms inside the
+    floating surface) — that is `Popover`. For essential
+    information that defines the control — that belongs in the
+    accessible name (`aria-label`, visible text). For
+    paragraph-length explanations — that is body prose or a
+    Disclosure. For status messages that announce state changes —
+    that is `Toast` or a `aria-live` region.
+  vsRelated:
+    - id: popover
+      difference: >-
+        `Popover` is interactive — the user may tab into the body
+        and click controls. `Tooltip` is non-interactive — focus
+        never enters the tooltip, and the body must contain only
+        descriptive text. The boundary is canonical and APG-
+        defined; do not blur it with "tooltip with a button"
+        designs.
+    - id: modal
+      difference: >-
+        `Modal` is blocking and viewport-centred; `Tooltip` is
+        non-blocking and trigger-anchored. They occupy opposite
+        ends of the floating-surface spectrum (Modal: maximum
+        modality, content-rich; Tooltip: zero modality,
+        description-only).
+    - id: alert
+      difference: >-
+        `Alert` is an inline `aria-live` message announcing state
+        changes; `Tooltip` is on-demand description revealed by
+        hover or focus. Alert pushes content at the user; Tooltip
+        is pulled by the user's interaction.
+
+notes: >-
+  Tooltip is the canonical reference's most contract-rigid
+  component. The "non-interactive content" rule is non-negotiable
+  per APG; many real-world tooltips violate it, which is exactly
+  why the canonical reference documents the boundary as a hard
+  edge and points designers needing interaction at Popover
+  instead. The reveal contract (hover OR focus, dismiss on
+  pointer-leave AND focus-leave OR Escape) is similarly strict
+  and most often broken in implementations that fire only on
+  hover.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/tooltip_role
+  - https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus
+  - https://floating-ui.com/docs/tutorial
+  - https://www.radix-ui.com/primitives/docs/components/tooltip
+  - https://react-spectrum.adobe.com/react-aria/Tooltip.html
+  - https://polaris.shopify.com/components/overlays/tooltip
+  - https://carbondesignsystem.com/components/tooltip/usage/
+  - https://atlassian.design/components/tooltip/examples
+  - https://m3.material.io/components/tooltips/overview
+  - https://inclusive-components.design/tooltips-toggletips/
+
+lastReviewed: '2026-04-29'
