@@ -1,0 +1,334 @@
+id: modal
+name: Modal
+description: >-
+  A transient overlay surface that suspends the underlying view and demands
+  attention or input before the user can return to the rest of the page.
+  Synonymous with "dialog" in the ARIA Authoring Practices Guide; "modal"
+  emphasises the *modality* (the page is blocked) over the dialog box
+  itself.
+related:
+  - drawer
+  - popover
+  - alert
+
+anatomy:
+  - id: backdrop
+    required: true
+    purpose: >-
+      Full-viewport scrim behind the dialog that visually de-emphasises
+      the underlying content and intercepts pointer events. Distinct
+      from the dialog container so it can be styled and animated
+      independently.
+    layout:
+      row: 1
+      col: 1
+      span: full
+      aspect: '16:3'
+    figma:
+      type: frame
+      hint: Full-bleed frame with semi-transparent fill below the container
+    code:
+      slot: backdrop
+      semantic: presentational-overlay
+    a11y:
+      hint: >-
+        Backdrop is presentational; do not put role on it. Clicking the
+        backdrop may dismiss the dialog when `dismissible` is true, but
+        keyboard users must always have an explicit close affordance.
+
+  - id: container
+    required: true
+    purpose: >-
+      The dialog box itself — the bounded surface that renders header,
+      body, and footer. Carries the focus trap and the dialog role.
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Centered auto-layout frame; size variant drives width
+    code:
+      slot: container
+      semantic: dialog-or-alertdialog
+    a11y:
+      hint: >-
+        Apply `role="dialog"` (or `role="alertdialog"` for the alert
+        variant) and `aria-modal="true"`. Label via `aria-labelledby`
+        pointing at the title slot, and optionally `aria-describedby`
+        pointing at the body. Focus is trapped here while open and
+        restored to the trigger on close.
+
+  - id: header
+    required: false
+    purpose: >-
+      Top region grouping title and close affordance. Optional because
+      some dialogs (alert dialogs, confirmation dialogs) inline the
+      title with the body and place the close affordance in the footer.
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; padding from container token
+    code:
+      slot: header
+      semantic: heading-region
+    a11y:
+      hint: >-
+        Header is a layout region, not a heading. The actual heading
+        semantics live on the title element.
+
+  - id: title
+    required: true
+    purpose: >-
+      The dialog's name. The first thing announced after the dialog
+      opens and the value of `aria-labelledby` on the container.
+    layout:
+      row: 4
+      col: 1
+      span: 9
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property for content
+    code:
+      slot: title
+      semantic: heading
+    a11y:
+      hint: >-
+        Use a real heading element of an appropriate level. Reference
+        it from the container with `aria-labelledby`. Never rely on
+        `aria-label` on the container if a visible title exists.
+
+  - id: close-button
+    required: false
+    purpose: >-
+      Visible affordance for dismissing the dialog without committing
+      its primary action. Conventionally an "×" icon in the trailing
+      edge of the header, but may live in the footer for alert dialogs.
+    layout:
+      row: 4
+      col: 2
+      span: 3
+    figma:
+      type: instance
+      hint: Icon button instance; bound to component slot for variant swap
+    code:
+      slot: close
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Close" or "Close dialog"); a bare
+        × glyph is not announced. The Escape key must do the same thing
+        as clicking this button when the dialog is dismissible.
+
+  - id: body
+    required: true
+    purpose: >-
+      Primary payload — the content the dialog exists to surface or
+      collect. Keep scrolling self-contained within the body if the
+      content overflows; the header and footer should remain pinned.
+    layout:
+      row: 5
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; min-height drives "comfortable" density
+    code:
+      slot: body
+      semantic: prose-or-form
+    a11y:
+      hint: >-
+        Body retains its native semantics (forms stay forms). If the
+        body is the dialog's description, reference its container with
+        `aria-describedby` on the container.
+
+  - id: footer
+    required: false
+    purpose: >-
+      Bottom region grouping the dialog's commit/cancel actions. Order
+      and emphasis (primary on leading vs. trailing edge) is a
+      platform-convention decision documented in the variants table.
+    layout:
+      row: 6
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; right-aligned buttons by default
+    code:
+      slot: footer
+      semantic: button-group
+    a11y:
+      hint: >-
+        Buttons keep native semantics. Document the default focus
+        target (usually the primary action, but the *cancel* action
+        for destructive alerts) so behavior is consistent across uses.
+
+axes:
+  variants:
+    - dialog
+    - alertdialog
+    - fullscreen
+  properties:
+    - name: size
+      type: 'sm | md | lg | xl'
+    - name: dismissible
+      type: boolean
+    - name: scrollBehavior
+      type: 'inside | outside'
+  states:
+    interactive:
+      - focus-visible
+    data:
+      - opening
+      - open
+      - closing
+      - closed
+
+mismatches:
+  - figma: A "modal" component drawn as a centered rectangle with a separate "backdrop" rectangle stacked on the same page
+    code: A portal that lifts the dialog out of the DOM tree, with focus trapping, escape key handling, and `inert` on the rest of the document
+    consequence: >-
+      The Figma artifact captures the visual treatment but encodes none
+      of the modality. Developers approximating from the Figma file may
+      ship a div that *looks* like a modal but allows tabbing into the
+      page beneath, breaks screen-reader virtual cursors, and routes
+      Escape to the wrong handler.
+    correct: >-
+      Treat the visual layout and the modal *behavior* as separate
+      concerns. The Figma component documents anatomy and visual
+      treatment; the canonical reference and a11y notes document the
+      portal, focus trap, escape, and inert behavior. Designers and
+      developers explicitly review both artefacts together.
+
+  - figma: Close icon drawn as a static glyph in the header
+    code: An accessible <button> with an ARIA label and matching escape-key handler
+    consequence: >-
+      The icon is announced as nothing or as the literal "×" character.
+      Mouse users can dismiss; keyboard and screen-reader users may not.
+    correct: >-
+      Treat the close affordance as an explicit slot that must be
+      implemented as a real button with an accessible name. Document
+      that the Escape key triggers the same handler when `dismissible`
+      is true.
+
+  - figma: Multiple stacked dialogs modeled as separate top-level Figma frames with no relationship between them
+    code: Stacked dialogs require z-index + correct `inert` toggling so only the topmost dialog is interactive
+    consequence: >-
+      Visually the second dialog appears on top, but assistive tech may
+      still read content from the first. Worse, focus trap collisions
+      can leak focus back into the underlying dialog.
+    correct: >-
+      Document that stacking is a separate behavioral concern, not just
+      a layering concern. The canonical guidance is "avoid stacking
+      modals; if you must, the topmost owns focus and inert all
+      ancestors." Figma may render two stacked frames for illustration
+      but the dev guidance is non-trivial.
+
+  - figma: Open/closed and transition states modeled as Figma variants
+    code: Data states (`opening`, `open`, `closing`, `closed`) driven by the application and CSS transitions
+    consequence: >-
+      Variant explosion (size × variant × state). Designers may also
+      forget transition states entirely and developers ship without
+      enter/exit animations.
+    correct: >-
+      Model transition states once as data states in the canonical
+      reference, with a single visual specification. Reserve Figma
+      variants for the structurally different versions
+      (`dialog` / `alertdialog` / `fullscreen`).
+
+mistakes:
+  - id: modal-no-focus-trap
+    title: Tab key escapes the dialog into the page beneath
+    description: >-
+      Without an explicit focus trap, pressing Tab from the last
+      interactive element inside the dialog moves focus to the next
+      element in the document — usually something visually obscured
+      by the backdrop.
+    fix: >-
+      Implement a focus trap that cycles Tab/Shift+Tab between the
+      first and last focusable elements inside the dialog. Most
+      modern primitives (Radix Dialog, React Aria, HTMLDialogElement
+      `showModal()`) include this for free; never roll your own
+      without `inert` on the rest of the document.
+
+  - id: modal-no-focus-restore
+    title: Focus is lost after the dialog closes
+    description: >-
+      After dismissal, focus lands on `<body>` instead of the trigger
+      that opened the dialog. Keyboard and screen-reader users have
+      to re-orient from the top of the page.
+    fix: >-
+      Capture the previously-focused element on open and restore
+      focus to it on close. If the trigger no longer exists (e.g.,
+      it was destroyed by the action just confirmed), focus a stable
+      landmark such as the page heading or a confirmation toast.
+
+  - id: modal-aria-hidden-leak
+    title: Setting `aria-hidden` on the body without scoping out the dialog
+    description: >-
+      Applying `aria-hidden="true"` to `<body>` to keep the
+      background out of the AT tree also hides the dialog itself,
+      because the dialog is typically a descendant of body in the
+      DOM.
+    fix: >-
+      Either portal the dialog out of body (so the hidden subtree
+      excludes it), or use `inert` (which does not collapse the
+      subtree from the AT tree but disables interaction). Modern
+      stacks should prefer `inert` on siblings of the portal.
+
+  - id: modal-escape-not-bound
+    title: Escape key does not dismiss a dismissible dialog
+    description: >-
+      `dismissible` is true (the close button works, the backdrop
+      click works) but Escape does nothing — usually because the
+      handler was attached to the backdrop element instead of
+      document-level.
+    fix: >-
+      Bind Escape on the dialog container with `keydown` capture, or
+      delegate at document level when the dialog is open. Make the
+      handler the same one bound to the close button so behavior is
+      identical across input modalities.
+
+  - id: modal-backdrop-pointer-leak
+    title: Pointer events pass through the backdrop to the page beneath
+    description: >-
+      The backdrop is rendered with `pointer-events: none` (or no
+      backdrop at all), so a click at backdrop coordinates triggers
+      the underlying button. The page is no longer modal.
+    fix: >-
+      The backdrop must intercept all pointer events. Native
+      `<dialog>` with `showModal()` does this automatically; custom
+      implementations need an opaque or transparent-but-pointer-active
+      element covering the viewport behind the container.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: native HTMLDialogElement (`<dialog>`) with `showModal()`, plus named slots for header / body / footer
+    variantMechanism: attributes for variant (`role="alertdialog"`) and size (`size="lg"`); CSS state via `[open]`
+  react:
+    structureMechanism: portal-based primitives (Radix `Dialog.Root` / `Dialog.Portal` / `Dialog.Content`, or React Aria `Modal` + `Dialog`) compositing the slots as children
+    variantMechanism: props with class-variance-authority for size/variant; `data-state` attribute for transition states
+  angularSignals:
+    structureMechanism: Angular CDK Dialog (`MatDialog` or `Dialog` from `@angular/cdk/dialog`) with content projection or template-based dialogs
+    variantMechanism: input<'dialog' | 'alertdialog' | 'fullscreen'>() and input<'sm' | 'md' | 'lg' | 'xl'>(); host bindings drive `[attr.role]`
+  vue:
+    structureMechanism: Headless UI `<Dialog>` / `<DialogPanel>` or native `<dialog>` with named slots
+    variantMechanism: defineProps with literal-union types; `:data-state` for transition states
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
+  - https://www.radix-ui.com/primitives/docs/components/dialog
+  - https://react-spectrum.adobe.com/react-aria/Modal.html
+  - https://headlessui.com/react/dialog
+  - https://polaris.shopify.com/components/overlays/modal
+  - https://carbondesignsystem.com/components/modal/usage/
+  - https://m3.material.io/components/dialogs/overview
+  - https://atlassian.design/components/modal-dialog/examples
+  - https://inclusive-components.design/a-todo-list/
+
+lastReviewed: '2026-04-28'
