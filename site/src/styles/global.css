@@ -525,6 +525,39 @@ th {
 }
 
 /* Index page */
+.phase-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 18px;
+  margin: 32px 0 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent-active);
+  border-radius: var(--radius-md);
+}
+.phase-banner__tag {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-active);
+}
+.phase-banner__text {
+  margin: 0;
+  font-size: var(--text-step-0);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+@media (max-width: 540px) {
+  .phase-banner {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+}
+
 .hero-eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-step--1);

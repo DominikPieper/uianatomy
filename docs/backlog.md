@@ -11,7 +11,7 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 - [x] **P0-1 Tabs nachziehen** — data states erweitert (`busy`, `lazy`, `error`), 2 mistakes ergänzt (lazy-panel-no-aria-busy, overflow-no-scroll-into-view, indicator-not-rtl-aware), 1 mismatch ergänzt (overflow wrap vs scroll). Erledigt 2026-04-29. Datei: `content/components/tabs.yaml`.
 - [x] **P0-2 Mindesttiefe-Checkliste** verankert in `docs/methodology.md` (Section "Minimum depth contract", Tabelle mit 8 Schwellwerten). Validator: `shared/tests/depth.test.ts` — bricht `pnpm -r test` bei Unterschreitung mit `<id>: <dimension> N < M`-Meldungen. Per-Component-Override via `overrides`-Map möglich. Erledigt 2026-04-29.
 - [x] **P0-3 ADR-006: Token-Layer** — Decision-Doc geschrieben: kanonische Token-Namen pro Slot, Werte in `implementations/<lib>/`. Fünf Kategorien (`spacing`, `radius`, `color`, `elevation`, `typography`). Schema-Skizze + `tokenBindings`-Form fixiert für P1-5. Erledigt 2026-04-29. Datei: `docs/adr/006-token-layer.md`.
-- [ ] **P0-4 Roadmap-Pin** auf Site-Index: Banner "Phase 1 — keine Beispiele, kein Live-Code. Phase 2 ab Q3." Datei: `site/src/pages/index.astro`.
+- [x] **P0-4 Roadmap-Pin** — `<aside class="phase-banner">` auf Site-Index oberhalb Hero: "Phase 1 · Reference only — no live examples and no implementation code yet. Phase 2 (implementation audits) begins Q3 2026." Light/Dark-tauglich, Mobile-Stack ab 540px. Erledigt 2026-04-29. Dateien: `site/src/pages/index.astro`, `site/src/styles/global.css`.
 
 ## P1 — strukturelle Schema-Erweiterungen
 
@@ -57,9 +57,9 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## Empfohlener Pfad
 
-P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 → P1-5 → P1-6 → P1-7 → P1-8 → P3-17 → P3-18.
+P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 (✓) → P1-5 → P1-6 → P1-7 → P1-8 → P3-17 → P3-18.
 
-P0-4 (Roadmap-Banner auf Site-Index) ist als Nächstes dran — Quick-Win. P1-5 (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) ist die nächste größere Plan-Session.
+Alle P0-Items abgeschlossen. **P1-5** (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) ist die nächste größere Plan-Session und entblockt den Phase-2-Audit. **P3-17** (Site-A11y: Skip-Link + `<nav>`-Landmarks) ist der nächste Quick-Win, falls eine kleine Session bevorzugt wird.
 
 ## Wartung dieses Backlogs
 
