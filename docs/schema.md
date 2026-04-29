@@ -44,6 +44,57 @@ The list of slots/regions the component is composed of. Each entry:
 
 **Why `required` matters:** drives how the slot is rendered in the diagram (solid vs. dashed outline) and informs the implementation (slot-conditional vs. always-rendered container).
 
+### `tokens` (optional, per slot)
+
+Each anatomy slot may declare semantic token *names* — never values — across five fixed categories. Concrete values live in `implementations/<lib>/<id>.yaml` via `tokenBindings` (Phase 2). The full rationale is in [ADR-006](./adr/006-token-layer.md).
+
+```yaml
+- id: title
+  required: true
+  purpose: ...
+  layout: { row: 3, col: 1, span: full }
+  figma: { type: text, hint: '...' }
+  code: { slot: title, semantic: heading-or-link }
+  a11y: { hint: '...' }
+  tokens:                                # optional
+    spacing:
+      blockPadding: spacing.tight
+    typography:
+      size: text.lg
+      weight: weight.semibold
+      lineHeight: leading.tight
+    color:
+      foreground: color.text.primary
+```
+
+**Shape rules:**
+
+- The `tokens` field, every category inside it, and every property inside a category are all optional.
+- Categories are exactly: `spacing`, `radius`, `color`, `elevation`, `typography`. The schema rejects unknown category names.
+- Each category is a map from a *property key* (the slot-side concern, e.g. `padding`, `corner`, `foreground`) to a *canonical token name* (the semantic, e.g. `spacing.compact`).
+- Token names follow dotted lower-kebab notation (`category.scaleStep` or `category.facet.scaleStep`). The schema enforces the regex `/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/` — any name that fails this is a build error.
+- Tokens describe the *default* variant of the slot (e.g. `primary` for Button, `elevated` for Card). Variant-specific overrides belong to implementations, not the canon.
+
+**Legal token-name vocabulary:**
+
+| Category | Legal names |
+|---|---|
+| `spacing` | `spacing.tight`, `spacing.compact`, `spacing.cozy`, `spacing.comfortable`, `spacing.loose` |
+| `radius` | `radius.none`, `radius.sm`, `radius.md`, `radius.lg`, `radius.pill`, `radius.full` |
+| `color` | `color.surface.bg`, `color.surface.raised`, `color.surface.sunken`, `color.surface.scrim`, `color.text.primary`, `color.text.muted`, `color.text.inverse`, `color.text.accent`, `color.border.subtle`, `color.border.strong`, `color.border.focus`, `color.accent.bg`, `color.accent.fg` |
+| `elevation` | `elevation.none`, `elevation.sm`, `elevation.md`, `elevation.lg`, `elevation.overlay` |
+| `typography` | size: `text.xs`, `text.sm`, `text.md`, `text.lg`, `text.xl` · weight: `weight.regular`, `weight.medium`, `weight.semibold`, `weight.bold` · line-height: `leading.tight`, `leading.snug`, `leading.normal`, `leading.relaxed` · tracking: `tracking.normal`, `tracking.wide` |
+
+Adding a name to this set is a schema-doc change. The Zod regex does not enforce membership — out-of-vocabulary names parse, but they will not survive review and do not have a binding contract for Phase 2.
+
+**Conventional property keys** (open-ended; pick the one that reads cleanly for the slot):
+
+- `spacing` → `padding`, `gap`, `inlinePadding`, `blockPadding`, `inset`
+- `radius` → `corner`
+- `color` → `background`, `foreground`, `border`, `ring`
+- `elevation` → `shadow`
+- `typography` → `size`, `weight`, `lineHeight`, `tracking`, `case`
+
 ## `axes`
 
 The three-way distinction between variants, properties, and states.

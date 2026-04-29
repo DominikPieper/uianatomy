@@ -1,0 +1,89 @@
+---
+import type { Component, SlotTokens } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const CATEGORIES = ['spacing', 'radius', 'color', 'elevation', 'typography'] as const;
+type Category = typeof CATEGORIES[number];
+
+const presentCategories: Category[] = CATEGORIES.filter((cat) =>
+  component.anatomy.some((slot) => {
+    const map = (slot.tokens as SlotTokens | undefined)?.[cat];
+    return map !== undefined && Object.keys(map).length > 0;
+  }),
+);
+---
+{presentCategories.length === 0 ? (
+  <p class="tokens-empty">No tokens declared for this component yet.</p>
+) : (
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Slot</th>
+          {presentCategories.map((cat) => (<th>{cat}</th>))}
+        </tr>
+      </thead>
+      <tbody>
+        {component.anatomy.map((slot) => (
+          <tr>
+            <td><code>{slot.id}</code></td>
+            {presentCategories.map((cat) => {
+              const map = (slot.tokens as SlotTokens | undefined)?.[cat];
+              const entries = map ? Object.entries(map) : [];
+              return (
+                <td>
+                  {entries.length === 0 ? (
+                    <span class="tokens-empty-cell">—</span>
+                  ) : (
+                    <ul class="tokens-list">
+                      {entries.map(([prop, name]) => (
+                        <li>
+                          <span class="tokens-prop">{prop}</span>
+                          <code class="tokens-name">{name}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .tokens-empty {
+    color: var(--fg-muted);
+    font-style: italic;
+    margin: 0 0 24px;
+  }
+  .tokens-empty-cell {
+    color: var(--fg-muted);
+  }
+  .tokens-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tokens-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tokens-prop {
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+  }
+  .tokens-name {
+    font-size: var(--text-step-0);
+  }
+</style>

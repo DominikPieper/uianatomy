@@ -35,6 +35,22 @@ anatomy:
         for buttons that should not receive focus; use `aria-disabled`
         only when the disabled button must remain focusable for
         assistive-tech announcement.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.accent.bg
+        foreground: color.accent.fg
+        border: color.border.subtle
+        ring: color.border.focus
+      elevation:
+        shadow: elevation.sm
+      typography:
+        size: text.md
+        weight: weight.semibold
 
   - id: icon-leading
     required: false
@@ -58,6 +74,9 @@ anatomy:
         `aria-hidden="true"` on the icon, no alt. If the icon is the
         sole label of the button (icon-only variant), the button
         carries an `aria-label` describing the action.
+    tokens:
+      color:
+        foreground: color.accent.fg
 
   - id: label
     required: true
@@ -81,6 +100,13 @@ anatomy:
         accessible name unless the button has an `aria-label` or
         `aria-labelledby` override. Avoid using only an icon as the
         label without an `aria-label`.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+        tracking: tracking.normal
+      color:
+        foreground: color.accent.fg
 
   - id: icon-trailing
     required: false
@@ -104,6 +130,9 @@ anatomy:
         state ("opens menu", "external link"), pair it with an
         invisible-text addition to the label or an `aria-label` that
         captures the meaning.
+    tokens:
+      color:
+        foreground: color.accent.fg
 
 axes:
   variants:

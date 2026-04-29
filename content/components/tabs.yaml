@@ -32,6 +32,14 @@ anatomy:
         `role="tablist"` with `aria-orientation` matching the visual
         orientation. If the tabs label a region elsewhere on the page,
         give the tablist an `aria-label` or `aria-labelledby`.
+    tokens:
+      spacing:
+        padding: spacing.tight
+        gap: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        border: color.border.subtle
 
   - id: tab
     required: true
@@ -56,6 +64,17 @@ anatomy:
         at any time. `aria-controls` references the associated tabpanel
         id. Disabled tabs use `aria-disabled` and remain focusable so
         keyboard users can still navigate to them.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
 
   - id: indicator
     required: false
@@ -81,6 +100,11 @@ anatomy:
         Presentational only. Selection is communicated through
         `aria-selected` on the tab; the indicator is a visual
         reinforcement, not a substitute.
+    tokens:
+      radius:
+        corner: radius.pill
+      color:
+        background: color.accent.bg
 
   - id: tabpanel
     required: true
@@ -103,6 +127,14 @@ anatomy:
         Make the panel programmatically focusable (`tabindex="0"`) only
         if the panel itself is the first interactive surface; otherwise
         let the first interactive child receive focus naturally.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      typography:
+        size: text.md
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
 
 axes:
   variants:

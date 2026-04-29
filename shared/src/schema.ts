@@ -52,6 +52,25 @@ export const a11yHintSchema = z.object({
   hint: z.string().min(1),
 });
 
+const tokenName = z
+  .string()
+  .regex(
+    /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/,
+    'token name must be dotted lower-kebab, e.g. spacing.compact',
+  );
+
+export const slotTokenMap = z.record(z.string().min(1), tokenName);
+
+export const slotTokensSchema = z
+  .object({
+    spacing: slotTokenMap.optional(),
+    radius: slotTokenMap.optional(),
+    color: slotTokenMap.optional(),
+    elevation: slotTokenMap.optional(),
+    typography: slotTokenMap.optional(),
+  })
+  .strict();
+
 export const anatomySlotSchema = z.object({
   id: slug,
   required: z.boolean(),
@@ -60,6 +79,7 @@ export const anatomySlotSchema = z.object({
   figma: figmaHintSchema,
   code: codeHintSchema,
   a11y: a11yHintSchema,
+  tokens: slotTokensSchema.optional(),
 });
 
 export const propertySchema = z.object({
@@ -123,6 +143,7 @@ export const componentSchema = z.object({
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
 export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
+export type SlotTokens = z.infer<typeof slotTokensSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Axes = z.infer<typeof axesSchema>;
 export type Mismatch = z.infer<typeof mismatchSchema>;

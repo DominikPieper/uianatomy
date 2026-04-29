@@ -32,6 +32,9 @@ anatomy:
         Backdrop is presentational; do not put role on it. Clicking the
         backdrop may dismiss the dialog when `dismissible` is true, but
         keyboard users must always have an explicit close affordance.
+    tokens:
+      color:
+        background: color.surface.scrim
 
   - id: container
     required: true
@@ -55,6 +58,16 @@ anatomy:
         pointing at the title slot, and optionally `aria-describedby`
         pointing at the body. Focus is trapped here while open and
         restored to the trigger on close.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      radius:
+        corner: radius.lg
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.overlay
 
   - id: header
     required: false
@@ -76,6 +89,10 @@ anatomy:
       hint: >-
         Header is a layout region, not a heading. The actual heading
         semantics live on the title element.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
 
   - id: title
     required: true
@@ -98,6 +115,13 @@ anatomy:
         Use a real heading element of an appropriate level. Reference
         it from the container with `aria-labelledby`. Never rely on
         `aria-label` on the container if a visible title exists.
+    tokens:
+      typography:
+        size: text.lg
+        weight: weight.semibold
+        lineHeight: leading.tight
+      color:
+        foreground: color.text.primary
 
   - id: close-button
     required: false
@@ -121,6 +145,14 @@ anatomy:
         Provide an accessible name ("Close" or "Close dialog"); a bare
         × glyph is not announced. The Escape key must do the same thing
         as clicking this button when the dialog is dismissible.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
 
   - id: body
     required: true
@@ -143,6 +175,14 @@ anatomy:
         Body retains its native semantics (forms stay forms). If the
         body is the dialog's description, reference its container with
         `aria-describedby` on the container.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      typography:
+        size: text.md
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
 
   - id: footer
     required: false
@@ -165,6 +205,10 @@ anatomy:
         Buttons keep native semantics. Document the default focus
         target (usually the primary action, but the *cancel* action
         for destructive alerts) so behavior is consistent across uses.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
 
 axes:
   variants:

@@ -2,6 +2,7 @@
 import type { Component } from '@uianatomy/shared/schema';
 import SectionHeader from '../SectionHeader.astro';
 import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
+import TokensTable from '../sections/TokensTable.astro';
 import AxesTable from '../sections/AxesTable.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
 import MistakesList from '../sections/MistakesList.astro';
@@ -13,6 +14,9 @@ const { component } = Astro.props;
 <section data-view-section="designer">
   <SectionHeader role="designer" title="Figma anatomy" id="figma-anatomy" />
   <FigmaSlotTable component={component} />
+
+  <SectionHeader role="designer" title="Token usage per slot" id="tokens" />
+  <TokensTable component={component} />
 
   <SectionHeader role="both" title="Variants, properties, states" id="axes" />
   <AxesTable component={component} />

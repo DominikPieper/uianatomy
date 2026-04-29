@@ -35,6 +35,18 @@ anatomy:
         `aria-activedescendant` pointing at the currently-highlighted
         option when navigating with arrow keys. The input retains DOM
         focus throughout — focus never moves into the listbox.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.md
+      typography:
+        size: text.md
+      color:
+        background: color.surface.bg
+        foreground: color.text.primary
+        border: color.border.strong
+        ring: color.border.focus
 
   - id: clear-button
     required: false
@@ -57,6 +69,13 @@ anatomy:
         Real button with accessible name ("Clear" or "Clear search").
         Clicking returns focus to the input. Escape with the popup
         closed performs the same action (clear value), per APG.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
 
   - id: trigger-button
     required: false
@@ -79,6 +98,13 @@ anatomy:
         `tabindex="-1"` because the input owns focus; `aria-label`
         ("Show options"). Clicking toggles `aria-expanded` on the
         combobox input, not on this button.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
 
   - id: listbox
     required: true
@@ -102,6 +128,16 @@ anatomy:
         `role="listbox"` and `id` referenced by the input's
         `aria-controls`. Listbox is rendered in the document but
         positioned via portal; do not move DOM focus into it.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.lg
 
   - id: option
     required: true
@@ -126,6 +162,15 @@ anatomy:
         highlighted option is referenced by the input's
         `aria-activedescendant`. Selected options have
         `aria-selected="true"`.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.md
+      color:
+        foreground: color.text.primary
 
   - id: empty-state
     required: false
@@ -150,6 +195,13 @@ anatomy:
         or via `aria-live="polite"` on the empty-state container.
         Avoid putting `role="option"` on the empty-state — it is not
         selectable.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.muted
 
 axes:
   variants:

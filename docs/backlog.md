@@ -15,7 +15,7 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## P1 — strukturelle Schema-Erweiterungen
 
-- [ ] **P1-5 Token-Layer Schema + Migration** — `shared/src/schema.ts` Felder ergänzen, alle 5 YAMLs migrieren (mind. spacing + radius pro Slot), Designer-View-Komponente `TokensTable.astro` rendern. Hängt an P0-3.
+- [x] **P1-5 Token-Layer Schema + Migration** — `anatomySlotSchema` um optionales `tokens`-Feld (5 Kategorien als optionale `Record<string, dotted-token-name>`-Maps) erweitert, Vokabular fixiert + in `docs/schema.md` dokumentiert, alle 5 YAMLs (33 Slots) migriert, neue Designer-View-Komponente `TokensTable.astro` mit sparse-column-Logik integriert. Tests + `pnpm -C site build` grün, Browser-Smoke-Test bestätigt Designer-only-Sichtbarkeit + warmer Akzent. Erledigt 2026-04-29. Dateien: `shared/src/schema.ts`, `content/components/{button,card,modal,tabs,combobox}.yaml`, `site/src/components/sections/TokensTable.astro`, `site/src/components/views/DesignerView.astro`, `docs/schema.md`.
 - [ ] **P1-6 Motion-Sektion** — `motion?: { reducedMotionFallback, durations: { open, close, indicator, ... }, easing }`. Migration: Modal, Combobox, Tabs.
 - [ ] **P1-7 Responsive-Sektion** — `responsive?: { breakpoints: [{ at, change }] }` deklarativ. Migration: Card (stack/side), Modal (fullscreen-Breakpoint), Tabs (vertical-Switch), Combobox (mobile native Listbox).
 - [ ] **P1-8 State-Maschine modellieren** — `axes.states.transitions[]: { from, to, trigger }`. Migration: Modal (closed→opening→open→closing→closed), Combobox (closed↔open, open→busy→open, open→invalid).
@@ -57,9 +57,9 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## Empfohlener Pfad
 
-P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 (✓) → P3-17 (✓) → P3-19 (✓) → P3-20 (✓) → P3-18 (✓) → P1-5 → P1-6 → P1-7 → P1-8.
+P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 (✓) → P3-17 (✓) → P3-19 (✓) → P3-20 (✓) → P3-18 (✓) → P1-5 (✓) → P1-6 → P1-7 → P1-8.
 
-Alle P0- und P3-Items abgeschlossen. Nächste größere Plan-Session: **P1-5** (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) — entblockt den Phase-2-Audit. Danach P1-6 (Motion), P1-7 (Responsive), P1-8 (State-Maschine) als sequenzielle Schema-Erweiterungen.
+Alle P0- und P3-Items sowie P1-5 abgeschlossen. Phase-2-Audit ist damit auf der Token-Schiene entblockt. Nächste Plan-Session: **P1-6** (Motion: `motion?: { reducedMotionFallback, durations, easing }`, Migration Modal/Combobox/Tabs). Danach P1-7 (Responsive) und P1-8 (State-Maschine) als sequenzielle Schema-Erweiterungen.
 
 ## Wartung dieses Backlogs
 

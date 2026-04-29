@@ -30,6 +30,9 @@ anatomy:
       hint: >-
         Provide alt text for informative images; alt="" for purely decorative
         media. Do not duplicate the title in alt text.
+    tokens:
+      radius:
+        corner: radius.md
 
   - id: eyebrow
     required: false
@@ -51,6 +54,13 @@ anatomy:
         Avoid heading semantics — the eyebrow is metadata, not a heading.
         If grouped with the title, treat as part of the same labelling
         relationship via aria-labelledby.
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.medium
+        tracking: tracking.wide
+      color:
+        foreground: color.text.muted
 
   - id: title
     required: true
@@ -73,6 +83,15 @@ anatomy:
         Use a heading element of the appropriate level for the surrounding
         document outline. If the card is interactive as a whole, the title
         also carries the accessible name of the activator.
+    tokens:
+      spacing:
+        blockPadding: spacing.tight
+      typography:
+        size: text.lg
+        weight: weight.semibold
+        lineHeight: leading.tight
+      color:
+        foreground: color.text.primary
 
   - id: subtitle
     required: false
@@ -93,6 +112,13 @@ anatomy:
       hint: >-
         If the subtitle qualifies the title's meaning, associate it via
         aria-describedby on the interactive element.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.regular
+        lineHeight: leading.snug
+      color:
+        foreground: color.text.muted
 
   - id: body
     required: true
@@ -113,6 +139,14 @@ anatomy:
         Body content keeps its native semantics (lists stay lists, links
         stay links). Avoid wrapping body in role="text" — it strips
         semantics from assistive tech.
+    tokens:
+      spacing:
+        blockPadding: spacing.compact
+      typography:
+        size: text.md
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
 
   - id: actions
     required: false
@@ -135,6 +169,10 @@ anatomy:
         Keep nested buttons keyboard-reachable. If the whole card is also
         clickable, see mistake "card-as-link-nested-buttons" for the
         correct overlay pattern.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
 
   - id: footer
     required: false
@@ -155,6 +193,14 @@ anatomy:
       hint: >-
         Footer content is not the card's accessible name. If it carries
         status, use aria-live on the chip itself, not the card.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
 
 axes:
   variants:
