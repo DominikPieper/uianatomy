@@ -1,0 +1,733 @@
+id: stepper
+name: Stepper
+description: >-
+  A sequential multi-step indicator that visualises progress
+  through an ordered process — checkout flows, signup wizards,
+  multi-step forms, onboarding sequences. Distinct from Tabs
+  (which switches between non-sequential parallel views) by
+  enforcing order: steps complete in sequence, prior steps may
+  be revisited but later steps are gated until prior steps
+  validate. Distinct from Accordion (independent collapsible
+  regions) by the strict sequence and the visible
+  progress-through-N-steps state.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded container that holds the step indicators
+      and connectors. Carries the `aria-label` for the
+      stepper's purpose ("Checkout progress", "Signup steps")
+      and the orientation property. Visual rhythm: equal
+      spacing between steps, consistent connector lengths.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame (or vertical depending on orientation); equal-distributed steps with connectors between
+    code:
+      slot: root
+      semantic: progress-indicator
+    a11y:
+      hint: >-
+        Apply `role="list"` (or `<ol>` for the canonical
+        ordered-list semantic) plus `aria-label="Progress"`
+        or "Steps". Each step is a `<li>` with role inferred
+        or explicit. The current step also carries
+        `aria-current="step"` to announce position to SR
+        users.
+    tokens:
+      spacing:
+        gap: spacing.compact
+        padding: spacing.tight
+
+  - id: step
+    required: true
+    purpose: >-
+      Individual step in the sequence. One anatomy slot
+      describes the role; multiple instances render per step.
+      Encapsulates the indicator + label + optional
+      description grouping. The state of each step (pending,
+      active, completed, error) drives visual treatment.
+    layout:
+      parent: root
+      row: 1
+      span: 4
+      repeats: 4
+    figma:
+      type: instance
+      hint: Step component instance with state variants (pending / active / completed / error)
+    code:
+      slot: step
+      semantic: listitem
+    a11y:
+      hint: >-
+        Each step is a `<li>` carrying state via
+        `aria-current="step"` (current), `aria-disabled`
+        (disabled future steps in linear mode), or no
+        attribute (pending / completed). For interactive
+        steppers (where the user may click prior steps to
+        revisit), the step is wrapped in a `<button>`
+        carrying the accessible name from the label.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+
+  - id: step-indicator
+    required: true
+    purpose: >-
+      The visual marker — a numbered circle for pending /
+      active steps; a checkmark icon for completed steps;
+      an error glyph for error states. Communicates the
+      step's state at a glance. Conventionally a circle of
+      consistent diameter across all states for visual
+      rhythm.
+    layout:
+      parent: step
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Step indicator component instance with number / checkmark / error icon variants
+    code:
+      slot: step-indicator
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — the step's accessible state
+        (`aria-current`, `aria-disabled`) plus visually-
+        hidden text ("Step 2 of 5, complete") communicates
+        state. The number / checkmark / error glyph is
+        visual reinforcement only. SR users do not rely on
+        the indicator glyph.
+    tokens:
+      radius:
+        corner: radius.full
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        background: color.surface.sunken
+        foreground: color.text.muted
+        border: color.border.subtle
+
+  - id: step-label
+    required: true
+    purpose: >-
+      The step's name — "Cart", "Shipping", "Payment",
+      "Review". Acts as the step's accessible name.
+      Visually positioned beside or below the indicator
+      depending on orientation; for `dot` variant the
+      label is visually-hidden.
+    layout:
+      parent: step
+      row: 2
+      col: 1
+      span: 3
+    figma:
+      type: text
+      hint: Label text style; bound to a component property
+    code:
+      slot: step-label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. The step's accessible name. For
+        interactive steps wrapped in `<button>`, the label
+        is the button's text content. For dot variant
+        (label visually-hidden), the label remains in the
+        DOM via sr-only — never `display: none`.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.primary
+
+  - id: step-description
+    required: false
+    purpose: >-
+      Optional supporting text below the label. Used for
+      brief context per step ("Review your items", "Enter
+      delivery details"). Single line or short paragraph;
+      omitted in compact / dot variants.
+    layout:
+      parent: step
+      row: 3
+      col: 1
+      span: 3
+    figma:
+      type: text
+      hint: Description text style; muted; visibility per variant
+    code:
+      slot: step-description
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. SR users hear it after the label when
+        navigating into the step. For interactive steps,
+        the description is referenced via
+        `aria-describedby` on the step's button to compose
+        into the announcement.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+  - id: connector
+    required: false
+    purpose: >-
+      The line between consecutive steps that visualises
+      sequence. May be a horizontal line (horizontal
+      orientation), a vertical line (vertical orientation),
+      or omitted entirely (compact / dot variants where
+      visual proximity alone communicates sequence). Style
+      changes between connectors: solid for completed-to-
+      completed; muted for pending-to-pending; mixed for
+      the active-step transition edge.
+    layout:
+      parent: root
+      row: 1
+      col: 2
+      span: 1
+      overlay: true
+    figma:
+      type: rectangle
+      hint: 2px line between consecutive step indicators; style varies by adjacent step states
+    code:
+      slot: connector
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Sequence is
+        communicated through DOM order plus the steps'
+        position cues (`aria-current`, `aria-disabled`,
+        visually-hidden "step N of M" text); the line is
+        visual reinforcement.
+    tokens:
+      color:
+        background: color.border.subtle
+
+axes:
+  variants:
+    - standard
+    - dot
+    - vertical
+  properties:
+    - { name: nonLinear, kind: primitive, of: boolean }
+    - { name: hasDescriptions, kind: primitive, of: boolean }
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - disabled
+    data:
+      - pending
+      - active
+      - completed
+      - error
+    transitions:
+      - from: pending
+        to: active
+        trigger: >-
+          User progresses to this step — by completing the
+          prior step (linear mode) or by clicking the step
+          directly (`nonLinear: true`). The previously-
+          active step transitions out of active; this step
+          becomes active and `aria-current="step"`.
+      - from: active
+        to: completed
+        trigger: >-
+          User completes the current step (validation
+          passes, "Next" activated). The step transitions
+          out of active; the next step becomes active. The
+          completed step's indicator changes to a checkmark.
+      - from: active
+        to: error
+        trigger: >-
+          User attempts to advance from this step but
+          validation fails. Step gains error state; the
+          step's indicator changes to error glyph; an
+          inline error message describes the failure.
+          Stays as the active step — the user must resolve
+          the error before advancing.
+      - from: error
+        to: active
+        trigger: >-
+          User resolves the validation error. State returns
+          to active; error indicator clears.
+      - from: completed
+        to: active
+        trigger: >-
+          User navigates back to a previous step (per
+          `nonLinear: true` or the canonical "user may
+          revisit prior steps" pattern). Previously-active
+          step transitions to its appropriate state
+          (typically pending if not yet completed, or
+          completed if revisiting after completion).
+
+mismatches:
+  - figma: Stepper drawn as horizontal Tabs
+    code: A list of steps with `aria-current="step"` plus order semantics
+    consequence: >-
+      Designers may use Tabs visually for sequential flow.
+      Implementations following the design ship `role="tablist"`
+      with `aria-selected` instead of `aria-current="step"`.
+      SR users hear "tab" with no sense of sequence; the
+      "X of N steps" announcement is missing; users navigate
+      between tabs and bypass step ordering.
+    correct: >-
+      Distinguish at the canonical level: Stepper is
+      sequential and ordered; Tabs is parallel and
+      switchable. The semantic distinction drives the role
+      (`<ol>` / `role="list"` vs `role="tablist"`) and the
+      state (`aria-current="step"` vs `aria-selected`). Use
+      Tabs for parallel views; Stepper for sequential
+      progression.
+
+  - figma: Step indicator drawn but no accessibility for "step N of M"
+    code: Each step carries visually-hidden "Step 2 of 5" text in addition to the indicator number
+    consequence: >-
+      Designers compose mocks with the indicator showing
+      "2" inside a circle. Implementations following the
+      design ship the visual indicator only; SR users hear
+      the indicator number announced as a digit but
+      without context — they do not know how many steps
+      remain or which step is current.
+    correct: >-
+      Pair the visual indicator with visually-hidden text
+      composing the position into the step's accessible
+      name: "Step 2 of 5, Shipping, current". The
+      visually-hidden text composes via `aria-describedby`
+      or directly inside the step container. The indicator
+      number itself can be `aria-hidden`.
+
+  - figma: Sequential and non-linear stepper drawn as the same component
+    code: 'A `nonLinear: boolean` property that gates whether the user may click prior or future steps'
+    consequence: >-
+      Designers do not distinguish linear (one-direction-
+      only) from non-linear (jump-anywhere). Implementations
+      following the design may ship the wrong mode; users
+      expecting to jump to a future step in linear mode get
+      blocked silently; users expecting linear sequence in
+      non-linear mode skip required steps and the underlying
+      flow breaks downstream.
+    correct: >-
+      Document `nonLinear` as a first-class property. Linear
+      (default false): only completed and current steps are
+      reachable; future steps are `aria-disabled`. Non-linear
+      (true): all steps reachable; user navigates freely.
+      Visual treatment communicates the mode (disabled-future-
+      steps in linear mode are clearly muted and unclickable).
+
+  - figma: Connectors drawn as a single uniform line
+    code: Connectors with style per adjacent-step-state pair (solid for completed-to-completed, muted for pending)
+    consequence: >-
+      Designers may use one connector style throughout for
+      visual simplicity. Implementations following the
+      design ship a single uniform line; users cannot
+      distinguish completed sequence from pending sequence
+      visually. The progress-through-N-steps story is
+      lost.
+    correct: >-
+      Connector style varies based on the states of its
+      flanking steps. Solid line for completed-to-completed
+      (or completed-to-active); muted dashed or thinner
+      line for pending-to-pending. Visually communicates
+      progress-flow direction. Decorative — the canonical
+      semantic still lives in `aria-current` and step
+      states.
+
+mistakes:
+  - id: stepper-no-aria-current
+    title: Active step missing `aria-current`
+    description: >-
+      Visual active step is shown via background colour or
+      indicator emphasis; `aria-current="step"` is missing.
+      SR users hear no signal of which step is active; they
+      cannot orient to the position in the sequence.
+    fix: >-
+      The active step carries `aria-current="step"` (the
+      canonical APG-recommended value for sequence steps).
+      SR announces "current step" before the step's label.
+      Update on every step transition.
+
+  - id: stepper-skip-validation
+    title: Linear stepper allows skipping required steps
+    description: >-
+      User clicks step 4 in linear mode while step 2 is
+      incomplete; the click navigates them there
+      regardless. Required validation per step is bypassed;
+      the underlying flow breaks downstream.
+    fix: >-
+      In linear mode (`nonLinear: false`), future steps
+      are `aria-disabled` until prior steps complete.
+      Click is a no-op (or shows a "complete prior steps
+      first" message). The "Next" button is the canonical
+      forward-navigation; clicking step indicators
+      directly is allowed for prior steps but not future
+      steps.
+
+  - id: stepper-step-not-button
+    title: Interactive step not a button
+    description: >-
+      Implementation makes step indicators clickable via
+      onClick on a `<div>`. SR users do not get button
+      semantics; keyboard users cannot activate via Enter
+      / Space; focus management is bespoke.
+    fix: >-
+      For interactive steps (any step the user may navigate
+      to via click), wrap in `<button>` (or `<a>` for
+      stepper-as-navigation patterns where each step has
+      its own URL). Standard button semantics apply: focus,
+      Enter / Space activation, accessible name from text
+      content.
+
+  - id: stepper-no-keyboard-nav
+    title: Steps reachable only via mouse
+    description: >-
+      Implementation lacks keyboard support — Tab cycles
+      through every step but ArrowKeys do not navigate
+      between steps; or the steps are not focusable at
+      all.
+    fix: >-
+      Steps are reachable via Tab (when interactive). For
+      non-linear steppers, ArrowLeft / ArrowRight (or
+      ArrowUp / ArrowDown for vertical orientation) move
+      focus between steps via roving tabindex; Enter /
+      Space activates. Linear steppers may use Tab-only
+      navigation since future steps are disabled.
+
+  - id: stepper-progress-cues-decorative-only
+    title: Progress communicated only by visual indicators
+    description: >-
+      Visual indicators (numbered circles, checkmarks,
+      coloured states) communicate progress. SR users
+      hear no progress percentage or "step N of M"
+      composition. The visual story is rich; the accessible
+      story is empty.
+    fix: >-
+      Compose visually-hidden "Step N of M" text into each
+      step's accessible name. The stepper's root may
+      additionally carry `aria-valuenow` / `aria-valuemin`
+      / `aria-valuemax` if treating the stepper as a
+      progress indicator (rare; usually the per-step
+      announcement is sufficient).
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-stepper>` host with `<ui-step>` children; `<ol>` element internally; named slots for label and description per step
+    variantMechanism: attributes (`variant="vertical"`, `non-linear`, `size="md"`); per-step `state` attribute (pending / active / completed / error); `data-current` for active step
+  react:
+    structureMechanism: Compound components (`<Stepper>` plus `<Stepper.Step>` plus `<Stepper.StepLabel>` plus `<Stepper.StepDescription>`); React Aria does not ship a Stepper primitive but `useListBox` plus custom step semantics works; Material UI ships `<Stepper>` with `<Step>` and `<StepLabel>` matching the canonical structure
+    variantMechanism: props with class-variance-authority for variant / size; controlled or uncontrolled `activeStep` index; per-step `completed`, `error` state props
+  angularSignals:
+    structureMechanism: Angular Material `MatStepper` plus `MatStep`; or Angular CDK Stepper for headless composition; signal-based active-step state
+    variantMechanism: input<'standard' | 'dot' | 'vertical'>(); `[nonLinear]`, `[size]` host bindings; per-step `[state]` input
+  vue:
+    structureMechanism: Vuetify `<v-stepper>` plus `<v-stepper-item>`; or custom composition with `<ol>` plus per-step components
+    variantMechanism: defineProps with literal-union types; `:variant`, `:non-linear` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    stateTransition: motion.duration.base
+    activeIndicator: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the canonical default switches to
+        `variant: vertical` regardless of authored
+        orientation — narrow viewports cannot accommodate
+        horizontal steppers with labels and connectors.
+        Vertical orientation accommodates labels naturally.
+        Step descriptions may collapse to active-step-only
+        (only the current step shows its description) to
+        save space.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the authored variant renders.
+        Horizontal stepper for short flows; vertical for
+        flows with rich descriptions per step.
+
+events:
+  - name: stepActivate
+    payload: >-
+      `{ stepId: string, stepIndex: number }`. Fires when
+      the user navigates to a step — by clicking (in
+      `nonLinear: true` mode), by completing the prior
+      step in linear mode, or by programmatic
+      `setActiveStep`. The previously-active step
+      transitions out of active.
+    frameworkNotes:
+      webComponents: >-
+        `stepActivate` CustomEvent on the host with
+        `event.detail = { stepId, stepIndex }`.
+      react: >-
+        `onStepChange(activeStep: number)` controlled-
+        pattern callback (Material UI Stepper pattern).
+      angularSignals: >-
+        `output<{ stepId: string, stepIndex: number }>('stepActivate')`.
+      vue: >-
+        `@update:activeStep` for `v-model:active-step`.
+
+  - name: stepComplete
+    payload: >-
+      `{ stepId: string, stepIndex: number }`. Fires when a
+      step transitions to completed state — typically on
+      "Next" activation after validation passes. Distinct
+      from `stepActivate` (which fires on navigation,
+      regardless of completion).
+    frameworkNotes:
+      webComponents: >-
+        `stepComplete` CustomEvent with
+        `event.detail = { stepId, stepIndex }`.
+      react: >-
+        `onStepComplete(stepIndex: number)` callback.
+      angularSignals: >-
+        `output<{ stepId: string, stepIndex: number }>('stepComplete')`.
+      vue: >-
+        `@step-complete` event.
+
+  - name: stepError
+    payload: >-
+      `{ stepId: string, stepIndex: number, message: string }`.
+      Fires when a step transitions to error state —
+      typically when "Next" is activated but validation
+      fails. The message is the user-facing failure
+      description.
+    frameworkNotes:
+      webComponents: >-
+        `stepError` CustomEvent with
+        `event.detail = { stepId, stepIndex, message }`.
+      react: >-
+        `onStepError(stepIndex: number, message: string)`
+        callback.
+      angularSignals: >-
+        `output<{ stepId: string, stepIndex: number, message: string }>('stepError')`.
+      vue: >-
+        `@step-error` event.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        For interactive steppers, focus enters the current
+        step's button; subsequent Tab moves to the next
+        focusable in the document (or to the "Next" button
+        if present below the stepper). Disabled future
+        steps in linear mode are skipped from tab order.
+    - keys: ArrowLeft / ArrowRight (focus on a step, horizontal orientation)
+      expected: >-
+        For non-linear steppers, moves focus to the
+        previous / next step via roving tabindex.
+        Activation does NOT auto-occur — Enter / Space
+        activates. Linear steppers do not bind ArrowKeys
+        on steps because future steps are disabled.
+    - keys: ArrowUp / ArrowDown (vertical orientation)
+      expected: >-
+        Same as ArrowLeft / Right for vertical layouts.
+    - keys: Enter or Space (focus on step)
+      expected: >-
+        Activates the step — navigates to it (non-linear)
+        or is a no-op for already-active step. For
+        completed steps in linear mode, activation
+        navigates back to revisit (canonical "may revisit
+        prior steps" allowance).
+    - keys: Home / End (focus on step)
+      expected: >-
+        Moves focus to first / last step in non-linear
+        mode. In linear mode, Home is the first completed
+        or active step; End is the active step (future
+        steps not focusable).
+  announcements:
+    - trigger: Focus enters current step
+      expected: >-
+        SR announces "Step <N> of <M>, <label>, current
+        step, button" (or "link" if stepper-as-nav). The
+        position cue comes from visually-hidden text or
+        `aria-describedby`; the current state from
+        `aria-current="step"`; the label from text
+        content.
+    - trigger: Step transitions to completed
+      expected: >-
+        SR announces the new state via the next
+        announcement on focus change; the visual checkmark
+        is decorative. For consumers using a polite live
+        region to announce step completion, the
+        announcement reads "Step 2 of 5 complete; Step 3
+        of 5, Payment, now active".
+    - trigger: Step transitions to error
+      expected: >-
+        SR announces the error state via the polite live
+        region: "Error in Step 2 of 5, Shipping: <error
+        message>". Focus moves to the first invalid field
+        within the step's content. `aria-invalid="true"`
+        on the field.
+    - trigger: Stepper completes (final step → completed)
+      expected: >-
+        SR announces completion via the live region:
+        "Process complete." Focus moves to the next page or
+        confirmation surface; the stepper itself remains
+        as a record of the completed sequence.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-current
+    - aria-valid-attr-value
+    - color-contrast
+    - listitem
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / dot / vertical. Dot variant hides labels visually (kept in DOM for SR).
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg. Drives indicator size and typography.
+  - figma: Non Linear
+    code: nonLinear
+    type: Boolean
+    notes: Toggles whether future steps are reachable. Default false (linear sequence).
+  - figma: Has Descriptions
+    code: hasDescriptions
+    type: Boolean
+    notes: Toggles per-step description slot. Useful for verbose steppers; omit for concise dot or icon-only patterns.
+  - figma: Step Count
+    code: 'steps.length'
+    type: Variant
+    notes: Figma exposes 3/4/5/6+ step counts as Variant for preview; code accepts an array of step definitions.
+  - figma: Active Step
+    code: activeStep
+    type: Variant
+    notes: Figma exposes "step 1 active / step 2 active / etc." as Variant for state preview; in code it is a controlled prop (active step index or id).
+  - figma: Completed Steps
+    code: completedSteps
+    type: Variant
+    notes: Figma exposes "0 / 1 / 2 completed" as Variant for state preview; in code it is derived from per-step state.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Horizontal stepper direction reverses logically —
+      first step at inline-start (visual right in RTL).
+      ArrowKey navigation follows visual direction
+      (ArrowLeft moves to next step in RTL per APG list
+      navigation). Connector orientation is direction-
+      neutral for vertical orientation; reverses for
+      horizontal. Step indicator number / checkmark glyph
+      is direction-neutral. Step labels inherit document
+      direction.
+  textExpansion: >-
+    Step labels grow with translation. Long-text languages
+    (DE / RU / FI) may force horizontal stepper layouts
+    to wrap or overflow; the canonical fallback at and
+    below `breakpoint.sm` is to switch to vertical
+    orientation regardless of authored value. For 4+
+    steps with long labels, vertical orientation is the
+    safer canonical default in international layouts.
+
+performance:
+  - name: maxStepsBeforeRedesign
+    metric: step-count
+    threshold: 7
+    unit: steps
+    rationale: >-
+      Above ~7 steps, the cognitive load of remembering
+      progress through the sequence overwhelms the
+      stepper pattern. Long sequences should be redesigned
+      as a wizard with section grouping (group steps into
+      logical phases), or split into multi-page flows
+      where each page has its own short stepper. The
+      threshold matches the "7 plus or minus 2" working-
+      memory canonical guideline (Miller's law).
+
+whenToUse:
+  use: >-
+    For sequential multi-step processes where the order
+    matters and progress through-the-flow is meaningful —
+    checkout flows, signup wizards, multi-step forms,
+    onboarding sequences, document signing flows. The user
+    must (or typically does) complete the steps in
+    sequence; their progress is visible at all times.
+  avoid: >-
+    For parallel views of the same content — that is
+    `Tabs`. For independent collapsible regions — that is
+    `Accordion`. For navigation between top-level pages —
+    that is `SidebarNav`. For sequences exceeding ~7
+    steps — redesign as a wizard with phase grouping or as
+    a multi-page flow.
+  vsRelated:
+    - id: tabs
+      difference: >-
+        `Tabs` is parallel — peer panels switchable in any
+        order. `Stepper` is sequential — ordered steps that
+        complete in sequence. The semantic distinction
+        drives the role (`role="tablist"` with
+        `aria-selected` vs `<ol>` with `aria-current="step"`).
+        Use Tabs for non-sequential views; Stepper for
+        ordered progress.
+    - id: accordion
+      difference: >-
+        `Accordion` is a list of independent collapsible
+        regions; `Stepper` is a sequential progression with
+        gating between steps. Accordion items are peers
+        with no ordering; Stepper steps are ordered and
+        gated. They look superficially similar (vertical
+        list of expandable items) but the semantic
+        distinction is clear in canonical usage.
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` navigates between independent pages
+        with their own URLs; `Stepper` shows progress
+        within a single multi-step flow. SidebarNav is
+        persistent global navigation; Stepper is contextual
+        to the current flow.
+    - id: progress-bar
+      difference: >-
+        A `ProgressBar` shows continuous progress as a
+        percentage or fraction; `Stepper` shows discrete
+        step-by-step progress with named milestones.
+        Progress bars are for indeterminate or
+        percentage-based progress (file upload, page
+        load); Stepper is for named-step processes
+        (checkout, wizard).
+
+notes: >-
+  Stepper vocabulary varies: Material 3 calls this "Stepper"
+  (canonical name); Polaris uses "Footer Help" with
+  embedded progress; Atlassian has "Progress Tracker";
+  Carbon ships "ProgressIndicator". The canonical "Stepper"
+  name and the variant taxonomy match Material 3 most
+  closely. The Stepper-vs-Tabs distinction is the most-
+  load-bearing canonical decision; many implementations
+  use Tabs visually for what is semantically a Stepper,
+  losing both the order semantic and the
+  `aria-current="step"` accessible state.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/practices/list-and-listbox/
+  - https://www.w3.org/TR/wai-aria-1.2/#aria-current
+  - https://m3.material.io/components/lists/overview
+  - https://carbondesignsystem.com/components/progress-indicator/usage/
+  - https://atlassian.design/components/progress-tracker/examples
+  - https://polaris.shopify.com/components/feedback-indicators/progress-bar
+  - https://react-spectrum.adobe.com/react-aria/
+  - https://www.gov.uk/service-manual/design/check-a-users-answers
+
+lastReviewed: '2026-04-29'
