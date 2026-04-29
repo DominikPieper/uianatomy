@@ -250,6 +250,34 @@ events:                                            # optional
 
 `frameworkNotes` is reference data, not a binding contract. Phase-2 implementations (`implementations/<lib>/<id>.yaml`) record the actual handler signatures via a future `eventBindings` field. The canonical notes describe what is *idiomatic*, not what is shipped in any specific library version.
 
+## `performance` (optional, top-level)
+
+Per-component capacity-planning thresholds. A non-empty array of `{ name, metric, threshold, unit, rationale }` records when present. The full rationale is in [ADR-018](./adr/018-performance-thresholds.md).
+
+```yaml
+performance:                          # optional, non-empty when present
+  - name: virtualisedListbox          # camelCase identifier
+    metric: option-count              # what is measured
+    threshold: 200                    # positive numeric value
+    unit: items                       # unit of measurement
+    rationale: >-                     # required prose
+      Above ~200 options, render virtualisation becomes necessary —
+      open latency, memory footprint, and SR announcement count all
+      degrade beyond this threshold on commodity hardware.
+```
+
+**Shape rules:**
+
+- `performance` itself is optional. Components without canonical capacity thresholds omit the field.
+- When present, the array is non-empty. Each entry has all five fields required.
+- `name` is a camelCase identifier (regex `/^[a-z][a-zA-Z0-9]*$/`); used as the stable lookup key for tooling.
+- `metric` is free-text describing *what* is measured (`option-count`, `tab-count`, `panel-payload-size`).
+- `threshold` is a positive number; can be integer or float depending on the metric.
+- `unit` is free-text describing the unit of measurement (`items`, `ms`, `kb`, `tabs`, `modals`); not a closed enum because the vocabulary is open and component-specific.
+- `rationale` is required prose explaining *why* this threshold matters and what happens at the boundary.
+
+**Render:** `PerformanceSection.astro` renders in Dev view (after FormIntegration, before Accessibility) and Bridge view (after FormIntegration, before I18n). Designer view does not render the section — the UX rule derived from a threshold lives in `whenToUse.avoid`.
+
 ## `i18n` (optional, top-level)
 
 Per-component internationalisation acceptance prose. Two required facets when present: `rtl.mirroring` and `textExpansion`. The full rationale is in [ADR-017](./adr/017-i18n-section.md).

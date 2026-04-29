@@ -273,6 +273,25 @@ export const announcementEntrySchema = z
   })
   .strict();
 
+const perfMetricName = z
+  .string()
+  .regex(
+    /^[a-z][a-zA-Z0-9]*$/,
+    'performance threshold name must be camelCase (e.g. virtualisedListbox)',
+  );
+
+export const performanceThresholdSchema = z
+  .object({
+    name: perfMetricName,
+    metric: z.string().min(1),
+    threshold: z.number().positive(),
+    unit: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+export const performanceSchema = z.array(performanceThresholdSchema).min(1);
+
 export const i18nRtlSchema = z
   .object({
     mirroring: z.string().min(1),
@@ -428,6 +447,7 @@ export const componentSchema = z.object({
   propertyMap: propertyMapSchema.optional(),
   formIntegration: formIntegrationSchema.optional(),
   i18n: i18nSchema.optional(),
+  performance: performanceSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -458,6 +478,8 @@ export type PropertyMap = z.infer<typeof propertyMapSchema>;
 export type FormIntegration = z.infer<typeof formIntegrationSchema>;
 export type I18nRtl = z.infer<typeof i18nRtlSchema>;
 export type I18n = z.infer<typeof i18nSchema>;
+export type PerformanceThreshold = z.infer<typeof performanceThresholdSchema>;
+export type Performance = z.infer<typeof performanceSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

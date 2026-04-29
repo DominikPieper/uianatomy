@@ -230,6 +230,79 @@ describe('responsive field', () => {
   });
 });
 
+describe('performance field', () => {
+  it('parses combobox performance with two thresholds', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    expect(combobox.performance?.length).toBe(2);
+    const names = combobox.performance?.map((p) => p.name) ?? [];
+    expect(names).toEqual(['virtualisedListbox', 'asyncFilterDebounce']);
+  });
+
+  it('parses tabs and modal performance', async () => {
+    const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    expect(tabs.performance?.find((p) => p.name === 'tablistOverflow')?.threshold).toBe(7);
+    expect(modal.performance?.find((p) => p.name === 'stackDepth')?.threshold).toBe(1);
+  });
+
+  it('omits performance on Card and Button', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    expect(card.performance).toBeUndefined();
+    expect(button.performance).toBeUndefined();
+  });
+
+  it('rejects performance with non-camelCase name', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const bad = {
+      ...combobox,
+      performance: [
+        { name: 'Bad-Name', metric: 'x', threshold: 1, unit: 'x', rationale: 'x' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects performance with non-positive threshold', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const bad = {
+      ...combobox,
+      performance: [
+        { name: 'foo', metric: 'x', threshold: 0, unit: 'x', rationale: 'x' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty performance array', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const bad = { ...combobox, performance: [] };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown extra field on threshold (strict)', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const bad = {
+      ...combobox,
+      performance: [
+        {
+          name: 'foo',
+          metric: 'x',
+          threshold: 1,
+          unit: 'x',
+          rationale: 'x',
+          somethingElse: 'extra',
+        },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('i18n field', () => {
   it('parses i18n on all five components', async () => {
     const ids = ['button', 'card', 'modal', 'tabs', 'combobox'];

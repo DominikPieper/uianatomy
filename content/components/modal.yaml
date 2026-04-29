@@ -492,6 +492,19 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
+performance:
+  - name: stackDepth
+    metric: open-modal-count
+    threshold: 1
+    unit: modals
+    rationale: >-
+      Avoid stacking modals; the canonical maximum is one open dialog
+      at a time. Stacked modals fight for focus traps, leak `inert`
+      handling between layers, and confuse assistive tech that walks
+      the modality tree. Patterns that feel like they need
+      "modal-on-modal" should be redesigned as a step flow within a
+      single modal, or as a sequence of modal → dismiss → modal.
+
 i18n:
   rtl:
     mirroring: >-

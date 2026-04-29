@@ -509,6 +509,30 @@ events:
         `@update:open` for `v-model:open`; suppressed when the open
         state is computed and not externally controlled.
 
+performance:
+  - name: virtualisedListbox
+    metric: option-count
+    threshold: 200
+    unit: items
+    rationale: >-
+      Above ~200 options, render virtualisation becomes necessary —
+      open latency, memory footprint, and screen-reader announcement
+      count all degrade beyond this threshold on commodity hardware.
+      Below 200, all options can stay in the DOM with no measurable
+      cost. The previously-prose "~200 items" hint in mistake
+      `combobox-non-virtualised-large-list` is the canonical source
+      of this threshold.
+  - name: asyncFilterDebounce
+    metric: keystroke-interval
+    threshold: 150
+    unit: ms
+    rationale: >-
+      Async filter requests should debounce keystrokes by ~150ms to
+      avoid request floods on fast typers without feeling laggy. The
+      150ms threshold sits below the 200ms perceptual threshold for
+      input feedback while suppressing 80%+ of in-flight stale
+      requests on a 60–80 wpm typer.
+
 i18n:
   rtl:
     mirroring: >-

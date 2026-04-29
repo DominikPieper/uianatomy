@@ -427,6 +427,32 @@ events:
         `@activate` event in manual mode; `automatic` mode collapses it
         into `@update:modelValue`.
 
+performance:
+  - name: tablistOverflow
+    metric: tab-count
+    threshold: 7
+    unit: tabs
+    rationale: >-
+      Above ~7 tabs the tablist overflows the viewport on common
+      desktop widths and the cognitive load of "remembering which tab
+      has what" exceeds tab-list usefulness. Split into a navigation
+      hierarchy or a search interface above this threshold; tab-row
+      overflow with horizontal scroll is a recovery pattern, not a
+      design target. Mirrors the existing whenToUse "≤7 panels"
+      guidance.
+  - name: lazyPanelRender
+    metric: panel-payload-size
+    threshold: 100
+    unit: kb
+    rationale: >-
+      Tabpanels above ~100kb of rendered DOM payload should lazy-mount
+      on selection rather than pre-render. Below the threshold,
+      eager-render all panels — allows CSS-only show/hide and avoids
+      per-selection mount latency. Above the threshold, the per-mount
+      cost dominates the trade-off and the lazy-mount + aria-busy
+      pattern (per the `tabs-lazy-panel-no-aria-busy` mistake) earns
+      its complexity.
+
 i18n:
   rtl:
     mirroring: >-

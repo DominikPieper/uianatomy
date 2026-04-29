@@ -1,0 +1,68 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const performance = component.performance;
+---
+{performance && performance.length > 0 && (
+  <ul class="performance-list">
+    {performance.map((p) => (
+      <li class="performance-item">
+        <header class="performance-item__header">
+          <code class="performance-item__name">{p.name}</code>
+          <span class="performance-item__threshold">
+            {p.metric} <span class="performance-item__op">≥</span>
+            <strong>{p.threshold}</strong> {p.unit}
+          </span>
+        </header>
+        <p class="performance-item__rationale">{p.rationale}</p>
+      </li>
+    ))}
+  </ul>
+)}
+
+<style>
+  .performance-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+    display: grid;
+    gap: 14px;
+  }
+  .performance-item {
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 12px 14px;
+    background: var(--surface-bg);
+  }
+  .performance-item__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 6px;
+  }
+  .performance-item__name {
+    font-size: var(--text-step-0);
+    font-weight: 600;
+  }
+  .performance-item__threshold {
+    font-family: var(--font-mono);
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+  .performance-item__op {
+    color: var(--accent-active, var(--text-primary));
+    margin: 0 2px;
+  }
+  .performance-item__threshold strong {
+    color: var(--fg);
+    font-weight: 700;
+  }
+  .performance-item__rationale {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>
