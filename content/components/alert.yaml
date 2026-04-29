@@ -1,0 +1,660 @@
+id: alert
+name: Alert
+description: >-
+  An inline non-blocking message that surfaces important information
+  to the user — system status, validation errors, success
+  confirmation, contextual warnings — and announces itself to
+  assistive tech via an `aria-live` region. Distinct from Modal
+  (blocking, demands response), Toast (auto-dismissed, transient),
+  and Tooltip (on-demand description). Alert sits in the document
+  flow, persists until dismissed or the underlying state changes,
+  and may carry optional inline actions.
+
+anatomy:
+  - id: container
+    required: true
+    purpose: >-
+      The bounded surface that holds the alert content. Inline in the
+      document flow (not floating); width by default fills the
+      container, height intrinsic to content. Carries the live
+      region semantics and the severity-driven visual treatment.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; severity drives accent treatment via a Variant property
+    code:
+      slot: container
+      semantic: alert-or-status
+    a11y:
+      hint: >-
+        Apply `role="alert"` for assertive severities (error,
+        warning) where the user must attend immediately, or
+        `role="status"` for polite severities (info, success) where
+        the user should be informed but not interrupted. Both roles
+        imply an implicit `aria-live` region; do not stack
+        `aria-live` attributes on top.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.bg
+        border: color.border.subtle
+
+  - id: icon
+    required: false
+    purpose: >-
+      Severity-indicating glyph at the inline-start of the
+      container. Reinforces the severity variant for sighted users
+      (a checkmark for success, an exclamation for warning, a cross
+      for error, an info-i for info). Decorative — the severity is
+      also communicated through the role and visible text.
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; glyph swap bound to severity Variant
+    code:
+      slot: icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — set `aria-hidden="true"` on the icon. Severity
+        is communicated to SR via the `role` (alert vs status) and
+        through the title or body text, never through the icon
+        glyph alone (icon-only severity violates WCAG 1.4.1 Use of
+        Color and 1.3.3 Sensory Characteristics).
+    tokens:
+      color:
+        foreground: color.text.accent
+
+  - id: title
+    required: false
+    purpose: >-
+      Optional brief heading describing the alert at a glance —
+      "Could not save changes", "Settings updated". Used for alerts
+      with substantial body content; omit for one-line alerts where
+      the body is the headline.
+    layout:
+      row: 1
+      col: 2
+      span: 6
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property for content
+    code:
+      slot: title
+      semantic: heading-or-strong
+    a11y:
+      hint: >-
+        Use a real heading element of an appropriate level when
+        the alert is a top-of-region announcement (e.g. a form
+        error summary). For inline contextual alerts, a `<strong>`
+        or styled `<p>` is sufficient — no heading is required.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: body
+    required: true
+    purpose: >-
+      The alert's primary content — the message itself. Plain prose
+      describing the situation; for error alerts, includes the
+      specific failure cause and an actionable next step. The first
+      content the live region announces.
+    layout:
+      row: 2
+      col: 2
+      span: 6
+    figma:
+      type: text
+      hint: Body text style; bound to a component property for content
+    code:
+      slot: body
+      semantic: prose
+    a11y:
+      hint: >-
+        Plain prose. The first user-facing text the SR announces
+        when the alert mounts (after the role is announced). Avoid
+        embedding actions inline — separate actions into the
+        actions slot for keyboard reachability.
+    tokens:
+      typography:
+        size: text.sm
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
+
+  - id: actions
+    required: false
+    purpose: >-
+      Optional inline actions — typically a primary "Retry" / "Undo"
+      button plus an optional secondary action. Distinct from the
+      dismiss button. Keep to 1–2 actions; complex action sets
+      belong in a Modal or Drawer.
+    layout:
+      row: 3
+      col: 2
+      span: 5
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame containing button instances
+    code:
+      slot: actions
+      semantic: button-group
+    a11y:
+      hint: >-
+        Buttons keep native semantics. Order primary first
+        (visually inline-end on LTR; SR announces in DOM order).
+        Action buttons receive focus via Tab in document order;
+        the alert does not auto-focus its actions on mount (that
+        would interrupt the user's current task).
+    tokens:
+      spacing:
+        gap: spacing.tight
+        padding: spacing.tight
+
+  - id: dismiss-button
+    required: false
+    purpose: >-
+      Optional close affordance. Conventionally an "×" icon at the
+      inline-end corner of the container. Visible only when
+      `dismissible: true` (which is canonical default for info
+      severity, false for error severity where the alert should
+      persist until the user acts).
+    layout:
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to dismissible property
+    code:
+      slot: dismiss
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Dismiss alert" or
+        "Dismiss <severity> message"). Activation removes the
+        alert from the live region; SR users do not hear a
+        secondary "alert dismissed" announcement (the silence
+        confirms removal).
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+axes:
+  variants:
+    - info
+    - success
+    - warning
+    - error
+  properties:
+    - { name: dismissible, kind: primitive, of: boolean }
+    - { name: hasIcon, kind: primitive, of: boolean }
+    - { name: hasTitle, kind: primitive, of: boolean }
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - open
+      - busy
+      - dismissed
+    transitions:
+      - from: open
+        to: busy
+        trigger: >-
+          User activates an action (e.g. Retry). The action handler
+          is in flight; the alert's actions show a busy indicator
+          and become non-activatable. The body and severity remain
+          announced.
+      - from: busy
+        to: open
+        trigger: >-
+          The action settles (success or failure). On success the
+          consumer typically updates the alert's variant or
+          replaces the alert with a new one; on failure the alert
+          stays in error state with the failure cause appended.
+      - from: open
+        to: dismissed
+        trigger: >-
+          User clicks the dismiss button (when `dismissible: true`).
+          The alert is removed from the document and from the
+          live region; focus moves to the next document focusable
+          unless the alert was the only focusable in its
+          container, in which case focus restores to the trigger
+          that surfaced the alert (rare).
+
+mismatches:
+  - figma: An alert drawn with severity communicated by background colour alone
+    code: Severity is reflected via `role` (alert vs status) plus the icon glyph plus the visible severity word in the body
+    consequence: >-
+      Designers may rely on Figma's coloured background as the
+      severity differentiator and skip the icon and the explicit
+      severity word. Implementations following the Figma file
+      ship colour-only severity — fails WCAG 1.4.1 (Use of Color)
+      for users with colour-vision deficiencies, and fails for
+      SR users entirely (the role is not implicit in colour).
+    correct: >-
+      Severity is communicated through THREE layers: visual
+      treatment (background, border, icon glyph), accessible role
+      (alert vs status), and explicit prose (the body or title
+      text names the severity for SR users).
+
+  - figma: A dismissible alert drawn with no clear undo affordance
+    code: An alert with destructive dismissal (the underlying state is also lost)
+    consequence: >-
+      Designers draw an "×" close button without considering what
+      dismissal means. Developers ship `onDismiss` that simply
+      removes the alert from the DOM; the user dismisses an
+      important warning by accident, the warning is lost, and
+      the underlying problem persists silently.
+    correct: >-
+      Distinguish dismiss-the-alert from dismiss-the-issue.
+      Dismissing the alert is a UI affordance; dismissing the
+      issue requires user action (Retry, Undo). Document both in
+      the actions slot. For warnings of system state, the alert
+      should re-appear when the underlying state next requires
+      attention.
+
+  - figma: Multiple alerts drawn stacked at the top of a region
+    code: Multiple alerts stacked dynamically, all wired to live regions
+    consequence: >-
+      Designers draw a stack of alerts in mocks; developers ship
+      with each alert in its own live region. SR users hear a
+      torrent of announcements at page load (every alert fires
+      simultaneously); pointer users see a wall of severity
+      treatment competing for attention.
+    correct: >-
+      Limit canonical alert stacks to 1–3. Beyond that, replace
+      with a "summary alert" (e.g. "3 errors prevent submission")
+      that links to the full list rendered as a non-live region.
+      Document the canonical maximum in the performance block.
+
+  - figma: Alert actions drawn as inline links inside the body prose
+    code: Alert actions as separate button elements in the actions slot
+    consequence: >-
+      Designers compose body text with embedded links ("Click here
+      to retry"); developers either ship the literal anchor (link
+      semantics for an action — see Link mistakes) or invent
+      buttons that look like links (visual confusion). Keyboard
+      reachability and SR announcements suffer either way.
+    correct: >-
+      Alert actions live in the dedicated actions slot as Button
+      elements (potentially with `variant: tertiary` for visual
+      restraint). Body prose names what the actions do ("Save
+      failed.") without itself being interactive.
+
+mistakes:
+  - id: alert-no-aria-live
+    title: Alert with no live-region announcement
+    description: >-
+      The alert renders visually but the role is missing or the
+      element is not in a live region. SR users do not hear the
+      alert; the message is silently delivered to sighted users
+      only.
+    fix: >-
+      Apply `role="alert"` for assertive severities (error,
+      warning) or `role="status"` for polite severities (info,
+      success). Both roles imply an implicit live region — do not
+      stack `aria-live` on top. Test with at least one SR before
+      shipping.
+
+  - id: alert-color-only-severity
+    title: Severity differentiated by colour alone
+    description: >-
+      The alert's severity is communicated only through background
+      or border colour. Colour-vision deficient users cannot
+      distinguish info from error; SR users get no severity cue
+      because the role is the same.
+    fix: >-
+      Triple-layer severity: visual (background + border +
+      severity icon), accessible role (alert vs status), explicit
+      prose ("Error:" prefix or named severity in title). Each
+      layer redundantly communicates severity.
+
+  - id: alert-stacked-without-summary
+    title: More than three alerts stacked without summary
+    description: >-
+      A page accumulates alerts (form validation errors, system
+      messages, user feedback). The stack grows beyond three —
+      visual hierarchy collapses, SR announcement floods at page
+      load, the user cannot prioritise.
+    fix: >-
+      Cap canonical alert stacks at three. Beyond, render a
+      summary alert ("3 errors prevent submission") with a link
+      to the full list rendered as a regular region (not live).
+      Document the threshold in the performance block.
+
+  - id: alert-actions-inside-prose
+    title: Alert actions embedded inline in body text
+    description: >-
+      Body prose contains "Click here to retry" or similar
+      embedded interaction. The interactive element is either an
+      anchor (wrong semantic for an action) or a styled span with
+      a click handler (no semantic at all).
+    fix: >-
+      Move actions to the dedicated actions slot as Button
+      elements. The body describes the situation; actions are
+      separately reachable.
+
+  - id: alert-dismiss-loses-issue
+    title: Dismiss removes the issue, not just the alert
+    description: >-
+      The user dismisses an important warning by accident; the
+      underlying issue (unsaved changes, expired session, network
+      failure) silently persists. The alert was the only signal,
+      and now the signal is gone.
+    fix: >-
+      Distinguish dismiss-the-alert from resolve-the-issue. For
+      warnings of persistent system state, re-render the alert
+      when the user next encounters the affected feature. For
+      transient confirmations, dismissal is final by design.
+      Document the contract per severity: error and warning alerts
+      should not auto-disappear; info and success may.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-alert>` host with named slots for `icon` / `title` / `body` / `actions`; `role` reflected from the `severity` attribute (error/warning → alert; info/success → status)
+    variantMechanism: attributes (`severity="error"`, `dismissible`, `density="compact"`); `data-state="open|busy|dismissed"` for CSS
+  react:
+    structureMechanism: Single `<Alert>` component with `severity` prop driving role; compound subcomponents (`Alert.Icon`, `Alert.Title`, `Alert.Body`, `Alert.Actions`) or named props for content
+    variantMechanism: props with class-variance-authority for severity / density; `dismissible` boolean drives close-button visibility plus `onDismiss` callback
+  angularSignals:
+    structureMechanism: >-
+      `<ui-alert>` component with content projection
+      (`<ng-content select="[ui-alert-title]">`,
+      `<ng-content select="[ui-alert-actions]">`); host bindings drive
+      `[attr.role]`
+    variantMechanism: input<'info' | 'success' | 'warning' | 'error'>(); `[dismissible]`, `[hasIcon]` host bindings; `output('dismiss')`
+  vue:
+    structureMechanism: >-
+      Single `<Alert>` SFC with named slots for `icon`, `title`,
+      `body`, `actions`; `:severity` prop drives the role
+    variantMechanism: defineProps with literal-union types; emits `dismiss`
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, alert containers stack vertically when
+        multiple alerts share a region; actions wrap below the
+        body rather than aligning inline-end. Compact density
+        becomes the default for narrow viewports to preserve
+        screen real estate. Title and body inherit the document's
+        line-height; severity icon size remains constant for
+        recognition.
+    - at: breakpoint.md
+      change: >-
+        Above this width, alerts render as authored. Comfortable
+        density with actions inline-end; dismiss button at the
+        inline-end corner of the container.
+
+events:
+  - name: dismiss
+    payload: >-
+      `{ source: 'closeButton' | 'programmatic' }`. Distinguishes a
+      user-clicked dismiss from a consumer-triggered programmatic
+      removal. Programmatic removal does not re-render the alert
+      automatically; consumers manage the alert lifecycle.
+    frameworkNotes:
+      webComponents: >-
+        `dismiss` CustomEvent on the host with
+        `event.detail = { source }`.
+      react: >-
+        `onDismiss(source)` callback. Some libraries pass the
+        original DOM event instead of a discriminated union;
+        consumers wrap to recover the canonical contract.
+      angularSignals: >-
+        `output<DismissSource>('dismiss')`.
+      vue: >-
+        `@dismiss` event with payload `{ source }`.
+
+  - name: actionInvoke
+    payload: >-
+      `{ actionId: string }` — the canonical id of the invoked
+      action. The consumer is responsible for executing the
+      action's effect (retrying a request, undoing a change). The
+      alert transitions to `busy` state until the consumer signals
+      completion.
+    frameworkNotes:
+      webComponents: >-
+        `actionInvoke` CustomEvent with `event.detail = { actionId }`.
+      react: >-
+        `onAction(actionId)` callback or per-action `onClick` props
+        on the action slot. The canonical event aggregates per-
+        action handlers into one stream.
+      angularSignals: >-
+        `output<string>('actionInvoke')`.
+      vue: >-
+        `@action-invoke` event with payload `{ actionId }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves through the alert in document order: actions
+        first (in DOM order), then the dismiss button. The alert
+        container itself is not focusable; the body is plain
+        prose with no tabindex.
+    - keys: Enter or Space (focus on action button)
+      expected: >-
+        Activates the action; alert transitions to `busy` while
+        the consumer's handler runs. Focus stays on the action
+        button (or moves to the dismiss button per consumer
+        choice) after settle.
+    - keys: Enter or Space (focus on dismiss button)
+      expected: >-
+        Dismisses the alert. Focus moves to the next document
+        focusable; if the alert was the only content in its
+        region, focus restores to the trigger that surfaced the
+        alert (rare for inline alerts, common for transient
+        success-after-submit).
+    - keys: Tab (after dismiss)
+      expected: >-
+        Continues from where focus landed after dismissal. The
+        dismissed alert is removed from DOM; subsequent Tab
+        traverses remaining document focusables.
+  announcements:
+    - trigger: Alert mounts in a live region (assertive severity)
+      expected: >-
+        SR interrupts the current announcement and reads the
+        alert's role ("alert") followed by the title (if present)
+        and body. Verbose modes may include the severity word
+        ("Error:" prefix); polite-only modes hear only the body.
+    - trigger: Alert mounts in a live region (polite severity)
+      expected: >-
+        SR queues the announcement after the current one
+        completes — reads the role ("status") followed by title
+        and body. Polite severity does not interrupt.
+    - trigger: Alert action invoked, transitions to busy
+      expected: >-
+        Action button announces busy state via `aria-busy="true"`;
+        SR users hear "<action label>, busy". The alert body
+        text is not re-announced.
+    - trigger: Alert dismissed
+      expected: >-
+        SR users do not hear a secondary "alert dismissed"
+        announcement; the silence (and removal of the live region
+        content) confirms removal. Avoid synthesising a "dismissed"
+        announcement — it adds noise without value.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - color-contrast
+    - role-img-alt
+    - landmark-unique
+    - empty-heading
+
+propertyMap:
+  - figma: Severity
+    code: severity
+    type: Variant
+    notes: Maps info / success / warning / error. Drives role (alert vs status) plus visual treatment plus icon glyph.
+  - figma: Density
+    code: density
+    type: Variant
+    notes: comfortable / compact.
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: Toggles the dismiss-button slot visibility plus the dismiss event wiring.
+  - figma: Has Icon
+    code: hasIcon
+    type: Boolean
+    notes: Toggles the icon slot. Canonical default is true for severity reinforcement.
+  - figma: Has Title
+    code: hasTitle
+    type: Boolean
+    notes: Toggles the title slot. Single-sentence alerts often skip the title.
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Body
+    code: body
+    type: Text
+  - figma: Has Actions
+    code: actions
+    type: Boolean
+  - figma: Actions
+    code: actions
+    type: Instance Swap
+    notes: Swap the actions slot — typically a Button or two.
+  - figma: Icon
+    code: icon
+    type: Instance Swap
+    notes: >-
+      The severity icon. Designers may swap the auto-derived glyph
+      for a custom icon (e.g. a domain-specific warning); code
+      respects the swap when provided, otherwise renders the
+      severity-default icon.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Severity icon position moves from inline-start to inline-end
+      visually (logical positioning via `inset-inline-start`).
+      Dismiss button moves to the visual left in RTL (still
+      inline-end logically). Actions group reverses order
+      logically: primary action stays on inline-end (visual right
+      in LTR, visual left in RTL). Icon glyphs themselves do not
+      mirror — checkmarks, exclamation marks, and crosses are
+      direction-neutral. Severity colour treatment is
+      direction-neutral.
+  textExpansion: >-
+    Title can grow into a second line; body free-flow with natural
+    wrap. Actions follow Button's expansion rules and may wrap to
+    a second row under heavy expansion. Compact density is risky
+    for long-text languages — `comfortable` is the safer canonical
+    default for DE / RU / FI. Severity-prefix prose ("Error:",
+    "Warnung:") differs in length per locale; allow auto-sized
+    title containers, never fixed widths.
+
+performance:
+  - name: stackDepth
+    metric: visible-alert-count
+    threshold: 3
+    unit: alerts
+    rationale: >-
+      The canonical maximum visible alert count per region is 3.
+      Above this threshold, visual hierarchy collapses and SR
+      announcement floods at page load. Replace stacks of 4+ with
+      a summary alert linking to the full list rendered as a
+      non-live region.
+
+whenToUse:
+  use: >-
+    When the user must be informed of a system state, validation
+    result, or contextual situation that does not require
+    immediate response — form submission errors, save
+    confirmations, network warnings, system maintenance notices.
+    Alert sits in the document flow, persists until dismissed or
+    the underlying state changes, and announces via aria-live.
+  avoid: >-
+    For decisions or destructive confirmations that block the user
+    — that is `Modal[variant=alertdialog]`. For transient
+    auto-dismissed feedback — that is `Toast`. For on-demand
+    descriptive text — that is `Tooltip`. For permanent
+    informational content (page descriptions, instructions) — that
+    is body prose, not Alert.
+  vsRelated:
+    - id: modal
+      difference: >-
+        `Modal[variant=alertdialog]` is a blocking confirmation
+        that demands user response (focus trap + inert siblings).
+        `Alert` is non-blocking and inline; the user may continue
+        working while the alert is visible. Do not confuse the
+        terminology — "alert" the inline message vs "alert dialog"
+        the blocking modal.
+    - id: toast
+      difference: >-
+        `Toast` auto-dismisses after a short visible duration
+        (3–7 seconds canonical); `Alert` persists until the user
+        dismisses or the underlying state changes. Toast is for
+        transient confirmations ("Saved"); Alert is for situations
+        the user may need to revisit or act on.
+    - id: tooltip
+      difference: >-
+        `Tooltip` is on-demand description revealed by hover or
+        focus; `Alert` is system-pushed announcement. Tooltip is
+        pulled by the user; Alert is pushed by the system.
+    - id: banner
+      difference: >-
+        `Banner` is a region-wide persistent informational
+        surface (e.g. a maintenance notice at the top of every
+        page); `Alert` is contextual and tied to a specific
+        situation (a form error, a recent action confirmation).
+        Banner often spans the viewport width; Alert sits within
+        a region.
+
+notes: >-
+  Alert occupies a confusing terminology space. The W3C ARIA APG
+  uses "Alert" for the live-region pattern documented here; many
+  design systems use "Inline Notification" (Carbon), "Banner"
+  (Polaris, Material 3), or "Notice" (Atlassian) for the same
+  pattern, and reserve "Alert" for the modal-confirmation
+  pattern that this canon calls
+  `Modal[variant=alertdialog]`. The whenToUse.vsRelated for
+  Modal explicitly names this distinction. Implementation audits
+  should clarify the naming in `componentName` and document the
+  vocabulary divergence as a divergence row.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/alert/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/alert_role
+  - https://www.w3.org/TR/WCAG22/#status-messages
+  - https://www.radix-ui.com/themes/docs/components/callout
+  - https://react-spectrum.adobe.com/react-aria/Alert.html
+  - https://polaris.shopify.com/components/feedback-indicators/banner
+  - https://carbondesignsystem.com/components/notification/usage/
+  - https://atlassian.design/components/inline-message/examples
+  - https://m3.material.io/components/banners/overview
+  - https://inclusive-components.design/notifications/
+
+lastReviewed: '2026-04-29'
