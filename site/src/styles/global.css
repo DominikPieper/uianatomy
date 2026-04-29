@@ -834,6 +834,29 @@ th {
   stroke-width: 1.5;
 }
 
+.anatomy-host .anatomy-floating > rect:first-of-type {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.14));
+}
+:root[data-theme='dark'] .anatomy-host .anatomy-floating > rect:first-of-type {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+}
+
+.anatomy-host .anatomy-z-badge circle {
+  fill: var(--accent-active);
+}
+.anatomy-host .anatomy-z-badge text {
+  fill: var(--surface-page);
+  text-transform: lowercase;
+}
+
+.anatomy-host .anatomy-repeat-count rect {
+  fill: var(--surface-raised);
+  stroke: var(--fg-muted);
+}
+.anatomy-host .anatomy-repeat-count text {
+  fill: var(--fg-muted);
+}
+
 .anatomy-host .anatomy-label {
   display: none;
 }
@@ -867,7 +890,9 @@ th {
 .anatomy-host--compact .anatomy-label,
 .anatomy-host--compact .anatomy-overlay,
 .anatomy-host--compact .anatomy-floating-connector,
-.anatomy-host--compact .anatomy-repeat-ghost {
+.anatomy-host--compact .anatomy-repeat-ghost,
+.anatomy-host--compact .anatomy-z-badge,
+.anatomy-host--compact .anatomy-repeat-count {
   display: none;
 }
 .anatomy-host--compact .anatomy-slot rect {

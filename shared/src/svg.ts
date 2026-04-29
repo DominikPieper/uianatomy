@@ -300,16 +300,46 @@ function emitSlotGroup(
   const figma = escape(truncateForBox(slot.figma.hint, w, 'serif'));
   const code = escape(truncateForBox(`slot="${slot.code.slot}"`, w, 'mono'));
   const bridge = escape(truncateForBox(slot.id, w, 'mono'));
-  const cls = isPrimary ? 'anatomy-slot' : 'anatomy-slot anatomy-repeat-ghost';
+  const isFloating = slot.layout.floating !== undefined;
+  const totalReps = boxes.repeats.length + 1;
+
+  const classes = ['anatomy-slot'];
+  if (!isPrimary) classes.push('anatomy-repeat-ghost');
+  if (isFloating && isPrimary) classes.push('anatomy-floating');
+  const cls = classes.join(' ');
   const idAttr = isPrimary ? ` id="slot-${escape(slot.id)}"` : '';
   const cy = y + h / 2;
   const cx = x + w / 2;
+
+  let badges = '';
+  if (isPrimary && isFloating) {
+    const bx = x + w - 12;
+    const by = y + 12;
+    badges +=
+      `<g class="anatomy-z-badge" aria-hidden="true">` +
+      `<circle cx="${bx}" cy="${by}" r="9" fill="currentColor"/>` +
+      `<text x="${bx}" y="${by + 3.5}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600" fill="white">z</text>` +
+      `</g>`;
+  }
+  if (isPrimary && totalReps > 1) {
+    const offset = isFloating ? 36 : 18;
+    const bx = x + w - offset;
+    const by = y + 12;
+    const label = `${totalReps}×`;
+    badges +=
+      `<g class="anatomy-repeat-count" aria-hidden="true">` +
+      `<rect x="${bx - 13}" y="${by - 8}" width="26" height="16" rx="3" fill="white" stroke="currentColor" stroke-width="1"/>` +
+      `<text x="${bx}" y="${by + 3}" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="currentColor">${label}</text>` +
+      `</g>`;
+  }
+
   return (
     `  <g${idAttr} class="${cls}" data-required="${slot.required}">` +
     `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="white" stroke="currentColor" stroke-width="1"${dasharray}/>` +
     `<text class="anatomy-label label-figma" x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">${figma}</text>` +
     `<text class="anatomy-label label-code"  x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${code}</text>` +
     `<text class="anatomy-label label-bridge" x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${bridge}</text>` +
+    badges +
     `</g>`
   );
 }

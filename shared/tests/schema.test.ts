@@ -93,6 +93,21 @@ describe('anatomy SVG generator', () => {
     expect(optionGhosts).toBeGreaterThanOrEqual(2);
   });
 
+  it('marks floating slots with the floating class and a "z" badge', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const svg = renderAnatomySVG(combobox);
+    expect(svg).toMatch(/class="anatomy-slot anatomy-floating"/);
+    expect(svg).toContain('anatomy-z-badge');
+    expect(svg).toMatch(/<text [^>]*>z<\/text>/);
+  });
+
+  it('annotates repeated slots with an "n×" count badge', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const svg = renderAnatomySVG(combobox);
+    expect(svg).toContain('anatomy-repeat-count');
+    expect(svg).toMatch(/>3×</);
+  });
+
   it('validates override slot ids against YAML anatomy', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const goodOverride = card.anatomy.map((s) => `<g id="slot-${s.id}"></g>`).join('');
