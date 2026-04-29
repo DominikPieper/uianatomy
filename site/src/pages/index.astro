@@ -25,13 +25,15 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
       </p>
     </section>
 
-    <p class="section-rule">Components</p>
+    <nav aria-labelledby="components-heading">
+      <h2 id="components-heading" class="section-rule">Components</h2>
 
-    <ul class="component-grid" role="list">
-      {components.map((entry) => (
-        <li><ComponentCard component={entry.data} /></li>
-      ))}
-    </ul>
+      <ul class="component-grid" role="list">
+        {components.map((entry) => (
+          <li><ComponentCard component={entry.data} /></li>
+        ))}
+      </ul>
+    </nav>
   </div>
 </Base>
 

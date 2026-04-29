@@ -7,6 +7,16 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+  markdown: {
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark-default',
+      },
+      defaultColor: false,
+      wrap: true,
+    },
+  },
   vite: {
     plugins: [tailwind()],
   },

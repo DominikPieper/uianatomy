@@ -61,32 +61,3 @@ const component = entry.data;
     )}
   </article>
 </Base>
-
-<script>
-  function syncEyebrow() {
-    const view = document.documentElement.getAttribute('data-view') ?? 'bridge';
-    const eyebrowMap: Record<string, string> = {
-      designer: 'Designer view',
-      dev: 'Dev view',
-      bridge: 'Bridge view',
-    };
-    const captionMap: Record<string, string> = {
-      designer: 'Slot labels per Figma conventions',
-      dev: 'Slot labels per code semantics',
-      bridge: 'Both label sets',
-    };
-    document.querySelectorAll<HTMLElement>('[data-view-eyebrow]').forEach((el) => {
-      el.textContent = eyebrowMap[view] ?? '';
-    });
-    document.querySelectorAll<HTMLElement>('[data-anatomy-caption]').forEach((el) => {
-      el.textContent = captionMap[view] ?? '';
-    });
-  }
-
-  syncEyebrow();
-
-  const observer = new MutationObserver((records) => {
-    if (records.some((r) => r.attributeName === 'data-view')) syncEyebrow();
-  });
-  observer.observe(document.documentElement, { attributes: true });
-</script>

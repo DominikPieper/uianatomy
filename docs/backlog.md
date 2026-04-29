@@ -33,10 +33,10 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## P3 — Site & SVG-Polish
 
-- [ ] **P3-17 Site-A11y-Fixes** — Skip-Link in `site/src/layouts/Base.astro`, `<nav>`-Landmark auf Index + Komponenten-Liste.
+- [x] **P3-17 Site-A11y-Fixes** — Skip-Link in `site/src/layouts/Base.astro` (off-screen, slides in on `:focus`/`:focus-visible`, jumps to `#main`), `<main id="main">`, `<nav aria-labelledby="components-heading">` mit `<h2 id="components-heading">` um den Component-Grid auf der Index-Seite. Erledigt 2026-04-29. Dateien: `site/src/layouts/Base.astro`, `site/src/pages/index.astro`, `site/src/styles/global.css`.
 - [ ] **P3-18 Anatomy-SVG-Verbesserungen** in `shared/src/svg.ts`: Required vs. Optional (durchgezogen vs. gestrichelt), Floating-Layer (Schatten + "z"-Badge), Repeats mit "n×"-Annotation, asymmetrische Layouts (echte Aspect-Ratios).
-- [ ] **P3-19 Shiki-Integration** in `astro.config.mjs` für künftige Code-Blocks.
-- [ ] **P3-20 Eyebrow ohne MutationObserver** — CSS `::before { content: attr(data-eyebrow); }`. Vereinfacht `site/src/pages/components/[id].astro:65-92`.
+- [x] **P3-19 Shiki-Integration** — `markdown.shikiConfig` mit Dual-Theme (`github-light` / `github-dark-default`), `defaultColor: false`, `wrap: true`. Dark-Theme über `:root[data-theme='dark']` statt `prefers-color-scheme`. Erledigt 2026-04-29. Dateien: `site/astro.config.mjs`, `site/src/styles/global.css` (`.astro-code` Basis-Styles + Dark-Override).
+- [x] **P3-20 Eyebrow ohne MutationObserver** — Per-View-Labels jetzt CSS-only via `:root[data-view='…'] [data-view-eyebrow]::before { content: '…'; }` (gleiches Muster für `[data-anatomy-caption]`). Komplettes `<script>`-Block aus `[id].astro` entfernt. Erledigt 2026-04-29. Dateien: `site/src/pages/components/[id].astro`, `site/src/styles/global.css`.
 
 ## P4 — Skalierung & Tooling
 
@@ -57,9 +57,9 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## Empfohlener Pfad
 
-P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 (✓) → P1-5 → P1-6 → P1-7 → P1-8 → P3-17 → P3-18.
+P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 (✓) → P3-17 (✓) → P3-19 (✓) → P3-20 (✓) → P1-5 → P1-6 → P1-7 → P1-8 → P3-18.
 
-Alle P0-Items abgeschlossen. **P1-5** (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) ist die nächste größere Plan-Session und entblockt den Phase-2-Audit. **P3-17** (Site-A11y: Skip-Link + `<nav>`-Landmarks) ist der nächste Quick-Win, falls eine kleine Session bevorzugt wird.
+Alle P0-Items und die P3-Quick-Wins (A11y, Shiki, Eyebrow-Vereinfachung) abgeschlossen. Nächste größere Plan-Session: **P1-5** (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) — entblockt den Phase-2-Audit. Verbleibender P3-Block ist **P3-18** (Anatomy-SVG-Verbesserungen: Required-vs-Optional, Floating-Layer, Repeats, asymmetrische Layouts).
 
 ## Wartung dieses Backlogs
 
