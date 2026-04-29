@@ -1,0 +1,740 @@
+id: search-input
+name: Search Input
+description: >-
+  A text input optimised for free-text search queries — typically
+  pinned at the top of a search-driven page or in a navigation
+  bar — with a leading magnifier icon, optional clear affordance,
+  and optional results-preview popup. Distinct from Combobox by
+  emitting a free-text query rather than committing a constrained
+  value: search results live in a separate region (a search-results
+  page or a results panel) rather than in the input's listbox.
+  Distinct from plain Input by structuring the search-and-submit
+  contract.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded surface containing the icon, input, and optional
+      affordances. Carries the focus ring and the
+      `role="search"` landmark when standalone.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame with input and decorative slots; min-inline-size from variant
+    code:
+      slot: root
+      semantic: search-region
+    a11y:
+      hint: >-
+        Apply `role="search"` (or `<search>` element where
+        supported) when the input is the page's primary search
+        landmark. For inline search inputs inside other regions
+        (a filter inside a settings panel), no landmark role is
+        needed — the input alone is sufficient.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.bg
+        border: color.border.strong
+        ring: color.border.focus
+
+  - id: icon
+    required: false
+    purpose: >-
+      Leading magnifier glyph at the inline-start of the input.
+      Decorative — communicates the search affordance visually.
+      Optional because some compact variants embed the magnifier
+      as the submit button instead of as a leading icon.
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Magnifier icon component instance; non-interactive in default variant
+    code:
+      slot: icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. The accessible name
+        comes from the wrapping label or from `aria-label`
+        ("Search products"); the magnifier glyph is not a
+        substitute.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: input
+    required: true
+    purpose: >-
+      The text input where the user types. Sized to fill the
+      remaining inline space. Carries the form `name` attribute,
+      the `type="search"` (which provides browser-default clear
+      affordance and Enter-submit behaviour), and the typeahead
+      / suggestion wiring for the with-suggestions variant.
+    layout:
+      row: 1
+      col: 2
+      span: 6
+    figma:
+      type: instance
+      hint: Text input component instance; typeahead/suggestion variant adds combobox semantics
+    code:
+      slot: input
+      semantic: searchbox
+    a11y:
+      hint: >-
+        `<input type="search">` is the canonical default. For
+        with-suggestions variant, layer the Combobox contract
+        (`role="combobox"`, `aria-controls` referencing the
+        results popup, `aria-activedescendant` for the
+        highlighted suggestion). The accessible name comes from
+        a paired `<label>` or `aria-label`. Avoid placeholder-
+        only labelling.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      typography:
+        size: text.md
+      color:
+        background: color.surface.bg
+        foreground: color.text.primary
+
+  - id: clear-button
+    required: false
+    purpose: >-
+      Optional close affordance to clear the current query.
+      Conventionally an "×" icon at the inline-end of the input,
+      visible when the input has a value. Fast clear-and-retype
+      flow.
+    layout:
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to "has value" state
+    code:
+      slot: clear
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button>` with accessible name ("Clear" or "Clear
+        search"). Activation clears the input value, returns
+        focus to the input, and may reset associated results.
+        Escape with focus on the input also clears (per APG
+        Combobox guidance and `<input type="search">`
+        platform default).
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+  - id: submit-button
+    required: false
+    purpose: >-
+      Optional explicit submit affordance. Conventionally a
+      magnifier icon at the inline-end of the input — for
+      patterns where Enter-submission is not obvious or where
+      the search must be initiated via pointer (compact
+      variants where the leading icon is omitted).
+    layout:
+      row: 1
+      col: 4
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; magnifier glyph; visibility bound to "has submit button" property
+    code:
+      slot: submit
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button type="submit">` (when nested in a
+        `<form>`) or `<button>` with explicit submit handler.
+        Accessible name "Search" or "Submit search". Enter on
+        the input also submits — the button is an additional
+        affordance, not a replacement.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        background: color.accent.bg
+        foreground: color.accent.fg
+
+  - id: results-popup
+    required: false
+    purpose: >-
+      Optional results-preview panel that surfaces below the
+      input as the user types — typeahead suggestions, recent
+      searches, or live preview of top-matching results. Floats
+      via portal-mount; positioning relative to the input
+      anchored at its inline-start edge.
+    layout:
+      floating:
+        anchor: input
+        position: below
+        offset: 8
+      span: 8
+    figma:
+      type: frame
+      hint: Floating frame anchored to input; visibility bound to suggestions/results state
+    code:
+      slot: results-popup
+      semantic: listbox-or-region
+    a11y:
+      hint: >-
+        For typeahead suggestions, `role="listbox"` plus
+        `aria-activedescendant` on the input. For live result-
+        preview (a search engine surfacing top hits), the popup
+        is `role="region"` with an `aria-live="polite"` status
+        announcing result counts. The two patterns are distinct
+        and the popup's role differs accordingly.
+
+axes:
+  variants:
+    - standard
+    - compact
+    - with-suggestions
+  properties:
+    - { name: hasIcon, kind: primitive, of: boolean }
+    - { name: hasClear, kind: primitive, of: boolean }
+    - { name: hasSubmit, kind: primitive, of: boolean }
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - empty
+      - filled
+      - busy
+    transitions:
+      - from: empty
+        to: filled
+        trigger: >-
+          User types into the input. Clear button (when
+          `hasClear: true`) becomes visible; the canonical
+          search-results pipeline begins (debounced query
+          dispatch for with-suggestions variant; standard
+          variant waits for explicit submit).
+      - from: filled
+        to: empty
+        trigger: >-
+          User clears the input — via clear button, Escape key
+          (closes results popup if open and clears value),
+          form reset, or programmatic clear.
+      - from: filled
+        to: busy
+        trigger: >-
+          For with-suggestions variant, the user types and the
+          debounced query fires. Suggestions / preview-results
+          request is in flight; the input shows a busy
+          indicator (spinner or progress bar) and any open
+          results popup shows a loading state.
+      - from: busy
+        to: filled
+        trigger: >-
+          Async suggestions / results return. The popup
+          renders the new results; busy indicator clears.
+
+mismatches:
+  - figma: SearchInput drawn with a results listbox below it (Combobox-style)
+    code: A SearchInput that emits a free-text query for a separate results page, with no inline listbox
+    consequence: >-
+      Designers may compose SearchInput mocks with combobox-
+      style results inline in the listbox. Implementations
+      following the design ship a Combobox; users committing
+      via Enter expect to navigate to a search-results page,
+      but instead a value is silently set in the input. The
+      contract diverges: search emits queries; combobox commits
+      values.
+    correct: >-
+      Distinguish at the canonical level. SearchInput emits
+      a free-text query on submit (Enter, button click) — the
+      results live in a separate region (search-results page,
+      sibling panel). Combobox commits a value from a
+      constrained list — the value is set inline. Document
+      the with-suggestions variant explicitly: the popup
+      shows previews of results that link to the full results
+      page, NOT options to commit as the input value.
+
+  - figma: SearchInput drawn without a clear button
+    code: SearchInput with no clear affordance, requiring users to manually delete the query
+    consequence: >-
+      Designers may omit the clear button for visual
+      simplicity. Implementations following the design ship
+      without clear; users typing partial queries must
+      manually backspace or select-all-delete to clear.
+      `<input type="search">` browsers provide a native clear
+      affordance at the OS level which the design may not
+      account for, leading to inconsistent visual treatment.
+    correct: >-
+      The clear button is canonical when `hasClear: true`
+      (default). For native `<input type="search">` the
+      browser provides one for free; styled SearchInputs that
+      override the native clear must provide their own.
+      Document the canonical contract: clear visible when
+      input is non-empty.
+
+  - figma: Magnifier icon drawn as a static decoration
+    code: A magnifier icon that may be either decorative (leading) or interactive (submit button trailing)
+    consequence: >-
+      Designers may draw the magnifier as a leading visual
+      decoration; developers ship it as a button. Or designers
+      draw it as a button; developers ship it as a decoration.
+      The clickable-vs-decorative status is not encoded in
+      the Figma file.
+    correct: >-
+      The leading icon (`anatomy.icon`) is decorative. The
+      submit button (`anatomy.submit-button`) is a real button.
+      Document the variant-driven choice: standard variant has
+      both (decorative leading + optional trailing submit
+      button); compact variant uses the magnifier as the
+      submit button (the only icon).
+
+  - figma: Search suggestions drawn looking like search results
+    code: Suggestions that auto-complete the query vs results that link to specific items
+    consequence: >-
+      Designers compose with-suggestions variant mocks that
+      visually conflate "query autocompletion" with "result
+      preview". Users clicking a suggestion expect either to
+      navigate to a result OR to fill in the query and submit;
+      the two intents are different.
+    correct: >-
+      The popup hosts one of two distinct content types:
+      query suggestions (text strings that, when activated,
+      fill the input and submit) OR result previews (links
+      that navigate directly to the result). Document the
+      distinction; surface it visually (suggestions look like
+      input completions; result previews look like list rows
+      with title/description).
+
+mistakes:
+  - id: searchinput-as-combobox
+    title: SearchInput implemented as a Combobox with constrained values
+    description: >-
+      The implementation uses Combobox semantics — committing
+      from the listbox sets the input value. Users typing
+      free-text searches that do not match any option get
+      silently rejected on commit; the search query never
+      fires.
+    fix: >-
+      SearchInput emits free-text queries; the results popup
+      is for previewing, not for committing as the input
+      value. Use `role="searchbox"` (input type="search") for
+      the input; if the with-suggestions variant adds a
+      listbox, the listbox items are clickable suggestions
+      that fill-and-submit, not commit-and-set.
+
+  - id: searchinput-no-debounce
+    title: Suggestion request fires on every keystroke without debouncing
+    description: >-
+      The with-suggestions variant fires a request on every
+      character typed. Users with fast typing flood the
+      backend; results race conditions render stale data.
+    fix: >-
+      Debounce typeahead requests by ~150ms. Below the
+      perceptual threshold of feeling laggy; suppresses 80%+
+      of in-flight stale requests on a 60–80 wpm typer.
+      Cancel in-flight requests when a newer one fires.
+
+  - id: searchinput-no-submit-on-enter
+    title: Enter key does not submit the query
+    description: >-
+      The implementation captures Enter for some other purpose
+      (closing the popup, blurring the input). Users pressing
+      Enter expect to commit the search; nothing happens.
+    fix: >-
+      Enter on the input always submits the search query. For
+      the with-suggestions variant where Enter-with-highlighted-
+      suggestion may select-and-submit, Enter-without-highlight
+      submits the typed query verbatim. The submit-button
+      activation is equivalent.
+
+  - id: searchinput-clear-doesnt-restore-results
+    title: Clear button removes the query but leaves stale results
+    description: >-
+      User clears the search; the results page or panel still
+      shows the old results. The state diverges — the input is
+      empty, but the results pretend the search is active.
+    fix: >-
+      Clear button activation must reset the associated
+      results region back to its empty / default state.
+      Document the canonical contract: query state and
+      results state are coupled; clearing one clears the
+      other.
+
+  - id: searchinput-results-popup-no-aria
+    title: With-suggestions popup has no `aria-live` or listbox structure
+    description: >-
+      The popup renders suggestions but SR users hear nothing
+      — no listbox role, no aria-live status. They type, get
+      no feedback, and may submit empty queries without
+      knowing suggestions exist.
+    fix: >-
+      For typeahead suggestions, the popup is `role="listbox"`
+      with `aria-activedescendant` driving the announcement.
+      For result-previews, the popup is `role="region"` with
+      a polite live region announcing result counts ("12
+      results"). The two patterns are distinct; document
+      both contracts.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-search>` host wrapping `<input type="search">` plus optional slots for icon, clear, submit, results-popup; for with-suggestions variant, layer Combobox semantics on the input
+    variantMechanism: attributes (`variant="compact"`, `has-icon`, `has-clear`, `has-submit`, `size="md"`); `data-state="empty|filled|busy"` for CSS
+  react:
+    structureMechanism: React Aria `useSearchField` (which provides the input plus clear-on-Escape contract) plus optional Combobox composition for suggestions; or a custom `<SearchInput>` wrapping `<input type="search">` plus icon/clear/submit slots
+    variantMechanism: props with class-variance-authority for variant / size; `onChange(value)`, `onSubmit(value)`, `onClear()` callbacks
+  angularSignals:
+    structureMechanism: Angular form-control directive on `<input type="search">` plus optional CDK Listbox for suggestions; signal-based query and results state
+    variantMechanism: input<'standard' | 'compact' | 'with-suggestions'>(); `[hasClear]`, `[hasSubmit]`, `[size]` host bindings
+  vue:
+    structureMechanism: Custom `<SearchInput>` SFC wrapping `<input type="search">` with named slots; for suggestions variant, Headless UI `<Combobox>` composition
+    variantMechanism: defineProps with literal-union types; `:variant`, `:has-clear`, `:size` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    clearTransition: motion.duration.fast
+    suggestionsOpen: motion.duration.fast
+    suggestionsClose: motion.duration.instant
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, search inputs commonly expand to full
+        inline-size of the parent (typical mobile pattern).
+        For compact-variant in nav bars, the input may
+        collapse to an icon-only state that expands to full-
+        width on tap (the "search icon expands to input"
+        pattern). Document the expand-on-tap as a separate
+        property if used; otherwise assume inline expansion.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the input renders at its authored
+        inline-size. Compact variant remains compact;
+        standard variant uses its design-default width.
+
+events:
+  - name: queryChange
+    payload: >-
+      `{ value: string }`. Fires on every input change. For
+      with-suggestions variant, this is the source for
+      debounced suggestion requests. For standard variant,
+      consumers may ignore it and only handle `submit`.
+    frameworkNotes:
+      webComponents: >-
+        `queryChange` CustomEvent on the host with
+        `event.detail = { value }`.
+      react: >-
+        `onChange(value: string)` controlled-pattern callback.
+      angularSignals: >-
+        `output<string>('queryChange')`; in reactive forms,
+        the FormControl `valueChanges` observable.
+      vue: >-
+        `@update:modelValue` for `v-model` on the input value.
+
+  - name: submit
+    payload: >-
+      `{ value: string }`. Fires when the user commits the
+      query — Enter on the input, click on the submit button,
+      or programmatic submit. Distinct from `queryChange`
+      because submit signals "search now"; queryChange signals
+      "user is still typing".
+    frameworkNotes:
+      webComponents: >-
+        `submit` CustomEvent with `event.detail = { value }`.
+      react: >-
+        `onSubmit(value: string)` callback. For with-suggestions
+        variant where Enter-with-highlight selects, the
+        submit fires with the selected suggestion's value.
+      angularSignals: >-
+        `output<string>('submit')`.
+      vue: >-
+        `@submit` event with payload `{ value }`. Form-nested
+        searches may emit native `submit` instead.
+
+  - name: clear
+    payload: >-
+      No payload (empty object or undefined). Fires when the
+      user clears the query — clear button click, Escape key
+      with focus on input, programmatic clear. Pairs with
+      `queryChange` (which fires with `value: ""`).
+    frameworkNotes:
+      webComponents: >-
+        `clear` CustomEvent on the host.
+      react: >-
+        `onClear()` callback.
+      angularSignals: >-
+        `output<void>('clear')`.
+      vue: >-
+        `@clear` event.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the input. Subsequent Tab moves to the
+        clear button (if present and visible), then to the
+        submit button (if present), then out of the
+        SearchInput. Disabled states skip from focus order.
+    - keys: Enter (focus on input)
+      expected: >-
+        Submits the query — fires the canonical `submit`
+        event. For with-suggestions variant where a suggestion
+        is highlighted, Enter selects-and-submits the
+        suggestion; without highlight, Enter submits the
+        typed value verbatim.
+    - keys: 'Escape (focus on input)'
+      expected: >-
+        With suggestions popup open: closes the popup without
+        clearing the query. With popup already closed: clears
+        the input value (per `<input type="search">` platform
+        default and APG Combobox guidance).
+    - keys: ArrowDown / ArrowUp (focus on input, with-suggestions variant)
+      expected: >-
+        Opens the suggestions popup if closed; moves
+        highlight to next / previous suggestion when open.
+        DOM focus stays on the input;
+        `aria-activedescendant` updates.
+    - keys: 'Enter or Space (focus on clear button)'
+      expected: >-
+        Activates clear; input value resets; focus returns to
+        the input; results region resets to default.
+    - keys: 'Enter or Space (focus on submit button)'
+      expected: >-
+        Activates submit; equivalent to Enter on the input.
+  announcements:
+    - trigger: Focus enters the input
+      expected: >-
+        SR announces the input's accessible name followed by
+        "search" (from `<input type="search">` or
+        `role="searchbox"`). For with-suggestions variant
+        also "expanded false, has popup, listbox" until the
+        popup opens.
+    - trigger: User types into the input
+      expected: >-
+        Standard variant: no announcement (typing is the
+        user's own input). With-suggestions variant: when
+        debounced suggestions return, SR announces the
+        result count via the popup's polite live region
+        ("12 suggestions").
+    - trigger: Submit fires (Enter)
+      expected: >-
+        Page announces the search-results region (typically
+        via focus moving to a results heading with
+        `tabindex="-1"` and `aria-live` on the count
+        statement). The SearchInput itself does not
+        announce submit completion.
+    - trigger: Clear activated
+      expected: >-
+        Input value clears silently (no SR announcement for
+        the empty state). Subsequent re-focus on the input
+        announces it as "<accessible name>, search".
+  axeRules:
+    - aria-input-field-name
+    - aria-required-attr
+    - aria-valid-attr-value
+    - color-contrast
+    - landmark-unique
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / compact / with-suggestions.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg.
+  - figma: Has Icon
+    code: hasIcon
+    type: Boolean
+    notes: Toggles the leading magnifier icon. Default true; false for compact variant where the magnifier is the submit button instead.
+  - figma: Has Clear
+    code: hasClear
+    type: Boolean
+    notes: Toggles the clear button. Default true; visible only when input has a value.
+  - figma: Has Submit
+    code: hasSubmit
+    type: Boolean
+    notes: Toggles the submit button. Default false (Enter submits); true for compact variant or for forms where explicit pointer-submit is preferred.
+  - figma: Placeholder
+    code: placeholder
+    type: Text
+    notes: 'Examples — "Search products…", "Search documents…". Avoid placeholder-only labelling.'
+  - figma: Disabled
+    code: disabled
+    type: Boolean
+  - figma: Icon
+    code: icon
+    type: Instance Swap
+    notes: Swap the magnifier glyph; rare to deviate from the canonical magnifier.
+
+formIntegration:
+  name: >-
+    The internal `<input type="search">` carries the form
+    `name` attribute. Native `<input type="search">` produces
+    a string entry in the form's FormData under the
+    configured `name`; the value is the current input text.
+  formData: >-
+    Submit produces a single FormData entry (key=name,
+    value=current input string). For form-nested SearchInputs
+    where Enter triggers form submission, the search query
+    submits as part of the broader form. For standalone
+    SearchInputs (search bar in nav), the consumer captures
+    the value via the `submit` event without form
+    submission.
+  reset: >-
+    `form.reset()` restores the input to its `defaultValue`.
+    For nested SearchInputs in a form being reset, the search
+    query clears alongside the rest. Standalone SearchInputs
+    not nested in a form respond only to programmatic
+    `.value = ""` plus `clear` event.
+  validation: >-
+    `<input type="search">` is rarely required by canon —
+    search inputs tolerate empty queries (which submit "show
+    all" results). The `required` attribute is technically
+    available but rarely meaningful. For with-suggestions
+    variant where commit-from-listbox is wanted, layer
+    Combobox's strict-mode `setCustomValidity()` plus
+    `aria-invalid` for "must select from suggestions"
+    enforcement.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Leading icon position moves from inline-start (visual
+      left in LTR) to inline-start (visual right in RTL) via
+      logical positioning. Clear button and submit button
+      move from inline-end to inline-end (visual left in
+      RTL). Magnifier glyph is direction-neutral; chevron
+      glyphs (if used in suggestions) follow standard
+      direction-neutral rotation. Input caret follows
+      document direction; mixed-direction queries (typing
+      Hebrew into a Latin-default field) honour the input's
+      own `dir` attribute.
+  textExpansion: >-
+    Placeholder text expands significantly in long-text
+    languages — "Search products" → "Produkte suchen",
+    "Поиск товаров", "Hae tuotteita". Allow input
+    inline-size to grow; never truncate placeholder. Suggestion
+    list inline-size matches input by default; long-text
+    suggestions wrap to multiple lines or truncate with
+    ellipsis (full text in `aria-label` for SR fallback).
+
+performance:
+  - name: typeaheadDebounce
+    metric: keystroke-interval
+    threshold: 150
+    unit: ms
+    rationale: >-
+      Async typeahead-suggestion requests debounce
+      keystrokes by ~150ms to avoid request floods. Below the
+      perceptual threshold of feeling laggy (~200ms);
+      suppresses 80%+ of in-flight stale requests on a 60–80
+      wpm typer. Mirrors the Combobox.asyncFilterDebounce
+      threshold for consistency in the ecosystem.
+  - name: minQueryLength
+    metric: characters
+    threshold: 2
+    unit: characters
+    rationale: >-
+      Suggestions are typically not surfaced for queries
+      below 2 characters — single-character queries match
+      everything and provide no useful narrowing. The
+      threshold is canonical convention; some search
+      backends require 3+ for performance reasons. Below
+      the threshold, the popup remains closed.
+
+whenToUse:
+  use: >-
+    For free-text search queries that route to a separate
+    results region — site-wide search bars, in-page filter
+    composers, search engines, document-finders, contact-
+    pickers (where the result-set is long and unbounded).
+    The user types intent, submits, and receives results
+    elsewhere.
+  avoid: >-
+    For selecting a constrained value from a list — that is
+    `Combobox` (commit-from-list semantics). For multi-value
+    input where each value renders as an inline tag — that is
+    `TagInput`. For free-text without search semantics — plain
+    `Input`. For navigation menus styled as search — that is
+    `MenuButton`.
+  vsRelated:
+    - id: combobox
+      difference: >-
+        `Combobox` commits a value from a constrained list
+        (the input value is set to the selected option).
+        `SearchInput` emits a free-text query that routes to
+        a separate results region. They look similar with
+        with-suggestions variant; the distinguisher is whether
+        the popup contains options-to-commit (Combobox) or
+        suggestions-to-fill-and-submit / result-previews-to-
+        navigate (SearchInput).
+    - id: input
+      difference: >-
+        `Input` is generic free-text without search semantics
+        — no canonical magnifier icon, no clear-on-Escape,
+        no debounced typeahead architecture. `SearchInput`
+        layers search-specific affordances on top of input.
+    - id: tag-input
+      difference: >-
+        `TagInput` accepts multiple discrete values rendered
+        inline as tokens; `SearchInput` accepts a single
+        free-text query. Multi-attribute search (filtering by
+        multiple tags) is TagInput-shaped; single-query
+        search is SearchInput-shaped. The two may compose —
+        a search bar with both a TagInput for filters AND a
+        SearchInput for query is a legitimate composite.
+
+notes: >-
+  SearchInput sits in a pattern-vs-component grey area: HTML's
+  `<input type="search">` provides a minimal canonical shape
+  (Enter-submit, browser-native clear, autocomplete
+  semantics); design systems layer SearchInput as a styled
+  composite. The canonical SearchInput here documents the
+  composite contract — leading icon, clear, optional submit
+  button, optional suggestions popup — while preserving
+  `<input type="search">` as the underlying element. Implementation
+  audits document whether libraries provide a SearchInput
+  primitive (React Aria does via `useSearchField`) or expect
+  consumers to compose from Input plus auxiliary slots.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/search
+  - https://www.w3.org/TR/WCAG22/#status-messages
+  - https://react-spectrum.adobe.com/react-aria/SearchField.html
+  - https://www.radix-ui.com/themes/docs/components/text-field
+  - https://polaris.shopify.com/components/selection-and-input/text-field
+  - https://carbondesignsystem.com/components/search/usage/
+  - https://atlassian.design/components/textfield/examples
+  - https://m3.material.io/components/search/overview
+  - https://www.gov.uk/service-manual/design/search
+
+lastReviewed: '2026-04-29'
