@@ -1,21 +1,39 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import ComponentCard from '../components/ComponentCard.astro';
 
 const components = await getCollection('components');
 components.sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
-<Base title="Components" description="Canonical UI component anatomy reference.">
-  <h1>UI Anatomy</h1>
-  <p>Canonical reference for UI component anatomy — the same truth, in three views.</p>
+<Base title="Components" description="Canonical reference for UI component anatomy — the same truth, in three views.">
+  <div class="shell">
+    <section class="component-hero">
+      <p class="hero-eyebrow">A canonical reference</p>
+      <h1 class="hero-title">UI Anatomy</h1>
+      <p class="hero-lede">
+        Component anatomy documented as <em>canon</em> — slots, axes, and translation. Switch
+        between Designer, Dev, and Bridge views to read the same truth from your perspective.
+      </p>
+    </section>
 
-  <h2>Components</h2>
-  <ul class="component-index">
-    {components.map((entry) => (
-      <li>
-        <a href={`/components/${entry.id}`}>{entry.data.name}</a>
-        <p>{entry.data.description}</p>
-      </li>
-    ))}
-  </ul>
+    <p class="section-rule">Components</p>
+
+    <ul class="component-grid" role="list">
+      {components.map((entry) => (
+        <li><ComponentCard component={entry.data} /></li>
+      ))}
+    </ul>
+  </div>
 </Base>
+
+<style>
+  .component-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .component-grid > li {
+    display: contents;
+  }
+</style>

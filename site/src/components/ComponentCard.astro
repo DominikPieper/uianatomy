@@ -1,0 +1,24 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+import AnatomyDiagram from './AnatomyDiagram.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  component: Component;
+}
+
+const { component } = Astro.props;
+const slotCount = component.anatomy.length;
+const mismatchCount = component.mismatches.length;
+---
+<a class="component-card" href={`/components/${component.id}`}>
+  <div class="component-card__thumb">
+    <AnatomyDiagram component={component} compact />
+  </div>
+  <h3 class="component-card__title">{component.name}</h3>
+  <p class="component-card__desc">{component.description}</p>
+  <div class="component-card__meta">
+    <span><Icon name="layers" size={12} /> {slotCount} slots</span>
+    <span><Icon name="alert-triangle" size={12} /> {mismatchCount} mismatches</span>
+  </div>
+</a>

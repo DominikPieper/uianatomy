@@ -5,6 +5,7 @@ import AnatomyDiagram from '../../components/AnatomyDiagram.astro';
 import DesignerView from '../../components/views/DesignerView.astro';
 import DevView from '../../components/views/DevView.astro';
 import BridgeView from '../../components/views/BridgeView.astro';
+import Icon from '../../components/Icon.astro';
 
 export async function getStaticPaths() {
   const components = await getCollection('components');
@@ -15,27 +16,77 @@ interface Props { entry: CollectionEntry<'components'> }
 const { entry } = Astro.props;
 const component = entry.data;
 ---
-<Base title={component.name} description={component.description}>
-  <h1>{component.name}</h1>
-  <p>{component.description}</p>
+<Base
+  title={component.name}
+  description={component.description}
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: component.name }]}
+>
+  <article class="shell measure-wide" style="margin-inline:auto;">
+    <section class="component-hero">
+      <p class="hero-eyebrow">
+        <span data-view-eyebrow></span>
+      </p>
+      <h1 class="component-name">{component.name}</h1>
+      <p class="component-description">{component.description}</p>
 
-  {component.related && component.related.length > 0 && (
-    <p>
-      <strong>Related:</strong>
-      {component.related.map((id) => <code style="margin-left:6px">{id}</code>)}
-    </p>
-  )}
+      {component.related && component.related.length > 0 && (
+        <div class="related-row">
+          <span class="related-row__label"><Icon name="link-2" size={12} /> Related</span>
+          {component.related.map((id) => (
+            <a class="related-chip" href={`/components/${id}`}>{id}</a>
+          ))}
+        </div>
+      )}
+    </section>
 
-  <h2>Anatomy</h2>
-  <AnatomyDiagram component={component} />
+    <section aria-label="Anatomy">
+      <div class="anatomy-frame">
+        <AnatomyDiagram component={component} />
+      </div>
+      <p class="anatomy-caption">
+        <span data-anatomy-caption></span>
+      </p>
+    </section>
 
-  <DesignerView component={component} />
-  <DevView component={component} />
-  <BridgeView component={component} />
+    <DesignerView component={component} />
+    <DevView component={component} />
+    <BridgeView component={component} />
 
-  {component.lastReviewed && (
-    <p style="margin-top:48px;font-size:0.85em;color:var(--fg-muted)">
-      Last reviewed: <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
-    </p>
-  )}
+    {component.lastReviewed && (
+      <footer class="component-footer">
+        <span>
+          <Icon name="clock" size={12} /> Last reviewed <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
+        </span>
+      </footer>
+    )}
+  </article>
 </Base>
+
+<script>
+  function syncEyebrow() {
+    const view = document.documentElement.getAttribute('data-view') ?? 'bridge';
+    const eyebrowMap: Record<string, string> = {
+      designer: 'Designer view',
+      dev: 'Dev view',
+      bridge: 'Bridge view',
+    };
+    const captionMap: Record<string, string> = {
+      designer: 'Slot labels per Figma conventions',
+      dev: 'Slot labels per code semantics',
+      bridge: 'Both label sets',
+    };
+    document.querySelectorAll<HTMLElement>('[data-view-eyebrow]').forEach((el) => {
+      el.textContent = eyebrowMap[view] ?? '';
+    });
+    document.querySelectorAll<HTMLElement>('[data-anatomy-caption]').forEach((el) => {
+      el.textContent = captionMap[view] ?? '';
+    });
+  }
+
+  syncEyebrow();
+
+  const observer = new MutationObserver((records) => {
+    if (records.some((r) => r.attributeName === 'data-view')) syncEyebrow();
+  });
+  observer.observe(document.documentElement, { attributes: true });
+</script>

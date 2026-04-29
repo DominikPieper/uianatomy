@@ -1,21 +1,33 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
+import Icon from '../Icon.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
+
+function pickIcon(hint: string): 'keyboard' | 'volume-2' | 'accessibility' {
+  const h = hint.toLowerCase();
+  if (/keyboard|focus|tab|enter|escape|arrow/.test(h)) return 'keyboard';
+  if (/screen reader|aria|alt|announce|label/.test(h)) return 'volume-2';
+  return 'accessibility';
+}
 ---
-<table>
-  <thead>
-    <tr>
-      <th>Slot</th>
-      <th>Accessibility hint</th>
-    </tr>
-  </thead>
-  <tbody>
-    {component.anatomy.map((s) => (
+<div class="table-scroll">
+  <table>
+    <thead>
       <tr>
-        <td><code>{s.id}</code></td>
-        <td>{s.a11y.hint}</td>
+        <th style="width:1%"></th>
+        <th>Slot</th>
+        <th>Accessibility hint</th>
       </tr>
-    ))}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {component.anatomy.map((s) => (
+        <tr>
+          <td><Icon class="a11y-icon" name={pickIcon(s.a11y.hint)} size={14} /></td>
+          <td><code>{s.id}</code></td>
+          <td>{s.a11y.hint}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

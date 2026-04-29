@@ -6,15 +6,18 @@ import { dirname, resolve } from 'node:path';
 
 interface Props {
   component: Component;
+  compact?: boolean;
 }
 
-const { component } = Astro.props;
+const { component, compact = false } = Astro.props;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = resolve(here, '..', '..', '..', 'content', 'components');
 const svg = await resolveAnatomySVG(component, { contentDir });
+
+const hostClass = compact ? 'anatomy-host anatomy-host--compact' : 'anatomy-host';
 ---
 
-<figure class="anatomy-host" aria-label={`${component.name} anatomy diagram`}>
+<figure class={hostClass} aria-label={`${component.name} anatomy diagram`}>
   <Fragment set:html={svg} />
 </figure>

@@ -1,13 +1,16 @@
 ---
 import '../styles/global.css';
 import ViewSwitcher from '../components/ViewSwitcher.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Icon from '../components/Icon.astro';
 
 interface Props {
   title: string;
   description?: string;
+  breadcrumb?: { name: string; href?: string }[];
 }
 
-const { title, description } = Astro.props;
+const { title, description, breadcrumb } = Astro.props;
 ---
 
 <!doctype html>
@@ -17,25 +20,59 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} — UI Anatomy</title>
     {description && <meta name="description" content={description} />}
+    <link rel="preconnect" href="data:" />
     <script is:inline>
       (() => {
         try {
-          const stored = localStorage.getItem('uianatomy.view');
-          const view = stored === 'designer' || stored === 'dev' || stored === 'bridge' ? stored : 'bridge';
-          document.documentElement.setAttribute('data-view', view);
-        } catch (_) {
-          /* localStorage unavailable */
-        }
+          const view = localStorage.getItem('uianatomy.view');
+          if (view === 'designer' || view === 'dev' || view === 'bridge') {
+            document.documentElement.setAttribute('data-view', view);
+          }
+          const theme = localStorage.getItem('uianatomy.theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (_) {}
       })();
     </script>
   </head>
   <body>
     <header class="site-header">
-      <a href="/" class="brand">UI Anatomy</a>
-      <ViewSwitcher />
+      <div class="shell site-header__inner">
+        <a href="/" class="site-header__brand">
+          <Icon name="square-stack" size={18} />
+          <span>UI Anatomy</span>
+        </a>
+        {breadcrumb && breadcrumb.length > 0 && (
+          <nav class="site-header__breadcrumb" aria-label="Breadcrumb">
+            {breadcrumb.map((item, i) => (
+              <Fragment>
+                {i > 0 && <span aria-hidden="true">/</span>}
+                {item.href ? <a href={item.href}>{item.name}</a> : <span>{item.name}</span>}
+              </Fragment>
+            ))}
+          </nav>
+        )}
+        <div class="site-header__cluster">
+          <ViewSwitcher />
+          <ThemeToggle />
+        </div>
+      </div>
     </header>
     <main>
       <slot />
     </main>
+
+    <script>
+      function syncOverflow() {
+        document.querySelectorAll<HTMLElement>('.table-scroll').forEach((el) => {
+          const overflow = el.scrollWidth > el.clientWidth + 1;
+          el.dataset.overflow = String(overflow);
+        });
+      }
+      syncOverflow();
+      window.addEventListener('resize', syncOverflow);
+      window.addEventListener('load', syncOverflow);
+    </script>
   </body>
 </html>

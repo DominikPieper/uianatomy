@@ -1,5 +1,6 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
+import SectionHeader from '../SectionHeader.astro';
 import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
 import AxesTable from '../sections/AxesTable.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
@@ -10,16 +11,16 @@ interface Props { component: Component }
 const { component } = Astro.props;
 ---
 <section data-view-section="designer">
-  <h2>Figma anatomy</h2>
+  <SectionHeader role="designer" title="Figma anatomy" id="figma-anatomy" />
   <FigmaSlotTable component={component} />
 
-  <h2>Variants, properties, states</h2>
+  <SectionHeader role="both" title="Variants, properties, states" id="axes" />
   <AxesTable component={component} />
 
-  <h2>Figma↔Code mismatches</h2>
+  <SectionHeader role="both" title="Figma↔Code mismatches" id="mismatches" />
   <MismatchesTable component={component} />
 
-  <h2>Common mistakes</h2>
+  <SectionHeader role="designer" title="Common mistakes" id="mistakes" />
   <MistakesList component={component} />
 
   <details>

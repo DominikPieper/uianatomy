@@ -1,0 +1,22 @@
+---
+import Icon from './Icon.astro';
+
+type Role = 'designer' | 'dev' | 'both';
+
+interface Props {
+  role: Role;
+  title: string;
+  id?: string;
+}
+
+const { role, title, id } = Astro.props;
+const iconName = role === 'designer' ? 'palette' : role === 'dev' ? 'code' : 'git-compare';
+const labelText = role === 'designer' ? 'Designer' : role === 'dev' ? 'Dev' : 'Both';
+---
+<header class="section-header" data-role={role}>
+  <span class="role-badge" aria-label={`${labelText} relevance`}>
+    <Icon name={iconName} size={12} />
+    <span class="role-badge__label">{labelText}</span>
+  </span>
+  <h2 id={id}>{title}</h2>
+</header>

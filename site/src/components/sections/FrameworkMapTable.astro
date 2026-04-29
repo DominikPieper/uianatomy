@@ -10,17 +10,19 @@ const labels: Record<string, string> = {
   vue: 'Vue',
 };
 ---
-<table>
-  <thead>
-    <tr><th>Framework</th><th>Structure mechanism</th><th>Variant mechanism</th></tr>
-  </thead>
-  <tbody>
-    {entries.map(([key, val]) => (
-      <tr>
-        <td>{labels[key] ?? key}</td>
-        <td>{val.structureMechanism}</td>
-        <td>{val.variantMechanism}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>Framework</th><th>Structure mechanism</th><th>Variant mechanism</th></tr>
+    </thead>
+    <tbody>
+      {entries.map(([key, val]) => (
+        <tr>
+          <td><strong>{labels[key] ?? key}</strong></td>
+          <td>{val.structureMechanism}</td>
+          <td><code>{val.variantMechanism}</code></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

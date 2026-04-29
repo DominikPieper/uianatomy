@@ -1,27 +1,125 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
+import Icon from '../Icon.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
 ---
 <div class="mismatches">
-  <table>
-    <thead>
-      <tr>
-        <th>Figma</th>
-        <th>Code</th>
-        <th>Consequence</th>
-        <th>Correct</th>
-      </tr>
-    </thead>
-    <tbody>
-      {component.mismatches.map((m) => (
-        <tr>
-          <td>{m.figma}</td>
-          <td>{m.code}</td>
-          <td>{m.consequence}</td>
-          <td>{m.correct}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+  <ol class="mismatch-list">
+    {component.mismatches.map((m, i) => (
+      <li class="mismatch">
+        <span class="mismatch__index">{String(i + 1).padStart(2, '0')}</span>
+        <div class="mismatch__pair">
+          <div class="mismatch__side mismatch__side--figma">
+            <span class="mismatch__label"><Icon name="palette" size={12} /> Figma</span>
+            <p>{m.figma}</p>
+          </div>
+          <span class="mismatch__arrow" aria-hidden="true">
+            <Icon name="arrow-right" size={16} />
+          </span>
+          <div class="mismatch__side mismatch__side--code">
+            <span class="mismatch__label"><Icon name="code" size={12} /> Code</span>
+            <p>{m.code}</p>
+          </div>
+        </div>
+        <div class="mismatch__rows">
+          <div class="mismatch__row mismatch__row--consequence">
+            <span class="mismatch__row-label"><Icon name="alert-triangle" size={12} /> Consequence</span>
+            <p>{m.consequence}</p>
+          </div>
+          <div class="mismatch__row mismatch__row--correct">
+            <span class="mismatch__row-label"><Icon name="check" size={12} /> Correct</span>
+            <p>{m.correct}</p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
 </div>
+
+<style>
+  .mismatch-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .mismatch {
+    position: relative;
+    padding: 20px 20px 16px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+  .mismatch__index {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: var(--font-mono);
+    font-size: var(--text-step--1);
+    color: var(--fg-faint);
+    letter-spacing: 0.04em;
+  }
+  .mismatch__pair {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: start;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px dashed var(--border-subtle);
+  }
+  @media (max-width: 640px) {
+    .mismatch__pair {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  .mismatch__side p {
+    margin: 4px 0 0;
+    color: var(--fg);
+  }
+  .mismatch__label,
+  .mismatch__row-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .mismatch__side--figma .mismatch__label {
+    color: var(--accent-warm);
+  }
+  .mismatch__side--code .mismatch__label {
+    color: var(--accent-cool);
+  }
+  .mismatch__arrow {
+    color: var(--accent-active);
+    align-self: center;
+    padding-top: 16px;
+  }
+  @media (max-width: 640px) {
+    .mismatch__arrow {
+      transform: rotate(90deg);
+      padding: 4px 0;
+      justify-self: start;
+    }
+  }
+  .mismatch__rows {
+    display: grid;
+    gap: 12px;
+  }
+  .mismatch__row p {
+    margin: 4px 0 0;
+    color: var(--fg-muted);
+  }
+  .mismatch__row--consequence .mismatch__row-label {
+    color: var(--accent-warm);
+  }
+  .mismatch__row--correct .mismatch__row-label {
+    color: var(--accent-cool);
+  }
+</style>

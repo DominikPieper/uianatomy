@@ -4,33 +4,74 @@ interface Props { component: Component }
 const { component } = Astro.props;
 const { axes } = component;
 ---
-<h3>Variants</h3>
-<p>Structurally different versions of the component.</p>
-<ul>
-  {axes.variants.map((v) => <li><code>{v}</code></li>)}
-</ul>
+<div class="axes">
+  <div class="axes__group">
+    <h3>Variants</h3>
+    <p>Structurally different versions of the component.</p>
+    <div class="chip-row">
+      {axes.variants.map((v) => <code class="chip">{v}</code>)}
+    </div>
+  </div>
 
-<h3>Properties</h3>
-<p>Same component, parameterised.</p>
-<table>
-  <thead>
-    <tr><th>Property</th><th>Type</th></tr>
-  </thead>
-  <tbody>
-    {axes.properties.map((p) => (
-      <tr><td><code>{p.name}</code></td><td><code>{p.type}</code></td></tr>
-    ))}
-  </tbody>
-</table>
+  <div class="axes__group">
+    <h3>Properties</h3>
+    <p>The same component, parameterised.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Property</th><th>Type</th></tr></thead>
+        <tbody>
+          {axes.properties.map((p) => (
+            <tr><td><code>{p.name}</code></td><td><code>{p.type}</code></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<h3>States</h3>
-<p>Browser/user-driven (interactive) vs. app-driven (data).</p>
-<table>
-  <thead>
-    <tr><th>Kind</th><th>States</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>interactive</td><td>{axes.states.interactive.map((s) => <code style="margin-right:6px">{s}</code>)}</td></tr>
-    <tr><td>data</td><td>{axes.states.data.map((s) => <code style="margin-right:6px">{s}</code>)}</td></tr>
-  </tbody>
-</table>
+  <div class="axes__group">
+    <h3>States</h3>
+    <p>Browser/user-driven (interactive) vs. app-driven (data).</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Kind</th><th>States</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>interactive</code></td>
+            <td>
+              <div class="chip-row">{axes.states.interactive.map((s) => <code class="chip">{s}</code>)}</div>
+            </td>
+          </tr>
+          <tr>
+            <td><code>data</code></td>
+            <td>
+              <div class="chip-row">{axes.states.data.map((s) => <code class="chip">{s}</code>)}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+  .axes {
+    display: grid;
+    gap: 24px;
+  }
+  .axes__group h3 {
+    margin: 0 0 4px;
+  }
+  .axes__group p {
+    margin: 0 0 12px;
+  }
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip-row .chip {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 3px 8px;
+  }
+</style>

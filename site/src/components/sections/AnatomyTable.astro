@@ -3,21 +3,23 @@ import type { Component } from '@uianatomy/shared/schema';
 interface Props { component: Component }
 const { component } = Astro.props;
 ---
-<table class="anatomy-table">
-  <thead>
-    <tr>
-      <th>Slot</th>
-      <th>Required</th>
-      <th>Purpose</th>
-    </tr>
-  </thead>
-  <tbody>
-    {component.anatomy.map((slot) => (
-      <tr data-slot-row={slot.id}>
-        <td><code>{slot.id}</code></td>
-        <td>{slot.required ? 'required' : 'optional'}</td>
-        <td>{slot.purpose}</td>
+<div class="table-scroll">
+  <table class="anatomy-table">
+    <thead>
+      <tr>
+        <th>Slot</th>
+        <th>Required</th>
+        <th>Purpose</th>
       </tr>
-    ))}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {component.anatomy.map((slot) => (
+        <tr data-slot-row={slot.id}>
+          <td><code>{slot.id}</code></td>
+          <td>{slot.required ? 'required' : 'optional'}</td>
+          <td>{slot.purpose}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
