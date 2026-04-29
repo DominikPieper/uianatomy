@@ -1,0 +1,602 @@
+id: segmented-control
+name: Segmented Control
+description: >-
+  A row (or column) of connected buttons that lets the user switch
+  between mutually-exclusive views of the same content — list vs
+  grid, day vs week vs month, KB vs MB vs GB unit toggles. Distinct
+  from Tabs (which switches between different *content*), distinct
+  from RadioGroup (which captures form values rather than view
+  state), distinct from Toggle (which is binary, not n-way). Used
+  for content-presentation toggles where the underlying data is
+  the same and the segments select the visual shape.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded container holding the segments. Carries
+      `role="radiogroup"` per APG canonical (segments are
+      mutually-exclusive choices, not navigation tabs). Visual
+      treatment connects the segments — single border, shared
+      background, no gap between segments by default.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; segments share an outer border
+    code:
+      slot: root
+      semantic: radiogroup
+    a11y:
+      hint: >-
+        Apply `role="radiogroup"` plus an `aria-label` (or
+        `aria-labelledby` referencing a heading near the
+        control). The radiogroup is the canonical APG choice
+        because segments are *mutually-exclusive choices about
+        view*, not navigation between content. Tabs would be
+        wrong — Tabs switch content, segments switch view-of-
+        content.
+    tokens:
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.sunken
+        border: color.border.subtle
+
+  - id: segment
+    required: true
+    purpose: >-
+      Individual button option. One anatomy slot describes the
+      role; multiple instances render per segment in the
+      control. Carries the segment's accessible name, the
+      `aria-checked` reflecting selection state, and the focus
+      affordance.
+    layout:
+      parent: root
+      row: 1
+      span: 4
+      repeats: 3
+    figma:
+      type: instance
+      hint: Segment component instance with selected and unselected variants
+    code:
+      slot: segment
+      semantic: radio
+    a11y:
+      hint: >-
+        Each segment is `role="radio"` with `aria-checked`
+        reflecting selection state. Roving tabindex — only the
+        currently-checked segment has `tabindex="0"`, others
+        have `tabindex="-1"`. Disabled segments use
+        `aria-disabled` and stay focusable so SR users hear
+        them.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+  - id: icon
+    required: false
+    purpose: >-
+      Optional icon at the inline-start of each segment label —
+      used to compactly represent the option's view (a list-
+      icon vs grid-icon for "view as list / grid"). May be the
+      sole content of icon-only-variant segments.
+    layout:
+      parent: segment
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance per segment; visibility per variant
+    code:
+      slot: segment-icon
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative when paired with a visible label
+        (`aria-hidden="true"`). For icon-only variant, the
+        segment's `aria-label` carries the meaning ("List
+        view", "Grid view") because the icon alone is not a
+        label.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: label
+    required: true
+    purpose: >-
+      The text inside each segment. Acts as the segment's
+      accessible name when the segment is not icon-only. Should
+      be brief — one to two words — because the control is
+      sized to fit segments inline.
+    layout:
+      parent: segment
+      row: 1
+      col: 2
+      span: 3
+    figma:
+      type: text
+      hint: Segment text style; bound to a component property
+    code:
+      slot: segment-label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. When icon-only variant is used, the label
+        is hidden visually but kept in the DOM (visually-
+        hidden) for SR users — never replaced by `aria-label`
+        without a visible alternative when the segment also
+        renders text.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.muted
+
+  - id: indicator
+    required: false
+    purpose: >-
+      Optional sliding selection indicator that animates
+      between segments on selection change. Decorative — the
+      selection state is communicated via `aria-checked`. May
+      be a filled background, a contrast-coloured pill, or an
+      underline depending on the variant treatment.
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: 4
+      overlay: true
+    figma:
+      type: rectangle
+      hint: Pill or filled rectangle behind the selected segment; position bound to selection
+    code:
+      slot: indicator
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Selection is
+        communicated through `aria-checked` on the radio
+        segments; the indicator is visual reinforcement.
+    tokens:
+      radius:
+        corner: radius.sm
+      color:
+        background: color.surface.bg
+      elevation:
+        shadow: elevation.sm
+
+axes:
+  variants:
+    - standard
+    - icon-only
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - name: orientation
+      kind: enum
+      values: [horizontal, vertical]
+    - { name: hasIndicator, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - selected
+    transitions:
+      - from: selected
+        to: selected
+        trigger: >-
+          User activates a different segment via Enter / Space
+          or via ArrowKey navigation in roving-tabindex mode
+          (which auto-activates on focus per APG radiogroup
+          contract). The previously-selected segment loses
+          `aria-checked="true"`; the newly-selected segment
+          gains it. The indicator (if present) animates to
+          the new position.
+
+mismatches:
+  - figma: SegmentedControl drawn as Tabs with no visual differentiation
+    code: A SegmentedControl with `role="radiogroup"` rather than `role="tablist"`
+    consequence: >-
+      Designers may use SegmentedControl visually for what is
+      semantically Tabs (switching between different content
+      panels). Implementations following the design ship
+      `role="radiogroup"` for content-switching, breaking the
+      keyboard model (radiogroup uses ArrowKeys with
+      auto-activation; tablist may use manual activation) and
+      misleading SR users about the surface's purpose.
+    correct: >-
+      Distinguish at the canonical level: SegmentedControl
+      switches view-of-same-content (list vs grid; day vs
+      week vs month); Tabs switches between different content
+      panels. The semantic distinction drives the role
+      (`radiogroup` vs `tablist`). Document the boundary
+      clearly in `whenToUse.vsRelated`.
+
+  - figma: Multi-select segmented control drawn (multiple segments highlighted)
+    code: A canonical SegmentedControl is single-select only; multi-select segments are not segmented control
+    consequence: >-
+      Designers compose mocks with two or three segments
+      "active" simultaneously. Implementations following the
+      design ship multi-select; the semantic surface is
+      neither radiogroup (single) nor a clean checkbox group
+      (no visible grouping). The control becomes ambiguous.
+    correct: >-
+      SegmentedControl is single-select by canon — `role="radio"`
+      semantics enforce mutual exclusion. For multi-select
+      visual toggles, use a horizontal `<CheckboxGroup>` styled
+      to look segmented; document this as the related
+      pattern, not as a SegmentedControl variant.
+
+  - figma: Selected segment differentiated by a coloured fill alone
+    code: Selected segment differentiated by fill PLUS contrast-text PLUS optional border
+    consequence: >-
+      Designers may use a single colour change to mark
+      selection. Implementations following the design fail
+      WCAG 1.4.1 (Use of Color) for users with colour-vision
+      deficiencies; SR users hear the same announcement for
+      every segment because the differentiation is purely
+      visual.
+    correct: >-
+      Triple-layer selection differentiation: visual
+      (background + foreground contrast + optional weight or
+      border), accessible state (`aria-checked="true"`), and
+      iconographic (an inline checkmark or selected-state
+      icon for icon-only variants). The `aria-checked` is the
+      source of truth; visuals reinforce.
+
+  - figma: Vertical segmented control drawn but no orientation property documented
+    code: A SegmentedControl with an `orientation` property switching between row and column layouts
+    consequence: >-
+      Designers compose vertical-segmented variants in mocks
+      without flagging that the orientation is property-driven.
+      Developers ship one orientation; the design is
+      occasionally requested in the other and re-implemented
+      from scratch.
+    correct: >-
+      Document `orientation` as a first-class property
+      (horizontal default, vertical opt-in). The keyboard
+      model adapts: ArrowLeft / Right for horizontal, ArrowUp
+      / Down for vertical, with Home / End working in both.
+
+mistakes:
+  - id: segmented-as-tabs
+    title: Used as content-switching tabs
+    description: >-
+      The control is used to switch between different content
+      panels (a settings page with "Account / Billing /
+      Notifications" sections). Semantically this is Tabs;
+      the `role="radiogroup"` of SegmentedControl is wrong
+      here — SR users hear "radio button" instead of "tab",
+      and panel content does not get the `role="tabpanel"`
+      relationship.
+    fix: >-
+      Use Tabs for content-switching. SegmentedControl is for
+      view-of-same-content (list vs grid). The decision test:
+      does activating a segment change *what content is
+      shown* or *how the same content is displayed*? "What"
+      → Tabs; "how" → SegmentedControl.
+
+  - id: segmented-no-roving-tabindex
+    title: Every segment has tabindex="0"
+    description: >-
+      Tab cycles through every segment one by one. APG
+      canonical for radiogroup is roving tabindex — only the
+      currently-checked segment has `tabindex="0"`, others
+      have `tabindex="-1"`. ArrowKeys navigate within the
+      group.
+    fix: >-
+      Roving tabindex — only the checked segment is in the
+      tab order. ArrowKeys move focus AND selection (per APG
+      radiogroup auto-activation). Tab from the radiogroup
+      moves to the next document focusable, not to the next
+      segment.
+
+  - id: segmented-arrow-no-activate
+    title: ArrowKeys move focus but do not activate
+    description: >-
+      Implementation copies the manual-activation pattern from
+      Tabs. ArrowKeys move focus between segments; the user
+      must press Enter / Space to activate. APG radiogroup
+      canonical is auto-activation — ArrowKey IS the
+      activation.
+    fix: >-
+      ArrowKey moves focus AND activates the new segment.
+      `aria-checked` flips immediately. The indicator (if
+      present) animates to the new position. Enter / Space
+      are no-ops on the focused segment when it is already
+      checked (or are equivalent to ArrowKey activation if a
+      rare focus-without-check edge case exists).
+
+  - id: segmented-color-only-selected
+    title: Selection differentiated by colour alone
+    description: >-
+      Selected segment has a filled background; unselected
+      segments have transparent background. The differentiator
+      is colour. Colour-vision deficient users cannot
+      distinguish; SR users get only the `aria-checked`
+      cue.
+    fix: >-
+      Pair colour with non-colour cue: contrast-text
+      foreground change (selected segment uses primary text
+      colour vs muted; unselected uses muted), optional
+      weight change, optional inline checkmark for
+      icon-only-variant. Colour is reinforcement, not the
+      sole signal.
+
+  - id: segmented-overflow-silent
+    title: Overflowing segments clipped at the inline-end
+    description: >-
+      Five-segment control rendered in a narrow container;
+      the last two segments clip at the edge. Users cannot
+      see them; SR users navigate to them via ArrowKey but
+      pointer users miss their existence.
+    fix: >-
+      For SegmentedControl above 5 segments, redesign as
+      tabs with overflow-scroll, a Select, or splitting into
+      smaller controls. Document the canonical maximum
+      segment count in performance. Above the threshold,
+      SegmentedControl is the wrong pattern.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-segmented-control>` host with `<ui-segment>` children; root carries `role="radiogroup"`, segments carry `role="radio"` plus shared keyboard state machine
+    variantMechanism: attributes (`variant="icon-only"`, `size="md"`, `orientation="horizontal"`, `has-indicator`); per-segment `selected` attribute reflects `aria-checked`
+  react:
+    structureMechanism: React Aria `useRadioGroup` plus `useRadio` (with custom styled segments); Radix does not ship a SegmentedControl primitive but ToggleGroup with `type="single"` is the closest match
+    variantMechanism: props with class-variance-authority for variant / size; controlled or uncontrolled value (the selected segment id)
+  angularSignals:
+    structureMechanism: Angular Material `MatButtonToggleGroup` (with `multiple="false"`) provides the closest pattern; or Angular CDK `cdk-listbox` configured for radio semantics
+    variantMechanism: input<'standard' | 'icon-only'>(); input<'horizontal' | 'vertical'>(); two-way binding `[(value)]`
+  vue:
+    structureMechanism: Headless UI `<RadioGroup>` plus styled radio options; or Radix Vue ToggleGroup; Vuetify `v-btn-toggle` with `mandatory` prop
+    variantMechanism: defineProps with literal-union types; `:variant`, `:orientation` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    indicator: motion.duration.fast
+    segmentColorChange: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the canonical default switches to
+        compact density and may force `orientation="vertical"`
+        when the segment count exceeds 3 (avoids overflow on
+        narrow viewports). For icon-only variant, orientation
+        stays horizontal up to 4 segments because icon-only
+        is space-efficient.
+    - at: breakpoint.md
+      change: >-
+        Above this width, orientation and size render as
+        authored. Both orientations are valid; choose per
+        layout context.
+
+events:
+  - name: selectedChange
+    payload: >-
+      `{ value: string }` — the id of the newly selected
+      segment. Always a string matching one of the rendered
+      segment ids; never empty (segmented controls always
+      have one segment selected — the canonical default
+      requires `mandatory` selection).
+    frameworkNotes:
+      webComponents: >-
+        `selectedChange` CustomEvent on the host with
+        `event.detail = { value }`.
+      react: >-
+        `onValueChange(value: string)` controlled-pattern
+        callback (Radix ToggleGroup, React Aria
+        `useRadioGroup`).
+      angularSignals: >-
+        `output<string>('selectedChange')`; pair with
+        `[(value)]` for two-way binding.
+      vue: >-
+        `@update:modelValue` for `v-model`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the currently-checked segment (roving
+        tabindex). Subsequent Tab leaves the SegmentedControl
+        toward the next document focusable — does NOT cycle
+        through the segments.
+    - keys: ArrowLeft / ArrowRight (horizontal orientation)
+      expected: >-
+        Moves focus AND selection to the previous / next
+        segment. `aria-checked` flips on the new segment;
+        previous segment becomes unchecked. The indicator (if
+        present) animates to the new position. Wraps from
+        last to first and vice versa per APG canonical.
+    - keys: ArrowUp / ArrowDown (vertical orientation)
+      expected: >-
+        Same as ArrowLeft / Right but for vertical
+        orientation.
+    - keys: Home / End
+      expected: >-
+        Moves focus AND selection to the first / last segment
+        respectively. Works in both orientations.
+    - keys: Enter or Space (focus on already-checked segment)
+      expected: >-
+        No-op (segment is already selected). For unchecked
+        segments, Enter / Space is equivalent to ArrowKey
+        activation — moves selection here.
+  announcements:
+    - trigger: Focus enters a segment
+      expected: >-
+        SR announces "<segment label>, radio button, checked,
+        X of N" for the checked segment, or "not checked, X
+        of N" for unchecked. The radiogroup's accessible name
+        (from `aria-label` / `aria-labelledby`) is announced
+        on first entry.
+    - trigger: ArrowKey changes selection
+      expected: >-
+        SR announces the new segment's label and "checked"
+        state. Driven by `aria-checked` flipping on the
+        focused segment.
+    - trigger: Indicator animates
+      expected: >-
+        No SR announcement — the indicator is decorative.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - color-contrast
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / icon-only.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg.
+  - figma: Orientation
+    code: orientation
+    type: Variant
+    notes: horizontal / vertical. Affects keyboard model (ArrowLeft/Right vs ArrowUp/Down).
+  - figma: Has Indicator
+    code: hasIndicator
+    type: Boolean
+    notes: Toggles the sliding-indicator slot. Default true; some variants use only foreground-color contrast for selection without a separate indicator.
+  - figma: Segment Count
+    code: 'segments.length'
+    type: Variant
+    notes: >-
+      Figma exposes 2/3/4/5 segment counts as a Variant for
+      preview-time layout review. Code accepts an array of
+      segment definitions.
+  - figma: Selected Segment
+    code: value
+    type: Variant
+    notes: >-
+      Figma exposes "first / second / third selected" as
+      Variant for preview; in code this is a controlled value
+      (the selected segment id).
+  - figma: Has Icons
+    code: hasIcons
+    type: Boolean
+    notes: Toggles per-segment icons. Required for icon-only variant; optional for standard variant.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Horizontal orientation reverses logically — first
+      segment in source order appears at the inline-start
+      (visual right in RTL). ArrowLeft / ArrowRight follow
+      visual direction (per APG radiogroup canonical):
+      ArrowRight moves to the *previous* segment in RTL,
+      ArrowLeft to the *next*. Vertical orientation is
+      direction-neutral (Up/Down keys unchanged). Indicator
+      animation slides along the logical axis.
+  textExpansion: >-
+    Segment labels grow with translation. The control sizes
+    to its widest segment (or to fill the container when
+    `width: full`); long-text languages may force wider
+    segments than designed. Avoid fixed segment widths;
+    allow intrinsic-size growth. Above 4 segments with
+    long-text labels, consider switching to vertical
+    orientation or to Tabs.
+
+performance:
+  - name: maxSegments
+    metric: segment-count
+    threshold: 5
+    unit: segments
+    rationale: >-
+      Above ~5 segments, the connected-segment visual breaks
+      down — the control overflows narrow viewports, the
+      roving-tabindex requires more ArrowKey presses, and the
+      mutual-exclusion intent becomes ambiguous (users may
+      perceive a list of buttons rather than a single
+      choice). Above 5, redesign as Tabs (with overflow-
+      scroll), a Select dropdown, or split into smaller
+      controls.
+
+whenToUse:
+  use: >-
+    For switching between mutually-exclusive views of the
+    same content — list vs grid view, day vs week vs month
+    calendar, KB vs MB vs GB unit toggle, light vs dark vs
+    auto theme. The user picks one; the underlying data
+    stays the same and the segment selects how it is
+    presented.
+  avoid: >-
+    For switching between different content panels — that
+    is `Tabs`. For form values with form submission — that
+    is `RadioGroup` (which is semantically identical but
+    visually distinct as separate radio buttons). For binary
+    on/off — that is `Switch` or `Toggle`. For more than 5
+    options — that is a `Select` dropdown.
+  vsRelated:
+    - id: tabs
+      difference: >-
+        `Tabs` switches between different *content* panels;
+        `SegmentedControl` switches between *view-of-same-
+        content*. The semantic distinction drives the role
+        (`tablist` vs `radiogroup`) and the keyboard model
+        (Tabs may use manual activation; SegmentedControl
+        always uses auto-activation per APG radiogroup).
+    - id: radio
+      difference: >-
+        `RadioGroup` is the semantic foundation —
+        SegmentedControl IS a radio group, just rendered as
+        connected-segment buttons rather than as separate
+        radio inputs. Use Radio when the choices are part of
+        a form being submitted (gender, plan tier); use
+        SegmentedControl when the choice controls in-page
+        view-presentation.
+    - id: toggle
+      difference: >-
+        `Toggle` (a.k.a. Switch) is binary on/off;
+        `SegmentedControl` is n-way mutual exclusion. Two-
+        segment SegmentedControls and Toggles can look
+        similar — the distinguisher is whether the option
+        space is binary (Toggle) or could expand (Segmented).
+
+notes: >-
+  SegmentedControl vocabulary varies: Apple HIG calls this
+  "Segmented Control" (the canonical name); Material 3 calls
+  it "Segmented Buttons"; Polaris uses "ButtonGroup" with
+  segmented styling; Carbon calls it "Content Switcher". The
+  canonical name here matches Apple HIG and Material 3
+  vocabulary. The role-vs-pattern distinction (radiogroup vs
+  tablist) is the most-overlooked semantic decision — many
+  implementations ship a tablist styled as segmented for
+  what is really a view-toggle, breaking the SR contract.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/radio/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/radiogroup_role
+  - https://www.radix-ui.com/primitives/docs/components/toggle-group
+  - https://react-spectrum.adobe.com/react-aria/RadioGroup.html
+  - https://m3.material.io/components/segmented-buttons/overview
+  - https://carbondesignsystem.com/components/content-switcher/usage/
+  - https://atlassian.design/components/tabs/examples
+  - https://polaris.shopify.com/components/actions/button-group
+  - https://developer.apple.com/design/human-interface-guidelines/segmented-controls
+
+lastReviewed: '2026-04-29'
