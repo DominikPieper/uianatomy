@@ -1,0 +1,788 @@
+id: drawer
+name: Drawer
+description: >-
+  An edge-anchored panel that slides in from a viewport edge to surface
+  contextual content alongside (or temporarily replacing) the underlying
+  view. Distinct from Modal in two ways: positioning is edge-anchored
+  rather than centered, and the modal/non-modal behaviour is a property
+  rather than the defining trait. Common uses: filter panels,
+  detail-view side-sheets, mobile navigation, settings flyouts.
+
+anatomy:
+  - id: backdrop
+    required: false
+    purpose: >-
+      Full-viewport scrim behind the drawer when the `modal` variant is
+      active. Intercepts pointer events and visually de-emphasises the
+      underlying content. Absent on the `non-modal` variant — the page
+      remains fully interactive while the drawer is open.
+    layout:
+      overlay: true
+    figma:
+      type: frame
+      hint: Full-bleed frame with semi-transparent fill; conditional on modal variant
+    code:
+      slot: backdrop
+      semantic: presentational-overlay
+    a11y:
+      hint: >-
+        Backdrop is presentational; do not put `role` on it. Clicking the
+        backdrop dismisses the drawer when `dismissible: true`. Keyboard
+        users always have an explicit close affordance because they
+        cannot click the backdrop.
+    tokens:
+      color:
+        background: color.surface.scrim
+
+  - id: container
+    required: true
+    purpose: >-
+      The drawer panel itself — the bounded surface that renders header,
+      body, and footer. Anchored to one viewport edge via the `side`
+      property. Carries the focus trap when `modal: true`.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Edge-anchored auto-layout frame; size variant drives inline-size for left/right, block-size for top/bottom
+    code:
+      slot: container
+      semantic: dialog-or-region
+    a11y:
+      hint: >-
+        For modal drawers, apply `role="dialog"` and `aria-modal="true"`,
+        with focus trap and `inert` on siblings. For non-modal drawers,
+        `role="region"` with `aria-labelledby` pointing at the title is
+        the canonical choice — focus may escape the drawer naturally.
+        Always label via `aria-labelledby` regardless of modality.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      radius:
+        corner: radius.lg
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.overlay
+
+  - id: header
+    required: false
+    purpose: >-
+      Top region grouping title and close affordance. Optional because
+      some drawers (in-flow filter panels, simple navigation drawers)
+      embed the title directly in the body or omit a title entirely in
+      favour of an external trigger label.
+    layout:
+      parent: container
+      row: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame at the inline-start edge of the container
+    code:
+      slot: header
+      semantic: heading-region
+    a11y:
+      hint: >-
+        Header is a layout region, not a heading. Heading semantics live
+        on the title element inside.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+
+  - id: title
+    required: true
+    purpose: >-
+      The drawer's name. The value referenced by `aria-labelledby` on
+      the container. First content announced when focus enters a modal
+      drawer.
+    layout:
+      parent: header
+      row: 1
+      col: 1
+      span: 9
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property for content
+    code:
+      slot: title
+      semantic: heading
+    a11y:
+      hint: >-
+        Use a real heading element of an appropriate level. The drawer's
+        container references this element via `aria-labelledby`. Hidden
+        titles (visually-hidden but accessible) are valid for drawers
+        that do not visually display a title.
+    tokens:
+      typography:
+        size: text.lg
+        weight: weight.semibold
+        lineHeight: leading.tight
+      color:
+        foreground: color.text.primary
+
+  - id: close-button
+    required: false
+    purpose: >-
+      Visible affordance for dismissing the drawer. Conventionally an
+      "×" icon in the inline-end corner of the header. Optional in
+      navigation-drawer patterns where dismissal happens via outside
+      tap or swipe; required when `dismissible: true` and no other
+      visible close affordance exists.
+    layout:
+      parent: header
+      row: 1
+      col: 2
+      span: 3
+    figma:
+      type: instance
+      hint: Icon button instance; bound to component slot
+    code:
+      slot: close
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Close" or "Close filters"). The
+        Escape key must do the same thing as clicking this button when
+        `dismissible: true`.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+  - id: body
+    required: true
+    purpose: >-
+      Primary payload — the content the drawer exists to surface or
+      collect. Scrolls internally when content overflows; header and
+      footer remain pinned to their respective edges.
+    layout:
+      parent: container
+      row: 2
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; min-block-size drives "comfortable" density
+    code:
+      slot: body
+      semantic: prose-or-form-or-list
+    a11y:
+      hint: >-
+        Body retains its native semantics (forms stay forms, lists stay
+        lists). For scroll-on-overflow, ensure the scrollable region is
+        keyboard-reachable (`tabindex="0"` on the scroll container) so
+        keyboard users can scroll without an interactive child.
+    tokens:
+      spacing:
+        padding: spacing.comfortable
+      typography:
+        size: text.md
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
+
+  - id: footer
+    required: false
+    purpose: >-
+      Bottom region grouping commit/cancel actions or status content.
+      Optional — many drawers (navigation, detail-view) commit changes
+      automatically via in-body controls and need no explicit footer.
+      When present, pinned to the inline-end edge of the container.
+    layout:
+      parent: container
+      row: 3
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; right-aligned actions in LTR
+    code:
+      slot: footer
+      semantic: button-group
+    a11y:
+      hint: >-
+        Buttons keep native semantics. Document the default focus
+        target (usually the primary commit button); destructive
+        commits should default focus to the cancel action.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+
+  - id: handle
+    required: false
+    purpose: >-
+      Optional drag affordance for swipe-to-dismiss interactions —
+      typical on mobile bottom-sheet patterns. A small horizontal pill
+      at the inline-start edge (top edge for top/bottom drawers).
+      Decorative on pointer devices; functional on touch.
+    layout:
+      parent: container
+      row: 1
+      col: 1
+      span: 2
+    figma:
+      type: rectangle
+      hint: 4×40px pill at the leading edge; visibility bound to "swipeable" property
+    code:
+      slot: handle
+      semantic: presentational-or-resize-affordance
+    a11y:
+      hint: >-
+        Decorative when only providing a visual cue. If the handle also
+        accepts pointer drag for resize, expose it as `role="separator"`
+        with `aria-orientation` and ARIA range values, and provide
+        keyboard equivalents (ArrowKeys to resize).
+    tokens:
+      radius:
+        corner: radius.pill
+      color:
+        background: color.border.subtle
+
+axes:
+  variants:
+    - modal
+    - non-modal
+    - navigation
+  properties:
+    - name: side
+      kind: enum
+      values: [start, end, top, bottom]
+    - name: size
+      kind: enum
+      values: [sm, md, lg, full]
+    - { name: dismissible, kind: primitive, of: boolean }
+    - { name: swipeable, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - focus-visible
+      - hover
+    data:
+      - closed
+      - opening
+      - open
+      - closing
+      - dragging
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          User activates the trigger that owns the drawer (button click,
+          link activation, programmatic `open()`). For modal drawers the
+          previously-focused element is captured for restoration on
+          close; for non-modal, focus does not move automatically.
+      - from: opening
+        to: open
+        trigger: >-
+          The slide-in animation completes (or, under
+          `prefers-reduced-motion: reduce`, immediately after
+          `closed → opening`). Modal: focus moves into the drawer, focus
+          trap engages, siblings become `inert`. Non-modal: drawer is
+          ready, focus stays where it was.
+      - from: open
+        to: closing
+        trigger: >-
+          User dismisses via the close button, Escape (when
+          `dismissible: true`), backdrop click (modal + dismissible), or
+          swipe gesture (when `swipeable: true`); or the primary action
+          commits and programmatically requests close.
+      - from: closing
+        to: closed
+        trigger: >-
+          The slide-out animation completes (or immediately under
+          reduced motion). Modal: drawer is removed from the AT tree,
+          `inert` is released, focus restores to the captured trigger.
+          Non-modal: drawer is removed; focus stays where it was.
+      - from: open
+        to: dragging
+        trigger: >-
+          User initiates a swipe gesture on the handle or container
+          edge (`swipeable: true`). The drawer follows the pointer
+          position with reduced damping; release-velocity above
+          threshold triggers `dragging → closing`, below resets to
+          `dragging → open`.
+      - from: dragging
+        to: open
+        trigger: >-
+          User releases the swipe with insufficient velocity / distance
+          to dismiss; drawer animates back to its open position.
+      - from: dragging
+        to: closing
+        trigger: >-
+          User releases the swipe with sufficient velocity / distance to
+          dismiss; drawer animates the rest of the way out via the
+          standard close path.
+
+mismatches:
+  - figma: A drawer drawn as a static side panel that's just always there
+    code: A portal-mounted panel with focus trap, escape handling, slide animation, and `inert` toggling
+    consequence: >-
+      The Figma artifact captures the visual end-state but encodes none
+      of the open/close lifecycle, the modality, or the focus contract.
+      Designers approximating the canonical drawer from the Figma file
+      may not realise modal drawers need `inert`, escape handling, and
+      focus trap; developers may ship something that looks like a
+      drawer but escapes attention semantics.
+    correct: >-
+      Document the open/close lifecycle and modality contract in the
+      canonical reference. The Figma file captures visual states
+      (closed, opening, open, dragging); the canonical reference and
+      a11y notes document the portal mount, focus trap, escape, and
+      `inert` for modal drawers.
+
+  - figma: Modal drawer and non-modal drawer drawn as one variant set
+    code: Two distinct accessibility contracts (focus trap + inert vs none) driven by the variant prop
+    consequence: >-
+      Designers may pick "drawer" without realising the modality choice
+      determines whether keyboard users can tab past the drawer; the
+      canonical contract for `role` (`dialog` vs `region`) differs
+      between the two. Developers shipping non-modal-styled-as-modal
+      lock keyboard focus inside a panel that looks dismissable just
+      by clicking outside.
+    correct: >-
+      Treat modal vs non-modal as a structural variant (separate ARIA
+      role, separate keyboard contract). Designers and developers both
+      consult the canon to confirm which variant they're using; the
+      Figma component carries a Variant property that surfaces both.
+
+  - figma: Swipe-to-dismiss drawn as a static "drag handle" with no animation
+    code: A pointer-event-driven gesture handler tracking velocity and distance, with kinematic close-or-snap-back
+    consequence: >-
+      Designers see a static handle and may assume it's just a visual
+      affordance; developers either ship without swipe support
+      (touch-input feels broken) or invent the gesture interaction
+      from scratch. Animation curves and dismiss thresholds are
+      reinvented per implementation.
+    correct: >-
+      Document swipe-to-dismiss as a `swipeable: true` property with
+      explicit canonical states (`dragging`) and transitions. Specify
+      threshold conventions in the canonical reference (e.g. "release
+      velocity > 800px/s OR distance > 30% closes").
+
+  - figma: Side `start` vs `end` drawn as two separate components
+    code: A single component with a `side` property toggling logical positioning
+    consequence: >-
+      Designers and developers count drawers differently — designers
+      see four components (left, right, top, bottom drawers);
+      developers see one with a property. Variant explosion
+      (4 sides × 3 modal-modes × 4 sizes = 48 variants) makes the
+      Figma file unmaintainable.
+    correct: >-
+      Model `side` as a property, not as separate components. Use
+      Figma's Variant property type for the four side values; the
+      anatomy is shared across all four.
+
+mistakes:
+  - id: drawer-no-focus-trap-on-modal
+    title: Modal drawer with no focus trap
+    description: >-
+      The drawer is styled to feel modal (backdrop, scrim) but
+      pressing Tab from the last focusable inside the drawer moves
+      focus to the next element in the page beneath the backdrop.
+      Visually obscured but technically focused.
+    fix: >-
+      Implement a focus trap when `modal: true`. Modern primitives
+      (Radix Dialog, React Aria Modal, vaul) include this; never
+      roll your own without `inert` on the rest of the document.
+
+  - id: drawer-no-focus-restore
+    title: Focus is lost after the drawer closes
+    description: >-
+      After dismissal, focus lands on `<body>`. Keyboard and
+      screen-reader users have to re-orient from the top of the page.
+    fix: >-
+      Capture the previously-focused element on open (modal variants).
+      Restore focus to it on close. If the trigger no longer exists,
+      focus a stable landmark (page heading, parent toolbar).
+
+  - id: drawer-swipe-without-keyboard-equivalent
+    title: Swipe-to-dismiss with no keyboard equivalent
+    description: >-
+      Mobile drawers are dismissable via swipe but keyboard users on
+      desktop have no equivalent. Either the drawer cannot be closed
+      from the keyboard at all, or the close button is missing on the
+      assumption "users will swipe".
+    fix: >-
+      Every dismissible drawer carries a visible close-button slot
+      reachable by keyboard. Escape dismisses when `dismissible: true`
+      regardless of input modality. Swipe is an additive convenience,
+      not a replacement.
+
+  - id: drawer-side-not-rtl-aware
+    title: Side `start` hard-coded to `left`
+    description: >-
+      The drawer slides from the left in LTR — and also in RTL,
+      breaking RTL users' expectation that "start" means visual right.
+      Implementations using `left: 0` or `transform: translateX(-100%)`
+      hard-code direction.
+    fix: >-
+      Use logical properties: `inset-inline-start: 0`,
+      `transform: translateX(calc(-1 * 100%))` only when paired with
+      `:dir(rtl)` overrides, or better, use logical-property-aware
+      transforms via a CSS variable. The drawer's `side: start`
+      slides from inline-start in any direction.
+
+  - id: drawer-stacking-with-modal
+    title: Drawer opened on top of an existing Modal
+    description: >-
+      Both surfaces install their own focus traps and `inert`
+      handling. The two systems fight: focus may bounce between the
+      modal and the drawer; assistive tech reads stale content from
+      the now-inert modal beneath.
+    fix: >-
+      Forbid stacking by canon: a Drawer and a Modal cannot be open
+      simultaneously. Either dismiss the modal before opening the
+      drawer, or model the drawer's content as a step inside the
+      modal flow. Stacking is a redesign signal, not a layering
+      concern.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-drawer>` host with named slots for `header`, `body`, `footer`, `handle`; modal variant uses native `<dialog>` internally with custom positioning, non-modal uses a positioned `<aside>`
+    variantMechanism: attributes (`variant="modal"`, `side="end"`, `size="md"`, `dismissible`, `swipeable`); `data-state="open|closed|opening|closing|dragging"` for CSS transitions
+  react:
+    structureMechanism: portal-based primitives (Radix has no first-party Drawer; vaul or React Aria Drawer-via-Modal compose the slots as children) compositing the slots as named children
+    variantMechanism: props with class-variance-authority for variant/side/size; `data-state` attribute for transition states; `onOpenChange` / `onDismiss` controlled-pattern callbacks
+  angularSignals:
+    structureMechanism: Angular CDK Overlay + custom positioning strategy (top/bottom/start/end attached); content projection for header / body / footer slots
+    variantMechanism: input<'modal' | 'non-modal' | 'navigation'>(), input<'start' | 'end' | 'top' | 'bottom'>(); host bindings drive `[attr.role]` (dialog vs region)
+  vue:
+    structureMechanism: Headless UI does not yet ship a Drawer (as of 2026-04); third-party (vue-final-modal, custom composable around Teleport) provides the portal + focus trap; named slots for header/body/footer
+    variantMechanism: defineProps with literal-union types; `:data-state` for transition states; emits `update:open` / `dismiss`
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.base
+    close: motion.duration.base
+    backdrop: motion.duration.fast
+    dragSnap: motion.duration.fast
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, all drawer variants render as the `bottom` side
+        with `size: full` regardless of authored `side` and `size`
+        properties — narrow viewports do not afford left/right edge
+        anchoring without crowding the underlying content. Navigation
+        drawers may further degrade to a fullscreen overlay
+        (`size: full`, suppressed handle).
+    - at: breakpoint.md
+      change: >-
+        Above this width, all variants render as authored. The
+        `navigation` variant typically pins as a permanent column on
+        desktop (non-modal, `size: md` minimum); below `md` it
+        collapses back to the modal-with-trigger pattern.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` after the drawer has finished entering
+      (`opening → open`), `false` after it has finished exiting
+      (`closing → closed`). Fires after the slide animation settles,
+      not at the start.
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent on the `<ui-drawer>` host with
+        `event.detail = { open: boolean }`. Native `<dialog>` fires
+        `close` on dismissal which the host re-emits as `openChange`.
+      react: >-
+        `onOpenChange(open: boolean)` controlled-pattern callback
+        (vaul, React Aria Modal). Some libraries emit before the
+        animation completes; canonical contract is "after settle".
+      angularSignals: >-
+        `output<boolean>('openChange')`; emits after each transition
+        settles. Pair with `[(open)]` two-way binding.
+      vue: >-
+        `@update:open` for `v-model:open`; some third-party drawers
+        emit `@open` and `@close` separately at the same moment.
+
+  - name: dismiss
+    payload: >-
+      `{ reason: 'escape' | 'backdrop' | 'closeButton' | 'swipe' }`.
+      Distinguishes user-initiated dismissal from a programmatic
+      close after primary-action commit. The `swipe` reason is the
+      Drawer-specific addition over Modal's three-reason union.
+    frameworkNotes:
+      webComponents: >-
+        Native `<dialog>` `cancel` event covers Escape; a custom
+        `dismiss` CustomEvent with the same `event.detail` shape
+        covers backdrop, close-button, and swipe paths.
+      react: >-
+        vaul exposes `onDismiss` / `onClose` with reason inference
+        from the source event. React Aria's `useModalOverlay`
+        provides the source DOM event so consumers can infer.
+      angularSignals: >-
+        `output<DismissReason>('dismiss')` paralleling `openChange`;
+        suppressed on programmatic close.
+      vue: >-
+        `@dismiss` event with payload `{ reason }`. Consumers needing
+        the reason wrap any `@close` from an underlying library.
+
+  - name: sideChange
+    payload: >-
+      `'start' | 'end' | 'top' | 'bottom'`. Fires when the responsive
+      auto-flip kicks in (e.g. authored `side: end` becomes `bottom`
+      below `breakpoint.sm`). Lets consumers re-anchor satellite UI
+      (toast positioning, tooltip arrows) when the drawer reflows.
+    frameworkNotes:
+      webComponents: >-
+        `sideChange` CustomEvent with `event.detail = { side }`.
+        Optional event — many hosts do not implement responsive
+        auto-flip and never fire this.
+      react: >-
+        `onSideChange(side)` callback; not standard across libraries.
+        Canonical reference documents the contract; consumers wire it
+        up where the underlying library does not.
+      angularSignals: >-
+        `output<DrawerSide>('sideChange')`.
+      vue: >-
+        `@update:side` if the side is `v-model`-bound; otherwise a
+        discrete `@side-change` event.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Modal: focus moves to the next focusable inside the drawer;
+        cycles back to the first after the last (focus trap).
+        Non-modal: focus moves to the next focusable in the document
+        — drawer content first, then siblings; focus may escape the
+        drawer naturally.
+    - keys: Shift+Tab
+      expected: >-
+        Modal: focus moves to the previous focusable inside the
+        drawer; cycles to the last after the first.
+        Non-modal: focus moves to the previous document focusable.
+    - keys: 'Escape (when dismissible is true)'
+      expected: >-
+        Closes the drawer along the canonical
+        `open → closing → closed` path. Modal: focus restores to the
+        trigger. Non-modal: focus stays where it was.
+    - keys: ArrowLeft / ArrowRight (with handle focused, swipeable resize)
+      expected: >-
+        Resizes the drawer along the inline axis when the handle
+        exposes `role="separator"`. Step size matches the keyboard
+        increment convention (~24px).
+  announcements:
+    - trigger: Modal drawer opens
+      expected: >-
+        SR announces the drawer's title (via `aria-labelledby`)
+        followed by "dialog" — e.g. "Filters, dialog". Page context
+        is silenced via `inert` on siblings.
+    - trigger: Non-modal drawer opens
+      expected: >-
+        SR announces the title followed by "region" — e.g. "Recent
+        activity, region". Page context remains in the AT tree;
+        focus does not move automatically.
+    - trigger: Drawer closes
+      expected: >-
+        Focus returns to the trigger (modal) or stays in place
+        (non-modal). The trigger's accessible name is re-announced.
+        No automatic announcement is required for the close itself.
+    - trigger: Swipe-to-dismiss in progress
+      expected: >-
+        SR users do not perform swipe dismissals (touch + visual
+        feedback only). The drawer's `dragging` state is not
+        announced; the resulting close event triggers the standard
+        close announcement.
+  axeRules:
+    - aria-dialog-name
+    - aria-required-attr
+    - aria-modal-misuse
+    - color-contrast
+    - focus-order-semantics
+    - landmark-unique
+    - region
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps modal / non-modal / navigation. Drives ARIA role.
+  - figma: Side
+    code: side
+    type: Variant
+    notes: start / end / top / bottom. Encoded as Variant for preview-time positioning review.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg / full. Drives container inline-size (left/right) or block-size (top/bottom).
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: >-
+      Toggles close-button visibility plus Escape and backdrop-click
+      handling. Some host libraries combine the three; canonical
+      treats them as one switch.
+  - figma: Swipeable
+    code: swipeable
+    type: Boolean
+    notes: >-
+      Toggles handle visibility plus swipe-gesture wiring. Generally
+      true on mobile breakpoints, false on desktop.
+  - figma: Has Backdrop
+    code: backdrop
+    type: Boolean
+    notes: >-
+      Derived in canon from `variant: modal` (true) vs `non-modal`
+      (false); Figma may expose it as a separate Boolean for design
+      preview.
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Has Header
+    code: header
+    type: Boolean
+  - figma: Body
+    code: body
+    type: Instance Swap
+    notes: Swaps the body content slot (form, prose, list, custom layout).
+  - figma: Has Footer
+    code: footer
+    type: Boolean
+  - figma: Footer
+    code: footer
+    type: Instance Swap
+
+formIntegration:
+  name: >-
+    Drawer is a container, not a form control — it has no `name`
+    attribute. Forms hosted inside the drawer carry their own `name`
+    attributes on their fields. Native `<dialog>` cooperates with
+    `<form method="dialog">` to submit-and-close in a single user
+    action; custom-implementation drawers re-implement this contract.
+  formData: >-
+    Forms inside the drawer submit normally via their own `<form>`
+    element. The drawer itself contributes nothing to FormData.
+    Filter-style drawers commonly serialize their internal form on
+    every change rather than on submit, persisting filter state to
+    the URL or app state.
+  reset: >-
+    Forms inside the drawer respond to `form.reset()` independently
+    of the drawer's open/closed state. Closing via Escape, backdrop,
+    or swipe does not reset the form. Filter drawers often expose a
+    "Reset filters" action that calls `form.reset()` plus clears
+    application state.
+  validation: >-
+    Forms inside the drawer use HTML5 validation as normal.
+    Validation failures focus the first invalid field — for modal
+    drawers focus stays inside the drawer because of the focus trap;
+    for non-modal drawers the focus also stays naturally because the
+    field is reachable. Avoid auto-closing the drawer on submit
+    failure.
+
+i18n:
+  rtl:
+    mirroring: >-
+      The `side` property is logical, not physical: `start` slides
+      from the inline-start edge (visual right in RTL), `end` from
+      the inline-end (visual left in RTL). Implemented via
+      `inset-inline-start` / `inset-inline-end`, not `left` / `right`.
+      Top and bottom sides are direction-neutral. Close-button
+      positioning inside the header follows the existing logical
+      pattern (close on inline-end). Swipe-to-dismiss gesture
+      direction reverses for `start` and `end` sides under RTL.
+  textExpansion: >-
+    Drawer width is sized in CSS (`size: sm | md | lg | full`); long
+    titles and labels grow naturally within the inline-size. For
+    `size: sm`, German and Russian titles risk wrap or truncation —
+    `size: md` is the safer canonical default in long-text locales.
+    Body content scrolls; footer buttons may wrap to two rows under
+    heavy expansion.
+
+performance:
+  - name: stackDepth
+    metric: open-drawer-count
+    threshold: 1
+    unit: drawers
+    rationale: >-
+      Avoid stacking drawers; the canonical maximum is one open
+      drawer at a time, and a drawer cannot stack on top of a Modal
+      either (see mistake `drawer-stacking-with-modal`). Stacked
+      drawers fight for focus traps and `inert` handling. Patterns
+      that need "drawer-on-drawer" should be redesigned as a
+      sequence or as nested in-drawer disclosure.
+  - name: swipeFrameBudget
+    metric: drag-frame-time
+    threshold: 16
+    unit: ms
+    rationale: >-
+      Swipe-to-dismiss feels broken when the drawer position update
+      misses the 16ms (60fps) frame budget. Position updates must
+      use transform (compositor thread), never `inset-inline-start`
+      changes (layout thread). Pin transform-only animations and
+      profile against this budget on low-tier mobile.
+
+whenToUse:
+  use: >-
+    When contextual content should surface alongside (or temporarily
+    replacing) the underlying view from a viewport edge — filter
+    panels, detail-view side-sheets, mobile navigation, mobile
+    bottom-sheet pickers. Drawer is preferred over Modal when the
+    relationship to the underlying content matters and the user
+    benefits from continued visual context.
+  avoid: >-
+    For blocking decisions or destructive confirmations — that is
+    `Modal[role=alertdialog]`. For contextual content tied to a
+    specific trigger — that is `Popover`. For non-blocking inline
+    notifications — that is `Toast` or `Banner`. For a permanent
+    column that is part of the layout — that is a layout primitive,
+    not a Drawer.
+  vsRelated:
+    - id: modal
+      difference: >-
+        `Modal` always centres and is always modal; `Drawer` is
+        edge-anchored and can be modal or non-modal. Drawer preserves
+        spatial relationship to the underlying content (the page is
+        still partly visible); Modal severs that relationship.
+    - id: popover
+      difference: >-
+        `Popover` is anchored to a *trigger element* and floats near
+        it; `Drawer` is anchored to a *viewport edge*. Popover is
+        always non-modal and dismissable on outside click without
+        ceremony; Drawer can be modal and may require explicit
+        dismissal. Use Popover for content the user reads and
+        dismisses; Drawer for content the user *acts in*.
+    - id: alert
+      difference: >-
+        `Alert` is a non-blocking inline message announced via
+        `aria-live`. Drawer is a navigable surface; Alert is a
+        static message. The `Drawer[variant=navigation]` is similar
+        to a SidebarNav, not to Alert.
+
+notes: >-
+  Drawer is one of the most fragmented patterns in the field —
+  Polaris uses "Modal", Carbon uses "Side panel", Material 3 uses
+  "Navigation drawer" and "Side sheet" as separate components, vaul
+  uses "Drawer" for the bottom-sheet variant specifically. The
+  canonical "Drawer" here covers all four sides plus modal and
+  non-modal modes; design systems may split the canonical Drawer
+  into multiple named components for editorial reasons (often
+  "Drawer" for side-anchored vs "Sheet" for bottom-anchored). The
+  audit relationship in `implementations/<lib>/drawer.yaml` covers
+  the naming via `componentName` plus divergence rows for the
+  splits.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
+  - https://vaul.emilkowal.ski/
+  - https://react-spectrum.adobe.com/react-aria/Modal.html
+  - https://m3.material.io/components/navigation-drawer/overview
+  - https://m3.material.io/components/side-sheets/overview
+  - https://polaris.shopify.com/components/overlays/modal
+  - https://carbondesignsystem.com/components/side-panel/usage/
+  - https://atlassian.design/components/side-navigation
+  - https://inclusive-components.design/a-todo-list/
+
+lastReviewed: '2026-04-29'
