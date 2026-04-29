@@ -1,0 +1,690 @@
+id: menu-button
+name: Menu Button
+description: >-
+  A button that opens a menu of actions or commands — a more
+  document item, a settings list, an overflow ("…") menu of
+  context actions. Distinct from Popover (interactive arbitrary
+  content) by its `role="menu"` semantic and APG menu-keyboard
+  contract; distinct from Select (single-value commit) by
+  invoking actions rather than selecting values; distinct from
+  navigation menus by being a transient action surface, not a
+  persistent navigation region.
+
+anatomy:
+  - id: trigger
+    required: true
+    purpose: >-
+      The button that opens the menu. Carries the
+      `aria-haspopup="menu"`, `aria-expanded`, and `aria-controls`
+      wiring. Visual treatment may match any Button variant —
+      MenuButton is a usage pattern, not a separate visual
+      identity. Common forms: caret-suffixed button ("Actions ▾"),
+      icon-only kebab/meatball ("⋮" or "⋯") for overflow menus,
+      avatar-as-trigger for user menus.
+    layout:
+      row: 1
+      col: 1
+      span: 4
+    figma:
+      type: instance
+      hint: Button instance with optional caret or icon-only treatment; menu state via component property
+    code:
+      slot: trigger
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button>` carrying `aria-haspopup="menu"` (or
+        "true" for legacy support; `"menu"` is the modern APG
+        canonical value). `aria-expanded` reflects open state;
+        `aria-controls` references the menu container's id.
+        Icon-only triggers (overflow menus) require an
+        `aria-label` ("More actions", "User menu") because the
+        icon alone is not a label.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.md
+      color:
+        ring: color.border.focus
+
+  - id: caret
+    required: false
+    purpose: >-
+      Optional chevron or triangle indicator showing that the
+      trigger opens a popup. Rotates 180° on
+      `aria-expanded="true"` for visual reinforcement. Omitted
+      on icon-only kebab triggers where the icon itself
+      communicates the menu intent.
+    layout:
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; rotation bound to expanded state
+    code:
+      slot: caret
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Open state is
+        communicated by `aria-expanded`; the caret visualises
+        it.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: menu
+    required: true
+    purpose: >-
+      The popup container with `role="menu"`. Holds menu items
+      and optional separators / submenu labels. Floats above
+      adjacent content via portal-mount and Floating UI
+      positioning. Auto-flips when the authored placement
+      collides with the viewport.
+    layout:
+      floating:
+        anchor: trigger
+        position: below
+        offset: 4
+      span: 6
+    figma:
+      type: frame
+      hint: Floating frame; min-inline-size matches trigger by default
+    code:
+      slot: menu
+      semantic: menu
+    a11y:
+      hint: >-
+        Apply `role="menu"` and an `id` referenced by the
+        trigger's `aria-controls`. Menu receives DOM focus when
+        opened (unlike Popover where focus stays on trigger).
+        Roving tabindex within the menu — only the
+        currently-focused item has `tabindex="0"`, others have
+        `tabindex="-1"`.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.lg
+
+  - id: menu-item
+    required: true
+    purpose: >-
+      Individual selectable command inside the menu. Carries
+      `role="menuitem"` (action), `role="menuitemcheckbox"`
+      (toggleable boolean), or `role="menuitemradio"` (mutually-
+      exclusive choice within a group). One anatomy slot
+      describes the role; multiple instances render per menu.
+    layout:
+      parent: menu
+      row: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Menu item instance; supports leading icon, label, optional shortcut, optional trailing indicator
+    code:
+      slot: menu-item
+      semantic: menuitem
+    a11y:
+      hint: >-
+        `role="menuitem"` for plain commands; menuitemcheckbox
+        plus `aria-checked` for toggleables (Bold, Italic);
+        menuitemradio plus `aria-checked` and grouping for
+        mutually-exclusive (text alignment). Disabled items
+        carry `aria-disabled="true"` and stay focusable so SR
+        users hear them; activation is suppressed.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.sm
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+
+  - id: separator
+    required: false
+    purpose: >-
+      Optional horizontal divider grouping related menu items.
+      Visual only — does not affect keyboard navigation. Used
+      for visual separation between command groups (e.g. file
+      operations · edit operations · sharing operations).
+    layout:
+      parent: menu
+      row: 2
+      span: full
+    figma:
+      type: rectangle
+      hint: 1px horizontal line; padding inset from container edges
+    code:
+      slot: separator
+      semantic: separator
+    a11y:
+      hint: >-
+        `role="separator"` (or no role and `aria-hidden="true"`
+        for purely decorative dividers — APG accepts both).
+        Separators do not receive focus; keyboard navigation
+        skips them.
+    tokens:
+      color:
+        background: color.border.subtle
+
+axes:
+  variants:
+    - standard
+    - icon-only
+  properties:
+    - { name: hasCaret, kind: primitive, of: boolean }
+    - name: side
+      kind: enum
+      values: [top, right, bottom, left]
+    - name: align
+      kind: enum
+      values: [start, center, end]
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - closed
+      - opening
+      - open
+      - closing
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          User activates the trigger (Enter / Space / ArrowDown
+          / ArrowUp / click). `aria-expanded` flips to true; the
+          menu mounts; focus moves into the menu landing on
+          first item (or last item for ArrowUp activation per
+          APG).
+      - from: opening
+        to: open
+        trigger: >-
+          The enter animation completes (or, under
+          prefers-reduced-motion reduce, immediately). Menu is
+          ready for keyboard navigation; ArrowDown / ArrowUp
+          move between items.
+      - from: open
+        to: closing
+        trigger: >-
+          User selects a menuitem (Enter / Space activates the
+          item and closes the menu by canon); presses Escape;
+          tabs out of the menu (Tab / Shift+Tab close); clicks
+          outside the menu; activates a menuitemcheckbox
+          (toggle without close per consumer choice).
+      - from: closing
+        to: closed
+        trigger: >-
+          The exit animation completes (or immediately under
+          reduced motion). Focus restores to the trigger.
+          `aria-expanded` flips to false; menu unmounts.
+
+mismatches:
+  - figma: A "menu" drawn as a Popover with arbitrary content
+    code: A `role="menu"` with strict APG menu contract (menuitems only, roving tabindex, ArrowKeys navigate)
+    consequence: >-
+      Designers may treat menu and popover as interchangeable —
+      both are floating panels triggered by a button. Implementations
+      following the Figma file ship `role="menu"` with form
+      controls or non-menuitem content inside; SR users hear
+      "menu" and expect menuitem-only content with the
+      menu-keyboard contract; the actual content is something
+      else and the contract breaks.
+    correct: >-
+      Distinguish at the canonical level: Menu = list of
+      commands with `role="menu"` and APG menu-keyboard;
+      Popover = arbitrary interactive content with `role="dialog"`
+      or `role="region"` and Tab-into-content. If the floating
+      surface contains form controls, use Popover, not
+      MenuButton.
+
+  - figma: Menu items drawn as anchor-styled (link-coloured underlined text)
+    code: Menu items as `<button>` (or appropriate element with `role="menuitem"`)
+    consequence: >-
+      Designers compose menus from link-styled items because
+      menus often "feel like navigation". Implementations
+      following the design ship `<a>` with click handlers that
+      perform actions (not navigate); middle-click opens an
+      empty page; copy-link captures `#`. Or developers ship
+      buttons styled as links — visual confusion remains.
+    correct: >-
+      Menu items inside a MenuButton are buttons (perform
+      actions) by canon. Visual styling may match link styling
+      (underlined, accent colour) but the underlying element
+      is a button or a div with `role="menuitem"` plus the
+      keyboard contract. For navigation menus (where each item
+      navigates to a URL), use SidebarNav or a navigation
+      list, not MenuButton.
+
+  - figma: Submenu drawn as a separate menu component, no parent-child relationship
+    code: Submenus via APG menu-button + menu nesting with `aria-haspopup="menu"` on the parent menuitem
+    consequence: >-
+      Designers draw a top-level menu and a submenu as separate
+      components. Implementations following the design wire
+      them as independent menus; the parent menuitem has no
+      `aria-haspopup`, the submenu has no parent reference,
+      keyboard ArrowRight does not open the submenu, ArrowLeft
+      does not close it.
+    correct: >-
+      Submenus are nested menus where the parent menuitem
+      carries `aria-haspopup="menu"` and `aria-expanded`. Right
+      arrow opens (and moves focus into); Left arrow closes
+      (and returns focus to parent item). The canonical
+      reference documents submenus as a recursive composition
+      pattern but ships single-level menus only in Phase 1
+      (submenu scope deferred to a follow-up).
+
+  - figma: Caret rotation drawn but no menu enter/exit animation
+    code: Both caret rotation AND menu enter/exit animate together
+    consequence: >-
+      Designers animate the caret in mocks but the menu appears
+      instantly (Figma cannot easily mock smooth slide/fade
+      transitions for floating surfaces). Developers shipping
+      faithful-to-mock get jumpy menu transitions; SR users
+      get no announcement while focus moves into the menu.
+    correct: >-
+      Caret rotation and menu enter/exit share the same duration
+      token. Reduced-motion fallback is `instant` — both
+      animations skip together. Document the pairing in the
+      motion block.
+
+mistakes:
+  - id: menubutton-no-aria-haspopup
+    title: Trigger missing `aria-haspopup`
+    description: >-
+      The trigger is a styled button with no `aria-haspopup`. SR
+      users hear "button" with no signal that activation opens
+      a menu. Combined with missing `aria-expanded`, the
+      relationship to the menu is invisible.
+    fix: >-
+      Trigger always carries `aria-haspopup="menu"` (or `"true"`
+      for legacy SR support — modern canonical is `"menu"`).
+      `aria-expanded` toggles in sync with the open state.
+      `aria-controls` references the menu's id.
+
+  - id: menubutton-arrowdown-doesnt-open
+    title: ArrowDown on trigger does not open the menu
+    description: >-
+      The trigger opens the menu only on click / Enter / Space.
+      APG canonical behaviour requires ArrowDown / ArrowUp to
+      also open (and ArrowUp to land focus on the last item).
+      Keyboard users expecting the canonical behaviour cannot
+      navigate efficiently.
+    fix: >-
+      Bind ArrowDown and ArrowUp on the trigger:
+      ArrowDown opens the menu and focuses the first item;
+      ArrowUp opens and focuses the last item. Click / Enter /
+      Space focus the first item by canon (some implementations
+      focus none and require a subsequent ArrowKey; APG
+      canonical is to focus first).
+
+  - id: menubutton-no-typeahead
+    title: Typeahead by first-letter not implemented
+    description: >-
+      User types a letter expecting to jump to the next
+      menuitem starting with that letter (a canonical APG
+      behaviour). Nothing happens; users with long menus
+      arrow-key through every entry.
+    fix: >-
+      Implement first-letter typeahead on the open menu: typing
+      matches the first menuitem starting with that letter and
+      moves focus there. Sequential same-letter cycles
+      through matches. Multi-character timeout (~500ms)
+      accumulates the buffer.
+
+  - id: menubutton-tab-traps-in-menu
+    title: Tab cycles within the menu instead of closing
+    description: >-
+      Implementation copies the focus-trap pattern from Modal
+      into the menu. Tab cycles between menuitems instead of
+      moving past the menu and closing it. Keyboard users
+      cannot escape the menu without Escape; cyclical Tab feels
+      broken because menus are non-modal.
+    fix: >-
+      Tab on an open menu MOVES focus to the next document
+      focusable AND closes the menu (canonical APG). Shift+Tab
+      same in reverse. ArrowDown / ArrowUp navigate within;
+      Tab is the explicit "I'm done with this menu" key.
+
+  - id: menubutton-no-roving-tabindex
+    title: Every menuitem has tabindex="0"
+    description: >-
+      Implementation gives every menuitem a `tabindex="0"`. Tab
+      reaches every item one by one; the menu inflates the
+      page's tab order with `n` extra stops. APG canonical is
+      roving tabindex (only the focused item has `tabindex="0"`,
+      others have `tabindex="-1"`).
+    fix: >-
+      Only the currently-focused menuitem has `tabindex="0"`;
+      all others have `tabindex="-1"`. ArrowKeys move the
+      `tabindex="0"` reference along with focus. Tab moves out
+      of the menu (one stop, not n).
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-menu-button>` host with a child `<button>` plus a portal-mounted `<ul role="menu">` of `<li role="menuitem">` children; light DOM for menu item content
+    variantMechanism: attributes (`variant="icon-only"`, `side="bottom"`, `align="start"`, `has-caret`, `size="md"`); `data-state="open|closed|opening|closing"` for CSS
+  react:
+    structureMechanism: Radix DropdownMenu (`DropdownMenu.Root` / `DropdownMenu.Trigger` / `DropdownMenu.Portal` / `DropdownMenu.Content` / `DropdownMenu.Item` / `DropdownMenu.CheckboxItem` / `DropdownMenu.RadioItem`); React Aria `useMenuTrigger` plus `useMenu`; Headless UI ships `<Menu>` / `<MenuButton>` / `<MenuItems>` / `<MenuItem>`
+    variantMechanism: props on the root and trigger for variant / size; `data-state` on content for animation; checkbox / radio item subcomponents for stateful items
+  angularSignals:
+    structureMechanism: Angular CDK Menu (`cdk-menu`, `cdk-menu-item`) plus Overlay for positioning; signal-based menu state
+    variantMechanism: input<'standard' | 'icon-only'>(); input<'top' | 'right' | 'bottom' | 'left'>(); `[hasCaret]`, `[size]` host bindings
+  vue:
+    structureMechanism: Headless UI `<Menu>` / `<MenuButton>` / `<MenuItems>` / `<MenuItem>`; or Radix Vue's DropdownMenu
+    variantMechanism: defineProps with literal-union types; named slots for menu items via `<MenuItem>` children
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.instant
+    caretRotate: motion.duration.fast
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the menu may degrade to a bottom-anchored
+        Drawer pattern — full-width, action-list display,
+        explicit close button. The trigger remains; the
+        floating menu becomes a sheet. Especially for overflow
+        menus on mobile where the small-floating-popup pattern
+        works poorly with thumb-targeting.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the floating menu renders as authored.
+        Side and align properties honoured; auto-flip and shift
+        work as designed.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` when the menu opens, `false` when it
+      closes. Fires after the transition settles, not at the
+      start. Mirrors `aria-expanded` on the trigger.
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent on the host with
+        `event.detail = { open: boolean }`.
+      react: >-
+        `onOpenChange(open: boolean)` (Radix DropdownMenu,
+        Headless UI Menu).
+      angularSignals: >-
+        `output<boolean>('openChange')`.
+      vue: >-
+        `@update:open` for `v-model:open`.
+
+  - name: itemSelect
+    payload: >-
+      `{ itemId: string }` — the canonical id of the activated
+      menuitem. Consumer handles the action (running a command,
+      toggling a state). Menu closes by default after item
+      selection (canonical for `menuitem` and `menuitemradio`);
+      `menuitemcheckbox` may keep the menu open per consumer
+      choice.
+    frameworkNotes:
+      webComponents: >-
+        `itemSelect` CustomEvent with `event.detail = { itemId }`.
+      react: >-
+        Per-item `onSelect(event)` on `DropdownMenu.Item` (Radix);
+        Headless UI uses `onClick` on `<MenuItem>` children.
+      angularSignals: >-
+        `output<string>('itemSelect')` on the menu component.
+      vue: >-
+        `@select` event on the menu item or per-item `@click`.
+
+  - name: checkedChange
+    payload: >-
+      `{ itemId: string, checked: boolean }` — fires for
+      menuitemcheckbox or menuitemradio activation. Distinct
+      from `itemSelect` because checkbox toggles state without
+      committing a single action; consumer typically updates
+      its own state and may keep the menu open.
+    frameworkNotes:
+      webComponents: >-
+        `checkedChange` CustomEvent with
+        `event.detail = { itemId, checked }`.
+      react: >-
+        `onCheckedChange(checked)` on `DropdownMenu.CheckboxItem`
+        (Radix); per-item callbacks.
+      angularSignals: >-
+        `output<{ itemId: string, checked: boolean }>('checkedChange')`.
+      vue: >-
+        `@update:checked` on the relevant menu item.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Enter / Space / ArrowDown (focus on trigger, menu closed)
+      expected: >-
+        Opens the menu and moves focus to the first menuitem.
+        `aria-expanded` flips to true; menu mounts.
+    - keys: ArrowUp (focus on trigger, menu closed)
+      expected: >-
+        Opens the menu and moves focus to the LAST menuitem (per
+        APG — convenient for "most recent action" patterns
+        where the user wants the bottom item).
+    - keys: ArrowDown / ArrowUp (menu open)
+      expected: >-
+        Moves focus to the next / previous menuitem. Skips
+        separators and disabled items (focus moves to the next
+        focusable). Wraps from last to first and vice versa.
+    - keys: Home / End (menu open)
+      expected: >-
+        Moves focus to the first / last menuitem.
+    - keys: Enter / Space (menu open, focus on item)
+      expected: >-
+        Activates the item — fires the selection event and
+        closes the menu (for `menuitem` and `menuitemradio`);
+        toggles state and may keep menu open (for
+        `menuitemcheckbox` per consumer choice).
+    - keys: 'Escape (menu open)'
+      expected: >-
+        Closes the menu without activation. Focus restores to
+        the trigger.
+    - keys: Tab / Shift+Tab (menu open)
+      expected: >-
+        Closes the menu and moves focus to the next / previous
+        document focusable. Tab is "I'm done with this menu";
+        ArrowKeys navigate within.
+    - keys: typeahead character keys (menu open)
+      expected: >-
+        Moves focus to the next menuitem starting with the typed
+        character. Sequential same-character cycles. Multi-
+        character within ~500ms accumulates.
+  announcements:
+    - trigger: Trigger receives focus, menu closed
+      expected: >-
+        SR announces "<accessible name>, has popup, button" (or
+        equivalent — exact phrasing varies by SR). The
+        "has popup" portion comes from `aria-haspopup="menu"`.
+    - trigger: Menu opens
+      expected: >-
+        SR announces "expanded" plus the menu's first item.
+        Subsequent ArrowKeys announce each item by label and
+        position ("Cut, 1 of 5"). Menu container itself does
+        not need an accessible name (the trigger labels it
+        implicitly).
+    - trigger: Item activated
+      expected: >-
+        SR announces the item's label one final time before
+        the menu closes; focus returns to trigger; consumer's
+        action runs in parallel.
+    - trigger: menuitemcheckbox toggled
+      expected: >-
+        SR announces the new checked state ("Bold, checked, menu
+        item" or "Bold, not checked, menu item"). Driven by
+        `aria-checked` on the item.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - aria-valid-attr-value
+    - color-contrast
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps standard / icon-only.
+  - figma: Side
+    code: side
+    type: Variant
+    notes: top / right / bottom / left. Authored placement preference; auto-flips on viewport collision.
+  - figma: Align
+    code: align
+    type: Variant
+    notes: start / center / end along the perpendicular axis.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg. Affects trigger and menu typography.
+  - figma: Has Caret
+    code: hasCaret
+    type: Boolean
+    notes: Toggles the caret slot. Default true for standard variant; default false for icon-only.
+  - figma: Has Separators
+    code: separators
+    type: Boolean
+    notes: Toggles whether menu groups are visually separated. Decorative — does not change keyboard behaviour.
+  - figma: Item Count
+    code: 'items.length'
+    type: Variant
+    notes: >-
+      Figma exposes 2/3/4/5/6+ item counts as a Variant for
+      preview-time layout review. Code accepts an array of menu
+      item definitions.
+  - figma: Trigger Label
+    code: triggerLabel
+    type: Text
+    notes: For standard variant. Icon-only variant uses aria-label instead.
+  - figma: Trigger Icon
+    code: triggerIcon
+    type: Instance Swap
+    notes: 'For icon-only variant. Common: kebab (⋮), meatball (⋯), avatar.'
+
+i18n:
+  rtl:
+    mirroring: >-
+      Side property is direction-neutral (top/right/bottom/left
+      are physical). Align is logical. Caret moves from
+      inline-end of the trigger (visual right in LTR) to
+      inline-end (visual left in RTL) via logical positioning.
+      Caret rotation is direction-neutral. Menu alignment
+      follows trigger inline-start in both directions.
+      Submenu opens via ArrowRight in LTR / ArrowLeft in RTL —
+      keyboard model follows logical inline direction.
+  textExpansion: >-
+    Menu item labels grow with translation; menu inline-size
+    matches longest item by canon. Long-text languages (German,
+    Russian) may exceed common menu widths — design at sm size
+    with care. Trigger label follows Button's expansion rules.
+    Keyboard shortcut indicators (e.g. "⌘K", "Ctrl+K") at the
+    inline-end of menu items are direction-neutral but their
+    position mirrors with the menu inline direction.
+
+performance:
+  - name: switchToCommandPalette
+    metric: menuitem-count
+    threshold: 15
+    unit: items
+    rationale: >-
+      Above ~15 menu items, scanning the list overwhelms users
+      and typeahead alone is insufficient. Above this
+      threshold, redesign as a Command Palette (a Combobox-
+      like input plus filtered command list) or split into
+      submenus by category. Submenu nesting beyond two levels
+      is itself a redesign signal toward Command Palette.
+
+whenToUse:
+  use: >-
+    For a list of commands or actions invoked from a single
+    button — More-actions menus, overflow ("⋯") menus, user
+    avatar menus, context-action menus, settings dropdowns.
+    The user opens the menu, picks one command, and the menu
+    closes.
+  avoid: >-
+    For arbitrary interactive content (forms, multi-step
+    flows) — that is `Popover`. For single-value selection
+    from a fixed list — that is `Select`. For navigation
+    between independent pages — that is `SidebarNav` or a
+    navigation list of `Link` elements. For long lists of
+    commands — switch to a Command Palette (see performance
+    threshold).
+  vsRelated:
+    - id: popover
+      difference: >-
+        `Popover` hosts arbitrary interactive content with
+        `role="dialog"`; `MenuButton` hosts a list of commands
+        with `role="menu"` and the APG menu-keyboard contract.
+        The role choice determines the keyboard behaviour:
+        Popover allows Tab into content; MenuButton uses
+        ArrowKeys with Tab closing the menu.
+    - id: select
+      difference: >-
+        `Select` commits a value (the user picks one from a
+        list); `MenuButton` invokes an action (the user runs
+        one command). Select's `aria-haspopup` is "listbox";
+        MenuButton's is "menu". Their keyboard contracts
+        differ slightly (Select stays focused on trigger via
+        `aria-activedescendant`; MenuButton moves DOM focus
+        into the menu).
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` is a persistent navigation region with
+        anchors as children; `MenuButton` is a transient
+        action surface invoked on demand. SidebarNav lives in
+        the page layout; MenuButton is portal-mounted and
+        dismisses after one action.
+    - id: tooltip
+      difference: >-
+        `Tooltip` is non-interactive descriptive text revealed
+        on hover/focus; `MenuButton` opens a list of
+        interactive commands invoked on click/keyboard. They
+        do not share visual or behavioural surface area.
+
+notes: >-
+  MenuButton is the cleanest case of role-driven contract: the
+  difference between `role="menu"` (this) and `role="dialog"`
+  (Popover) is what determines the keyboard model and the
+  expected content. Many implementations conflate them, shipping
+  Popovers styled as menus or menus containing form controls;
+  the canonical reference documents the boundary as a hard
+  edge. Submenu nesting is real but Phase 1 ships single-level
+  menus only; submenu composition is filed as a follow-up
+  pattern.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/menu/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/menu_role
+  - https://www.radix-ui.com/primitives/docs/components/dropdown-menu
+  - https://react-spectrum.adobe.com/react-aria/Menu.html
+  - https://headlessui.com/react/menu
+  - https://polaris.shopify.com/components/actions/action-list
+  - https://carbondesignsystem.com/components/overflow-menu/usage/
+  - https://atlassian.design/components/dropdown-menu/examples
+  - https://m3.material.io/components/menus/overview
+
+lastReviewed: '2026-04-29'
