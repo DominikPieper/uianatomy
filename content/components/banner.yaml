@@ -1,0 +1,631 @@
+id: banner
+name: Banner
+description: >-
+  A region-wide persistent informational surface — typically pinned
+  to the top of a page or section — that surfaces system-level
+  notices, promotional content, or status messages that should be
+  visible across the user's session. Distinct from Alert (contextual,
+  bound to a specific situation) by its persistence and scope, from
+  Toast (transient, corner-anchored) by its persistence and full
+  width, and from Modal (blocking) by its non-blocking contract.
+  Used for cookie consent, maintenance notices, beta-feature
+  callouts, system-degradation warnings, and full-bleed promotional
+  CTAs.
+
+anatomy:
+  - id: container
+    required: true
+    purpose: >-
+      The full-bleed (or region-wide) surface that carries the
+      banner content. Spans the inline-size of its parent — page
+      width when pinned to the document root, region width when
+      scoped to a section. Carries the variant-driven visual
+      treatment.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame at full inline-size; padding from container token
+    code:
+      slot: container
+      semantic: region-or-status
+    a11y:
+      hint: >-
+        Apply `role="region"` with an `aria-labelledby` reference to
+        the title (or `aria-label` when no title is shown). For
+        banners conveying urgent system state, `role="status"`
+        (polite) is acceptable — `role="alert"` (assertive) is
+        almost never appropriate for banner-scope content because
+        the message is not action-required at the moment of
+        appearance. Banner persists across navigation; do not
+        re-announce on every route change.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      color:
+        background: color.surface.bg
+        border: color.border.subtle
+
+  - id: icon
+    required: false
+    purpose: >-
+      Variant-indicating glyph at the inline-start of the container.
+      Reinforces the banner's intent for sighted users (an info-i
+      for informational, a tag for promotional, an exclamation for
+      warning). Decorative — intent is also communicated through
+      visible text and the variant's accessible role.
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; glyph swap bound to variant
+    code:
+      slot: icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Variant intent is
+        communicated through visible text and (where applicable)
+        through `role`. Never rely on the icon glyph alone.
+    tokens:
+      color:
+        foreground: color.text.accent
+
+  - id: title
+    required: false
+    purpose: >-
+      Optional brief heading describing the banner at a glance —
+      "Scheduled maintenance", "Cookie preferences",
+      "New beta features". Used for banners with substantial body
+      content; omit for one-line banners where the body is the
+      headline.
+    layout:
+      row: 1
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property
+    code:
+      slot: title
+      semantic: heading-or-strong
+    a11y:
+      hint: >-
+        Use a real heading element of an appropriate level
+        relative to the surrounding document outline. The
+        container's `aria-labelledby` references the title's id
+        when present.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: body
+    required: true
+    purpose: >-
+      The banner's primary content — the message itself. One or two
+      short paragraphs maximum; longer content belongs in body
+      prose or a Modal. The first user-facing text the SR
+      announces.
+    layout:
+      row: 2
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Body text style; bound to a component property
+    code:
+      slot: body
+      semantic: prose
+    a11y:
+      hint: >-
+        Plain prose. Inline links (e.g. "Read our cookie policy")
+        are valid in body prose; complex actions belong in the
+        actions slot for keyboard reachability.
+    tokens:
+      typography:
+        size: text.sm
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
+
+  - id: actions
+    required: false
+    purpose: >-
+      Optional inline actions — typically 1–3 CTAs ("Accept all",
+      "Decline", "Customise" for cookie banners; "Learn more",
+      "Dismiss" for promotional). Distinct from the dismiss
+      button. Banner actions may navigate (Link semantic) or
+      trigger in-page state changes (Button semantic); choose per
+      action.
+    layout:
+      row: 3
+      col: 2
+      span: 5
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame containing button or link instances
+    code:
+      slot: actions
+      semantic: button-group
+    a11y:
+      hint: >-
+        Buttons keep native semantics; links keep anchor
+        semantics. Order primary first (visually inline-end on
+        LTR; SR announces in DOM order). For cookie banners with
+        legal-compliance requirements, "Decline" must be as
+        prominent as "Accept" — visual weight equality is
+        canonical.
+    tokens:
+      spacing:
+        gap: spacing.tight
+        padding: spacing.tight
+
+  - id: dismiss-button
+    required: false
+    purpose: >-
+      Optional close affordance. Conventionally an "×" icon at the
+      inline-end corner. Visible when `dismissible: true`. For
+      banners conveying ongoing system state (maintenance,
+      service degradation), `dismissible: false` is canonical —
+      the banner persists until the underlying state resolves.
+    layout:
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to dismissible property
+    code:
+      slot: dismiss
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Dismiss banner" or "Close
+        notification"). Activation removes the banner from the
+        document. Persistence (re-appears on next visit vs
+        permanently dismissed) is a `persistent` property,
+        documented separately.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+axes:
+  variants:
+    - info
+    - promotional
+    - warning
+    - error
+  properties:
+    - { name: dismissible, kind: primitive, of: boolean }
+    - { name: persistent, kind: primitive, of: boolean }
+    - { name: hasIcon, kind: primitive, of: boolean }
+    - { name: hasTitle, kind: primitive, of: boolean }
+    - name: layout
+      kind: enum
+      values: [horizontal, stacked]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - open
+      - dismissed
+    transitions:
+      - from: open
+        to: dismissed
+        trigger: >-
+          User clicks the dismiss button (when dismissible: true);
+          or the consumer programmatically removes the banner; or
+          the underlying system state resolves (e.g. maintenance
+          window ends) and the consumer rehides the banner.
+
+mismatches:
+  - figma: A banner drawn full-screen, blocking the page
+    code: 'A banner with `position: fixed` covering the viewport'
+    consequence: >-
+      Designers may scale the banner to dominate the page for
+      visual impact. Implementations following the Figma file
+      ship a banner that visually blocks content, hides the
+      navigation, and traps the user in a CTA they may not want
+      to engage with. The pattern collapses to Modal but without
+      Modal's a11y contract.
+    correct: >-
+      Banner is a region-wide horizontal strip, not a full-screen
+      surface. If the surface needs to block the page, redesign
+      as Modal (with proper focus trap and a11y contract). The
+      canonical Banner caps height at one-to-three rows of
+      content; tall banners are a redesign signal.
+
+  - figma: Cookie consent banner drawn with only an "Accept all" button
+    code: Cookie consent banner with Accept-only — no Decline or Customise
+    consequence: >-
+      Designers may treat cookie banners as marketing surfaces
+      with single CTA. Implementations following the design fail
+      GDPR / ePrivacy compliance — users must be able to decline
+      with a single action equally prominent as Accept.
+    correct: >-
+      For cookie consent banners specifically, the canonical
+      action set requires Accept and Decline as visually equal.
+      Customise / preferences may be a third option but never
+      replaces Decline. Document the legal-compliance constraint
+      explicitly; design review enforces it.
+
+  - figma: Banner sticky at top with no skip-link
+    code: 'Banner pinned to viewport top with `position: sticky` consuming Tab focus'
+    consequence: >-
+      Designers draw a sticky banner that visually persists
+      across scroll. Developers ship it; keyboard users reach
+      the banner first on every page-level Tab cycle (when
+      banner contains tabbable content), and the visual sticky
+      behaviour interacts with browser autoscroll-on-focus
+      unpredictably.
+    correct: >-
+      Sticky banners require a skip-to-content link as the first
+      focusable element after the banner (or before, depending
+      on focus order). The canonical document-level skip-link
+      already covers banners pinned at document scope; banners
+      scoped to a region need a region-level skip-link.
+
+  - figma: Multiple banners stacked at the page top
+    code: Multiple banners rendered, each in its own region
+    consequence: >-
+      Designers stack banners (cookie + beta-feature +
+      maintenance + promotional) for visual mocks. Developers
+      ship the stack; the page header is now half-banner, the
+      user is overwhelmed, and the most recently-added banner is
+      buried beneath legacy ones.
+    correct: >-
+      Cap the canonical banner stack at 1 visible banner at a
+      time per scope (document-scope or region-scope). Beyond
+      that, queue banners by priority — system-state banners
+      (maintenance) outrank promotional banners; legal-compliance
+      banners (cookie consent) outrank everything until
+      acknowledged.
+
+mistakes:
+  - id: banner-as-modal
+    title: Banner sized to block the entire viewport
+    description: >-
+      The banner is rendered at `100vh` or `position: fixed` with
+      full-viewport coverage. Visually blocks the page; user
+      cannot reach content beneath without dismissing or
+      activating. The pattern claims Banner semantics
+      (`role="region"`) while behaving like Modal.
+    fix: >-
+      Banner is a horizontal strip — top, bottom, or section-
+      anchored — that does not visually block content beneath. If
+      the surface genuinely needs to block, redesign as Modal
+      with proper focus trap and `aria-modal`. Do not stretch
+      Banner past one-to-three content rows.
+
+  - id: banner-cookie-accept-only
+    title: Cookie consent banner without Decline option
+    description: >-
+      The banner offers only "Accept all" or similar single-
+      affirmative CTA. Decline is hidden, requires multiple
+      clicks, or is absent entirely. Fails GDPR / ePrivacy /
+      similar regulations that require equal-prominence consent
+      and rejection.
+    fix: >-
+      Cookie consent banners have Accept and Decline as visually
+      equal actions, both reachable in one click. Customise /
+      preferences may be a third action but does not substitute
+      for Decline. Cookie-banner consent is a legal contract,
+      not a marketing surface — review with legal counsel before
+      shipping.
+
+  - id: banner-multiple-stacked
+    title: Multiple banners stacked at the page top
+    description: >-
+      Page renders cookie banner, beta-feature banner,
+      maintenance banner, and promotional banner all at once.
+      Visual hierarchy collapses; users either tune all out or
+      miss the most important one (legal-compliance buried under
+      promotional).
+    fix: >-
+      Cap the canonical banner display at 1 per scope at a time.
+      Queue or prioritise by category: legal-compliance > system-
+      state > beta-feature > promotional. Render the highest-
+      priority banner; show others only after the higher-
+      priority ones are acknowledged or dismissed.
+
+  - id: banner-dismissed-state-not-persisted
+    title: Dismissed banner reappears on every page load
+    description: >-
+      User dismisses the banner; on the next navigation it
+      reappears. The dismiss action feels meaningless; users
+      learn to ignore the dismiss button entirely.
+    fix: >-
+      Persist the dismissed state for `persistent: true` banners
+      — typically via localStorage keyed by banner id and
+      version. Re-show only when the banner content changes
+      (version bump) or when the consumer explicitly resets the
+      dismissed state. For `persistent: false` banners (session-
+      only), document the in-memory persistence contract.
+
+  - id: banner-color-only-variant
+    title: Variant differentiated by colour alone
+    description: >-
+      The banner's variant is communicated only through
+      background or border colour. Colour-vision deficient users
+      cannot distinguish info from warning; the icon glyph and
+      the text both fail to name the variant.
+    fix: >-
+      Triple-layer variant: visual (background / border / icon),
+      explicit prose (the title or body names the variant —
+      "Maintenance:", "Beta:", "Important:"), and where
+      applicable accessible role. Colour alone is never the only
+      differentiator.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-banner>` host with named slots for `icon` / `title` / `body` / `actions`; container `[role]` reflected from the `severity` attribute when applicable
+    variantMechanism: attributes (`variant="warning"`, `dismissible`, `persistent`, `layout="stacked"`); `data-state="open|dismissed"` for CSS
+  react:
+    structureMechanism: Single `<Banner>` component with `variant` prop; compound subcomponents (`Banner.Icon`, `Banner.Title`, `Banner.Body`, `Banner.Actions`) or named props for content
+    variantMechanism: props with class-variance-authority for variant / layout; `dismissible` boolean drives close button; `onDismiss` callback
+  angularSignals:
+    structureMechanism: >-
+      `<ui-banner>` component with content projection for icon /
+      title / body / actions; host bindings drive `[attr.role]`
+    variantMechanism: input<'info' | 'promotional' | 'warning' | 'error'>(); `[dismissible]`, `[persistent]` host bindings; `output('dismiss')`
+  vue:
+    structureMechanism: >-
+      Single `<Banner>` SFC with named slots for icon / title /
+      body / actions; the `variant` prop drives visual treatment
+    variantMechanism: defineProps with literal-union types; emits `dismiss`
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the canonical layout switches from
+        horizontal (icon · content · actions) to stacked (icon
+        and title in row 1, body in row 2, actions in row 3
+        below). The container retains full-bleed inline-size; the
+        dismiss button moves to the inline-end of the title row.
+        For very narrow viewports, body prose may also wrap to
+        more lines; banners exceeding 4 lines should be
+        redesigned as Alert or Modal.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the layout property is honoured as
+        authored. `horizontal` shows icon · content · actions
+        inline; `stacked` retains the row-stacked layout
+        regardless of available width.
+
+events:
+  - name: dismiss
+    payload: >-
+      `{ source: 'closeButton' | 'programmatic' }`. Distinguishes
+      a user-clicked dismiss from a consumer-triggered programmatic
+      removal. For `persistent: true` banners, the dismiss event
+      is the signal for the consumer to write the dismissed flag
+      to localStorage.
+    frameworkNotes:
+      webComponents: >-
+        `dismiss` CustomEvent on the host with
+        `event.detail = { source }`.
+      react: >-
+        `onDismiss(source)` callback. Some libraries pass the
+        original DOM event; consumers wrap to recover the
+        canonical contract.
+      angularSignals: >-
+        `output<DismissSource>('dismiss')`.
+      vue: >-
+        `@dismiss` event with payload `{ source }`.
+
+  - name: actionInvoke
+    payload: >-
+      `{ actionId: string }` — the canonical id of the invoked
+      action. Consumer handles the effect (navigation, modal
+      open, in-page state change). For cookie consent banners
+      specifically, the canonical actionIds are `accept`,
+      `decline`, `customise`.
+    frameworkNotes:
+      webComponents: >-
+        `actionInvoke` CustomEvent with `event.detail = { actionId }`.
+      react: >-
+        `onAction(actionId)` callback or per-action `onClick` on
+        the action elements.
+      angularSignals: >-
+        `output<string>('actionInvoke')`.
+      vue: >-
+        `@action-invoke` event with payload `{ actionId }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves through the banner content in document order
+        — inline links in body first, then actions in DOM order,
+        then dismiss button. Continued Tab leaves the banner
+        region into the rest of the page.
+    - keys: Enter or Space (focus on action button)
+      expected: >-
+        Activates the action; consumer handler runs. For
+        navigation-style actions (Link), Enter only.
+    - keys: Enter or Space (focus on dismiss button)
+      expected: >-
+        Dismisses the banner. Focus moves to the next document
+        focusable; for banners pinned at document scope, focus
+        often lands on the main content's first focusable.
+    - keys: F6 (when supported)
+      expected: >-
+        Cycles focus to landmark regions including the banner
+        region. Allows keyboard users to reach the banner
+        without tabbing through earlier content.
+  announcements:
+    - trigger: Banner mounts (initial page load with persistent dismissed-state false)
+      expected: >-
+        SR announces the region's accessible name (via
+        `aria-labelledby` to the title or `aria-label`) followed
+        by the body content when the user navigates to the
+        region. Banner is `role="region"` — does not auto-fire
+        announcements (unlike Alert / Toast). Users discover
+        banners by landmark navigation.
+    - trigger: Banner mounts after page load (e.g. delayed system-state alert)
+      expected: >-
+        Promote to `role="status"` for delayed-mount banners that
+        the user should be aware of without active navigation.
+        Keep polite (no interrupt). Avoid `role="alert"` —
+        banners are not assertive by canon.
+    - trigger: Banner dismissed
+      expected: >-
+        SR users hear no "dismissed" announcement; the silence
+        and removal of the region confirm the banner is gone.
+        Subsequent landmark navigation skips the dismissed
+        region.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - color-contrast
+    - landmark-unique
+    - region
+    - role-img-alt
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps info / promotional / warning / error. Drives visual treatment plus icon glyph plus (where applicable) accessible role.
+  - figma: Layout
+    code: layout
+    type: Variant
+    notes: horizontal / stacked. At and below `breakpoint.sm` the layout is forced to stacked regardless of authored value.
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: Toggles the dismiss-button slot visibility plus the dismiss event wiring.
+  - figma: Persistent
+    code: persistent
+    type: Boolean
+    notes: >-
+      Controls whether the dismissed state survives page reload.
+      True for one-time announcements (cookie consent, beta
+      feature); false for session-only banners (maintenance
+      that resolves at session end).
+  - figma: Has Icon
+    code: hasIcon
+    type: Boolean
+  - figma: Has Title
+    code: hasTitle
+    type: Boolean
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Body
+    code: body
+    type: Text
+  - figma: Actions
+    code: actions
+    type: Instance Swap
+    notes: Swap the actions slot — typically 1–3 Button or Link instances.
+  - figma: Icon
+    code: icon
+    type: Instance Swap
+    notes: Variant-default icon glyph; designers may swap for domain-specific icons (e.g. a beta-tag icon for beta-feature banners).
+
+i18n:
+  rtl:
+    mirroring: >-
+      Banner inline layout follows logical direction —
+      inline-start to inline-end ordering of icon · content ·
+      actions reverses visual position in RTL. Dismiss button
+      moves to the visual left in RTL (still inline-end
+      logically). Action button order reverses logically: primary
+      action stays on inline-end (visual right in LTR, visual
+      left in RTL). Variant icon glyphs are direction-neutral.
+      Stacked layout is direction-neutral by inline-axis.
+  textExpansion: >-
+    Title and body grow with translation; banner container
+    inline-size is determined by parent (full bleed at document
+    scope, region width at section scope), so growth wraps
+    naturally to additional lines. Long-text languages (German,
+    Russian, Finnish) routinely expand banner height by 20-30%;
+    layout `stacked` accommodates better than `horizontal` for
+    long text. Action button labels follow Button's expansion
+    rules; multi-action banners may need to wrap actions to a
+    second row under heavy expansion.
+
+whenToUse:
+  use: >-
+    For region-wide or page-wide persistent informational
+    surfaces — cookie consent, maintenance notices, beta-feature
+    callouts, system-degradation warnings, full-bleed
+    promotional CTAs. Banner is non-blocking, persistent
+    (survives navigation when configured), and visible across
+    the user's session.
+  avoid: >-
+    For contextual situation-specific notices bound to a
+    specific page or form — that is `Alert`. For transient
+    confirmations after async actions — that is `Toast`. For
+    blocking decisions or destructive confirmations — that is
+    `Modal[variant=alertdialog]`. For on-demand description —
+    that is `Tooltip`.
+  vsRelated:
+    - id: alert
+      difference: >-
+        `Alert` is contextual and bound to a specific situation
+        (form error, recent action confirmation); `Banner` is
+        page-wide / region-wide and persists across the session.
+        Alert appears in response to an event; Banner persists
+        as ongoing system signal.
+    - id: toast
+      difference: >-
+        `Toast` is corner-anchored, ephemeral, and
+        action-triggered; `Banner` is region-wide, persistent,
+        and system-pushed. They occupy opposite ends of the
+        notification-permanence spectrum.
+    - id: modal
+      difference: >-
+        `Modal[variant=alertdialog]` is blocking and demands
+        explicit response; `Banner` is non-blocking and
+        persistent. Banner that needs to block the page is a
+        redesign signal (use Modal); Modal that needs to persist
+        across navigation is also a redesign signal (use Banner
+        plus an in-page Modal triggered from it).
+
+notes: >-
+  Banner sits in the same vocabulary trap as Alert: APG calls
+  this "Region" or "Status" depending on urgency; many design
+  systems use "Banner" (Polaris, Material 3) or "Notification"
+  (Carbon, Atlassian inline-message family). The canonical
+  Banner here matches Polaris and Material 3's terminology and
+  scope (region-wide persistent). Implementation audits document
+  the naming via `componentName` and the cookie-consent
+  legal-compliance contract via divergence rows where the audit
+  library does not enforce equal-prominence Decline.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/regions.html
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/region_role
+  - https://www.w3.org/TR/WCAG22/#status-messages
+  - https://gdpr.eu/cookies/
+  - https://polaris.shopify.com/components/feedback-indicators/banner
+  - https://m3.material.io/components/banners/overview
+  - https://carbondesignsystem.com/components/notification/usage/
+  - https://atlassian.design/components/section-message/examples
+  - https://www.gov.uk/service-manual/design/notification-banner
+
+lastReviewed: '2026-04-29'
