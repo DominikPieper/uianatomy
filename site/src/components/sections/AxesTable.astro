@@ -1,5 +1,6 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
+import { formatPropertyType } from '@uianatomy/shared/format';
 interface Props { component: Component }
 const { component } = Astro.props;
 const { axes } = component;
@@ -21,7 +22,7 @@ const { axes } = component;
         <thead><tr><th>Property</th><th>Type</th></tr></thead>
         <tbody>
           {axes.properties.map((p) => (
-            <tr><td><code>{p.name}</code></td><td><code>{p.type}</code></td></tr>
+            <tr><td><code>{p.name}</code></td><td><code>{formatPropertyType(p)}</code></td></tr>
           ))}
         </tbody>
       </table>

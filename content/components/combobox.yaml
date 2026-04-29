@@ -6,10 +6,42 @@ description: >-
   to commit a value. Distinct from a Select (which has no text input)
   and from Autocomplete (which is a behavior, not a component name in
   most design systems).
-related:
-  - select
-  - search-input
-  - tag-input
+whenToUse:
+  use: >-
+    When the user selects a value from a finite or near-finite set
+    that benefits from typeahead filtering. The text-input front
+    differentiates it from `Select`: users can type to narrow before
+    committing. Best for option counts of ~10–10,000 with optional
+    async filter.
+  avoid: >-
+    For free-text input with no constrained set of values — that is
+    `Input` or `SearchInput`. For a fixed short list (≤7) where
+    typeahead adds no value — `Select`. For multi-tag input where
+    the set is open-ended and tags are user-created — `TagInput`.
+  vsRelated:
+    - id: select
+      difference: >-
+        `Select` has no text-input front; the user picks from a
+        fixed list via click or keyboard. `Combobox` adds a
+        typeahead input plus async and strict modes. Migrate from
+        Select to Combobox when the option count crosses the
+        "scrollable popup is annoying" threshold (~10 items in
+        practice).
+    - id: search-input
+      difference: >-
+        `SearchInput` is free text submitted to a search engine;
+        results appear separately. `Combobox` constrains output to
+        a known set of options and commits on selection. They look
+        similar; the distinguisher is whether the popup is a
+        completion list (Combobox) or a results preview
+        (SearchInput).
+    - id: tag-input
+      difference: >-
+        `TagInput` accepts user-created tags or selections from a
+        set and renders accumulated tags inline. `Combobox` with
+        `variant: multi-select` is the constrained-set version;
+        `TagInput` is the open-set version where users can create
+        new tags.
 
 anatomy:
   - id: input
@@ -210,13 +242,11 @@ axes:
     - creatable
   properties:
     - name: filterMode
-      type: 'startsWith | contains | fuzzy | none'
-    - name: strict
-      type: boolean
-    - name: virtualised
-      type: boolean
-    - name: async
-      type: boolean
+      kind: enum
+      values: [startsWith, contains, fuzzy, none]
+    - { name: strict, kind: primitive, of: boolean }
+    - { name: virtualised, kind: primitive, of: boolean }
+    - { name: async, kind: primitive, of: boolean }
   states:
     interactive:
       - hover
@@ -228,6 +258,43 @@ axes:
       - open
       - busy
       - invalid
+    transitions:
+      - from: closed
+        to: open
+        trigger: >-
+          User types a printable character into the input, presses Down/Up
+          arrow with the popup closed, or clicks the trigger button.
+          `aria-expanded` flips to `true`; the listbox renders.
+      - from: open
+        to: closed
+        trigger: >-
+          User presses Escape with the popup open, clicks outside the
+          combobox, or selects an option (single-select). `aria-expanded`
+          flips to `false`; the listbox is removed.
+      - from: open
+        to: busy
+        trigger: >-
+          Typed input triggers an async filter request (`async: true`).
+          Existing options are replaced with a loading affordance; an
+          `aria-live` announcement signals the in-flight state.
+      - from: busy
+        to: open
+        trigger: >-
+          Async filter results return successfully. The option list
+          re-renders with the new matches; an `aria-live` announcement
+          signals the result count.
+      - from: open
+        to: invalid
+        trigger: >-
+          `strict: true` and the input blurs with a value that does not
+          match any option. The combobox surfaces an inline error and
+          sets `aria-invalid="true"` on the input.
+      - from: invalid
+        to: closed
+        trigger: >-
+          User clears the input or selects a valid option from a
+          subsequently-opened listbox. `aria-invalid` is removed; the
+          inline error is cleared.
 
 mismatches:
   - figma: A combobox drawn as a text input with a dropdown panel rendered beneath, both inside the same Figma frame
@@ -349,6 +416,98 @@ frameworkMap:
   vue:
     structureMechanism: Headless UI `<Combobox>` / `<ComboboxInput>` / `<ComboboxButton>` / `<ComboboxOptions>` / `<ComboboxOption>`
     variantMechanism: defineProps with literal-union types; `multiple` prop for multi-select
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.fast
+    filter: motion.duration.instant
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the floating listbox is replaced with the platform
+        bottom-sheet picker (`<select>` on iOS, drawer-style native list
+        on Android). The trigger button opens the OS-level surface; the
+        in-page listbox markup is suppressed and `aria-controls` no
+        longer applies. Filtering becomes synchronous (no async results)
+        and the chip-input multi-select degrades to comma-separated
+        tokens in the input.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the floating listbox renders as authored —
+        `aria-activedescendant` model, `aria-controls` reference, all
+        framework-map mechanisms apply. Multi-select chips wrap inline
+        with the input.
+
+events:
+  - name: inputChange
+    payload: >-
+      The current input string. Fires on every keystroke and on
+      programmatic input mutation. May be empty after the user clears.
+      During async filtering it remains the *typed* string, not the
+      canonical selection label.
+    frameworkNotes:
+      webComponents: >-
+        Native `input` event on the inner `<input>` slot, re-emitted on
+        the `<ui-combobox>` host as `inputChange` with
+        `event.detail = { value }`.
+      react: >-
+        `onInputValueChange(value: string)` (Headless UI `Combobox`)
+        or `onInputChange(value)` (React Aria `useComboBox`,
+        controlled).
+      angularSignals: >-
+        `output<string>('inputChange')`; pair with `[(inputValue)]`
+        for two-way binding on the typed string.
+      vue: >-
+        `@update:inputValue` for `v-model:input-value` binding on the
+        typed string, separate from the value `v-model`.
+
+  - name: selectionChange
+    payload: >-
+      The selected value (single-select), the array of selected values
+      (multi-select), or `null` / `[]` after clear. Always reflects the
+      canonical value, not the input string. Does not fire while the
+      user is typing — only when they commit a selection or clear.
+    frameworkNotes:
+      webComponents: >-
+        `change` CustomEvent on the host with
+        `event.detail = { value }`. Multi-select hosts may emit
+        `event.detail = { value: T[] }` — document the shape per host.
+      react: >-
+        `onSelectionChange(key | Set<Key>)` (React Aria
+        `useComboBox`) or `onChange(value)` (Headless UI). React Aria's
+        set form is used for the multi-select variant.
+      angularSignals: >-
+        `output<T | T[] | null>('selectionChange')`; the union covers
+        single, multi, and cleared paths.
+      vue: >-
+        `@update:modelValue` for `v-model`; multi-select uses an array
+        `modelValue`.
+
+  - name: openChange
+    payload: >-
+      Boolean. `true` when the listbox opens, `false` when it closes.
+      Mirrors `aria-expanded` on the input. Fires on user-driven open
+      (typing, arrow keys, trigger click) and on close paths (Escape,
+      outside click, selection in single-select).
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent with `event.detail = { open }`.
+        Distinct from selection events so consumers that only care
+        about popup lifecycle do not subscribe to selection.
+      react: >-
+        `onOpenChange(open: boolean)` (Headless UI, React Aria); fires
+        on the same edge as `aria-expanded` flips.
+      angularSignals: >-
+        `output<boolean>('openChange')`; common pattern is `[(open)]`
+        for controlled-from-parent scenarios.
+      vue: >-
+        `@update:open` for `v-model:open`; suppressed when the open
+        state is computed and not externally controlled.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/

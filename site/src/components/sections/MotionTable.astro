@@ -1,0 +1,83 @@
+---
+import type { Component, ReducedMotionFallback } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const motion = component.motion;
+
+const FALLBACK_LABEL: Record<ReducedMotionFallback, string> = {
+  instant: 'Instant (jump cut)',
+  reduced: 'Reduced (shortened)',
+  preserved: 'Preserved (essential motion)',
+};
+
+const durationEntries = motion ? Object.entries(motion.durations) : [];
+---
+{!motion ? (
+  <p class="motion-empty">No motion declared for this component.</p>
+) : (
+  <>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Transition</th>
+            <th>Duration token</th>
+          </tr>
+        </thead>
+        <tbody>
+          {durationEntries.map(([key, name]) => (
+            <tr>
+              <td><code>{key}</code></td>
+              <td><code class="motion-name">{name}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <dl class="motion-meta">
+      <div>
+        <dt>Easing</dt>
+        <dd><code class="motion-name">{motion.easing}</code></dd>
+      </div>
+      <div>
+        <dt>Reduced motion</dt>
+        <dd>{FALLBACK_LABEL[motion.reducedMotionFallback]}</dd>
+      </div>
+    </dl>
+  </>
+)}
+
+<style>
+  .motion-empty {
+    color: var(--fg-muted);
+    font-style: italic;
+    margin: 0 0 24px;
+  }
+  .motion-name {
+    font-size: var(--text-step-0);
+  }
+  .motion-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 24px;
+    margin: 16px 0 24px;
+    padding: 0;
+  }
+  .motion-meta > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .motion-meta dt {
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .motion-meta dd {
+    margin: 0;
+    font-size: var(--text-step-0);
+  }
+</style>

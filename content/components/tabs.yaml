@@ -5,10 +5,40 @@ description: >-
   panels through a row (or column) of tab triggers. Used to chunk
   related content under a single surface so only one chunk is visible
   at a time.
-related:
-  - accordion
-  - segmented-control
-  - sidebar-nav
+whenToUse:
+  use: >-
+    When chunking related content into 3–7 mutually exclusive panels
+    under a single surface where the user picks one chunk at a time.
+    Best for parallel views of the same subject (a settings page
+    with "Account / Notifications / Billing" panels) or alternative
+    presentations of the same data.
+  avoid: >-
+    For sequential steps that must complete in order — that is
+    `Stepper` or a wizard pattern. For navigation between top-level
+    pages — that is `SidebarNav` or breadcrumbs. For more than seven
+    panels — split into a navigation hierarchy or a search
+    interface; tab-row overflow is a recovery pattern, not a design
+    target.
+  vsRelated:
+    - id: accordion
+      difference: >-
+        `Accordion` allows multiple panels open at once (or one at a
+        time, but visually stacked); `Tabs` always show one panel
+        and replace it on selection. Accordion preserves all panel
+        labels on screen; Tabs surface only one panel's content.
+    - id: segmented-control
+      difference: >-
+        `SegmentedControl` switches between mutually exclusive
+        *views of the same content* (e.g. "List / Grid" toggle);
+        `Tabs` switches between *different content* under the same
+        heading. Segmented controls tend to live above the content
+        they control; tabs replace it.
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` navigates between independent pages with their
+        own URLs; `Tabs` swap inline content within one page.
+        Vertical Tabs and SidebarNav can look similar — the
+        distinguisher is whether selecting changes the URL.
 
 anatomy:
   - id: tablist
@@ -143,11 +173,14 @@ axes:
     - pill
   properties:
     - name: orientation
-      type: 'horizontal | vertical'
+      kind: enum
+      values: [horizontal, vertical]
     - name: activation
-      type: 'automatic | manual'
+      kind: enum
+      values: [automatic, manual]
     - name: density
-      type: 'comfortable | compact'
+      kind: enum
+      values: [comfortable, compact]
   states:
     interactive:
       - hover
@@ -325,6 +358,74 @@ frameworkMap:
   vue:
     structureMechanism: Headless UI `<TabGroup>` / `<TabList>` / `<Tab>` / `<TabPanels>` / `<TabPanel>`
     variantMechanism: defineProps with literal-union types; `:selected-index` for controlled selection
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    indicator: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the `vertical` orientation is forced to horizontal
+        with overflow-scroll on the tablist — vertical tab columns claim
+        too much inline space on narrow viewports. Indicator continues to
+        track the selected tab; arrow keys revert to Left/Right.
+    - at: breakpoint.lg
+      change: >-
+        Above this width, the `orientation` property is honoured as
+        authored. Vertical layouts dock the tablist on the inline-start
+        edge with a fixed inline-size; arrow keys map Up/Down to next/prev
+        tab. The indicator switches from a bottom underline to an
+        inline-start side bar.
+
+events:
+  - name: selectedChange
+    payload: >-
+      The id of the newly selected tab — always a string matching one of
+      the rendered tab ids; never empty. In `activation: automatic` mode
+      fires on every focus change inside the tablist; in
+      `activation: manual` mode fires only when the user activates a
+      focused tab via Enter or Space.
+    frameworkNotes:
+      webComponents: >-
+        `change` CustomEvent on the `<ui-tabs>` host with
+        `event.detail = { selectedId }`. Listen on the host, not on
+        individual tab elements.
+      react: >-
+        `onValueChange(value: string)` (Radix `Tabs.Root`) or
+        `onSelectionChange(key: Key)` (React Aria `useTabList`). Both
+        fire on the same edge.
+      angularSignals: >-
+        `output<string>('selectedChange')`; pair with `[(selected)]`
+        for two-way binding when the parent owns selection.
+      vue: >-
+        `@update:modelValue` for `v-model` on the selected id. Headless
+        UI `<TabGroup>` provides `@change(index: number)` for consumers
+        that prefer index-based selection.
+
+  - name: tabActivate
+    payload: >-
+      The id of the tab whose panel was requested. Distinct from
+      `selectedChange` only in `activation: manual` mode — the user has
+      moved focus across tabs and pressed Enter or Space to commit. In
+      `automatic` mode this event is a no-op alias of `selectedChange`.
+    frameworkNotes:
+      webComponents: >-
+        Same `change` mechanism, but only emitted on activation. The
+        highlight state is internal and not exposed.
+      react: >-
+        Radix `Tabs` does not expose an activate-only event; React Aria
+        `useTabList` exposes `onAction(key)` for the activate-only path
+        so consumers can distinguish navigation from activation.
+      angularSignals: >-
+        `output<string>('tabActivate')`; only emits in manual
+        activation mode.
+      vue: >-
+        `@activate` event in manual mode; `automatic` mode collapses it
+        into `@update:modelValue`.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/

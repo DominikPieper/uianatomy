@@ -1,0 +1,98 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const events = component.events;
+
+const FRAMEWORK_LABEL: Record<'webComponents' | 'react' | 'angularSignals' | 'vue', string> = {
+  webComponents: 'Web Components',
+  react: 'React',
+  angularSignals: 'Angular Signals',
+  vue: 'Vue',
+};
+const FRAMEWORK_ORDER: Array<'webComponents' | 'react' | 'angularSignals' | 'vue'> = [
+  'webComponents',
+  'react',
+  'angularSignals',
+  'vue',
+];
+---
+{!events || events.length === 0 ? null : (
+  <ol class="events-list">
+    {events.map((e) => (
+      <li class="events-item">
+        <header class="events-header">
+          <code class="events-name">{e.name}</code>
+        </header>
+        <dl class="events-meta">
+          <div>
+            <dt>Payload</dt>
+            <dd class="events-payload">{e.payload}</dd>
+          </div>
+          {FRAMEWORK_ORDER.map((fw) => (
+            <div>
+              <dt>{FRAMEWORK_LABEL[fw]}</dt>
+              <dd>{e.frameworkNotes[fw]}</dd>
+            </div>
+          ))}
+        </dl>
+      </li>
+    ))}
+  </ol>
+)}
+
+<style>
+  .events-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+    display: grid;
+    gap: 16px;
+  }
+  .events-item {
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 14px 16px;
+    background: var(--surface-bg);
+  }
+  .events-header {
+    margin: 0 0 8px;
+  }
+  .events-name {
+    font-size: var(--text-step-0);
+    font-weight: 600;
+  }
+  .events-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px 24px;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 720px) {
+    .events-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .events-meta > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .events-meta dt {
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .events-meta dd {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .events-payload {
+    font-family: var(--font-mono, ui-monospace);
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+</style>

@@ -6,10 +6,39 @@ description: >-
   Synonymous with "dialog" in the ARIA Authoring Practices Guide; "modal"
   emphasises the *modality* (the page is blocked) over the dialog box
   itself.
-related:
-  - drawer
-  - popover
-  - alert
+whenToUse:
+  use: >-
+    When the user must focus on a single decision or input that
+    blocks the underlying flow — confirmations, destructive actions,
+    multi-step wizards that must run to completion. Distinguished
+    from non-blocking surfaces by the focus trap and the `inert`
+    background.
+  avoid: >-
+    For non-blocking notifications — that is `Toast` or `Banner`.
+    For contextual content tied to a trigger — that is `Popover`.
+    For side-pane content that does not require completion before
+    returning to the page — that is `Drawer`. For inline disclosure
+    of secondary detail — that is `Disclosure` or `Accordion`.
+  vsRelated:
+    - id: drawer
+      difference: >-
+        `Drawer` slides from a viewport edge and may be modal or
+        non-modal; `Modal` always centres and is always modal.
+        Drawer is preferred for navigation, filters, and side panels
+        that accompany the main flow rather than blocking it.
+    - id: popover
+      difference: >-
+        `Popover` is non-modal, anchored to a trigger, and
+        dismissable by outside-click without ceremony. `Modal` is
+        modal, viewport-centred, and dismissal requires explicit
+        user intent (Escape, close button, or commit).
+    - id: alert
+      difference: >-
+        `Alert` is a non-blocking inline message that announces to
+        assistive tech via `aria-live`.
+        `Modal` with `variant: alertdialog` is a blocking variant
+        for confirmations that demand user response; do not confuse
+        the two.
 
 anatomy:
   - id: backdrop
@@ -217,11 +246,12 @@ axes:
     - fullscreen
   properties:
     - name: size
-      type: 'sm | md | lg | xl'
-    - name: dismissible
-      type: boolean
+      kind: enum
+      values: [sm, md, lg, xl]
+    - { name: dismissible, kind: primitive, of: boolean }
     - name: scrollBehavior
-      type: 'inside | outside'
+      kind: enum
+      values: [inside, outside]
   states:
     interactive:
       - focus-visible
@@ -230,6 +260,32 @@ axes:
       - open
       - closing
       - closed
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          User activates the trigger that owns the dialog (button click,
+          link activation, programmatic `showModal()`); the previously-
+          focused element is captured for restoration on close.
+      - from: opening
+        to: open
+        trigger: >-
+          The enter animation completes (or, under `prefers-reduced-motion:
+          reduce`, immediately after `closed → opening`). Focus moves into
+          the dialog, the focus trap engages, and the rest of the document
+          becomes `inert`.
+      - from: open
+        to: closing
+        trigger: >-
+          User dismisses via the close button, Escape, or — when
+          `dismissible` is true — backdrop click; or the primary action
+          commits and programmatically requests close.
+      - from: closing
+        to: closed
+        trigger: >-
+          The exit animation completes (or immediately under reduced
+          motion). The dialog is removed from the AT tree, `inert` is
+          released, and focus is restored to the captured trigger.
 
 mismatches:
   - figma: A "modal" component drawn as a centered rectangle with a separate "backdrop" rectangle stacked on the same page
@@ -361,6 +417,80 @@ frameworkMap:
   vue:
     structureMechanism: Headless UI `<Dialog>` / `<DialogPanel>` or native `<dialog>` with named slots
     variantMechanism: defineProps with literal-union types; `:data-state` for transition states
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.base
+    close: motion.duration.fast
+    backdrop: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the `dialog` and `alertdialog` variants render as the
+        `fullscreen` variant by default — container fills the viewport,
+        backdrop is suppressed (the dialog is the page), header pins to
+        the top inset, footer pins to the bottom inset above the safe-area.
+        Size property (`sm | md | lg | xl`) is ignored.
+    - at: breakpoint.md
+      change: >-
+        Above this width, all three variants render as authored; the
+        explicit `fullscreen` variant continues to fill the viewport but
+        non-fullscreen variants honour their `size` property and centre
+        with backdrop padding.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` when the dialog has finished entering
+      (`opening → open`), `false` when it has finished exiting
+      (`closing → closed`). Fires after the transition settles, not at
+      the start of the transition, so consumers cannot use it to drive
+      enter/exit animations — those are owned by the `motion` block.
+    frameworkNotes:
+      webComponents: >-
+        Native `<dialog>` fires `close` on dismissal; an `open` is
+        synthesised from `showModal()`. Composite hosts re-emit a unified
+        `openChange` CustomEvent with `event.detail = { open: boolean }`.
+      react: >-
+        `onOpenChange(open: boolean)` controlled-pattern callback
+        (Radix `Dialog.Root`). React Aria splits into `onOpen` /
+        `onClose` paired callbacks fired at the same moment.
+      angularSignals: >-
+        `output<boolean>('openChange')`; emits after each transition
+        settles. Pair with `[(open)]` two-way binding when consumers
+        want a single signal.
+      vue: >-
+        `@update:open` for `v-model:open` two-way binding. Headless UI
+        `<Dialog>` exposes a paired `@close` event for the dismissal
+        path.
+
+  - name: dismiss
+    payload: >-
+      `{ reason: 'escape' | 'backdrop' | 'closeButton' }`. Distinguishes
+      a user-initiated dismissal from a programmatic close after a
+      primary-action commit. Consumers that need to differentiate
+      "user cancelled" from "we committed and closed" listen here, not
+      on `openChange`.
+    frameworkNotes:
+      webComponents: >-
+        Native `<dialog>` `cancel` event covers Escape only; a custom
+        `dismiss` CustomEvent with the same `event.detail` shape covers
+        the backdrop and close-button paths.
+      react: >-
+        Radix `onOpenChange(false)` carries no reason; React Aria
+        `onDismiss(event)` provides the source DOM event so consumers
+        can infer the path.
+      angularSignals: >-
+        `output<DismissReason>('dismiss')` paralleling `openChange`;
+        suppressed on programmatic close.
+      vue: >-
+        `@dismiss` event with payload `{ reason }`. Headless UI raises
+        `@close` for both paths; use a wrapper to carry the reason
+        explicitly.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/

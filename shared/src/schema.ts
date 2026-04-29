@@ -82,18 +82,69 @@ export const anatomySlotSchema = z.object({
   tokens: slotTokensSchema.optional(),
 });
 
-export const propertySchema = z.object({
-  name: z.string().min(1),
-  type: z.string().min(1),
-});
+const propertyPrimitiveSchema = z
+  .object({
+    name: z.string().min(1),
+    kind: z.literal('primitive'),
+    of: z.enum(['boolean']),
+  })
+  .strict();
+
+const propertyEnumSchema = z
+  .object({
+    name: z.string().min(1),
+    kind: z.literal('enum'),
+    values: z
+      .array(z.string().min(1))
+      .min(2, 'enum must declare at least two values')
+      .refine((v) => new Set(v).size === v.length, 'enum values must be unique'),
+  })
+  .strict();
+
+export const propertySchema = z.discriminatedUnion('kind', [
+  propertyPrimitiveSchema,
+  propertyEnumSchema,
+]);
+
+export const transitionSchema = z
+  .object({
+    from: z.string().min(1),
+    to: z.string().min(1),
+    trigger: z.string().min(1),
+  })
+  .strict();
+
+export const statesSchema = z
+  .object({
+    interactive: z.array(z.string().min(1)),
+    data: z.array(z.string().min(1)),
+    transitions: z.array(transitionSchema).optional(),
+  })
+  .superRefine((states, ctx) => {
+    if (!states.transitions) return;
+    const declared = new Set([...states.interactive, ...states.data]);
+    states.transitions.forEach((t, i) => {
+      if (!declared.has(t.from)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['transitions', i, 'from'],
+          message: `from "${t.from}" must reference a declared interactive or data state`,
+        });
+      }
+      if (!declared.has(t.to)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['transitions', i, 'to'],
+          message: `to "${t.to}" must reference a declared interactive or data state`,
+        });
+      }
+    });
+  });
 
 export const axesSchema = z.object({
   variants: z.array(z.string().min(1)),
   properties: z.array(propertySchema),
-  states: z.object({
-    interactive: z.array(z.string().min(1)),
-    data: z.array(z.string().min(1)),
-  }),
+  states: statesSchema,
 });
 
 export const mismatchSchema = z.object({
@@ -122,11 +173,90 @@ export const frameworkMapSchema = z.object({
   vue: frameworkEntrySchema,
 });
 
+const motionDurationKey = z
+  .string()
+  .regex(
+    /^[a-z][a-zA-Z0-9]*$/,
+    'duration key must be camelCase, e.g. open, panelEnter',
+  );
+
+export const motionDurationMap = z
+  .record(motionDurationKey, tokenName)
+  .refine((m) => Object.keys(m).length > 0, {
+    message: 'durations must declare at least one entry',
+  });
+
+export const reducedMotionFallbackSchema = z.enum([
+  'instant',
+  'reduced',
+  'preserved',
+]);
+
+export const motionSchema = z
+  .object({
+    durations: motionDurationMap,
+    easing: tokenName,
+    reducedMotionFallback: reducedMotionFallbackSchema,
+  })
+  .strict();
+
+export const breakpointEntrySchema = z
+  .object({
+    at: tokenName,
+    change: z.string().min(1),
+  })
+  .strict();
+
+export const responsiveSchema = z
+  .object({
+    breakpoints: z.array(breakpointEntrySchema).min(1),
+  })
+  .strict();
+
+const eventName = z
+  .string()
+  .regex(
+    /^[a-z][a-zA-Z0-9]*$/,
+    'event name must be camelCase, e.g. select, openChange',
+  );
+
+export const eventFrameworkNotesSchema = z
+  .object({
+    webComponents: z.string().min(1),
+    react: z.string().min(1),
+    angularSignals: z.string().min(1),
+    vue: z.string().min(1),
+  })
+  .strict();
+
+export const eventSchema = z
+  .object({
+    name: eventName,
+    payload: z.string().min(1),
+    frameworkNotes: eventFrameworkNotesSchema,
+  })
+  .strict();
+
+export const vsRelatedEntrySchema = z
+  .object({
+    id: slug,
+    difference: z.string().min(1),
+  })
+  .strict();
+
+export const whenToUseSchema = z
+  .object({
+    use: z.string().min(1),
+    avoid: z.string().min(1),
+    vsRelated: z.array(vsRelatedEntrySchema).min(1).optional(),
+  })
+  .strict();
+
 export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
   description: z.string().min(1),
-  related: z.array(slug).optional(),
+  whenToUse: whenToUseSchema.optional(),
   notes: z.string().optional(),
   lastReviewed: z
     .string()
@@ -138,6 +268,9 @@ export const componentSchema = z.object({
   mismatches: z.array(mismatchSchema).min(1),
   mistakes: z.array(mistakeSchema).min(1),
   frameworkMap: frameworkMapSchema,
+  motion: motionSchema.optional(),
+  responsive: responsiveSchema.optional(),
+  events: z.array(eventSchema).min(1).optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -145,8 +278,18 @@ export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
 export type SlotTokens = z.infer<typeof slotTokensSchema>;
 export type Property = z.infer<typeof propertySchema>;
+export type Transition = z.infer<typeof transitionSchema>;
+export type States = z.infer<typeof statesSchema>;
 export type Axes = z.infer<typeof axesSchema>;
 export type Mismatch = z.infer<typeof mismatchSchema>;
 export type Mistake = z.infer<typeof mistakeSchema>;
 export type FrameworkMap = z.infer<typeof frameworkMapSchema>;
+export type Motion = z.infer<typeof motionSchema>;
+export type ReducedMotionFallback = z.infer<typeof reducedMotionFallbackSchema>;
+export type BreakpointEntry = z.infer<typeof breakpointEntrySchema>;
+export type Responsive = z.infer<typeof responsiveSchema>;
+export type EventFrameworkNotes = z.infer<typeof eventFrameworkNotesSchema>;
+export type ComponentEvent = z.infer<typeof eventSchema>;
+export type VsRelatedEntry = z.infer<typeof vsRelatedEntrySchema>;
+export type WhenToUse = z.infer<typeof whenToUseSchema>;
 export type Component = z.infer<typeof componentSchema>;

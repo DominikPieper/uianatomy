@@ -17,6 +17,8 @@ axes: {...}                 # Variants, properties, states
 mismatches: [...]           # Figma↔Code translation issues
 mistakes: [...]             # Common implementation errors
 frameworkMap: {...}         # Cross-framework expression
+motion: {...}               # Optional. Durations, easing, reduced-motion fallback
+responsive: {...}           # Optional. Behaviour changes at viewport breakpoints
 ```
 
 ## `anatomy`
@@ -95,6 +97,159 @@ Adding a name to this set is a schema-doc change. The Zod regex does not enforce
 - `elevation` → `shadow`
 - `typography` → `size`, `weight`, `lineHeight`, `tracking`, `case`
 
+## `motion` (optional, top-level)
+
+Components that animate as part of their definition declare a single `motion` block at the top level — parallel to `axes`, `mismatches`, `mistakes`, `frameworkMap`. Motion is **per-component**, not per-slot: durations like `open`, `close`, `indicator` parameterise transitions that span the component as a whole. The full rationale is in [ADR-007](./adr/007-motion-section.md).
+
+```yaml
+motion:                                   # optional
+  reducedMotionFallback: instant          # instant | reduced | preserved
+  durations:                              # required when motion present, non-empty
+    open: motion.duration.base
+    close: motion.duration.fast
+    backdrop: motion.duration.fast
+  easing: motion.easing.standard          # single dotted token name
+```
+
+**Shape rules:**
+
+- `motion` itself is optional. Components without transition vocabulary (Card, Button) omit the field entirely.
+- When present, all three keys (`durations`, `easing`, `reducedMotionFallback`) are required.
+- `durations` is an open-ended map from a *duration key* (camelCase, e.g. `open`, `close`, `panelEnter`) to a *canonical token name* (e.g. `motion.duration.base`). It must declare at least one entry.
+- `easing` is a single canonical token name, applied to every duration in the component. Per-duration easing overrides are deferred until a real case demands them.
+- `reducedMotionFallback` is one of three values: `instant` (jump cut, the safe default for decorative motion), `reduced` (shortened duration, motion shape preserved), `preserved` (motion is essential to comprehension; keep it as authored).
+- Token names follow the same dotted lower-kebab regex as ADR-006 tokens — the schema reuses the existing `tokenName` validator.
+
+**Legal motion-token vocabulary:**
+
+| Category | Legal names |
+|---|---|
+| `motion.duration.*` | `motion.duration.instant`, `motion.duration.fast`, `motion.duration.base`, `motion.duration.slow`, `motion.duration.slower` |
+| `motion.easing.*`   | `motion.easing.standard`, `motion.easing.decelerate`, `motion.easing.accelerate`, `motion.easing.sharp` |
+
+The duration scale mirrors Polaris (`motion-duration-{75,100,150,200,300}`) and Material 3 (Short / Medium / Long). The easing names mirror Material 3's Standard / Decelerated / Accelerated / Linear-out-Slow-in vocabulary. As with tokens, the Zod regex enforces shape but not membership — out-of-vocabulary names parse, but they will not survive review and have no Phase-2 binding contract.
+
+**Conventional duration keys** (open-ended; pick the one that names the transition unambiguously):
+
+- Modal-like surfaces → `open`, `close`, `backdrop`
+- Combobox-like surfaces → `open`, `close`, `filter`
+- Tab-like indicators → `indicator`
+- Panel-swap surfaces → `panelEnter`, `panelExit`
+- Tag/chip surfaces → `chipEnter`, `chipExit`
+
+## `responsive` (optional, top-level)
+
+Components that change behaviour, layout, or activation across viewport breakpoints declare a single `responsive` block at the top level. Like `motion`, responsive is **per-component**, not per-slot — breakpoint-driven changes span the component as a whole. The full rationale is in [ADR-008](./adr/008-responsive-section.md).
+
+```yaml
+responsive:                                 # optional
+  breakpoints:                              # required when responsive present, non-empty
+    - at: breakpoint.sm
+      change: >-
+        At and below, container fills the viewport, backdrop is suppressed,
+        size property is ignored.
+    - at: breakpoint.md
+      change: >-
+        Above this width, all variants render as authored.
+```
+
+**Shape rules:**
+
+- `responsive` itself is optional. Components without breakpoint-driven behaviour (Button) omit the field entirely.
+- When present, `breakpoints` is required and must be a non-empty array.
+- Each breakpoint entry has exactly two fields: `at` (a canonical token name) and `change` (a free-text description of what happens around that threshold).
+- Direction (above / below / between) is part of the `change` prose, not a separate schema field. The `at` token is the *threshold*; the prose says which side of the threshold the change applies to.
+- Token names follow the same dotted lower-kebab regex as ADR-006 tokens — the schema reuses the existing `tokenName` validator.
+- Order of entries is meaningful: write narrow-to-wide so the array reads top-to-bottom in the same direction as a viewport widening.
+
+**Legal breakpoint vocabulary:**
+
+| Category | Legal names |
+|---|---|
+| `breakpoint.*` | `breakpoint.xs`, `breakpoint.sm`, `breakpoint.md`, `breakpoint.lg`, `breakpoint.xl` |
+
+The five-step scale mirrors Tailwind, Bootstrap, and Polaris. As with motion and tokens, the Zod regex enforces shape but not membership — out-of-vocabulary names parse, but will not survive review and have no Phase-2 binding contract.
+
+**Conventional change-prose openings** (open-ended; pick the one that names the threshold side clearly):
+
+- "At and below, …" — applies to the breakpoint and narrower viewports
+- "At and above, …" — applies to the breakpoint and wider viewports
+- "Above this width, …" — applies strictly wider than the breakpoint
+- "Below this width, …" — applies strictly narrower than the breakpoint
+- "Between sm and lg, …" — applies to a band; declare two adjacent entries to express it
+
+## `whenToUse` (optional, top-level)
+
+A structured "should I use this?" entry. Replaces the old bare `related: [slug, …]` field with a richer surface that names *use* and *avoid* prose plus per-related differentiators. The full rationale is in [ADR-012](./adr/012-when-to-use-section.md).
+
+```yaml
+whenToUse:                                  # optional
+  use: >-                                   # required prose
+    When the user must focus on a single decision or input that blocks
+    the underlying flow.
+  avoid: >-                                 # required prose
+    For non-blocking notifications — that is `Toast`. For contextual
+    content tied to a trigger — that is `Popover`.
+  vsRelated:                                # optional, non-empty when present
+    - id: drawer                            # slug of the related component
+      difference: >-
+        `Drawer` slides from a viewport edge and may be modal or
+        non-modal; `Modal` always centres and is always modal.
+    - id: popover
+      difference: >-
+        `Popover` is non-modal, anchored to a trigger, and dismissable
+        by outside-click without ceremony.
+```
+
+**Shape rules:**
+
+- `whenToUse` itself is optional. Components without a meaningful "use vs. avoid" distinction omit the field.
+- When present, `use` and `avoid` are required prose, both non-empty.
+- `vsRelated` is optional. When present, it is a non-empty array of `{ id, difference }` records. Each `id` follows the kebab-case slug regex (matches a canonical component id, even if that component is not yet documented).
+- `difference` prose names the *distinguishing characteristic* between this component and the related one — not a description of the related component itself.
+- The bare `related: [slug]` field is gone. Where you previously wrote `related: [tile, list-item]`, you now write `whenToUse.vsRelated[].id` paired with a `difference`. Templates render the chips from the structured form.
+
+**Why dropped, not coexisting:** ADR-001's "single source of truth" plus ADR-012's "decisions need rationale" both point to a single structured entry. Two ways to spell the same data is the failure mode the schema is meant to prevent.
+
+## `events` (optional, top-level)
+
+Components that expose callback or event vocabulary worth recording cross-framework declare a single `events` block at the top level — parallel to `motion`, `responsive`, `axes`, `mismatches`, `mistakes`, `frameworkMap`. Like motion and responsive, events are **per-component**: the `selectedChange` event on Tabs is component-level, not slot-level. The full rationale is in [ADR-011](./adr/011-events-section.md).
+
+```yaml
+events:                                            # optional
+  - name: selectedChange                           # camelCase identifier
+    payload: >-                                    # free-text prose
+      The id of the newly selected tab — always a string matching one of
+      the rendered tab ids; never empty.
+    frameworkNotes:                                # all four required
+      webComponents: >-
+        `change` CustomEvent on the host with `event.detail = { selectedId }`.
+      react: >-
+        `onValueChange(value: string)` (Radix) or `onSelectionChange(key)`
+        (React Aria).
+      angularSignals: >-
+        `output<string>('selectedChange')`; pair with `[(selected)]`.
+      vue: >-
+        `@update:modelValue` for `v-model` on the selected id.
+```
+
+**Shape rules:**
+
+- `events` itself is optional. Components without first-class event vocabulary (Card, Button) omit the field entirely.
+- When present, `events` is a non-empty array. Each entry has exactly three required fields: `name`, `payload`, `frameworkNotes`.
+- `name` is a camelCase identifier (`/^[a-z][a-zA-Z0-9]*$/`). Mirrors the conventional event-name shape across frameworks (`onChange`, `update:modelValue` strip both reduce to the same canonical name).
+- `payload` is free-text prose describing what the consumer receives — the value, the shape of a structured payload, or "No payload" for void events. Carries the meaning callers need to wire correctly.
+- `frameworkNotes` mirrors the `frameworkMap` shape: all four framework keys (`webComponents`, `react`, `angularSignals`, `vue`) are required, each free-text. Captures the per-framework idiom for the same canonical event.
+
+**Conventional event names** (open-ended; pick the form that names the change unambiguously):
+
+- State change with new value: `selectedChange`, `openChange`, `valueChange`, `inputChange`
+- Lifecycle: `dismiss`, `commit`, `cancel`, `clear`
+- User intent (manual activation): `tabActivate`, `select`, `confirm`
+- Error or rejection: `invalid`, `submitError`
+
+`frameworkNotes` is reference data, not a binding contract. Phase-2 implementations (`implementations/<lib>/<id>.yaml`) record the actual handler signatures via a future `eventBindings` field. The canonical notes describe what is *idiomatic*, not what is shipped in any specific library version.
+
 ## `axes`
 
 The three-way distinction between variants, properties, and states.
@@ -106,12 +261,31 @@ axes:
     - outlined
     - flat
   properties:
-    - { name: interactive, type: boolean }
-    - { name: orientation, type: 'vertical | horizontal' }
+    - { name: interactive, kind: primitive, of: boolean }
+    - name: orientation
+      kind: enum
+      values: [vertical, horizontal]
   states:
     interactive: [hover, focus-visible, active, disabled]
     data: [selected, loading]
 ```
+
+### `properties[].type`
+
+A property's type is a discriminated union with two arms, distinguished by a `kind` field. The full rationale is in [ADR-010](./adr/010-property-type-union.md).
+
+- **`kind: primitive`** — `of: boolean` is currently the only allowed primitive. Widen the `of` enum in a follow-up ADR if a real property needs `string` or `number`.
+- **`kind: enum`** — `values: [...]`, at least two unique non-empty strings. The canonical render joins the values with ` | ` for display, so `values: [sm, md, lg]` reads as `sm | md | lg` in the properties table.
+
+```yaml
+properties:
+  - { name: iconOnly, kind: primitive, of: boolean }
+  - name: size
+    kind: enum
+    values: [sm, md, lg]
+```
+
+This shape replaces the previous free-form `type: string` (e.g., `type: 'sm | md | lg'`). Authors no longer escape pipe characters inside YAML strings, and Zod validates that enum values are unique, non-empty, and at least two in number.
 
 **Test for variant vs. property:**
 
@@ -126,6 +300,40 @@ If you can describe two things as "Card-elevated" and "Card-outlined," they're v
 - Data state = app-driven (selected, loading, error, busy)
 
 The distinction matters because they're handled differently in code (CSS pseudo-classes vs. attribute-driven styling) and shouldn't be modeled as Figma variants (a common mistake — leads to variant explosion).
+
+### `transitions` (optional, nested under `axes.states`)
+
+Components with a non-trivial state graph declare transitions explicitly. Each entry is `{ from, to, trigger }`. The full rationale is in [ADR-009](./adr/009-state-transitions.md).
+
+```yaml
+axes:
+  states:
+    interactive: [focus-visible]
+    data: [opening, open, closing, closed]
+    transitions:                              # optional
+      - from: closed
+        to: opening
+        trigger: User activates the trigger that owns the dialog.
+      - from: open
+        to: closing
+        trigger: Escape, close button, dismissible backdrop click, or programmatic close.
+```
+
+**Shape rules:**
+
+- `transitions` is optional. Components with trivial graphs (Card's independent `selected`/`loading`, Button's lone `loading`) omit the field.
+- Each entry has exactly three required fields: `from`, `to`, `trigger`.
+- `from` and `to` must be a name declared in `axes.states.interactive` or `axes.states.data`. The schema validates this with a cross-field refine; a typo or stale reference is a parse error with the path `axes.states.transitions[i].from`.
+- `trigger` is free-text prose describing what causes the transition. Compound triggers (multiple alternative causes for the same edge) are written as disjunctive prose ("Escape, close button, or backdrop click") rather than split into multiple entries.
+- Order of entries is meaningful: write the dominant happy path first, exceptional paths after. Renderers preserve declaration order.
+
+**Conventional trigger forms** (open-ended; pick the form that names the cause unambiguously):
+
+- User input: "User presses Escape", "User clicks the close button", "User types a printable character"
+- Async events: "Async filter results return successfully", "Network request fails with a non-retriable error"
+- Animation lifecycle: "The enter animation completes (or immediately under reduced motion)"
+- Programmatic: "Application calls `dialog.close()`", "Form submission resolves"
+- Validation: "Strict mode and the input blurs with no matching option"
 
 ## `mismatches`
 

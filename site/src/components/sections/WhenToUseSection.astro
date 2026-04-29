@@ -1,0 +1,108 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const wtu = component.whenToUse;
+---
+{wtu && (
+  <section class="when-to-use" aria-labelledby="when-to-use-heading">
+    <h2 id="when-to-use-heading" class="when-to-use__heading">When to use</h2>
+    <div class="when-to-use__pair">
+      <div class="when-to-use__cell when-to-use__cell--use">
+        <h3>Use</h3>
+        <p>{wtu.use}</p>
+      </div>
+      <div class="when-to-use__cell when-to-use__cell--avoid">
+        <h3>Avoid</h3>
+        <p>{wtu.avoid}</p>
+      </div>
+    </div>
+    {wtu.vsRelated && wtu.vsRelated.length > 0 && (
+      <div class="when-to-use__vs">
+        <h3>Versus related</h3>
+        <ul class="when-to-use__vs-list">
+          {wtu.vsRelated.map((v) => (
+            <li class="when-to-use__vs-item">
+              <a class="related-chip" href={`/components/${v.id}`}>{v.id}</a>
+              <p class="when-to-use__vs-prose">{v.difference}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+)}
+
+<style>
+  .when-to-use {
+    margin: 0 0 32px;
+    padding: 20px 24px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--surface-bg);
+  }
+  .when-to-use__heading {
+    margin: 0 0 16px;
+    font-size: var(--text-step-1);
+    font-weight: 600;
+  }
+  .when-to-use__pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px 24px;
+    margin: 0 0 20px;
+  }
+  @media (min-width: 720px) {
+    .when-to-use__pair {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .when-to-use__cell h3 {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    margin: 0 0 6px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+  }
+  .when-to-use__cell--use h3 {
+    color: var(--accent-active, var(--text-primary));
+  }
+  .when-to-use__cell--avoid h3 {
+    color: var(--fg-muted);
+  }
+  .when-to-use__cell p {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .when-to-use__vs h3 {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    margin: 0 0 10px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+  .when-to-use__vs-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .when-to-use__vs-item {
+    display: grid;
+    grid-template-columns: minmax(140px, 180px) 1fr;
+    gap: 16px;
+    align-items: baseline;
+  }
+  @media (max-width: 540px) {
+    .when-to-use__vs-item {
+      grid-template-columns: 1fr;
+    }
+  }
+  .when-to-use__vs-prose {
+    margin: 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

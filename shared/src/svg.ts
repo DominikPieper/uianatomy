@@ -7,6 +7,7 @@ const CANVAS_WIDTH = 800;
 const PADDING = 16;
 const GAP = 8;
 const NESTED_PADDING = 12;
+const PARENT_LABEL_STRIP = 24;
 const ROW_HEIGHT_DEFAULT = 64;
 const REPEAT_GAP = 6;
 const COLUMNS = 12;
@@ -68,6 +69,7 @@ function truncateForBox(s: string, boxWidth: number, fontKind: 'serif' | 'mono' 
 
 interface LayoutResult {
   boxes: Map<string, SlotBoxes>;
+  childrenByParent: Map<string, AnatomySlot[]>;
   overlaySlot: AnatomySlot | null;
   totalHeight: number;
   width: number;
@@ -78,6 +80,7 @@ function layoutGrid(
   area: Box,
   childrenByParent: Map<string, AnatomySlot[]>,
   out: Map<string, SlotBoxes>,
+  floatingExtensions: Map<string, number> = new Map(),
 ): number {
   const innerWidth = area.w - GAP * (COLUMNS - 1);
   const colWidth = innerWidth / COLUMNS;
@@ -110,7 +113,10 @@ function layoutGrid(
       if (aspectH) primaryHeight = aspectH;
       const kids = childrenByParent.get(slot.id) ?? [];
       if (kids.length > 0) {
-        primaryHeight = Math.max(primaryHeight, estimateNestedHeight(kids, childrenByParent, slotWidth));
+        primaryHeight = Math.max(
+          primaryHeight,
+          estimateNestedHeight(kids, childrenByParent, slotWidth) + PARENT_LABEL_STRIP,
+        );
       }
 
       const horizontal = reps > 1 && cols * reps <= COLUMNS;
@@ -144,15 +150,24 @@ function layoutGrid(
       if (kids.length > 0) {
         const innerArea: Box = {
           x: box.x + NESTED_PADDING,
-          y: box.y + NESTED_PADDING,
+          y: box.y + NESTED_PADDING + PARENT_LABEL_STRIP,
           w: box.w - NESTED_PADDING * 2,
-          h: box.h - NESTED_PADDING * 2,
+          h: box.h - NESTED_PADDING * 2 - PARENT_LABEL_STRIP,
         };
         layoutGrid(kids, innerArea, childrenByParent, out);
       }
     }
 
-    y += rowHeight + GAP;
+    let extraDrop = 0;
+    for (const [anchorId, ext] of floatingExtensions) {
+      const anchorBox = out.get(anchorId)?.primary;
+      if (!anchorBox) continue;
+      if (anchorBox.y < y || anchorBox.y >= y + rowHeight) continue;
+      const overflow = anchorBox.y + anchorBox.h + ext - (y + rowHeight);
+      if (overflow > extraDrop) extraDrop = overflow;
+    }
+
+    y += rowHeight + GAP + extraDrop;
   }
   return y - GAP;
 }
@@ -184,7 +199,12 @@ function estimateNestedHeight(
       const aspectH = aspectToHeight(slot.layout.aspect, slotWidth);
       if (aspectH) h = aspectH;
       const grandkids = childrenByParent.get(slot.id) ?? [];
-      if (grandkids.length > 0) h = Math.max(h, estimateNestedHeight(grandkids, childrenByParent, slotWidth));
+      if (grandkids.length > 0) {
+        h = Math.max(
+          h,
+          estimateNestedHeight(grandkids, childrenByParent, slotWidth) + PARENT_LABEL_STRIP,
+        );
+      }
       const horizontal = reps > 1 && cols * reps <= COLUMNS;
       if (reps > 1 && !horizontal) h = h * reps + REPEAT_GAP * (reps - 1);
       if (h > rowHeight) rowHeight = h;
@@ -244,8 +264,21 @@ function buildLayout(component: Component, width: number): LayoutResult {
   const roots = component.anatomy.filter(
     (s) => !s.layout.parent && !s.layout.overlay && !s.layout.floating,
   );
+
+  const floatingExtensions = new Map<string, number>();
+  for (const slot of component.anatomy) {
+    const f = slot.layout.floating;
+    if (!f || f.position !== 'below') continue;
+    const cols = spanToCols(slot.layout.span, 12);
+    const colWidth = (width - PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
+    const fWidth = cols * colWidth + (cols - 1) * GAP;
+    const fHeight = aspectToHeight(slot.layout.aspect, fWidth) ?? ROW_HEIGHT_DEFAULT;
+    const offset = f.offset ?? 8;
+    floatingExtensions.set(f.anchor, fHeight + offset);
+  }
+
   const rootArea: Box = { x: PADDING, y: PADDING, w: width - PADDING * 2, h: 0 };
-  const yEnd = layoutGrid(roots, rootArea, childrenByParent, boxes);
+  const yEnd = layoutGrid(roots, rootArea, childrenByParent, boxes, floatingExtensions);
 
   // Floating slots may chain off other floating slots; resolve in passes
   const floatingSlots = component.anatomy.filter((s) => s.layout.floating);
@@ -263,16 +296,17 @@ function buildLayout(component: Component, width: number): LayoutResult {
         if (kids.length > 0) {
           const innerArea: Box = {
             x: box.x + NESTED_PADDING,
-            y: box.y + NESTED_PADDING,
+            y: box.y + NESTED_PADDING + PARENT_LABEL_STRIP,
             w: box.w - NESTED_PADDING * 2,
-            h: box.h - NESTED_PADDING * 2,
+            h: box.h - NESTED_PADDING * 2 - PARENT_LABEL_STRIP,
           };
           // Children of floating slot may need vertical space; expand floating box if needed
-          const childrenHeight = estimateNestedHeight(kids, childrenByParent, box.w);
+          const childrenHeight =
+            estimateNestedHeight(kids, childrenByParent, box.w) + PARENT_LABEL_STRIP;
           if (childrenHeight > box.h) {
             box.h = childrenHeight;
             boxes.set(slot.id, { primary: box, repeats: [] });
-            innerArea.h = box.h - NESTED_PADDING * 2;
+            innerArea.h = box.h - NESTED_PADDING * 2 - PARENT_LABEL_STRIP;
           }
           layoutGrid(kids, innerArea, childrenByParent, boxes);
         }
@@ -286,7 +320,7 @@ function buildLayout(component: Component, width: number): LayoutResult {
     for (const r of repeats) totalHeight = Math.max(totalHeight, r.y + r.h + PADDING);
   }
 
-  return { boxes, overlaySlot, totalHeight, width };
+  return { boxes, childrenByParent, overlaySlot, totalHeight, width };
 }
 
 function emitSlotGroup(
@@ -294,22 +328,29 @@ function emitSlotGroup(
   boxes: SlotBoxes,
   isPrimary: boolean,
   index: number,
+  hasChildren: boolean,
 ): string {
   const { x, y, w, h } = isPrimary ? boxes.primary : boxes.repeats[index]!;
   const dasharray = slot.required ? '' : ' stroke-dasharray="6 4"';
-  const figma = escape(truncateForBox(slot.figma.hint, w, 'serif'));
-  const code = escape(truncateForBox(`slot="${slot.code.slot}"`, w, 'mono'));
-  const bridge = escape(truncateForBox(slot.id, w, 'mono'));
+  const labelMaxWidth = hasChildren ? Math.min(w - 24, 360) : w;
+  const figma = escape(truncateForBox(slot.figma.hint, labelMaxWidth, 'serif'));
+  const code = escape(truncateForBox(`slot="${slot.code.slot}"`, labelMaxWidth, 'mono'));
+  const bridge = escape(truncateForBox(slot.id, labelMaxWidth, 'mono'));
   const isFloating = slot.layout.floating !== undefined;
   const totalReps = boxes.repeats.length + 1;
 
   const classes = ['anatomy-slot'];
   if (!isPrimary) classes.push('anatomy-repeat-ghost');
   if (isFloating && isPrimary) classes.push('anatomy-floating');
+  if (hasChildren) classes.push('anatomy-parent');
   const cls = classes.join(' ');
   const idAttr = isPrimary ? ` id="slot-${escape(slot.id)}"` : '';
   const cy = y + h / 2;
   const cx = x + w / 2;
+  const labelX = hasChildren ? x + 12 : cx;
+  const labelY = hasChildren ? y + 14 : cy;
+  const textAnchor = hasChildren ? 'start' : 'middle';
+  const baseline = hasChildren ? 'hanging' : 'middle';
 
   let badges = '';
   if (isPrimary && isFloating) {
@@ -336,9 +377,9 @@ function emitSlotGroup(
   return (
     `  <g${idAttr} class="${cls}" data-required="${slot.required}">` +
     `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="white" stroke="currentColor" stroke-width="1"${dasharray}/>` +
-    `<text class="anatomy-label label-figma" x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">${figma}</text>` +
-    `<text class="anatomy-label label-code"  x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${code}</text>` +
-    `<text class="anatomy-label label-bridge" x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${bridge}</text>` +
+    `<text class="anatomy-label label-figma" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">${figma}</text>` +
+    `<text class="anatomy-label label-code"  x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${code}</text>` +
+    `<text class="anatomy-label label-bridge" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${bridge}</text>` +
     badges +
     `</g>`
   );
@@ -387,7 +428,7 @@ export interface RenderOptions {
 export function renderAnatomySVG(component: Component, options: RenderOptions = {}): string {
   const width = options.width ?? CANVAS_WIDTH;
   const layout = buildLayout(component, width);
-  const { boxes, overlaySlot, totalHeight } = layout;
+  const { boxes, childrenByParent, overlaySlot, totalHeight } = layout;
 
   const parts: string[] = [];
   parts.push(
@@ -407,9 +448,10 @@ export function renderAnatomySVG(component: Component, options: RenderOptions = 
     if (slot.layout.overlay) continue;
     const slotBoxes = boxes.get(slot.id);
     if (!slotBoxes) continue;
-    parts.push(emitSlotGroup(slot, slotBoxes, true, 0));
+    const hasChildren = (childrenByParent.get(slot.id) ?? []).length > 0;
+    parts.push(emitSlotGroup(slot, slotBoxes, true, 0, hasChildren));
     for (let i = 0; i < slotBoxes.repeats.length; i++) {
-      parts.push(emitSlotGroup(slot, slotBoxes, false, i));
+      parts.push(emitSlotGroup(slot, slotBoxes, false, i, hasChildren));
     }
   }
 

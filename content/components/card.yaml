@@ -4,9 +4,31 @@ description: >-
   A bounded container that groups a coherent unit of content — typically a
   title, supporting body, optional media, and optional actions — and lifts
   it as a single perceivable object on the page.
-related:
-  - tile
-  - list-item
+whenToUse:
+  use: >-
+    When grouping a coherent unit of content — title plus body plus
+    optional media plus optional actions — that should perceive as a
+    single object on the page. Typical hosts: dashboards, marketing
+    grids, search results, content collections.
+  avoid: >-
+    For dense list rows where every row is structurally identical
+    and visual separation is purely a horizontal rule — that is
+    `ListItem`. For decorative content tiles in a grid where each
+    tile is primarily an image with a label — `Tile`. For announcing
+    transient information — `Banner` or `Toast`.
+  vsRelated:
+    - id: tile
+      difference: >-
+        `Tile` is image-led with minimal supporting text; `Card` is
+        content-led with hierarchical title plus body plus media. A
+        wall of Tiles reads as a gallery; a wall of Cards reads as a
+        feed.
+    - id: list-item
+      difference: >-
+        `ListItem` lives inside an explicit `<ul>` or `<ol>` and
+        cooperates with sibling rows for keyboard navigation and
+        selection semantics. `Card` is a standalone object with no
+        implicit sibling relationship.
 
 anatomy:
   - id: media
@@ -208,12 +230,13 @@ axes:
     - outlined
     - flat
   properties:
-    - name: interactive
-      type: boolean
+    - { name: interactive, kind: primitive, of: boolean }
     - name: orientation
-      type: 'vertical | horizontal'
+      kind: enum
+      values: [vertical, horizontal]
     - name: density
-      type: 'comfortable | compact'
+      kind: enum
+      values: [comfortable, compact]
   states:
     interactive:
       - hover
@@ -338,6 +361,21 @@ frameworkMap:
   vue:
     structureMechanism: named slots (<slot name="media" />, <slot name="title" />, …)
     variantMechanism: defineProps with literal-union types
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the `horizontal` orientation collapses to vertical
+        regardless of the prop — media stacks above body, the leading-edge
+        layout cannot survive narrow viewports without truncating either
+        the image aspect or the body's measure. Media aspect relaxes from
+        16:9 to 4:3 for better thumb-scroll density.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the `orientation` property is honoured as
+        authored. Density `compact` becomes the default for cards rendered
+        in multi-column grids; `comfortable` for full-width detail cards.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/

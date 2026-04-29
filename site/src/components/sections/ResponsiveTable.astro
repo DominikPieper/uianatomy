@@ -1,0 +1,44 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const responsive = component.responsive;
+---
+{!responsive ? (
+  <p class="responsive-empty">No responsive behaviour declared for this component.</p>
+) : (
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Breakpoint</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {responsive.breakpoints.map((bp) => (
+          <tr>
+            <td><code class="responsive-token">{bp.at}</code></td>
+            <td class="responsive-change">{bp.change}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .responsive-empty {
+    color: var(--fg-muted);
+    font-style: italic;
+    margin: 0 0 24px;
+  }
+  .responsive-token {
+    font-size: var(--text-step-0);
+    white-space: nowrap;
+  }
+  .responsive-change {
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

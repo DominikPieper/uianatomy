@@ -5,6 +5,7 @@ import AnatomyDiagram from '../../components/AnatomyDiagram.astro';
 import DesignerView from '../../components/views/DesignerView.astro';
 import DevView from '../../components/views/DevView.astro';
 import BridgeView from '../../components/views/BridgeView.astro';
+import WhenToUseSection from '../../components/sections/WhenToUseSection.astro';
 import Icon from '../../components/Icon.astro';
 
 export async function getStaticPaths() {
@@ -28,16 +29,9 @@ const component = entry.data;
       </p>
       <h1 class="component-name">{component.name}</h1>
       <p class="component-description">{component.description}</p>
-
-      {component.related && component.related.length > 0 && (
-        <div class="related-row">
-          <span class="related-row__label"><Icon name="link-2" size={12} /> Related</span>
-          {component.related.map((id) => (
-            <a class="related-chip" href={`/components/${id}`}>{id}</a>
-          ))}
-        </div>
-      )}
     </section>
+
+    <WhenToUseSection component={component} />
 
     <section aria-label="Anatomy">
       <div class="anatomy-frame">

@@ -128,12 +128,37 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: var(--surface-page);
+  background-color: var(--surface-page);
+  background-image: radial-gradient(
+    ellipse 1100px 520px at 50% -10%,
+    color-mix(in oklab, var(--accent-warm) 6%, transparent),
+    transparent 65%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--fg);
   line-height: 1.55;
   font-size: var(--text-step-0);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) body {
+    background-image: radial-gradient(
+      ellipse 1100px 520px at 50% -10%,
+      color-mix(in oklab, var(--accent-cool) 4%, transparent),
+      transparent 65%
+    );
+  }
+}
+
+:root[data-theme='dark'] body {
+  background-image: radial-gradient(
+    ellipse 1100px 520px at 50% -10%,
+    color-mix(in oklab, var(--accent-cool) 4%, transparent),
+    transparent 65%
+  );
 }
 
 ::selection {
@@ -406,8 +431,20 @@ main {
   gap: 12px;
   margin: 56px 0 16px;
   padding-bottom: 10px;
+  padding-left: 14px;
   border-bottom: 1px solid var(--border-subtle);
   flex-wrap: wrap;
+  position: relative;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--accent-active);
+  border-radius: 1px;
 }
 .section-header h2 {
   color: var(--accent-active);
@@ -531,10 +568,16 @@ th {
   gap: 14px;
   padding: 14px 18px;
   margin: 32px 0 0;
-  background: var(--surface-raised);
+  background:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--accent-active-soft) 60%, var(--surface-raised)),
+      var(--surface-raised) 35%
+    );
   border: 1px solid var(--border-subtle);
   border-left: 2px solid var(--accent-active);
   border-radius: var(--radius-md);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--fg) 4%, transparent);
 }
 .phase-banner__tag {
   flex-shrink: 0;
@@ -583,6 +626,21 @@ th {
   line-height: 1.05;
   margin: 0 0 20px;
   font-weight: 500;
+  position: relative;
+  isolation: isolate;
+}
+.hero-title::before {
+  content: '';
+  position: absolute;
+  inset: -8px -16px;
+  background: linear-gradient(
+    to bottom right,
+    color-mix(in oklab, var(--accent-warm-soft) 55%, transparent),
+    transparent 60%
+  );
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
 }
 
 .hero-lede {
@@ -641,12 +699,17 @@ th {
   border-radius: var(--radius-lg);
   text-decoration: none;
   color: inherit;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--fg) 4%, transparent),
+    0 14px 32px -22px color-mix(in oklab, var(--fg) 16%, transparent);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 .component-card:hover {
   transform: translateY(-2px);
   border-color: var(--accent-active);
-  box-shadow: 0 12px 24px -16px color-mix(in oklab, var(--accent-active) 35%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--accent-active) 12%, transparent),
+    0 18px 36px -18px color-mix(in oklab, var(--accent-active) 35%, transparent);
   text-decoration: none;
 }
 

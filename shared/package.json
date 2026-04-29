@@ -19,6 +19,10 @@
     "./svg": {
       "types": "./dist/svg.d.ts",
       "import": "./dist/svg.js"
+    },
+    "./format": {
+      "types": "./dist/format.d.ts",
+      "import": "./dist/format.js"
     }
   },
   "scripts": {

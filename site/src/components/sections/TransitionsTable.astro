@@ -1,0 +1,39 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const transitions = component.axes.states.transitions;
+---
+{!transitions || transitions.length === 0 ? null : (
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>To</th>
+          <th>Trigger</th>
+        </tr>
+      </thead>
+      <tbody>
+        {transitions.map((t) => (
+          <tr>
+            <td><code class="transitions-state">{t.from}</code></td>
+            <td><code class="transitions-state">{t.to}</code></td>
+            <td class="transitions-trigger">{t.trigger}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .transitions-state {
+    white-space: nowrap;
+    font-size: var(--text-step-0);
+  }
+  .transitions-trigger {
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

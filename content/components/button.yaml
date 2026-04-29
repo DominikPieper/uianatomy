@@ -5,10 +5,33 @@ description: >-
   Anchors most user-initiated state changes — submitting forms,
   opening dialogs, advancing flows. Distinct from a Link (which
   navigates) in semantic and visual treatment.
-related:
-  - link
-  - icon-button
-  - menu-button
+whenToUse:
+  use: >-
+    When the user needs to perform an action that triggers a state
+    change, submits a form, or initiates a flow. Default activator
+    for in-page mutations.
+  avoid: >-
+    For navigating to another page or external URL — that is `Link`,
+    even when styled like a button. For binary on/off state — that
+    is `Switch`. For opening a menu of multiple options — that is
+    `MenuButton`.
+  vsRelated:
+    - id: link
+      difference: >-
+        `Link` navigates (changes the URL or opens a new tab); `Button`
+        performs an action without navigation. Visual styling may
+        converge but semantics never do — middle-click, "open in new
+        tab", and copy-as-URL all rely on `<a>`.
+    - id: icon-button
+      difference: >-
+        `IconButton` is the same component family rendered with
+        `iconOnly: true` plus a required `aria-label`. Document as a
+        configuration of `Button`, not a separate component.
+    - id: menu-button
+      difference: >-
+        `MenuButton` opens a menu with multiple options and carries
+        `aria-haspopup="menu"` plus `aria-expanded`. `Button` triggers
+        a single action.
 
 anatomy:
   - id: root
@@ -143,13 +166,13 @@ axes:
     - destructive
   properties:
     - name: size
-      type: 'sm | md | lg'
-    - name: iconOnly
-      type: boolean
-    - name: fullWidth
-      type: boolean
+      kind: enum
+      values: [sm, md, lg]
+    - { name: iconOnly, kind: primitive, of: boolean }
+    - { name: fullWidth, kind: primitive, of: boolean }
     - name: type
-      type: 'button | submit | reset'
+      kind: enum
+      values: [button, submit, reset]
   states:
     interactive:
       - hover
