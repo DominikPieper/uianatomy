@@ -1,0 +1,311 @@
+id: combobox
+name: Combobox
+description: >-
+  A text input combined with a popup list of suggestions. The user
+  types to filter, navigates with arrow keys, and selects an option
+  to commit a value. Distinct from a Select (which has no text input)
+  and from Autocomplete (which is a behavior, not a component name in
+  most design systems).
+related:
+  - select
+  - search-input
+  - tag-input
+
+anatomy:
+  - id: input
+    required: true
+    purpose: >-
+      Single-line text field that accepts user input. The combobox's
+      primary surface; carries the editable value, the focus, and the
+      `aria-controls` relationship to the listbox.
+    layout:
+      row: 1
+      col: 1
+      span: 8
+    figma:
+      type: instance
+      hint: Text input component instance; min-width drives the field size
+    code:
+      slot: input
+      semantic: textbox
+    a11y:
+      hint: >-
+        `role="combobox"`, `aria-expanded` reflecting popup state,
+        `aria-controls` referencing the listbox id, and
+        `aria-activedescendant` pointing at the currently-highlighted
+        option when navigating with arrow keys. The input retains DOM
+        focus throughout — focus never moves into the listbox.
+
+  - id: clear-button
+    required: false
+    purpose: >-
+      Affordance to clear the current input value. Conventionally an
+      "×" icon inside the trailing edge of the input; appears only
+      when the input has a value.
+    layout:
+      row: 1
+      col: 2
+      span: 2
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to "has value" property
+    code:
+      slot: clear
+      semantic: button
+    a11y:
+      hint: >-
+        Real button with accessible name ("Clear" or "Clear search").
+        Clicking returns focus to the input. Escape with the popup
+        closed performs the same action (clear value), per APG.
+
+  - id: trigger-button
+    required: false
+    purpose: >-
+      Disclosure affordance that toggles the listbox without typing.
+      Conventionally a chevron at the trailing edge of the input.
+      Optional because some comboboxes only open on typing.
+    layout:
+      row: 1
+      col: 3
+      span: 2
+    figma:
+      type: instance
+      hint: Icon button instance; chevron rotates with `aria-expanded`
+    code:
+      slot: trigger
+      semantic: button
+    a11y:
+      hint: >-
+        `tabindex="-1"` because the input owns focus; `aria-label`
+        ("Show options"). Clicking toggles `aria-expanded` on the
+        combobox input, not on this button.
+
+  - id: listbox
+    required: true
+    purpose: >-
+      Popup container that renders the option list. Floats above
+      adjacent content; positioned relative to the input.
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Floating frame (overlay layer); width matches input by default
+    code:
+      slot: listbox
+      semantic: listbox
+    a11y:
+      hint: >-
+        `role="listbox"` and `id` referenced by the input's
+        `aria-controls`. Listbox is rendered in the document but
+        positioned via portal; do not move DOM focus into it.
+
+  - id: option
+    required: true
+    purpose: >-
+      Individual selectable item inside the listbox. One anatomy slot
+      describes the role; one component instance is rendered per
+      filtered match.
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Option component instance with selected and highlighted variants
+    code:
+      slot: option
+      semantic: option
+    a11y:
+      hint: >-
+        `role="option"` and a unique `id` per option. The currently-
+        highlighted option is referenced by the input's
+        `aria-activedescendant`. Selected options have
+        `aria-selected="true"`.
+
+  - id: empty-state
+    required: false
+    purpose: >-
+      Message rendered inside the listbox when no options match the
+      current input value. Substitutes for the option list rather
+      than appearing alongside it.
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Centered text with optional icon; visibility bound to "no matches" state
+    code:
+      slot: empty
+      semantic: status
+    a11y:
+      hint: >-
+        Announce the no-results state to assistive tech via
+        `role="status"` (polite) on a live region inside the listbox,
+        or via `aria-live="polite"` on the empty-state container.
+        Avoid putting `role="option"` on the empty-state — it is not
+        selectable.
+
+axes:
+  variants:
+    - single-select
+    - multi-select
+    - creatable
+  properties:
+    - name: filterMode
+      type: 'startsWith | contains | fuzzy | none'
+    - name: strict
+      type: boolean
+    - name: virtualised
+      type: boolean
+    - name: async
+      type: boolean
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - closed
+      - open
+      - busy
+      - invalid
+
+mismatches:
+  - figma: A combobox drawn as a text input with a dropdown panel rendered beneath, both inside the same Figma frame
+    code: The listbox is rendered in a portal at the end of the document body, positioned with floating-ui or popper, and z-indexed above other content
+    consequence: >-
+      Designers approximate the listbox at "natural" stacking order,
+      then are surprised when the implementation appears to "escape"
+      its container (e.g., over a parent modal or sticky header).
+    correct: >-
+      Document the portal model in the canonical reference and the
+      Figma file. Designers keep the dropdown rendered for review
+      purposes but treat it as a floating layer; developers always
+      portal in production.
+
+  - figma: Each typeahead state (default / focused / open / loading / invalid / disabled) modeled as a Figma variant
+    code: Data states (`open`, `busy`, `invalid`) toggled by the application; interactive states (`focus-visible`, `disabled`) are CSS pseudo-classes
+    consequence: >-
+      Variant explosion (6 states × 3 sizes × 2 widths = 36+ variants)
+      and ambiguity about which states are mutually exclusive.
+    correct: >-
+      Reserve Figma variants for the structural variants (single /
+      multi / creatable). States are documented once in the
+      canonical reference, with a clear matrix of which are
+      mutually exclusive.
+
+  - figma: Multi-select rendered as chips inside the input field, drawn statically
+    code: Chips are rendered dynamically; their addition / removal triggers re-layout that shifts the typing caret position
+    consequence: >-
+      The dynamic re-layout is invisible to the static Figma file;
+      developers ship comboboxes whose typing behaviour breaks when
+      chips wrap to a new row.
+    correct: >-
+      Document the multi-select chip behavior explicitly: chips wrap
+      naturally, the input width is the remaining row space (with a
+      minimum), and adding / removing a chip preserves the caret
+      position. Annotate the Figma frame with a note about the
+      dynamic re-layout.
+
+  - figma: A "loading" spinner drawn inside the listbox as a permanent visual element
+    code: The busy state replaces (not supplements) the option list while async results are in-flight, and is announced via a live region
+    consequence: >-
+      The spinner appears on every render in mocks, encouraging an
+      implementation that always shows a spinner; assistive-tech users
+      get no announcement when results arrive.
+    correct: >-
+      Treat busy as a data state replacing the option list. Document
+      that an `aria-live` announcement fires when results change. The
+      Figma file uses a state-toggle to show busy vs. loaded
+      explicitly.
+
+mistakes:
+  - id: combobox-focus-into-listbox
+    title: Arrow Down moves DOM focus into the listbox
+    description: >-
+      The implementation uses real `tabindex` on each option and
+      moves focus there. Typing no longer routes to the input;
+      Escape behaves unexpectedly.
+    fix: >-
+      Keep DOM focus on the input. Track the highlighted option
+      with `aria-activedescendant` referencing the option's `id`.
+      Arrow keys mutate the highlighted index; Enter selects.
+
+  - id: combobox-no-aria-expanded
+    title: '`aria-expanded` not toggled on open / close'
+    description: >-
+      The input misses `aria-expanded`, so screen readers cannot
+      tell whether the popup is open. Users hear "combobox" with
+      no state cue.
+    fix: >-
+      Set `aria-expanded="true"` when the listbox is open, `false`
+      when closed. Keep this in sync with the `data-state` /
+      transition state of the popup.
+
+  - id: combobox-strict-without-feedback
+    title: Strict mode silently rejects invalid input on blur
+    description: >-
+      The combobox is strict (must select from the list) but on
+      blur with an unmatched value the input simply reverts. The
+      user sees their typing disappear with no indication why.
+    fix: >-
+      On blur with an unmatched value, either snap to the best
+      match (with an `aria-live` announcement) or surface an
+      `invalid` state with an inline error referenced by
+      `aria-describedby`. Never silently revert.
+
+  - id: combobox-non-virtualised-large-list
+    title: A list of 5,000 options renders all DOM nodes
+    description: >-
+      Every option is in the DOM whether visible or not. Open
+      latency, memory, and screen-reader announcement all suffer.
+    fix: >-
+      Virtualise the option list when it exceeds ~200 items. Keep
+      the visible window plus a small overscan in the DOM; emit a
+      live-region count ("100 results") so users know the size
+      without scrolling.
+
+  - id: combobox-clear-button-tab-stop
+    title: Clear button appears in the keyboard tab order
+    description: >-
+      Tabbing from the input lands on the × button instead of
+      moving past the combobox. The natural keyboard flow expects
+      the clear affordance to be operable via the input itself.
+    fix: >-
+      Give the clear button `tabindex="-1"` and bind Escape on the
+      input (when the popup is closed) to clear the value. The
+      mouse user can still click the button; the keyboard user
+      uses Escape.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-combobox>` host with named slots for `option`-bearing children and an internal portal for the listbox; floating positioning via the Popover API or floating-ui
+    variantMechanism: attributes for variant (`single-select` / `multi-select` / `creatable`); CSS `[data-state="open"]` for transition styling
+  react:
+    structureMechanism: compound components (Radix `Combobox` does not exist as of 2026-04, but Headless UI `Combobox`, Downshift, or React Aria `useComboBox` follow the compound pattern with portal-based listbox)
+    variantMechanism: props with discriminated unions for variant; controlled or uncontrolled value props; `data-state` attribute on the listbox element
+  angularSignals:
+    structureMechanism: Angular CDK Overlay + `cdk-listbox`; signal-based query, results, and selectedValue inputs / outputs
+    variantMechanism: input<'single-select' | 'multi-select' | 'creatable'>(); input<'startsWith' | 'contains' | 'fuzzy'>() for filterMode
+  vue:
+    structureMechanism: Headless UI `<Combobox>` / `<ComboboxInput>` / `<ComboboxButton>` / `<ComboboxOptions>` / `<ComboboxOption>`
+    variantMechanism: defineProps with literal-union types; `multiple` prop for multi-select
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/combobox_role
+  - https://react-spectrum.adobe.com/react-aria/ComboBox.html
+  - https://headlessui.com/react/combobox
+  - https://www.downshift-js.com/
+  - https://polaris.shopify.com/components/selection-and-input/combobox
+  - https://carbondesignsystem.com/components/combo-box/usage/
+  - https://m3.material.io/components/menus/overview
+  - https://atlassian.design/components/combobox/examples
+  - https://www.tpgi.com/the-anatomy-of-a-combobox/
+  - https://inclusive-components.design/menus-menu-buttons/
+
+lastReviewed: '2026-04-28'

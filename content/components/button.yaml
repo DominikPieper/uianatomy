@@ -1,0 +1,273 @@
+id: button
+name: Button
+description: >-
+  An interactive element that triggers an action when activated.
+  Anchors most user-initiated state changes — submitting forms,
+  opening dialogs, advancing flows. Distinct from a Link (which
+  navigates) in semantic and visual treatment.
+related:
+  - link
+  - icon-button
+  - menu-button
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The interactive surface itself. Carries the `<button>` element,
+      the focus ring, the variant treatment, and the press affordance.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; min-height per size token; padding from variant set
+    code:
+      slot: root
+      semantic: button
+    a11y:
+      hint: >-
+        Always render as `<button type="button">` (or `type="submit"`
+        inside a form). Do not use `<div role="button">` — it loses
+        the implicit form participation and key handling. Disabled
+        state via the HTML `disabled` attribute (not `aria-disabled`)
+        for buttons that should not receive focus; use `aria-disabled`
+        only when the disabled button must remain focusable for
+        assistive-tech announcement.
+
+  - id: icon-leading
+    required: false
+    purpose: >-
+      Optional decorative or semantic icon before the label, anchoring
+      the action visually. Conventionally aligned to the leading edge
+      with consistent gap to the label.
+    layout:
+      row: 2
+      col: 1
+      span: 2
+    figma:
+      type: instance
+      hint: Icon component instance; size bound to button size token
+    code:
+      slot: icon-leading
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative when paired with a visible text label —
+        `aria-hidden="true"` on the icon, no alt. If the icon is the
+        sole label of the button (icon-only variant), the button
+        carries an `aria-label` describing the action.
+
+  - id: label
+    required: true
+    purpose: >-
+      The text that names the action. Carries the button's accessible
+      name when no `aria-label` overrides it. Should read as a verb
+      phrase ("Save changes", not "Changes").
+    layout:
+      row: 2
+      col: 2
+      span: 8
+    figma:
+      type: text
+      hint: Button label text style; bound to a "label" component property
+    code:
+      slot: label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text node, no special role. The label is the button's
+        accessible name unless the button has an `aria-label` or
+        `aria-labelledby` override. Avoid using only an icon as the
+        label without an `aria-label`.
+
+  - id: icon-trailing
+    required: false
+    purpose: >-
+      Optional icon after the label, conventionally a chevron or
+      arrow indicating direction (advance, external link, dropdown
+      disclosure).
+    layout:
+      row: 2
+      col: 3
+      span: 2
+    figma:
+      type: instance
+      hint: Icon component instance; visibility bound to "has trailing icon" property
+    code:
+      slot: icon-trailing
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative; `aria-hidden="true"`. If the icon communicates
+        state ("opens menu", "external link"), pair it with an
+        invisible-text addition to the label or an `aria-label` that
+        captures the meaning.
+
+axes:
+  variants:
+    - primary
+    - secondary
+    - tertiary
+    - ghost
+    - destructive
+  properties:
+    - name: size
+      type: 'sm | md | lg'
+    - name: iconOnly
+      type: boolean
+    - name: fullWidth
+      type: boolean
+    - name: type
+      type: 'button | submit | reset'
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - loading
+      - pressed
+
+mismatches:
+  - figma: A button drawn as a styled `<div>` (or "rectangle with text") with click-through interactions in the prototype
+    code: A real `<button>` element with native focus, native key handling (Enter / Space), and form participation
+    consequence: >-
+      Designers prototype clickable rectangles that work with mouse
+      input but break for keyboard users when implemented literally.
+      Developers shipping divs lose form submission and have to
+      reimplement keyboard activation manually.
+    correct: >-
+      Document the button as a semantic element in the canonical
+      reference. Designers may draw rectangles in Figma but the
+      component instance is named "Button" and developers always
+      render it as `<button>`.
+
+  - figma: Hover / focus / active / disabled modeled as Figma variants on every variant × size combination
+    code: CSS pseudo-classes (`:hover`, `:focus-visible`, `:active`) and the HTML `disabled` attribute
+    consequence: >-
+      Variant explosion: 5 variants × 3 sizes × 4 states × 2 widths
+      = 120 component variants. The Figma file becomes unmaintainable
+      and developers cannot mechanically map a Figma "hover variant"
+      to a CSS rule.
+    correct: >-
+      States live on a separate states sheet, documented once. Figma
+      variants are reserved for variant (primary / secondary / …),
+      size, and width (auto / full). State styling is documented as
+      CSS rules referencing `:hover`, `:focus-visible`, etc.
+
+  - figma: A "loading button" variant that visually replaces the label with a spinner
+    code: A `loading` data state that disables the button, swaps the leading icon for a spinner, and announces busy via `aria-busy="true"`
+    consequence: >-
+      Designers may not realise the button must remain announced as
+      busy; developers may strip the disabled attribute to keep the
+      button focusable, missing the announcement entirely.
+    correct: >-
+      Document `loading` as a data state. The button is `aria-busy`,
+      not `disabled` (so its label remains announceable), and a
+      spinner replaces the leading icon. The button is non-activatable
+      while loading via a click-handler guard, not via the disabled
+      attribute.
+
+  - figma: A "link button" variant that looks like a button but navigates
+    code: A `<button>` cannot navigate; navigation requires `<a>`. The "link button" must render as an anchor with button styling.
+    consequence: >-
+      Developers ship a `<button>` with a click handler that calls
+      `router.push`. The element loses middle-click "open in new tab",
+      cannot be copied as a URL, and breaks user expectations for
+      links.
+    correct: >-
+      Distinguish at the canonical level: a `Button` triggers an
+      action, a `Link` navigates. A "link styled as a button" remains
+      an `<a>` element with button visual treatment. The component
+      reference may document a `Link` component that shares the
+      button's visual variants.
+
+mistakes:
+  - id: button-icon-only-no-label
+    title: Icon-only button with no `aria-label`
+    description: >-
+      The visual is a single icon and the button carries no
+      accessible name. Screen readers announce "button" with no
+      indication of what it does.
+    fix: >-
+      Every icon-only button has an `aria-label` describing the
+      action ("Close", "Sort ascending"). Lint rule: any button
+      whose textContent is empty must have `aria-label` or
+      `aria-labelledby`.
+
+  - id: button-disabled-tooltip
+    title: Disabled button has a tooltip explaining why
+    description: >-
+      The `disabled` attribute removes the button from the focus
+      order, so keyboard users cannot trigger the tooltip and never
+      see the explanation.
+    fix: >-
+      Use `aria-disabled="true"` instead of `disabled` when the
+      button needs to remain focusable for tooltip discovery.
+      Activation is suppressed via a click-handler guard. The
+      tooltip appears on focus and hover.
+
+  - id: button-loading-removes-label
+    title: Loading state replaces the label with a spinner only
+    description: >-
+      The visible label is replaced by a spinner, but the button's
+      accessible name remains the original label. Screen-reader
+      users hear "Save" while the button is in fact unactivatable.
+    fix: >-
+      Keep the label visible (or visually hidden but accessible)
+      during the loading state. Set `aria-busy="true"`. Announce
+      the loading start and completion via a live region rather
+      than mutating the button's accessible name.
+
+  - id: button-submit-default-in-toolbar
+    title: A button inside a `<form>` defaults to `type="submit"`
+    description: >-
+      A button placed inside a form without an explicit `type`
+      attribute submits the form when clicked. The first button in
+      a toolbar accidentally becomes the form's submit on Enter.
+    fix: >-
+      Always set `type="button"` on buttons that do not submit. Make
+      the canonical reference's default `type` value `"button"`,
+      and require an explicit `type="submit"` opt-in.
+
+  - id: button-text-in-anchor
+    title: A `<button>` wrapped in an `<a>` for navigation
+    description: >-
+      The DOM has a button inside an anchor (`<a><button>Go</button></a>`),
+      producing nested interactive elements. Assistive tech announces
+      ambiguously, and click events bubble through both.
+    fix: >-
+      Use the right element: `<a>` for navigation styled as a
+      button, `<button>` for in-page actions. Never nest interactive
+      elements.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-button>` host element that internally renders a `<button>` and exposes named slots for `icon-leading`, default (label), and `icon-trailing`
+    variantMechanism: attributes (`variant="primary"`, `size="md"`, `loading`); reflected to host classes for CSS selectors
+  react:
+    structureMechanism: a single `<Button>` component that accepts `leadingIcon`, `trailingIcon`, and children for the label
+    variantMechanism: props with class-variance-authority for variant / size / fullWidth; `data-loading` attribute for the loading state
+  angularSignals:
+    structureMechanism: a `<ui-button>` component projecting the label via `<ng-content>`; `[uiIconLeading]` / `[uiIconTrailing]` directives or named projection slots
+    variantMechanism: input<'primary' | 'secondary' | 'tertiary' | 'ghost' | 'destructive'>(); input<'sm' | 'md' | 'lg'>(); host-bound `[disabled]` and `[attr.aria-busy]`
+  vue:
+    structureMechanism: a `<Button>` SFC with named slots for leading and trailing icons and a default slot for the label
+    variantMechanism: defineProps with literal-union types; `:loading` boolean prop drives `aria-busy`
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/button/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button
+  - https://www.radix-ui.com/themes/docs/components/button
+  - https://react-spectrum.adobe.com/react-aria/Button.html
+  - https://headlessui.com/react/button
+  - https://polaris.shopify.com/components/actions/button
+  - https://carbondesignsystem.com/components/button/usage/
+  - https://m3.material.io/components/buttons/overview
+  - https://atlassian.design/components/button/examples
+  - https://www.gov.uk/service-manual/design/buttons
+
+lastReviewed: '2026-04-28'

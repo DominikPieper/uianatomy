@@ -1,0 +1,246 @@
+id: tabs
+name: Tabs
+description: >-
+  A switching control that exposes a flat set of mutually exclusive
+  panels through a row (or column) of tab triggers. Used to chunk
+  related content under a single surface so only one chunk is visible
+  at a time.
+related:
+  - accordion
+  - segmented-control
+  - sidebar-nav
+
+anatomy:
+  - id: tablist
+    required: true
+    purpose: >-
+      The container that holds the tab triggers. Establishes the
+      tablist semantic, the orientation, and the keyboard model
+      (arrow keys cycle through tabs within the list).
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; gap and padding from token set
+    code:
+      slot: tablist
+      semantic: tablist
+    a11y:
+      hint: >-
+        `role="tablist"` with `aria-orientation` matching the visual
+        orientation. If the tabs label a region elsewhere on the page,
+        give the tablist an `aria-label` or `aria-labelledby`.
+
+  - id: tab
+    required: true
+    purpose: >-
+      Individual trigger that activates its associated tabpanel. One
+      anatomy slot describes the *role*; in practice one component
+      instance is rendered per tab.
+    layout:
+      row: 2
+      col: 1
+      span: quarter
+    figma:
+      type: instance
+      hint: Tab item component instance; selected state via component property
+    code:
+      slot: tab
+      semantic: tab
+    a11y:
+      hint: >-
+        `role="tab"`. Exactly one tab in the list has `aria-selected="true"`
+        at any time. `aria-controls` references the associated tabpanel
+        id. Disabled tabs use `aria-disabled` and remain focusable so
+        keyboard users can still navigate to them.
+
+  - id: indicator
+    required: false
+    purpose: >-
+      Optional decorative element that emphasises the selected tab
+      (typically an underline). Not part of the semantic structure;
+      driven from the selected tab's geometry.
+    layout:
+      row: 3
+      col: 1
+      span: quarter
+    figma:
+      type: rectangle
+      hint: 2-3px line component variant; position bound to selected tab
+    code:
+      slot: indicator
+      semantic: presentational
+    a11y:
+      hint: >-
+        Presentational only. Selection is communicated through
+        `aria-selected` on the tab; the indicator is a visual
+        reinforcement, not a substitute.
+
+  - id: tabpanel
+    required: true
+    purpose: >-
+      The content region revealed by selecting a tab. One per tab in
+      practice; one anatomy slot describes the role.
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; visibility driven by selected variant
+    code:
+      slot: tabpanel
+      semantic: tabpanel
+    a11y:
+      hint: >-
+        `role="tabpanel"` with `aria-labelledby` pointing at its tab.
+        Make the panel programmatically focusable (`tabindex="0"`) only
+        if the panel itself is the first interactive surface; otherwise
+        let the first interactive child receive focus naturally.
+
+axes:
+  variants:
+    - line
+    - contained
+    - pill
+  properties:
+    - name: orientation
+      type: 'horizontal | vertical'
+    - name: activation
+      type: 'automatic | manual'
+    - name: density
+      type: 'comfortable | compact'
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - selected
+
+mismatches:
+  - figma: Each tab state (default / hover / selected / disabled) modeled as a separate Figma variant on the tab component
+    code: A single tab element with `:hover`, `:focus-visible`, and `aria-selected` driving CSS
+    consequence: >-
+      Variant explosion: 4 states × 3 sizes × 2 orientations = 24
+      variants, and developers cannot mechanically map a Figma
+      "hover variant" to a CSS pseudo-class without manual translation.
+    correct: >-
+      States belong on a separate states sheet, not as variants. The
+      Figma component captures structural variants (line / contained /
+      pill); the canonical reference documents the state matrix once.
+
+  - figma: The active-tab underline drawn as a separate decorative line component on the artboard
+    code: An indicator pseudo-element (or absolute-positioned div) whose position is bound to the selected tab
+    consequence: >-
+      Designers move the underline manually when switching the visible
+      tab in mocks; developers wire the indicator to selection
+      programmatically. The two artefacts disagree about which tab is
+      active at any given mock.
+    correct: >-
+      Document that the indicator is presentational and *derived from*
+      the selected tab. In Figma, bind the indicator's position to the
+      selected variant; in code, animate the indicator from the
+      selected tab's bounding box.
+
+  - figma: Vertical tabs drawn as a left sidebar with no semantic relationship to the right-hand content
+    code: Vertical tabs use the same `role="tablist"` with `aria-orientation="vertical"` and arrow keys reverse from horizontal to vertical
+    consequence: >-
+      Designers and developers diverge on whether a vertical layout is
+      "tabs" or a "sidebar nav". The keyboard model and the announced
+      role differ between the two patterns.
+    correct: >-
+      Treat vertical tabs as the same component with an `orientation`
+      property. Reserve "sidebar nav" as a distinct pattern with
+      different keyboard semantics (Tab moves between links, no arrow
+      cycling).
+
+  - figma: Manual vs. automatic activation modeled as two visually identical Figma components
+    code: A property toggles whether arrow-key navigation activates the tab on focus (automatic) or only on Enter / Space (manual)
+    consequence: >-
+      Designers may not realise activation mode is a meaningful
+      decision. Developers default to one mode without knowing the
+      other exists; users with assistive tech feel the difference.
+    correct: >-
+      Document `activation` as a first-class property in the
+      canonical reference. Default is automatic for tabs that swap
+      cheap, static content; manual for tabs that load expensive
+      content per panel.
+
+mistakes:
+  - id: tabs-no-arrow-keys
+    title: Tab key cycles through every tab instead of arrow keys
+    description: >-
+      Implementation uses native focusable buttons with no roving
+      `tabindex`, so Tab walks through every tab plus the panels
+      below. Screen-reader users hear "tab 1 of N" announcements
+      conflicting with the actual document order.
+    fix: >-
+      Implement the roving-tabindex pattern: only the selected tab
+      has `tabindex="0"`, all other tabs have `tabindex="-1"`. Arrow
+      keys (Left/Right for horizontal, Up/Down for vertical) move
+      focus between tabs and update the roving tabindex.
+
+  - id: tabs-panel-not-labelled
+    title: Tabpanels missing `aria-labelledby` to their tab
+    description: >-
+      The panel announces only its content with no relationship to
+      the tab that controls it. Screen-reader users navigating the
+      page out of order cannot identify which tab the panel belongs
+      to.
+    fix: >-
+      Each tabpanel sets `aria-labelledby` to the id of its tab.
+      Each tab sets `aria-controls` to the id of its panel.
+
+  - id: tabs-state-as-data-attribute-only
+    title: Selection driven only by a `data-selected` attribute, no `aria-selected`
+    description: >-
+      Visual selection works (CSS targets the data attribute) but
+      assistive tech reports every tab as unselected.
+    fix: >-
+      `aria-selected` is the source of truth. Style from
+      `[aria-selected="true"]` rather than introducing a parallel
+      `data-selected` attribute that has to stay in sync.
+
+  - id: tabs-disabled-but-not-skipped
+    title: Disabled tabs cannot receive keyboard focus
+    description: >-
+      Setting `disabled` on a disabled tab removes it from the focus
+      order entirely, breaking arrow-key navigation between the
+      remaining tabs and stranding users on the disabled tab.
+    fix: >-
+      Use `aria-disabled="true"` instead of the HTML `disabled`
+      attribute. The disabled tab remains focusable and announceable;
+      activation (Enter / Space) is the operation that becomes a
+      no-op.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-tabs>` host element with named slots for `tablist` and content panels exposed through `<slot name="panel-{id}">`
+    variantMechanism: attributes for variant / orientation / activation; `[selected]` attribute on tab elements drives styling
+  react:
+    structureMechanism: compound components (`Tabs.Root`, `Tabs.List`, `Tabs.Trigger`, `Tabs.Content`) à la Radix; or the React Aria `useTabList` hook with a collection
+    variantMechanism: props on `Tabs.Root` (variant / orientation / activationMode); selection state as a controlled or uncontrolled value prop
+  angularSignals:
+    structureMechanism: Angular CDK A11y `cdk-tab-group` or a custom directive composition with content projection; signal-based selectedIndex
+    variantMechanism: input<'line' | 'contained' | 'pill'>(), input<'horizontal' | 'vertical'>(), input<'automatic' | 'manual'>()
+  vue:
+    structureMechanism: Headless UI `<TabGroup>` / `<TabList>` / `<Tab>` / `<TabPanels>` / `<TabPanel>`
+    variantMechanism: defineProps with literal-union types; `:selected-index` for controlled selection
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/tab_role
+  - https://www.radix-ui.com/primitives/docs/components/tabs
+  - https://react-spectrum.adobe.com/react-aria/Tabs.html
+  - https://headlessui.com/react/tabs
+  - https://polaris.shopify.com/components/navigation/tabs
+  - https://carbondesignsystem.com/components/tabs/usage/
+  - https://m3.material.io/components/tabs/overview
+  - https://atlassian.design/components/tabs/examples
+  - https://inclusive-components.design/tabbed-interfaces/
+
+lastReviewed: '2026-04-28'
