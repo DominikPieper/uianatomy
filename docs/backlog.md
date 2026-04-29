@@ -10,7 +10,7 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 - [x] **P0-1 Tabs nachziehen** — data states erweitert (`busy`, `lazy`, `error`), 2 mistakes ergänzt (lazy-panel-no-aria-busy, overflow-no-scroll-into-view, indicator-not-rtl-aware), 1 mismatch ergänzt (overflow wrap vs scroll). Erledigt 2026-04-29. Datei: `content/components/tabs.yaml`.
 - [x] **P0-2 Mindesttiefe-Checkliste** verankert in `docs/methodology.md` (Section "Minimum depth contract", Tabelle mit 8 Schwellwerten). Validator: `shared/tests/depth.test.ts` — bricht `pnpm -r test` bei Unterschreitung mit `<id>: <dimension> N < M`-Meldungen. Per-Component-Override via `overrides`-Map möglich. Erledigt 2026-04-29.
-- [ ] **P0-3 ADR-006: Token-Layer** als kanonisches Konzept, Werte implementations-spezifisch. Schema-Skizze: `anatomy[].tokens?: { spacing?, radius?, color?, elevation?, typography? }`. Datei: `docs/adr/006-token-layer.md`.
+- [x] **P0-3 ADR-006: Token-Layer** — Decision-Doc geschrieben: kanonische Token-Namen pro Slot, Werte in `implementations/<lib>/`. Fünf Kategorien (`spacing`, `radius`, `color`, `elevation`, `typography`). Schema-Skizze + `tokenBindings`-Form fixiert für P1-5. Erledigt 2026-04-29. Datei: `docs/adr/006-token-layer.md`.
 - [ ] **P0-4 Roadmap-Pin** auf Site-Index: Banner "Phase 1 — keine Beispiele, kein Live-Code. Phase 2 ab Q3." Datei: `site/src/pages/index.astro`.
 
 ## P1 — strukturelle Schema-Erweiterungen
@@ -57,9 +57,9 @@ Status-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt
 
 ## Empfohlener Pfad
 
-P0-1 (✓) → P0-2 (✓) → P0-3 → P0-4 → P1-5 → P1-6 → P1-7 → P1-8 → P3-17 → P3-18.
+P0-1 (✓) → P0-2 (✓) → P0-3 (✓) → P0-4 → P1-5 → P1-6 → P1-7 → P1-8 → P3-17 → P3-18.
 
-P0-3 ist Vorbereitung für P1-5 (größte Schema-Migration, eigene Plan-Session wert). P0-4 ist Quick-Win.
+P0-4 (Roadmap-Banner auf Site-Index) ist als Nächstes dran — Quick-Win. P1-5 (Schema-Migration aller 5 YAMLs auf den in ADR-006 fixierten Token-Layer) ist die nächste größere Plan-Session.
 
 ## Wartung dieses Backlogs
 

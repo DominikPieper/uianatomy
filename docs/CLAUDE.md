@@ -14,6 +14,19 @@ A canonical reference for UI component anatomy — see [README.md](./README.md) 
 4. **views.md** — how content is presented (designer / dev / bridge)
 5. **decisions/** — the architectural decisions in order (001 → 005)
 6. **roadmap.md** — what's planned and in what order
+7. **backlog.md** — concrete open work items from the latest review (read before suggesting new work)
+
+## The backlog is canonical workflow state
+
+`docs/backlog.md` is the single source of truth for "what is open, what is next, what was just finished." Treat it as a working contract, not a snapshot.
+
+**When the user asks "what's next?", "where did we leave off?", "what's the status?", or anything similar:** read `docs/backlog.md` first, before any other exploration. The "Empfohlener Pfad" section names the next item; the priority sections (P0/P1/P2/...) hold the full open list.
+
+**When you discover new work during a session — bugs, follow-ups, deferred cleanups, missing tests, schema gaps, anything that should not be done right now but must not be lost — append it to `docs/backlog.md` automatically, in the right priority section, before ending the turn.** Do not wait to be asked. Use the existing format: `[ ] **PX-NN Title** — one-line summary. Datei: <path>.` Keep IDs sequential within their priority bucket.
+
+**When you finish a backlog item:** flip `[ ]` → `[x]`, add the completion date and a one-line outcome plus the affected file(s), and update the "Empfohlener Pfad" line if the next item has shifted.
+
+**Maintenance loop:** after any non-trivial change, scan the backlog for items that are now obsolete or already covered, and either mark them done or remove them with a brief rationale. A stale backlog is worse than no backlog.
 
 ## Core principles (always keep in mind)
 
