@@ -7,6 +7,7 @@ import AxesTable from '../sections/AxesTable.astro';
 import TransitionsTable from '../sections/TransitionsTable.astro';
 import FrameworkMapTable from '../sections/FrameworkMapTable.astro';
 import EventsTable from '../sections/EventsTable.astro';
+import PropertyMapTable from '../sections/PropertyMapTable.astro';
 import A11yAcceptanceTable from '../sections/A11yAcceptanceTable.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
 import MistakesList from '../sections/MistakesList.astro';
@@ -22,6 +23,13 @@ const { component } = Astro.props;
 
   <SectionHeader role="both" title="Variants, properties, states" id="axes" />
   <AxesTable component={component} />
+
+  {component.propertyMap && component.propertyMap.length > 0 && (
+    <>
+      <SectionHeader role="both" title="Figma ↔ Code property map" id="property-map" />
+      <PropertyMapTable component={component} />
+    </>
+  )}
 
   {component.axes.states.transitions && component.axes.states.transitions.length > 0 && (
     <>

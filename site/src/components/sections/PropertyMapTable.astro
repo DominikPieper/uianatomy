@@ -1,0 +1,88 @@
+---
+import type { Component, FigmaPropertyType } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const propertyMap = component.propertyMap;
+
+const TYPE_SLUG: Record<FigmaPropertyType, string> = {
+  Boolean: 'boolean',
+  Variant: 'variant',
+  Text: 'text',
+  'Instance Swap': 'instance-swap',
+};
+---
+{propertyMap && propertyMap.length > 0 && (
+  <div class="table-scroll">
+    <table class="property-map">
+      <thead>
+        <tr>
+          <th>Figma</th>
+          <th>Type</th>
+          <th>Code</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {propertyMap.map((p) => (
+          <tr>
+            <td><code class="property-map__figma">{p.figma}</code></td>
+            <td>
+              <span class={`property-map__type property-map__type--${TYPE_SLUG[p.type]}`}>
+                {p.type}
+              </span>
+            </td>
+            <td><code class="property-map__code">{p.code}</code></td>
+            <td class="property-map__notes">{p.notes ?? <span class="property-map__notes--empty">—</span>}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .property-map {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .property-map th {
+    text-align: left;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .property-map td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .property-map tr:last-child td {
+    border-bottom: 0;
+  }
+  .property-map__figma,
+  .property-map__code {
+    white-space: nowrap;
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .property-map__notes {
+    min-width: 240px;
+  }
+  .property-map__notes--empty {
+    color: var(--fg-muted);
+  }
+  .property-map__type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+</style>

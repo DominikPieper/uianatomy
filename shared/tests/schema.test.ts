@@ -230,6 +230,80 @@ describe('responsive field', () => {
   });
 });
 
+describe('propertyMap field', () => {
+  it('parses button propertyMap with mixed Figma types', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const types = new Set(button.propertyMap?.map((p) => p.type));
+    expect(types.has('Variant')).toBe(true);
+    expect(types.has('Boolean')).toBe(true);
+    expect(types.has('Text')).toBe(true);
+    expect(types.has('Instance Swap')).toBe(true);
+  });
+
+  it('all five components declare propertyMap', async () => {
+    const ids = ['button', 'card', 'modal', 'tabs', 'combobox'];
+    for (const id of ids) {
+      const c = await loadComponent(join(contentDir, `${id}.yaml`));
+      expect((c.propertyMap?.length ?? 0)).toBeGreaterThan(0);
+    }
+  });
+
+  it('rejects entry with unknown Figma type', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      propertyMap: [
+        { figma: 'Variant', code: 'variant', type: 'Number' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty figma name', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      propertyMap: [
+        { figma: '', code: 'variant', type: 'Variant' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty code name', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      propertyMap: [
+        { figma: 'Variant', code: '', type: 'Variant' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty propertyMap array', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, propertyMap: [] };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown extra field on entry (strict)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      propertyMap: [
+        { figma: 'Variant', code: 'variant', type: 'Variant', somethingElse: 'x' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('a11yAcceptance field', () => {
   it('parses modal a11yAcceptance with all three sub-arrays', async () => {
     const modal = await loadComponent(join(contentDir, 'modal.yaml'));

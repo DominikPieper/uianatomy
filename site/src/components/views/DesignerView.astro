@@ -3,6 +3,7 @@ import type { Component } from '@uianatomy/shared/schema';
 import SectionHeader from '../SectionHeader.astro';
 import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
 import TokensTable from '../sections/TokensTable.astro';
+import PropertyMapTable from '../sections/PropertyMapTable.astro';
 import MotionTable from '../sections/MotionTable.astro';
 import ResponsiveTable from '../sections/ResponsiveTable.astro';
 import AxesTable from '../sections/AxesTable.astro';
@@ -20,6 +21,13 @@ const { component } = Astro.props;
 
   <SectionHeader role="designer" title="Token usage per slot" id="tokens" />
   <TokensTable component={component} />
+
+  {component.propertyMap && component.propertyMap.length > 0 && (
+    <>
+      <SectionHeader role="both" title="Figma ↔ Code property map" id="property-map" />
+      <PropertyMapTable component={component} />
+    </>
+  )}
 
   {component.motion && (
     <>

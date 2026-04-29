@@ -377,6 +377,59 @@ responsive:
         authored. Density `compact` becomes the default for cards rendered
         in multi-column grids; `comfortable` for full-width detail cards.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps elevated / outlined / flat.
+  - figma: Orientation
+    code: orientation
+    type: Variant
+    notes: vertical / horizontal — Figma encodes as a separate Variant property, not bundled with the visual variant.
+  - figma: Density
+    code: density
+    type: Variant
+  - figma: Interactive
+    code: interactive
+    type: Boolean
+    notes: >-
+      Toggles the card-as-link overlay pattern. In Figma it controls
+      hover state visibility; in code it conditionally wraps the card
+      surface with the interactive activator.
+  - figma: Has Media
+    code: media
+    type: Boolean
+    notes: Slot-visibility toggle; code conditionally renders the media slot.
+  - figma: Media
+    code: media
+    type: Instance Swap
+    notes: Swaps the media component instance (image, video, iframe).
+  - figma: Has Eyebrow
+    code: eyebrow
+    type: Boolean
+  - figma: Eyebrow
+    code: eyebrow
+    type: Text
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Has Subtitle
+    code: subtitle
+    type: Boolean
+  - figma: Subtitle
+    code: subtitle
+    type: Text
+  - figma: Body
+    code: body
+    type: Text
+    notes: For non-prose bodies, Figma uses an Instance Swap on a 'Body Slot' instead.
+  - figma: Has Actions
+    code: actions
+    type: Boolean
+  - figma: Has Footer
+    code: footer
+    type: Boolean
+
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab

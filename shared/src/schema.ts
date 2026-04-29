@@ -273,6 +273,24 @@ export const announcementEntrySchema = z
   })
   .strict();
 
+export const figmaPropertyTypeSchema = z.enum([
+  'Boolean',
+  'Variant',
+  'Text',
+  'Instance Swap',
+]);
+
+export const propertyMapEntrySchema = z
+  .object({
+    figma: z.string().min(1),
+    code: z.string().min(1),
+    type: figmaPropertyTypeSchema,
+    notes: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const propertyMapSchema = z.array(propertyMapEntrySchema).min(1);
+
 export const a11yAcceptanceSchema = z
   .object({
     keyboardWalk: z.array(keyboardWalkEntrySchema).min(1).optional(),
@@ -374,6 +392,7 @@ export const componentSchema = z.object({
   responsive: responsiveSchema.optional(),
   events: z.array(eventSchema).min(1).optional(),
   a11yAcceptance: a11yAcceptanceSchema.optional(),
+  propertyMap: propertyMapSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -398,6 +417,9 @@ export type WhenToUse = z.infer<typeof whenToUseSchema>;
 export type KeyboardWalkEntry = z.infer<typeof keyboardWalkEntrySchema>;
 export type AnnouncementEntry = z.infer<typeof announcementEntrySchema>;
 export type A11yAcceptance = z.infer<typeof a11yAcceptanceSchema>;
+export type FigmaPropertyType = z.infer<typeof figmaPropertyTypeSchema>;
+export type PropertyMapEntry = z.infer<typeof propertyMapEntrySchema>;
+export type PropertyMap = z.infer<typeof propertyMapSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

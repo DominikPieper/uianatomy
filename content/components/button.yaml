@@ -310,6 +310,49 @@ frameworkMap:
     structureMechanism: a `<Button>` SFC with named slots for leading and trailing icons and a default slot for the label
     variantMechanism: defineProps with literal-union types; `:loading` boolean prop drives `aria-busy`
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: >-
+      Maps the visual variant set (primary / secondary / tertiary / ghost
+      / destructive). Figma stores it as a Variant property; code as a
+      string union.
+  - figma: Size
+    code: size
+    type: Variant
+  - figma: Has Leading Icon
+    code: iconLeading
+    type: Boolean
+    notes: >-
+      Toggles slot visibility in Figma. Code does not have a matching
+      boolean — the icon-leading slot is conditionally rendered based on
+      whether a child is provided.
+  - figma: Has Trailing Icon
+    code: iconTrailing
+    type: Boolean
+  - figma: Leading Icon
+    code: iconLeading
+    type: Instance Swap
+    notes: >-
+      Swaps the icon component instance when 'Has Leading Icon' is true.
+      Code passes the icon as slot child (React `leadingIcon` prop or
+      named slot).
+  - figma: Label
+    code: children
+    type: Text
+    notes: Maps to the default slot / children — the label text.
+  - figma: Loading
+    code: loading
+    type: Boolean
+    notes: >-
+      Drives the data state. In Figma it toggles the spinner overlay; in
+      code it sets `aria-busy="true"` and replaces the leading icon with
+      a spinner.
+  - figma: Full Width
+    code: fullWidth
+    type: Boolean
+
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab

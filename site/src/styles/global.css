@@ -826,6 +826,44 @@ th {
   text-decoration: none;
 }
 
+/* PropertyMap type badges */
+.property-map__type {
+  border: 1px solid transparent;
+}
+.property-map__type--boolean {
+  background: var(--surface-sunken);
+  color: var(--fg-muted);
+  border-color: var(--border-subtle);
+}
+.property-map__type--variant {
+  background: color-mix(in oklab, var(--accent-cool, #5b8def) 18%, var(--surface-bg));
+  color: var(--accent-cool, #2f5fcf);
+  border-color: color-mix(in oklab, var(--accent-cool, #5b8def) 35%, transparent);
+}
+.property-map__type--text {
+  background: color-mix(in oklab, var(--accent-warm, #d97757) 18%, var(--surface-bg));
+  color: color-mix(in oklab, var(--accent-warm, #d97757) 75%, var(--fg));
+  border-color: color-mix(in oklab, var(--accent-warm, #d97757) 35%, transparent);
+}
+.property-map__type--instance-swap {
+  background: color-mix(in oklab, #5da981 18%, var(--surface-bg));
+  color: #2f7755;
+  border-color: color-mix(in oklab, #5da981 35%, transparent);
+}
+
+:root[data-theme='dark'] .property-map__type--variant {
+  background: color-mix(in oklab, var(--accent-cool, #8aaef7) 22%, transparent);
+  color: var(--accent-cool, #c5d6f8);
+}
+:root[data-theme='dark'] .property-map__type--text {
+  background: color-mix(in oklab, var(--accent-warm, #f0a989) 22%, transparent);
+  color: var(--accent-warm, #f6cbb6);
+}
+:root[data-theme='dark'] .property-map__type--instance-swap {
+  background: color-mix(in oklab, #6cba90 22%, transparent);
+  color: #b8e4ca;
+}
+
 /* Divergence type badges (ImplementationCard / DivergenceTable) */
 .divergence-type {
   border: 1px solid transparent;

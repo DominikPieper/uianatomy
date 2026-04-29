@@ -427,6 +427,39 @@ events:
         `@activate` event in manual mode; `automatic` mode collapses it
         into `@update:modelValue`.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps line / contained / pill.
+  - figma: Orientation
+    code: orientation
+    type: Variant
+    notes: horizontal / vertical. Vertical is forced to horizontal at and below `breakpoint.sm` per the responsive block.
+  - figma: Density
+    code: density
+    type: Variant
+  - figma: Activation
+    code: activation
+    type: Variant
+    notes: >-
+      automatic / manual. In Figma a Variant property since the visual
+      treatment of focus differs slightly between modes; in code it
+      drives whether arrow-key navigation activates on focus.
+  - figma: Tab Count
+    code: 'tabs.length'
+    type: Variant
+    notes: >-
+      Figma exposes a Variant for 2 / 3 / 4 / 5 / 6+ tab counts to allow
+      preview-time layout review. Code accepts an array of tab
+      definitions; the count is `.length`, not a separate prop.
+  - figma: Selected
+    code: selectedId
+    type: Variant
+    notes: >-
+      Figma exposes the selected tab as a Variant for preview; in code
+      this is controlled state on the parent, not a Figma-style prop.
+
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab

@@ -492,6 +492,50 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps dialog / alertdialog / fullscreen.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg / xl. Ignored in fullscreen variant.
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Has Description
+    code: description
+    type: Boolean
+    notes: Slot-visibility toggle; controls whether the body's first paragraph wires `aria-describedby`.
+  - figma: Description
+    code: description
+    type: Text
+  - figma: Body
+    code: body
+    type: Instance Swap
+    notes: >-
+      Swaps the body content slot (form, prose, custom layout). Code
+      receives this as children of the dialog content.
+  - figma: Has Footer
+    code: footer
+    type: Boolean
+  - figma: Footer
+    code: footer
+    type: Instance Swap
+    notes: Action group instance — typically Button-Group.
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: >-
+      In Figma controls visibility of the close button and the backdrop's
+      pointer-event affordance. In code drives Escape, backdrop-click,
+      and close-button behavior.
+  - figma: Scroll Behavior
+    code: scrollBehavior
+    type: Variant
+    notes: inside / outside. Figma encodes the visual difference; code conditionally pins header/footer.
+
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab
