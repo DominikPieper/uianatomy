@@ -1,0 +1,721 @@
+id: toast
+name: Toast
+description: >-
+  A transient floating notification anchored to a corner of the
+  viewport, auto-dismissing after a short visible duration.
+  Distinct from Alert (inline, persistent) by its ephemerality and
+  positioning; distinct from Modal (blocking) by its non-modal
+  contract. Used for success confirmations after asynchronous
+  actions, transient status messages, undoable operations, and
+  short notifications that do not require explicit acknowledgement.
+
+anatomy:
+  - id: viewport
+    required: true
+    purpose: >-
+      The fixed-position region anchored to a corner of the viewport
+      that holds one or more toast containers. Single instance per
+      page; positioned via the `position` property. Hosts the
+      stacking, the hover-pause behaviour, and the live-region
+      semantics for the toasts inside.
+    layout:
+      overlay: true
+    figma:
+      type: frame
+      hint: Fixed-position frame at one viewport corner; padding from safe-area-inset
+    code:
+      slot: viewport
+      semantic: presentational-region
+    a11y:
+      hint: >-
+        Apply `role="region"` with `aria-label="Notifications"` so
+        SR users can navigate to the toast region by landmark. The
+        region itself is not a live region — individual toasts
+        inside carry their own polite or assertive live-region
+        roles depending on severity. Hover anywhere inside the
+        viewport pauses the auto-dismiss timers of all visible
+        toasts.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.tight
+
+  - id: container
+    required: true
+    purpose: >-
+      The bounded surface of a single toast. Sized to its content
+      with a sensible max-inline-size (commonly 360–420px). Carries
+      the severity-driven visual treatment and the per-toast live
+      region role.
+    layout:
+      parent: viewport
+      row: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; severity drives accent treatment
+    code:
+      slot: container
+      semantic: status-or-alert
+    a11y:
+      hint: >-
+        Apply `role="status"` (polite, default) for info and success
+        severities, or `role="alert"` (assertive) for error
+        severities. Warning sits on the boundary — canonical default
+        is polite to avoid interrupting the user's work. Both roles
+        imply implicit live regions.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.lg
+
+  - id: icon
+    required: false
+    purpose: >-
+      Severity-indicating glyph at the inline-start of the
+      container. Reinforces the severity for sighted users. Mirrors
+      Alert's icon contract — decorative, severity also conveyed by
+      role and visible text.
+    layout:
+      parent: container
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; glyph swap bound to severity Variant
+    code:
+      slot: icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Severity is communicated
+        through the `role` and the visible body text, never through
+        the icon glyph alone.
+    tokens:
+      color:
+        foreground: color.text.accent
+
+  - id: title
+    required: false
+    purpose: >-
+      Optional brief heading. Used when the body is multi-line; for
+      single-line toasts the body is itself the headline.
+    layout:
+      parent: container
+      row: 1
+      col: 2
+      span: 4
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property
+    code:
+      slot: title
+      semantic: strong-or-heading
+    a11y:
+      hint: >-
+        Plain `<strong>` or styled `<p>`; heading semantics not
+        required for transient toasts. SR announces the title
+        followed by the body in DOM order.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: body
+    required: true
+    purpose: >-
+      The toast's primary content — the message itself. One or two
+      short sentences. The first user-facing text the live region
+      announces. For longer content, use Alert (persistent inline)
+      or Banner (page-wide).
+    layout:
+      parent: container
+      row: 2
+      col: 2
+      span: 4
+    figma:
+      type: text
+      hint: Body text style; bound to a component property
+    code:
+      slot: body
+      semantic: prose
+    a11y:
+      hint: >-
+        Plain prose. Capped at one to two sentences by canon.
+        Anything longer should be an Alert.
+    tokens:
+      typography:
+        size: text.sm
+        lineHeight: leading.snug
+      color:
+        foreground: color.text.primary
+
+  - id: action
+    required: false
+    purpose: >-
+      Optional single inline action — typically "Undo" for
+      undoable operations or "View" for navigation hints. Limited
+      to one action per toast; multi-action toasts are a
+      redesign signal (use Alert or Modal instead).
+    layout:
+      parent: container
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance; visibility bound to hasAction property
+    code:
+      slot: action
+      semantic: button
+    a11y:
+      hint: >-
+        Real button with accessible name. Receives focus when the
+        user tabs into the toast region (after the dismiss
+        button); pressing Tab exits the region. Activation
+        triggers the consumer-provided handler and typically
+        dismisses the toast as a side effect.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.accent
+        ring: color.border.focus
+
+  - id: dismiss-button
+    required: false
+    purpose: >-
+      Optional close affordance. Conventionally an "×" icon at the
+      inline-end corner. Visible when `dismissible: true` (canonical
+      default true; rare to disable since users should always have
+      keyboard escape from the toast).
+    layout:
+      parent: container
+      row: 1
+      col: 4
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance; visibility bound to dismissible property
+    code:
+      slot: dismiss
+      semantic: button
+    a11y:
+      hint: >-
+        Provide an accessible name ("Dismiss" or "Dismiss
+        notification"). Activation removes the toast from the
+        viewport and from the live region. Escape key (when toast
+        region has focus) does the same.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+axes:
+  variants:
+    - info
+    - success
+    - warning
+    - error
+  properties:
+    - name: position
+      kind: enum
+      values: [top-start, top-end, bottom-start, bottom-end, top-center, bottom-center]
+    - { name: dismissible, kind: primitive, of: boolean }
+    - { name: hasAction, kind: primitive, of: boolean }
+    - { name: hasIcon, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - opening
+      - open
+      - paused
+      - closing
+      - closed
+    transitions:
+      - from: closed
+        to: opening
+        trigger: >-
+          Consumer triggers the toast (typically after an async
+          operation completes). The toast is mounted in the
+          viewport region; the auto-dismiss timer is initialised
+          but not yet started.
+      - from: opening
+        to: open
+        trigger: >-
+          The slide-in animation completes (or, under
+          prefers-reduced-motion reduce, immediately). The
+          auto-dismiss timer starts; the live region announces the
+          toast content.
+      - from: open
+        to: paused
+        trigger: >-
+          User hovers anywhere inside the toast viewport region OR
+          focus moves into the toast region. The auto-dismiss
+          timer pauses for all toasts in the viewport, not just
+          the hovered one.
+      - from: paused
+        to: open
+        trigger: >-
+          User leaves the viewport region (pointer and focus both
+          out). The auto-dismiss timer resumes from where it
+          paused (NOT restarted from full duration — the elapsed
+          time before pause counts).
+      - from: open
+        to: closing
+        trigger: >-
+          The auto-dismiss timer expires; or the user presses
+          Escape with focus inside the toast region; or the user
+          activates the dismiss button or invokes the action; or
+          the consumer programmatically closes the toast.
+      - from: closing
+        to: closed
+        trigger: >-
+          The slide-out animation completes (or immediately under
+          reduced motion). The toast is removed from the viewport
+          and from the live region. Subsequent toasts in the
+          stack reflow.
+
+mismatches:
+  - figma: A toast drawn next to the trigger that surfaced it
+    code: A toast rendered in a fixed-position viewport region at a corner of the screen
+    consequence: >-
+      Designers may anchor toasts to specific UI elements in mocks
+      (next to the save button, below the form). Implementations
+      following the Figma file create per-trigger floating
+      surfaces that compete with each other and miss the
+      stacking, the auto-dismiss, and the live-region semantics.
+    correct: >-
+      Toast lives in a single viewport region per page (or per
+      window scope), not anchored to triggers. The position
+      property selects which corner; the viewport region handles
+      stacking and live-region semantics. Document the singleton
+      viewport contract explicitly.
+
+  - figma: Toast auto-dismiss drawn as a single visual state with no progress indicator
+    code: An auto-dismiss timer driving slide-out at a configurable duration
+    consequence: >-
+      Designers may not realise the toast disappears automatically;
+      developers ship without a progress affordance and users feel
+      surprised when the toast vanishes mid-read. Worse,
+      implementations may default to too-short or too-long
+      durations.
+    correct: >-
+      Document auto-dismiss as a canonical behaviour with a
+      configurable duration property (or a fixed canonical default
+      such as 5 seconds). An optional progress indicator slot may
+      visualise remaining time. Hover-pause is canonical to
+      protect users who are reading.
+
+  - figma: Multiple toast variants for stacking visualisation
+    code: A single toast component plus a viewport region that handles stacking
+    consequence: >-
+      Designers create "single toast", "two toasts", "three toasts"
+      variants in the design file. Developers ship one toast plus
+      stacking logic; the design file's three-toast variant is
+      decorative, not real, and the production stack behaves
+      differently.
+    correct: >-
+      Stacking is a viewport-region concern, not a toast variant.
+      Document the canonical stack-depth maximum and the stacking
+      animation in the viewport's anatomy slot. The toast itself
+      is a single component; the viewport orchestrates.
+
+  - figma: Toast action drawn as link-styled inline text inside body
+    code: Toast action as a Button in the action slot
+    consequence: >-
+      Designers compose body text with inline link "Undo"; the
+      embedded interaction is either a real anchor (wrong
+      semantic — Undo does not navigate) or a span with click
+      handler (no semantic at all). Keyboard reachability and
+      announcement contracts both suffer.
+    correct: >-
+      Single action lives in the dedicated action slot as a Button
+      element (typically with `variant: tertiary` or `ghost`). The
+      body describes the situation; the action is separately
+      reachable by Tab.
+
+mistakes:
+  - id: toast-no-pause-on-hover
+    title: Auto-dismiss continues while the user reads
+    description: >-
+      The toast slides in, the user starts reading, the timer
+      fires, the toast slides out. Users with motor impairments,
+      cognitive impairments, or simply slow reading speed cannot
+      reliably consume the message. WCAG 2.2.1 (Timing Adjustable)
+      is failed.
+    fix: >-
+      Pause the auto-dismiss timer on pointer-enter and focus-into
+      the viewport region. Resume on pointer-leave AND focus-out
+      (both must be true). Some implementations pause on
+      individual toast hover; canonical pauses on viewport-level
+      hover so users can move between adjacent toasts.
+
+  - id: toast-stack-overflow
+    title: Toast stack grows unbounded
+    description: >-
+      Multiple toasts fire in rapid succession; the stack grows
+      to 5, 10, 20 toasts. SR users hear a torrent of
+      announcements; pointer users see the screen filled with
+      notifications. The viewport overflows.
+    fix: >-
+      Cap the canonical stack depth at 3 visible toasts. Beyond
+      that, queue new toasts and only render them when an
+      existing toast dismisses. Document the threshold in
+      performance. The queue is invisible — users do not know how
+      many toasts are pending.
+
+  - id: toast-essential-info
+    title: Critical errors delivered as toast
+    description: >-
+      A network failure or data-loss warning is shown as an
+      auto-dismissing toast. The user misses it (auto-dismiss);
+      the underlying problem persists; data is lost without
+      recourse.
+    fix: >-
+      Critical errors that require user action are Alert (inline
+      persistent) or Modal (blocking). Toast is reserved for
+      transient confirmations and non-essential updates the user
+      can miss without consequence. Document the canonical
+      severity-to-component map: success and info → toast or alert;
+      warning → alert; error requiring action → alert or modal.
+
+  - id: toast-aria-live-assertive-for-info
+    title: Info-severity toast uses assertive live region
+    description: >-
+      Toasts carry `role="alert"` (assertive) regardless of
+      severity. SR users are interrupted for every "Saved" /
+      "Copied to clipboard" confirmation; the assertive flood
+      makes them disable notifications entirely.
+    fix: >-
+      Match severity to live-region politeness: info / success →
+      `role="status"` (polite), error → `role="alert"`
+      (assertive), warning is canonical-default polite (re-evaluate
+      per use case). Document the mapping; reserve assertive for
+      content that genuinely interrupts.
+
+  - id: toast-no-keyboard-dismiss
+    title: Escape does not dismiss the focused toast
+    description: >-
+      Keyboard users tabbing into the toast region cannot exit
+      via Escape — the only way to dismiss is to tab to the
+      dismiss button and activate, or wait for auto-dismiss. The
+      keyboard contract feels broken compared to other
+      light-dismiss patterns (Popover, Tooltip).
+    fix: >-
+      Bind Escape on the viewport region: when focus is inside
+      the toast region, Escape dismisses the focused toast (or
+      the most recent toast if none is focused). Document the
+      keyboard contract in a11yAcceptance.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-toast-viewport>` host wrapping `<ui-toast>` children; viewport handles stacking and pause-on-hover; toast carries severity attribute reflected to role
+    variantMechanism: attributes (`severity="success"`, `position="bottom-end"`, `dismissible`, `auto-dismiss-ms="5000"`); `data-state="opening|open|paused|closing|closed"`
+  react:
+    structureMechanism: Radix Toast (`Toast.Provider` / `Toast.Viewport` / `Toast.Root` / `Toast.Title` / `Toast.Description` / `Toast.Action`); React Aria `useToastRegion` plus `useToast`; or Sonner library which composes its own viewport
+    variantMechanism: props with class-variance-authority for severity; `duration` prop for auto-dismiss; `position` on the viewport
+  angularSignals:
+    structureMechanism: Angular CDK Overlay for the viewport positioning plus `MatSnackBar` (or custom service) for queued toasts; signal-based toast state
+    variantMechanism: input<'info' | 'success' | 'warning' | 'error'>(); service-level `position` and `duration` defaults
+  vue:
+    structureMechanism: Headless UI does not ship Toast as of 2026-04; third-party (vue-sonner, primevue Toast); custom composable `useToast` plus a singleton viewport component
+    variantMechanism: defineProps with literal-union types; service-level configuration
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.fast
+    swipeDismiss: motion.duration.fast
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the toast viewport spans the inline-size of
+        the screen and anchors to the bottom regardless of the
+        authored `position` (top-anchored toasts on mobile cover
+        the address bar or status area). Toast container fills
+        the inline-size minus safe-area padding. Stack depth
+        canonical maximum drops from 3 to 2 to preserve screen
+        real estate.
+    - at: breakpoint.md
+      change: >-
+        Above this width, the viewport renders at the authored
+        position with toasts sized to their max-inline-size. Stack
+        depth canonical maximum is 3.
+
+events:
+  - name: openChange
+    payload: >-
+      Boolean. `true` after the toast has finished entering, `false`
+      after it has finished exiting (whether by auto-dismiss, user
+      action, or programmatic close).
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent on the toast element with
+        `event.detail = { open: boolean }`.
+      react: >-
+        `onOpenChange(open: boolean)` controlled-pattern callback
+        on `Toast.Root` (Radix Toast).
+      angularSignals: >-
+        `output<boolean>('openChange')` on the toast component or
+        a service-level observable for queued toasts.
+      vue: >-
+        `@update:open` for `v-model:open` on the toast element.
+
+  - name: dismiss
+    payload: >-
+      `{ source: 'autoDismiss' | 'closeButton' | 'escape' | 'swipe' | 'action' | 'programmatic' }`.
+      Distinguishes how the toast was dismissed. Useful for
+      analytics ("how often is auto-dismiss vs explicit dismiss")
+      and for consumers that want to suppress the action handler
+      on auto-dismiss but run it on explicit dismiss.
+    frameworkNotes:
+      webComponents: >-
+        `dismiss` CustomEvent with `event.detail = { source }`.
+      react: >-
+        `onDismiss(source)` callback. Some libraries surface
+        per-source callbacks (`onSwipeEnd`, `onEscapeKeyDown`)
+        instead; consumers wrap to recover the canonical contract.
+      angularSignals: >-
+        `output<DismissSource>('dismiss')`.
+      vue: >-
+        `@dismiss` event with payload `{ source }`.
+
+  - name: actionInvoke
+    payload: >-
+      `{ actionId: string }` — fires when the user activates the
+      action slot's button. Consumers handle the effect (typically
+      undo or navigation); the toast dismisses automatically as a
+      side effect with `dismiss { source: 'action' }`.
+    frameworkNotes:
+      webComponents: >-
+        `actionInvoke` CustomEvent with `event.detail = { actionId }`.
+      react: >-
+        `onAction(actionId)` callback or `onClick` on the
+        `Toast.Action` element.
+      angularSignals: >-
+        `output<string>('actionInvoke')`.
+      vue: >-
+        `@action-invoke` event with payload `{ actionId }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: F6 (when supported by browser/OS)
+      expected: >-
+        Cycles focus to landmark regions including the toast
+        viewport. Allows keyboard users to reach the toast region
+        without tabbing through the entire page first.
+    - keys: Tab (within the toast viewport)
+      expected: >-
+        Focus moves through visible toasts in DOM order — newest
+        toast first by canonical convention (the one most recently
+        announced). Within each toast, focus moves through action
+        first then dismiss button.
+    - keys: 'Escape (focus inside toast viewport)'
+      expected: >-
+        Dismisses the focused toast (or most recent if none
+        focused). Focus moves to the next focusable in the
+        viewport, or back out to the document if no other toast
+        remains.
+    - keys: Enter or Space (focus on action button)
+      expected: >-
+        Invokes the action; toast dismisses with
+        `source: 'action'`. Consumer handler runs.
+    - keys: Enter or Space (focus on dismiss button)
+      expected: >-
+        Dismisses the toast immediately with
+        `source: 'closeButton'`.
+  announcements:
+    - trigger: Polite-severity toast appears (info, success, warning)
+      expected: >-
+        SR queues the announcement after the current one
+        completes. Reads the role ("status") followed by title
+        and body in DOM order. Does not interrupt the user's
+        current task.
+    - trigger: Assertive-severity toast appears (error)
+      expected: >-
+        SR interrupts the current announcement and reads the
+        toast immediately. Reads "alert" followed by title and
+        body. Used sparingly — assertive is for genuinely urgent
+        situations.
+    - trigger: User hovers the viewport, timer pauses
+      expected: >-
+        No announcement — the pause is internal state. SR users
+        can re-read by navigating to the toast region's content.
+    - trigger: Toast auto-dismisses or is closed
+      expected: >-
+        No "dismissed" announcement; the silence (and removal of
+        the live-region content) confirms the toast is gone.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - color-contrast
+    - role-img-alt
+    - landmark-unique
+
+propertyMap:
+  - figma: Severity
+    code: severity
+    type: Variant
+    notes: Maps info / success / warning / error. Drives role (status vs alert) plus visual treatment plus icon glyph.
+  - figma: Position
+    code: position
+    type: Variant
+    notes: Six options covering corners and centres. Set on the viewport, not per-toast.
+  - figma: Dismissible
+    code: dismissible
+    type: Boolean
+    notes: Toggles the dismiss-button slot visibility plus Escape handling.
+  - figma: Has Icon
+    code: hasIcon
+    type: Boolean
+  - figma: Has Title
+    code: hasTitle
+    type: Boolean
+  - figma: Has Action
+    code: hasAction
+    type: Boolean
+    notes: Toggles the action slot. Single action per toast by canon.
+  - figma: Title
+    code: title
+    type: Text
+  - figma: Body
+    code: body
+    type: Text
+  - figma: Action Label
+    code: actionLabel
+    type: Text
+  - figma: Icon
+    code: icon
+    type: Instance Swap
+    notes: Severity icon glyph; designers may swap for domain-specific icons.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Position values are logical: `start` and `end` follow inline
+      direction (top-end is visual top-right in LTR, top-left in
+      RTL). Dismiss button moves with the inline-end logical
+      anchor. Action button order is unchanged within the toast
+      (single action by canon). Severity icons are
+      direction-neutral. Slide-in animations use logical transform
+      directions — toasts entering from inline-end slide from
+      visual right in LTR, visual left in RTL.
+  textExpansion: >-
+    Title and body grow with translation. Max-inline-size on the
+    container constrains horizontal growth; long-text languages
+    wrap to additional lines. Auto-dismiss duration may need to
+    extend in long-text locales — the canonical formula is
+    "2 seconds + 1 second per ~50 characters" rather than a fixed
+    duration. Action button label follows Button's expansion
+    rules; single-action toasts do not have multi-button wrap
+    issues.
+
+performance:
+  - name: stackDepth
+    metric: visible-toast-count
+    threshold: 3
+    unit: toasts
+    rationale: >-
+      The canonical maximum of visible toasts in the viewport is
+      3. Above this threshold, SR announcement floods occur and
+      the viewport overflows on common screen sizes. Beyond 3,
+      queue new toasts and reveal them as existing toasts dismiss.
+      Mobile drops the threshold to 2 (see responsive).
+  - name: autoDismissDuration
+    metric: visible-time
+    threshold: 5000
+    unit: ms
+    rationale: >-
+      The canonical default auto-dismiss duration is 5 seconds.
+      Below 3 seconds users cannot reliably read the message;
+      above 8 seconds the screen real estate cost outweighs the
+      benefit. The 5000ms default is reachable from
+      `Sonner` / Radix Toast / React Aria defaults. Long-text
+      locales may extend per the i18n textExpansion formula.
+
+whenToUse:
+  use: >-
+    For transient confirmations after asynchronous actions
+    ("Saved", "Copied"), undoable operations ("Item deleted ·
+    Undo"), and short non-essential status updates the user can
+    safely miss. Toast is non-blocking and auto-dismisses; users
+    do not need to acknowledge.
+  avoid: >-
+    For critical errors requiring user action — that is `Alert`
+    (inline persistent) or `Modal` (blocking). For long
+    informational content — that is `Alert` or page prose. For
+    on-demand description — that is `Tooltip`. For page-wide
+    persistent notices — that is `Banner`.
+  vsRelated:
+    - id: alert
+      difference: >-
+        `Alert` is inline and persistent; `Toast` is floating and
+        auto-dismissed. Alert is for situations the user may need
+        to revisit or act on; Toast is for transient signals the
+        user can miss without consequence.
+    - id: modal
+      difference: >-
+        `Modal[variant=alertdialog]` is blocking and demands
+        explicit response; `Toast` is non-blocking and
+        ephemeral. They occupy opposite ends of the
+        notification-urgency spectrum.
+    - id: banner
+      difference: >-
+        `Banner` is page-wide, persistent, and informational
+        (e.g. a maintenance notice at the top of every page);
+        `Toast` is corner-anchored, ephemeral, and
+        action-triggered. Banner is system-level; Toast is
+        action-level.
+    - id: tooltip
+      difference: >-
+        `Tooltip` is hover/focus-revealed descriptive text;
+        `Toast` is system-pushed notification. Tooltip is pulled
+        by the user; Toast is pushed by the system.
+
+notes: >-
+  Toast vocabulary varies across design systems: Material 3 calls
+  this "Snackbar"; Atlassian uses "Flag"; Polaris uses "Toast".
+  The canonical "Toast" here matches the Radix and Sonner
+  vocabulary which has become the React-ecosystem default.
+  Implementation audits document the naming via
+  `componentName`. Sonner's queue-based architecture (one
+  viewport, prioritised display) matches the canonical contract
+  most closely; Radix Toast exposes lower-level primitives that
+  consumers compose into the same architecture.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/alert/
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/status_role
+  - https://www.w3.org/TR/WCAG22/#timing-adjustable
+  - https://www.radix-ui.com/primitives/docs/components/toast
+  - https://sonner.emilkowal.ski/
+  - https://react-spectrum.adobe.com/react-aria/Toast.html
+  - https://polaris.shopify.com/components/feedback-indicators/toast
+  - https://carbondesignsystem.com/components/notification/usage/
+  - https://atlassian.design/components/flag/examples
+  - https://m3.material.io/components/snackbar/overview
+
+lastReviewed: '2026-04-29'
