@@ -1,0 +1,23 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+<table>
+  <thead>
+    <tr>
+      <th>Slot</th>
+      <th>Figma type</th>
+      <th>Hint</th>
+    </tr>
+  </thead>
+  <tbody>
+    {component.anatomy.map((s) => (
+      <tr>
+        <td><code>{s.id}</code></td>
+        <td>{s.figma.type}</td>
+        <td>{s.figma.hint}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

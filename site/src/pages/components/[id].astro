@@ -1,0 +1,41 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import AnatomyDiagram from '../../components/AnatomyDiagram.astro';
+import DesignerView from '../../components/views/DesignerView.astro';
+import DevView from '../../components/views/DevView.astro';
+import BridgeView from '../../components/views/BridgeView.astro';
+
+export async function getStaticPaths() {
+  const components = await getCollection('components');
+  return components.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'components'> }
+const { entry } = Astro.props;
+const component = entry.data;
+---
+<Base title={component.name} description={component.description}>
+  <h1>{component.name}</h1>
+  <p>{component.description}</p>
+
+  {component.related && component.related.length > 0 && (
+    <p>
+      <strong>Related:</strong>
+      {component.related.map((id) => <code style="margin-left:6px">{id}</code>)}
+    </p>
+  )}
+
+  <h2>Anatomy</h2>
+  <AnatomyDiagram component={component} />
+
+  <DesignerView component={component} />
+  <DevView component={component} />
+  <BridgeView component={component} />
+
+  {component.lastReviewed && (
+    <p style="margin-top:48px;font-size:0.85em;color:var(--fg-muted)">
+      Last reviewed: <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
+    </p>
+  )}
+</Base>

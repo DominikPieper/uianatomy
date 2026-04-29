@@ -1,0 +1,12 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+{component.mistakes.map((m) => (
+  <article class="mistake" id={`mistake-${m.id}`}>
+    <h3>{m.title} <span class="mistake-id">#{m.id}</span></h3>
+    <p><strong>Problem.</strong> {m.description}</p>
+    <p><strong>Fix.</strong> {m.fix}</p>
+  </article>
+))}

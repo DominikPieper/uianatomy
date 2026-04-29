@@ -1,0 +1,27 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+<div class="mismatches">
+  <table>
+    <thead>
+      <tr>
+        <th>Figma</th>
+        <th>Code</th>
+        <th>Consequence</th>
+        <th>Correct</th>
+      </tr>
+    </thead>
+    <tbody>
+      {component.mismatches.map((m) => (
+        <tr>
+          <td>{m.figma}</td>
+          <td>{m.code}</td>
+          <td>{m.consequence}</td>
+          <td>{m.correct}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

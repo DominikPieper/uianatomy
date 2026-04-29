@@ -1,0 +1,36 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
+import CodeSlotTable from '../sections/CodeSlotTable.astro';
+import AxesTable from '../sections/AxesTable.astro';
+import FrameworkMapTable from '../sections/FrameworkMapTable.astro';
+import MismatchesTable from '../sections/MismatchesTable.astro';
+import MistakesList from '../sections/MistakesList.astro';
+import A11yTable from '../sections/A11yTable.astro';
+
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+<section data-view-section="bridge">
+  <h2>Figma↔Code mismatches</h2>
+  <p>Where designer and developer worlds typically misalign on this component.</p>
+  <MismatchesTable component={component} />
+
+  <h2>Variants, properties, states</h2>
+  <AxesTable component={component} />
+
+  <h2>Figma anatomy</h2>
+  <FigmaSlotTable component={component} />
+
+  <h2>Code anatomy</h2>
+  <CodeSlotTable component={component} />
+
+  <h2>Cross-framework expression</h2>
+  <FrameworkMapTable component={component} />
+
+  <h2>Accessibility</h2>
+  <A11yTable component={component} />
+
+  <h2>Common mistakes</h2>
+  <MistakesList component={component} />
+</section>

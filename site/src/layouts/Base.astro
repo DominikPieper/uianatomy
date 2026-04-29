@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+import ViewSwitcher from '../components/ViewSwitcher.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-view="bridge">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — UI Anatomy</title>
+    {description && <meta name="description" content={description} />}
+    <script is:inline>
+      (() => {
+        try {
+          const stored = localStorage.getItem('uianatomy.view');
+          const view = stored === 'designer' || stored === 'dev' || stored === 'bridge' ? stored : 'bridge';
+          document.documentElement.setAttribute('data-view', view);
+        } catch (_) {
+          /* localStorage unavailable */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/" class="brand">UI Anatomy</a>
+      <ViewSwitcher />
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>

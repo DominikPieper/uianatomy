@@ -1,0 +1,36 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+const { axes } = component;
+---
+<h3>Variants</h3>
+<p>Structurally different versions of the component.</p>
+<ul>
+  {axes.variants.map((v) => <li><code>{v}</code></li>)}
+</ul>
+
+<h3>Properties</h3>
+<p>Same component, parameterised.</p>
+<table>
+  <thead>
+    <tr><th>Property</th><th>Type</th></tr>
+  </thead>
+  <tbody>
+    {axes.properties.map((p) => (
+      <tr><td><code>{p.name}</code></td><td><code>{p.type}</code></td></tr>
+    ))}
+  </tbody>
+</table>
+
+<h3>States</h3>
+<p>Browser/user-driven (interactive) vs. app-driven (data).</p>
+<table>
+  <thead>
+    <tr><th>Kind</th><th>States</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>interactive</td><td>{axes.states.interactive.map((s) => <code style="margin-right:6px">{s}</code>)}</td></tr>
+    <tr><td>data</td><td>{axes.states.data.map((s) => <code style="margin-right:6px">{s}</code>)}</td></tr>
+  </tbody>
+</table>

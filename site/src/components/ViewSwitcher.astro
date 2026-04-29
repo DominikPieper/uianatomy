@@ -1,0 +1,44 @@
+---
+---
+<div class="view-tabs" role="group" aria-label="View" data-view-switcher>
+  <button type="button" data-view-value="designer" aria-pressed="false">Designer</button>
+  <button type="button" data-view-value="dev" aria-pressed="false">Dev</button>
+  <button type="button" data-view-value="bridge" aria-pressed="true">Bridge</button>
+</div>
+
+<script>
+  const KEY = 'uianatomy.view';
+
+  function applyView(view: string) {
+    document.documentElement.setAttribute('data-view', view);
+    document.querySelectorAll<HTMLButtonElement>('[data-view-switcher] button').forEach((btn) => {
+      btn.setAttribute('aria-pressed', String(btn.dataset.viewValue === view));
+    });
+  }
+
+  function init() {
+    let view = 'bridge';
+    try {
+      const stored = localStorage.getItem(KEY);
+      if (stored === 'designer' || stored === 'dev' || stored === 'bridge') view = stored;
+    } catch {}
+    applyView(view);
+
+    document.querySelectorAll<HTMLButtonElement>('[data-view-switcher] button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = btn.dataset.viewValue;
+        if (!next) return;
+        try {
+          localStorage.setItem(KEY, next);
+        } catch {}
+        applyView(next);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>

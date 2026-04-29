@@ -1,0 +1,29 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
+import AxesTable from '../sections/AxesTable.astro';
+import MismatchesTable from '../sections/MismatchesTable.astro';
+import MistakesList from '../sections/MistakesList.astro';
+import A11yTable from '../sections/A11yTable.astro';
+
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+<section data-view-section="designer">
+  <h2>Figma anatomy</h2>
+  <FigmaSlotTable component={component} />
+
+  <h2>Variants, properties, states</h2>
+  <AxesTable component={component} />
+
+  <h2>Figma↔Code mismatches</h2>
+  <MismatchesTable component={component} />
+
+  <h2>Common mistakes</h2>
+  <MistakesList component={component} />
+
+  <details>
+    <summary>Accessibility hints</summary>
+    <A11yTable component={component} />
+  </details>
+</section>

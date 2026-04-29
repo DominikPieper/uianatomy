@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const components = await getCollection('components');
+components.sort((a, b) => a.data.name.localeCompare(b.data.name));
+---
+<Base title="Components" description="Canonical UI component anatomy reference.">
+  <h1>UI Anatomy</h1>
+  <p>Canonical reference for UI component anatomy — the same truth, in three views.</p>
+
+  <h2>Components</h2>
+  <ul class="component-index">
+    {components.map((entry) => (
+      <li>
+        <a href={`/components/${entry.id}`}>{entry.data.name}</a>
+        <p>{entry.data.description}</p>
+      </li>
+    ))}
+  </ul>
+</Base>

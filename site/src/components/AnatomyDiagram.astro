@@ -1,0 +1,20 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+import { resolveAnatomySVG } from '@uianatomy/shared/svg';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+interface Props {
+  component: Component;
+}
+
+const { component } = Astro.props;
+
+const here = dirname(fileURLToPath(import.meta.url));
+const contentDir = resolve(here, '..', '..', '..', 'content', 'components');
+const svg = await resolveAnatomySVG(component, { contentDir });
+---
+
+<figure class="anatomy-host" aria-label={`${component.name} anatomy diagram`}>
+  <Fragment set:html={svg} />
+</figure>

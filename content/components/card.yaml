@@ -1,0 +1,306 @@
+id: card
+name: Card
+description: >-
+  A bounded container that groups a coherent unit of content — typically a
+  title, supporting body, optional media, and optional actions — and lifts
+  it as a single perceivable object on the page.
+related:
+  - tile
+  - list-item
+
+anatomy:
+  - id: media
+    required: false
+    purpose: >-
+      Visual representation associated with the card's subject. Typically
+      full-bleed at the top (or leading edge in horizontal orientation) to
+      anchor scanning before the title.
+    layout:
+      row: 1
+      col: 1
+      span: full
+      aspect: '16:9'
+    figma:
+      type: frame
+      hint: Aspect-ratio-locked frame; image fill or instance swap
+    code:
+      slot: media
+      semantic: img-or-video
+    a11y:
+      hint: >-
+        Provide alt text for informative images; alt="" for purely decorative
+        media. Do not duplicate the title in alt text.
+
+  - id: eyebrow
+    required: false
+    purpose: >-
+      Short categorical label sitting above the title (kicker, tag, or
+      timestamp). Establishes context before the headline.
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Text style "Eyebrow" / "Overline"; uppercase or small-caps
+    code:
+      slot: eyebrow
+      semantic: text-with-role-or-tag
+    a11y:
+      hint: >-
+        Avoid heading semantics — the eyebrow is metadata, not a heading.
+        If grouped with the title, treat as part of the same labelling
+        relationship via aria-labelledby.
+
+  - id: title
+    required: true
+    purpose: >-
+      The card's primary identifier. Should be readable as a standalone
+      label outside of the card's context (e.g., when surfaced in a list of
+      results).
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property for content
+    code:
+      slot: title
+      semantic: heading-or-link
+    a11y:
+      hint: >-
+        Use a heading element of the appropriate level for the surrounding
+        document outline. If the card is interactive as a whole, the title
+        also carries the accessible name of the activator.
+
+  - id: subtitle
+    required: false
+    purpose: >-
+      Secondary descriptor below the title, narrowing or clarifying its
+      meaning. Not a place for body prose.
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Subtitle text style; lighter weight than title
+    code:
+      slot: subtitle
+      semantic: text
+    a11y:
+      hint: >-
+        If the subtitle qualifies the title's meaning, associate it via
+        aria-describedby on the interactive element.
+
+  - id: body
+    required: true
+    purpose: >-
+      Supporting prose, summary, or structured content. The card's payload.
+    layout:
+      row: 5
+      col: 1
+      span: full
+    figma:
+      type: text-or-frame
+      hint: Auto-layout text frame, or nested component instance for richer payloads
+    code:
+      slot: body
+      semantic: prose-or-children
+    a11y:
+      hint: >-
+        Body content keeps its native semantics (lists stay lists, links
+        stay links). Avoid wrapping body in role="text" — it strips
+        semantics from assistive tech.
+
+  - id: actions
+    required: false
+    purpose: >-
+      Primary call(s) to action associated with the card's content
+      (e.g., "View details", "Add to cart"). Distinct from card-as-link
+      affordance.
+    layout:
+      row: 6
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame containing button instances
+    code:
+      slot: actions
+      semantic: button-group
+    a11y:
+      hint: >-
+        Keep nested buttons keyboard-reachable. If the whole card is also
+        clickable, see mistake "card-as-link-nested-buttons" for the
+        correct overlay pattern.
+
+  - id: footer
+    required: false
+    purpose: >-
+      Tertiary metadata below the actions (e.g., timestamps, status chips,
+      author attribution). Lower visual weight than actions.
+    layout:
+      row: 7
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; smaller text style
+    code:
+      slot: footer
+      semantic: contentinfo-region
+    a11y:
+      hint: >-
+        Footer content is not the card's accessible name. If it carries
+        status, use aria-live on the chip itself, not the card.
+
+axes:
+  variants:
+    - elevated
+    - outlined
+    - flat
+  properties:
+    - name: interactive
+      type: boolean
+    - name: orientation
+      type: 'vertical | horizontal'
+    - name: density
+      type: 'comfortable | compact'
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - selected
+      - loading
+
+mismatches:
+  - figma: Variants for hover / focus / active / disabled
+    code: CSS pseudo-classes (:hover, :focus-visible, :active) and aria/disabled attributes
+    consequence: >-
+      Variant explosion in Figma (3 variants × 4 states × 2 orientations =
+      24+ component variants), and the developer cannot map a Figma
+      "hover variant" to a CSS pseudo-class without manual translation.
+    correct: >-
+      Treat interactive states as a separate spec (a "states" sheet or
+      component property documentation) — not as Figma variants. Variants
+      are reserved for structurally different versions (elevated /
+      outlined / flat).
+
+  - figma: Media-on-top vs. media-on-leading-edge expressed as separate variants
+    code: A single component with an `orientation` prop ('vertical' | 'horizontal')
+    consequence: >-
+      Designers and developers count card variants differently. Designers
+      see 6+ variants; developers see 3 variants × 2 orientations.
+      Implementation drift: designer adds a third orientation in Figma but
+      the prop type is a binary union.
+    correct: >-
+      Model orientation as a *property*, not a variant. Document the
+      property in Figma using a component property of type 'variant' that
+      *only* captures orientation, separate from visual variants.
+
+  - figma: A clickable card built by stacking a "card" component on top of an invisible "button" component
+    code: An <a>/<button> wrapping the entire card (or a pseudo-element overlay pattern)
+    consequence: >-
+      The Figma artifact does not encode the affordance — designers may
+      not realise the whole card must be a single accessible activator,
+      and developers may forget the keyboard story when implementing.
+    correct: >-
+      When the card is interactive as a whole, model the activator as an
+      explicit boolean property (`interactive`) on the canonical
+      component. Render it as a single anchor or button with the rest of
+      the card visually inside, using the overlay pattern to keep nested
+      controls reachable.
+
+  - figma: Selected state expressed via an "outline + filled background" variant
+    code: A `data-selected` or `aria-selected` attribute toggled by the application
+    consequence: >-
+      The selection style is duplicated in two places (variant + CSS) and
+      inevitably drifts. Worse, treating selection as a variant blocks
+      multi-state selection (e.g., selected + disabled).
+    correct: >-
+      Document selection as a *data state*, not a variant. The visual
+      treatment is described once and is composable with the interactive
+      states.
+
+mistakes:
+  - id: card-as-link-nested-buttons
+    title: Card-as-link with nested action buttons
+    description: >-
+      Wrapping the whole card in an <a> turns the entire surface into a
+      single tab stop and traps nested buttons — keyboard users cannot
+      activate the inner controls, and screen readers announce the nested
+      buttons as part of the link's name.
+    fix: >-
+      Use the pseudo-element overlay pattern: keep the card as a regular
+      container, give the title a real <a> with `::before` covering the
+      whole card via absolute positioning, and let nested actions sit on
+      a higher stacking context (z-index) so clicks on them aren't
+      intercepted. The link receives the card's accessible name from the
+      title.
+
+  - id: clickable-card-no-keyboard
+    title: Click handler on the card without a focusable activator
+    description: >-
+      Attaching a click handler to a <div> card with no <a> or <button>
+      inside makes the card unreachable by keyboard and unannounceable
+      to assistive tech.
+    fix: >-
+      Always anchor the activation on a real interactive element
+      (<a href> for navigation, <button> for in-page actions). If the
+      visual treatment requires the whole card to look clickable, use
+      the overlay pattern — never role="button" on the card div.
+
+  - id: variant-explosion-from-states
+    title: Modelling interactive states as Figma variants
+    description: >-
+      Adding hover / focus / active / disabled as variants in Figma
+      causes the variant matrix to explode and forces the developer to
+      hand-translate Figma variants into CSS pseudo-classes.
+    fix: >-
+      Document interactive states once in a separate "states" sheet or
+      component documentation. Reserve Figma variants for structurally
+      different versions (elevated / outlined / flat). Document the same
+      separation in the canonical reference and the production library.
+
+  - id: media-alt-duplicates-title
+    title: Image alt text repeats the card title
+    description: >-
+      Setting `alt` to the title text causes screen readers to announce
+      the title twice when the card is interactive — once as the link
+      name and once as the image alt.
+    fix: >-
+      For decorative / supporting media use `alt=""`. For media that
+      carries information not in the title, write alt that adds the
+      missing information ("Chart showing 12% YoY growth"), not a
+      restatement of the headline.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: named slots (<slot name="media">, <slot name="title">, …)
+    variantMechanism: attributes reflected to properties (variant="elevated", orientation="horizontal")
+  react:
+    structureMechanism: compound components (Card.Media, Card.Title, Card.Body, …) or explicit slot props
+    variantMechanism: props with class-variance-authority / tailwind-variants for the variant/property axis
+  angularSignals:
+    structureMechanism: ng-content with select="[card-media]" / [card-title] etc., and signal-based input() for slots
+    variantMechanism: input<'elevated' | 'outlined' | 'flat'>() and input<'vertical' | 'horizontal'>()
+  vue:
+    structureMechanism: named slots (<slot name="media" />, <slot name="title" />, …)
+    variantMechanism: defineProps with literal-union types
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article
+  - https://polaris.shopify.com/components/layout-and-structure/card
+  - https://carbondesignsystem.com/components/tile/usage/
+  - https://m3.material.io/components/cards/overview
+  - https://atlassian.design/components/card/examples
+  - https://www.radix-ui.com/themes/docs/components/card
+  - https://inclusive-components.design/cards/
+
+lastReviewed: '2026-04-28'
