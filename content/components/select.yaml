@@ -1,0 +1,763 @@
+id: select
+name: Select
+description: >-
+  A control that lets the user choose one or more values from a
+  fixed list. Distinct from Combobox by the absence of a text-input
+  front (no typeahead filtering); the user clicks or keyboard-
+  navigates to a value and commits. Distinct from Radio by
+  presenting choices in a popup rather than as visible
+  alternatives. Renders as native `<select>` by default; custom
+  implementations follow the APG Listbox pattern with portal-
+  mounted popup, `aria-activedescendant` highlighting, and
+  typeahead by first-letter.
+
+anatomy:
+  - id: trigger
+    required: true
+    purpose: >-
+      The button-like surface that displays the current selection
+      and toggles the listbox. The user's primary interaction
+      target — clicking opens, Enter / Space / ArrowDown opens,
+      typing a letter selects the next match. Carries the
+      `role="combobox"` (per APG Combobox-with-Listbox pattern,
+      which also covers the no-text-input case) plus
+      `aria-expanded`, `aria-controls`, `aria-activedescendant`.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Button-like surface with value display and caret; min-width drives field size
+    code:
+      slot: trigger
+      semantic: combobox-button
+    a11y:
+      hint: >-
+        Apply `role="combobox"` (the APG Combobox pattern covers
+        select-without-textbox via `aria-haspopup="listbox"`
+        plus `aria-activedescendant`), `aria-expanded` reflecting
+        open state, `aria-controls` referencing the listbox id.
+        Native `<select>` is the canonical fallback — has all
+        these contracts implicitly via the platform.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      radius:
+        corner: radius.md
+      typography:
+        size: text.md
+      color:
+        background: color.surface.bg
+        foreground: color.text.primary
+        border: color.border.strong
+        ring: color.border.focus
+
+  - id: value-display
+    required: true
+    purpose: >-
+      The text inside the trigger showing the currently selected
+      value (or values for multi-select, typically as a count or
+      a comma-separated list). Acts as the trigger's accessible
+      name when no `aria-label` is present. Falls back to
+      placeholder text when nothing is selected.
+    layout:
+      row: 1
+      col: 1
+      span: 8
+    figma:
+      type: text
+      hint: Inline text style; truncates with ellipsis when overflowing
+    code:
+      slot: value
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text. The trigger's accessible name is the value
+        display when the select has no separate label; pair the
+        trigger with a visible `<label>` for complete a11y.
+        Multi-select counts ("3 selected") work canonically;
+        comma-separated lists may overwhelm SR users on long
+        selections.
+    tokens:
+      typography:
+        size: text.md
+        lineHeight: leading.snug
+      color:
+        foreground: color.text.primary
+
+  - id: caret
+    required: true
+    purpose: >-
+      The chevron or triangle indicator at the inline-end of the
+      trigger, showing that the trigger opens a popup. Rotates
+      180° on `aria-expanded="true"` (or swaps glyph) to reinforce
+      the open state.
+    layout:
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; rotation bound to expanded state
+    code:
+      slot: caret
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Open state is
+        communicated by `aria-expanded`; the caret visualises it.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: listbox
+    required: true
+    purpose: >-
+      Popup container that renders the option list. Floats above
+      adjacent content; positioned relative to the trigger via
+      Floating UI / CSS anchor positioning. Native `<select>`
+      uses the platform's native listbox (OS picker on mobile);
+      custom implementations portal-mount.
+    layout:
+      floating:
+        anchor: trigger
+        position: below
+        offset: 4
+      span: 8
+    figma:
+      type: frame
+      hint: Floating frame; width matches trigger by default
+    code:
+      slot: listbox
+      semantic: listbox
+    a11y:
+      hint: >-
+        Apply `role="listbox"` and an `id` referenced by the
+        trigger's `aria-controls`. Listbox is rendered via portal
+        but DOM focus stays on the trigger; do not move focus
+        into the listbox. `aria-multiselectable="true"` for
+        multi-select variants.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        shadow: elevation.lg
+
+  - id: option
+    required: true
+    purpose: >-
+      Individual selectable item inside the listbox. One anatomy
+      slot describes the role; one component instance is rendered
+      per option in the value list.
+    layout:
+      parent: listbox
+      row: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Option component instance with selected and highlighted variants
+    code:
+      slot: option
+      semantic: option
+    a11y:
+      hint: >-
+        Apply `role="option"` plus a unique `id` per option. The
+        currently-highlighted option is referenced by the
+        trigger's `aria-activedescendant` (NOT focused — DOM
+        focus stays on the trigger). Selected options have
+        `aria-selected="true"`; multi-select shows a visual
+        check (typically a checkmark).
+    tokens:
+      spacing:
+        padding: spacing.compact
+      typography:
+        size: text.md
+      color:
+        foreground: color.text.primary
+
+  - id: option-group
+    required: false
+    purpose: >-
+      Optional grouping of options with a non-selectable label.
+      Maps to native `<optgroup>` for native selects; for custom
+      selects, a `<div role="group">` with `aria-labelledby`
+      pointing at the label. Used for categorising long option
+      lists (countries by continent, files by folder).
+    layout:
+      parent: listbox
+      row: 2
+      span: full
+    figma:
+      type: frame
+      hint: Group label plus indented options; visibility bound to "has groups" property
+    code:
+      slot: group
+      semantic: group
+    a11y:
+      hint: >-
+        `role="group"` with `aria-labelledby` referencing the
+        group label. Group label is non-selectable
+        (`role="presentation"` or styled `<span>`). SR announces
+        the group label before announcing options inside.
+
+axes:
+  variants:
+    - default
+    - inline
+  properties:
+    - { name: multi, kind: primitive, of: boolean }
+    - { name: required, kind: primitive, of: boolean }
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - { name: native, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - closed
+      - open
+      - invalid
+    transitions:
+      - from: closed
+        to: open
+        trigger: >-
+          User clicks the trigger, presses Enter / Space /
+          ArrowDown / ArrowUp on the focused trigger, or types
+          a printable character (typeahead opens and selects
+          first matching option). `aria-expanded` flips to true;
+          listbox renders.
+      - from: open
+        to: closed
+        trigger: >-
+          User selects an option (single-select); presses
+          Escape; clicks outside the listbox; or tabs focus
+          past the trigger. `aria-expanded` flips to false;
+          listbox is removed.
+      - from: closed
+        to: invalid
+        trigger: >-
+          `required: true` and the user blurs the trigger
+          without making a selection (or commits a form
+          containing an unselected required select). The
+          trigger surfaces an inline error and sets
+          `aria-invalid="true"`.
+      - from: invalid
+        to: closed
+        trigger: >-
+          User makes a selection (regardless of which option).
+          `aria-invalid` is removed; the inline error is
+          cleared.
+
+mismatches:
+  - figma: A select drawn as a custom popup with the native chevron icon
+    code: A custom listbox (portal-mounted div with role="listbox") with full APG keyboard contract
+    consequence: >-
+      Designers may draw a custom select with the native
+      browser chevron; developers face a choice between native
+      `<select>` (loses visual control over options, follows OS
+      picker) and a full custom listbox (gains visual control,
+      requires implementing the entire APG keyboard contract:
+      typeahead, ArrowKeys, Home/End, PageUp/PageDown,
+      `aria-activedescendant`, multi-select chord-keys). The
+      Figma file frequently does not encode which path was
+      chosen.
+    correct: >-
+      Document `native: boolean` as a first-class property. The
+      canonical default is custom (matches design-system
+      visuals); native is an opt-in for situations where the
+      platform picker is preferred (mobile, system-styled
+      forms). The Figma file carries `native` as a Boolean.
+
+  - figma: Multi-select drawn with comma-separated value list growing in the trigger
+    code: Multi-select with selected-count display ("3 of 5 selected") that does not reflow the trigger
+    consequence: >-
+      Designers compose multi-select mocks with selected values
+      listed inline in the trigger ("Apple, Banana, Cherry,
+      Durian, Eggplant"); the trigger grows unboundedly and
+      truncates at the inline-end. Developers ship the mock
+      faithfully and selecting many items breaks the form
+      layout.
+    correct: >-
+      Multi-select trigger displays a count ("3 selected" or
+      "3 of 5") rather than a comma-separated list. The visible
+      value is intrinsically bounded; long selections do not
+      break layout. Document the count-display pattern and
+      reserve comma-separated for very-short maximum
+      selections.
+
+  - figma: Select drawn at native `<select>` styling with no custom variant
+    code: A custom listbox replicating native `<select>` to within a few pixels
+    consequence: >-
+      Designers may approve a "use native" path then designers
+      rebuild the option list visually because the native
+      picker ignores most CSS. Developers shipping native lose
+      visual parity with the design; shipping custom required
+      reimplementing the platform keyboard contract.
+    correct: >-
+      Document the trade-off canonically. Native is invisible
+      to CSS for the popup itself (only the trigger is
+      style-able); custom requires implementing the entire APG
+      contract. Choose per use case; document via `native`
+      property; ship one or the other consistently per design
+      system.
+
+  - figma: Disabled options drawn greyed-out with no `aria-disabled`
+    code: Disabled options that are not focusable, not announceable, and silently un-clickable
+    consequence: >-
+      Designers grey out unavailable options visually; developers
+      either skip them in the listbox (SR users do not know they
+      exist) or include them with no `aria-disabled` (SR
+      announces them as available, click is a silent no-op).
+    correct: >-
+      Disabled options are present in the listbox with
+      `aria-disabled="true"`. SR users hear "<label>, dimmed,
+      option" — they know the option exists and is unavailable.
+      Selection skips disabled options on arrow-key navigation;
+      direct click is a no-op (no error toast, just silent
+      skip).
+
+mistakes:
+  - id: select-not-button-or-listbox
+    title: Select implemented as a styled `<div>` with click handlers
+    description: >-
+      The trigger is a `<div>` with `onclick` opening a popup
+      that has no `role="listbox"`. SR users hear nothing about
+      a select — no role, no expanded state, no controls
+      reference. Keyboard users get whatever the consumer wired
+      manually (often nothing).
+    fix: >-
+      Trigger is a `<button>` (or native `<select>`); listbox
+      has `role="listbox"`; options have `role="option"`.
+      Mature primitives (Radix Select, React Aria
+      `useListBox`+`useSelect`) provide the entire contract.
+
+  - id: select-no-typeahead
+    title: Typeahead by first-letter not implemented
+    description: >-
+      User types a letter expecting to jump to the next option
+      starting with that letter (a canonical APG behaviour
+      since OS-level select pickers); nothing happens or the
+      letter is captured by an unrelated handler. Users with
+      long option lists must arrow-key through every entry.
+    fix: >-
+      Implement first-letter typeahead per APG: typing matches
+      the first option whose label starts with that letter,
+      moving `aria-activedescendant`. Sequential same-letter
+      presses cycle through matches. Multi-character timeout
+      (~500ms) accumulates the buffer to allow "fer" jumping
+      to "Ferrari" before "Fiat".
+
+  - id: select-listbox-clipped
+    title: 'Listbox clipped by parent `overflow: hidden`'
+    description: >-
+      The listbox is rendered as a child of the trigger's DOM
+      ancestor. A scrollable parent clips the listbox when it
+      extends beyond. Z-index does not help because the
+      clipping is at paint time. Same failure mode as
+      `popover-z-index-clipping`.
+    fix: >-
+      Render the listbox via a portal at the document root.
+      Native `<select>` portal-mounts automatically. Custom
+      implementations use a Portal / Teleport primitive.
+
+  - id: select-required-silent-failure
+    title: Required select submits without selection silently
+    description: >-
+      `required: true` on a select; user submits the form
+      without selecting; submission proceeds (custom form
+      handler) without error indication, or the form rejects
+      with a generic "fill all fields" message that does not
+      identify the specific select.
+    fix: >-
+      Trigger HTML5 validation on submit (native `<select>`
+      does this automatically; custom uses
+      `setCustomValidity()` plus `aria-invalid`). On validation
+      failure, focus the unselected select and surface an
+      inline error referenced via `aria-describedby`.
+
+  - id: select-too-many-options-no-search
+    title: Select with hundreds of options and no search
+    description: >-
+      The listbox renders 200+ options without filtering or
+      typeahead-search. The user scrolls helplessly; SR users
+      cycle through every option to find the one they want.
+      The pattern collapses to "needs Combobox".
+    fix: >-
+      Above ~25 options, a Combobox (with text-input filter) is
+      almost always the right pattern. Document the canonical
+      threshold; use Select for short fixed lists where
+      typeahead-by-letter is sufficient. Above the threshold,
+      switch to Combobox.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-select>` host wrapping native `<select>` when the
+      `native` flag is true, or composing trigger plus listbox for
+      custom; named slots for option content
+    variantMechanism: attributes (`variant="default"`, `multi`, `required`, `size="md"`, `native`); `data-state="open|closed|invalid"` for CSS
+  react:
+    structureMechanism: Radix Select (`Select.Root` / `Select.Trigger` / `Select.Value` / `Select.Portal` / `Select.Content` / `Select.Item`); React Aria `useSelect` plus `useListBox`; for native, just `<select>` with styled wrapper
+    variantMechanism: props with class-variance-authority for variant / size; `multiple` boolean for multi-select; `data-state` exposed
+  angularSignals:
+    structureMechanism: Angular CDK Listbox (`cdk-listbox`) plus Overlay for positioning; signal-based selection; native fallback via `<select>` directive
+    variantMechanism: input<'default' | 'inline'>(); input<'sm' | 'md' | 'lg'>(); `[multi]`, `[required]`, `[native]` host bindings
+  vue:
+    structureMechanism: Headless UI `<Listbox>` / `<ListboxButton>` / `<ListboxOptions>` / `<ListboxOption>`; native fallback via `<select>` element
+    variantMechanism: defineProps with literal-union types; `:multiple` boolean; `:size` enum
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    open: motion.duration.fast
+    close: motion.duration.instant
+  easing: motion.easing.decelerate
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, the canonical default switches to
+        `native: true` — the platform picker provides better UX
+        on touch (full-screen native picker, scroll-wheel on
+        iOS, native search on Android). Visual variants (size,
+        density) still apply to the trigger; the popup
+        rendering follows the platform.
+    - at: breakpoint.md
+      change: >-
+        Above this width, custom listbox renders as authored.
+        Visual fidelity matches the design system; keyboard
+        contract follows APG.
+
+events:
+  - name: selectionChange
+    payload: >-
+      The selected value (single-select) or array of selected
+      values (multi-select), or `null` / `[]` after clear.
+      Always reflects the canonical value (id or token), not
+      the option's display label.
+    frameworkNotes:
+      webComponents: >-
+        `change` CustomEvent on the host with
+        `event.detail = { value }` (or `{ values }` for multi).
+      react: >-
+        `onValueChange(value: string)` (Radix Select) or
+        `onSelectionChange(key | Set<Key>)` (React Aria).
+      angularSignals: >-
+        `output<T | T[] | null>('selectionChange')`.
+      vue: >-
+        `@update:modelValue` for `v-model`.
+
+  - name: openChange
+    payload: >-
+      Boolean. `true` when the listbox opens, `false` when it
+      closes. Mirrors `aria-expanded` on the trigger.
+    frameworkNotes:
+      webComponents: >-
+        `openChange` CustomEvent with `event.detail = { open }`.
+      react: >-
+        `onOpenChange(open: boolean)`.
+      angularSignals: >-
+        `output<boolean>('openChange')`.
+      vue: >-
+        `@update:open` for `v-model:open`.
+
+  - name: invalidChange
+    payload: >-
+      Boolean. Fires when the validity state changes — typically
+      on blur with `required: true` and no selection (true), or
+      on selection that resolves the invalid state (false).
+    frameworkNotes:
+      webComponents: >-
+        `invalidChange` CustomEvent. Native `<select>` fires
+        `invalid` event; the host re-emits to unify with custom.
+      react: >-
+        `onInvalidChange(invalid: boolean)` callback. React Aria
+        and Radix surface validity through their form-state
+        APIs.
+      angularSignals: >-
+        `output<boolean>('invalidChange')`; reactive forms
+        integration provides this through the FormControl status.
+      vue: >-
+        `@invalid` event with payload `{ invalid }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the trigger. Native `<select>` allows
+        ArrowDown / ArrowUp to change selection without
+        opening (browser-specific); custom implementations
+        always open on ArrowDown / ArrowUp / Enter / Space.
+    - keys: Enter / Space / ArrowDown / ArrowUp (focus on trigger, listbox closed)
+      expected: >-
+        Opens the listbox and highlights the currently-selected
+        option (or the first option if none selected). DOM
+        focus stays on the trigger; the highlighted option is
+        referenced by `aria-activedescendant`.
+    - keys: ArrowDown / ArrowUp (listbox open)
+      expected: >-
+        Moves the highlight to the next / previous option.
+        `aria-activedescendant` updates. Skips disabled options.
+        Wraps from last to first and vice versa.
+    - keys: Home / End (listbox open)
+      expected: >-
+        Highlights first / last option respectively.
+    - keys: Enter (listbox open)
+      expected: >-
+        Commits the highlighted option (single-select); listbox
+        closes. For multi-select, toggles the highlighted
+        option's selected state without closing.
+    - keys: 'Escape (listbox open)'
+      expected: >-
+        Closes the listbox without committing. Trigger retains
+        focus and the previously-selected value.
+    - keys: typeahead character keys (focus on trigger or listbox open)
+      expected: >-
+        Highlights the next option whose label starts with the
+        typed character. Sequential same-character presses
+        cycle through matches; multi-character within ~500ms
+        accumulate (e.g. "fer" jumps to "Ferrari" before
+        "Fiat").
+  announcements:
+    - trigger: Trigger receives focus, listbox closed
+      expected: >-
+        SR announces "<accessible name>, combobox, collapsed,
+        <selected value or 'No selection'>". The combobox role
+        and expanded state come from APG; the value comes from
+        the trigger's accessible name composition.
+    - trigger: Listbox opens
+      expected: >-
+        SR announces "expanded" plus the highlighted option
+        ("<option label>, <position> of <total>, selected" if
+        already selected). The user can hear the option count
+        and current position.
+    - trigger: Option highlighted via ArrowDown
+      expected: >-
+        SR announces "<option label>, <position> of <total>"
+        (with "selected" suffix if applicable). Driven by
+        `aria-activedescendant` updating to the highlighted
+        option's id.
+    - trigger: Option committed (Enter)
+      expected: >-
+        SR announces the new selection. Listbox closes; focus
+        stays on trigger; trigger's value-display updates.
+    - trigger: Required validation fails on blur
+      expected: >-
+        Trigger gets `aria-invalid="true"`; the inline error
+        referenced via `aria-describedby` is announced
+        ("Please make a selection").
+  axeRules:
+    - aria-required-attr
+    - aria-valid-attr-value
+    - aria-roles
+    - aria-required-children
+    - aria-required-parent
+    - color-contrast
+    - select-name
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps default / inline.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg.
+  - figma: Multi
+    code: multi
+    type: Boolean
+    notes: Toggles single-vs-multi-select. Multi-select trigger displays a count by canon; comma-separated list is anti-pattern.
+  - figma: Required
+    code: required
+    type: Boolean
+    notes: Drives HTML5 validation on submit; canonical inline-error pattern via `aria-invalid` plus `aria-describedby`.
+  - figma: Native
+    code: native
+    type: Boolean
+    notes: >-
+      Toggles native `<select>` rendering vs custom listbox.
+      Canonical default is custom; native is an opt-in for
+      mobile-first or platform-styled forms. At and below
+      `breakpoint.sm` native becomes the canonical default
+      regardless of authored value.
+  - figma: Has Groups
+    code: groups
+    type: Boolean
+    notes: Toggles the option-group slot. Use for long lists categorised by domain (countries by continent, files by folder).
+  - figma: Disabled
+    code: disabled
+    type: Boolean
+    notes: Disables the entire select. Disabled options are a separate concern (per-option Boolean).
+  - figma: Placeholder
+    code: placeholder
+    type: Text
+    notes: Shown in value-display when nothing is selected. SR users hear it as the trigger's accessible name fallback.
+  - figma: Caret
+    code: caret
+    type: Instance Swap
+    notes: Swap the chevron glyph; defaults vary per design system (down-arrow, triangle, double-arrow).
+
+formIntegration:
+  name: >-
+    Native `<select>` carries the `name` attribute directly;
+    custom selects either render an internal hidden `<select>`
+    or `<input type="hidden">` to participate in form
+    submission, or wire form-state via the consumer (React Hook
+    Form, Vue's v-model). The canonical reference treats `name`
+    as a passthrough to the underlying form-participating
+    element.
+  formData: >-
+    Single-select submits the selected option's value (id /
+    token), not the display label, under the configured `name`.
+    Multi-select submits one entry per selected value (multiple
+    FormData entries with the same `name`) to match
+    `<select multiple>` native behaviour. Required-and-
+    unselected results in no entry (plus validation failure on
+    submit).
+  reset: >-
+    `form.reset()` restores the select's selected value to its
+    `defaultValue`. For native `<select>` this is the option
+    with the `selected` attribute (or first option when none
+    is marked). For custom selects, the consumer's form-state
+    library handles reset via its own contract; `onReset`
+    listener on the form syncs.
+  validation: >-
+    `required` triggers HTML5 validation on submit; native
+    `<select>` shows the platform's invalid bubble; custom
+    selects use `setCustomValidity()` plus `aria-invalid`. The
+    canonical inline-error pattern surfaces a user-facing
+    message via `aria-describedby` ("Please make a selection").
+    The select's `:invalid` pseudo-class state propagates to
+    `:invalid` on the parent form.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Caret moves from inline-end of the trigger (visual right
+      in LTR) to inline-end (visual left in RTL) via logical
+      positioning. Listbox alignment follows the trigger's
+      inline-start edge in both directions. Caret rotation is
+      direction-neutral (down/up arrows are symmetric). Option
+      content inherits document direction; mixed-direction
+      labels (Hebrew options in an English-default form) honour
+      each option's own `dir` attribute.
+  textExpansion: >-
+    Trigger value display truncates with ellipsis when option
+    labels exceed the trigger's inline-size; SR users hear the
+    full label via `aria-label` on the trigger or
+    `aria-activedescendant` on the option. Listbox width
+    matches trigger width by default; long option labels may
+    need a max-inline-size override. Long-text languages
+    (German, Russian) frequently exceed common trigger widths
+    — design size sm with care, or default to size md for
+    international form designs.
+
+performance:
+  - name: switchToCombobox
+    metric: option-count
+    threshold: 25
+    unit: items
+    rationale: >-
+      Above ~25 options, the typeahead-by-first-letter pattern
+      starts to fail (multiple options share initial letters,
+      cycling becomes tedious) and Combobox (with text-input
+      filter) is almost always the right pattern. Below 25,
+      Select with typeahead is sufficient. Document the
+      threshold; switching is a redesign signal, not a
+      progressive enhancement.
+  - name: virtualisedListbox
+    metric: option-count
+    threshold: 200
+    unit: items
+    rationale: >-
+      For Select implementations that absolutely must handle
+      large lists (rare canonical case — usually a Combobox is
+      preferred), virtualisation kicks in above ~200 options.
+      Mirrors the Combobox threshold for consistency in the
+      ecosystem.
+
+whenToUse:
+  use: >-
+    For choosing one or more values from a fixed list of ~3–25
+    options where typeahead-by-first-letter is sufficient.
+    Common cases: country picker (when the list is short or
+    grouped), priority picker, status setter, single-step
+    config dropdowns. Native `<select>` is the canonical
+    fallback and the right choice for mobile-first or
+    platform-styled forms.
+  avoid: >-
+    For long lists where filter-by-typing improves discovery —
+    that is `Combobox`. For 2–3 mutually-exclusive choices
+    where all options should be visible — that is `Radio`. For
+    multi-select where selections appear inline as removable
+    tokens — that is `TagInput`. For free-text input with
+    autocomplete suggestions — that is `Combobox`.
+  vsRelated:
+    - id: combobox
+      difference: >-
+        `Combobox` adds a text-input front for typeahead
+        filtering; `Select` requires the user to scan or
+        first-letter-jump through the visible list. Migrate
+        from Select to Combobox when the option count crosses
+        the "scrollable popup is annoying" threshold (~25
+        items in practice) or when the user benefits from
+        partial-match filtering.
+    - id: radio
+      difference: >-
+        `Radio` shows all options visible side-by-side or
+        stacked, mutually-exclusive; `Select` hides options
+        until the trigger is activated. Use Radio for 2–4
+        options where the choice itself communicates the
+        decision (gender, plan tier, payment method). Use
+        Select for 5+ options or when screen real estate is
+        constrained.
+    - id: tag-input
+      difference: >-
+        `TagInput` accepts multi-select with selected values
+        rendered inline as removable tokens; `Select[multi]`
+        shows a count or list in the trigger. TagInput is
+        preferred for visible-on-page selection state where
+        the user benefits from seeing tokens; Select is
+        preferred for compact triggers in dense forms.
+
+notes: >-
+  Select is one of the most-implemented patterns and one of the
+  most-fragmented in vocabulary: APG calls this "Listbox" or
+  "Combobox without textbox" depending on the variant; HTML
+  ships native `<select>` with platform pickers; design systems
+  layer custom implementations on top. The canonical Select
+  here covers both the native and custom paths via the `native`
+  property; implementation audits document the choice via
+  `componentName` (Radix "Select", React Aria "Select", Vue
+  Headless UI "Listbox") and divergence rows for the
+  contract differences. Typeahead-by-first-letter is the
+  most-overlooked APG behaviour; the canonical reference
+  documents it explicitly in a11yAcceptance and mistakes.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
+  - https://www.radix-ui.com/primitives/docs/components/select
+  - https://react-spectrum.adobe.com/react-aria/Select.html
+  - https://headlessui.com/react/listbox
+  - https://polaris.shopify.com/components/selection-and-input/select
+  - https://carbondesignsystem.com/components/dropdown/usage/
+  - https://atlassian.design/components/select/examples
+  - https://m3.material.io/components/menus/overview
+
+lastReviewed: '2026-04-29'
