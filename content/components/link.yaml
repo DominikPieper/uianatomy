@@ -1,0 +1,499 @@
+id: link
+name: Link
+description: >-
+  An interactive element that navigates the user to another resource —
+  another page, an anchor within the current page, an external URL, a
+  downloadable file, or a `mailto:` / `tel:` target. Distinct from
+  Button (which performs an action without navigation). Renders as
+  `<a href>` in HTML and inherits the entire native anchor contract:
+  middle-click opens in a new tab, right-click exposes the URL, copy-
+  as-link works, the URL is visible in the status bar.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The `<a>` element itself. Carries the `href`, the focus ring,
+      the visual variant treatment, and the underline affordance.
+      Determines accessible name via its text content (or
+      `aria-label` / `aria-labelledby` when content is non-textual).
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Inline text or auto-layout horizontal frame; bound to "destination" property documented separately
+    code:
+      slot: root
+      semantic: anchor
+    a11y:
+      hint: >-
+        Always render as `<a href="...">`. A link without `href` has
+        no role, is not focusable, and is not announced as a link by
+        SR. Avoid `<div>` or `<span>` with click handlers and
+        `role="link"` — the native element is always preferable.
+        Visited state must be perceivable (CSS `:visited` styled
+        beyond the page baseline) for content where revisit recall
+        matters.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.medium
+      color:
+        foreground: color.text.accent
+        ring: color.border.focus
+
+  - id: label
+    required: true
+    purpose: >-
+      The text that names the destination. Carries the link's
+      accessible name in the absence of `aria-label`. Should describe
+      the destination meaningfully out of context — "Download Q3
+      report (PDF, 2 MB)", not "click here".
+    layout:
+      row: 2
+      col: 1
+      span: 8
+    figma:
+      type: text
+      hint: Inline text style; underline applied by variant treatment
+    code:
+      slot: label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text node. Avoid generic phrases ("read more", "click
+        here") — they are uninformative when SR users navigate by
+        link list. Distinguish links to the same destination from
+        links to different destinations through the link text alone,
+        not just through surrounding context.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.medium
+        tracking: tracking.normal
+      color:
+        foreground: color.text.accent
+
+  - id: icon-trailing
+    required: false
+    purpose: >-
+      Optional indicator after the label. Conventionally signals
+      external navigation (arrow / square-out-of-square glyph),
+      download (down-arrow), or anchor-jump (down-chevron). Its
+      meaning is communicated by the icon's visual semantics paired
+      with the link's `external` / `download` property.
+    layout:
+      row: 2
+      col: 2
+      span: 2
+    figma:
+      type: instance
+      hint: Icon component instance; visibility bound to the relevant property
+    code:
+      slot: icon-trailing
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        Decorative when its meaning is also conveyed in the label
+        text or the link's accessible name (e.g. "Download report,
+        opens PDF" with a download icon). When the icon carries
+        meaning the label omits, surface the meaning in
+        `aria-label` on the link, not on the icon. Per WCAG, "opens
+        in new tab" / "external link" must be announced for SR
+        users.
+    tokens:
+      color:
+        foreground: color.text.accent
+
+  - id: visited-marker
+    required: false
+    purpose: >-
+      Optional decorative element communicating that the link has
+      been visited — typically a small dot or a colour shift on the
+      label. Driven by the `:visited` CSS pseudo-class, which is
+      privacy-restricted (only colour, opacity, and outline-color
+      can be set on `:visited`).
+    layout:
+      row: 2
+      col: 3
+      span: 1
+    figma:
+      type: rectangle
+      hint: 6×6 dot or label-color-shift; visibility bound to "visited" state
+    code:
+      slot: visited
+      semantic: presentational
+    a11y:
+      hint: >-
+        Visited state is rendered visually only. SR does not announce
+        "visited" by default. For lists where revisit recall matters
+        (search results, archives), pair the visual marker with an
+        `aria-describedby` reference to a visually-hidden "visited"
+        text — but only on links the user is meant to revisit-aware.
+    tokens:
+      color:
+        background: color.text.muted
+
+axes:
+  variants:
+    - inline
+    - standalone
+    - button-styled
+  properties:
+    - { name: external, kind: primitive, of: boolean }
+    - { name: download, kind: primitive, of: boolean }
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - name: emphasis
+      kind: enum
+      values: [subtle, default, strong]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - visited
+    data:
+      - disabled
+      - loading
+
+mismatches:
+  - figma: An underlined text style drawn for inline links in body prose
+    code: 'A `<a>` element with `text-decoration: underline` plus `:hover` reinforcement and `:focus-visible` ring'
+    consequence: >-
+      Designers may rely on Figma's underline rendering and forget
+      that `text-decoration` interacts with line-height and descender
+      clearance differently per browser. Removing the underline
+      entirely (relying on color alone) violates WCAG 1.4.1 (Use of
+      Color); Figma can show a styled link without an underline and
+      pass a visual review the rendered version would fail.
+    correct: >-
+      Document underline as the canonical default for inline links;
+      colour-only differentiation is the documented WCAG failure case
+      to avoid. Standalone and button-styled variants may opt out of
+      underline only when they carry sufficient non-color
+      affordances (button-styled buttons, distinct background).
+
+  - figma: A "link styled as button" variant drawn alongside actual buttons
+    code: A `<a class="button">` with button visual treatment but anchor semantics
+    consequence: >-
+      Designers and developers diverge on whether the element is a
+      Link or a Button — they look identical visually but their
+      keyboard contracts differ (Enter only on `<a>`, Enter + Space
+      on `<button>`), middle-click behavior differs, and form
+      participation differs. The Figma file does not encode the
+      semantic choice.
+    correct: >-
+      Treat the semantic question (does this navigate, or does it
+      perform an in-page action?) as the canonical distinguisher. A
+      "link styled as a button" remains a Link with anchor
+      semantics; a button-styled `<a>` does not get Spacebar
+      activation. Document the variant explicitly as
+      `variant: button-styled` so the visual treatment is named and
+      the semantic choice stays clear.
+
+  - figma: External link icon drawn as a separate static glyph next to the label
+    code: A `::after` pseudo-element on `[target="_blank"]` or a slot-based icon driven by the `external` property
+    consequence: >-
+      Designers may forget the "external" indicator on individual
+      links and developers may forget to set `rel="noopener
+      noreferrer"`. The two artefacts disagree about which links go
+      external; users cannot predict before clicking which links
+      will open a new tab.
+    correct: >-
+      Model `external` as a boolean property. The Figma component
+      exposes it as a Boolean; the code wires it to both the visual
+      icon and the `target="_blank" rel="noopener noreferrer"`
+      attributes plus an `aria-label` suffix or hidden text
+      announcing "(opens in new tab)".
+
+  - figma: Disabled link drawn as greyed-out text with no underline
+    code: There is no `disabled` attribute on `<a>` — `aria-disabled="true"` plus `tabindex="-1"` plus removed `href` is the closest equivalent
+    consequence: >-
+      Designers may treat "disabled link" as a real state; developers
+      shipping it implement disabled inconsistently — sometimes the
+      `<a>` is still keyboard-reachable but a no-op (confusing),
+      sometimes it's removed from focus order entirely (announced as
+      nothing).
+    correct: >-
+      Document that "disabled link" is not a native concept. Either
+      replace the `<a>` with a span (no semantic), or use
+      `aria-disabled="true"` plus an `onClick` guard plus removal of
+      `href` (announces as a non-focusable disabled link in some SR).
+      Prefer not rendering the link at all when the destination is
+      genuinely unavailable.
+
+mistakes:
+  - id: link-clickable-div
+    title: Clickable `<div>` styled as a link
+    description: >-
+      A `<div onclick="...">` styled with link colour and underline.
+      Has no role, is not focusable, is not announced as a link by
+      SR, does not support middle-click "open in new tab" or
+      right-click "copy link", does not support keyboard activation
+      without bespoke handlers.
+    fix: >-
+      Always use `<a href="...">` for navigation. The native element
+      is the canonical choice; `role="link"` on a div is a
+      last-resort ARIA fallback that still loses native browser
+      affordances (middle-click, copy-link, status-bar URL preview).
+
+  - id: link-as-button
+    title: '`<a>` used for an in-page action'
+    description: >-
+      A link wired with `onclick` performing an in-page action
+      (toggling a panel, submitting a form). Middle-click opens an
+      empty page; the URL is visible in the status bar but leads
+      nowhere meaningful; `href="#"` causes scroll-to-top on JS
+      failure.
+    fix: >-
+      Use `<button>` for in-page actions. The semantic distinction
+      ("link navigates, button performs") is the right test. If the
+      visual treatment requires a link's appearance, use a Button
+      with the `tertiary` or `ghost` variant — not an `<a>`.
+
+  - id: link-uninformative-text
+    title: 'Link text is "click here" or "read more"'
+    description: >-
+      SR users navigating by link list (a common SR navigation
+      pattern) hear "click here" / "read more" detached from
+      surrounding context. The link is unidentifiable.
+    fix: >-
+      Link text describes the destination meaningfully out of
+      context: "Read the Q3 report" instead of "click here". When
+      the visual design demands short link text adjacent to
+      descriptive prose, use `aria-labelledby` to assemble the full
+      accessible name from both the prose and the link text.
+
+  - id: link-external-no-rel-or-indication
+    title: External link without `rel` or visual indicator
+    description: >-
+      `target="_blank"` without `rel="noopener noreferrer"` exposes
+      the parent window via `window.opener` (security and tabnabbing
+      risk). Without a visual indicator the user cannot predict that
+      the link opens a new tab — back-button behaviour is broken
+      from their perspective.
+    fix: >-
+      `target="_blank"` always pairs with `rel="noopener
+      noreferrer"`. Render an external-indicator icon, append "(opens
+      in new tab)" to the accessible name (visible or
+      visually-hidden), and announce it on focus via `aria-label` or
+      a hidden `<span>`.
+
+  - id: link-download-no-fallback
+    title: Download link without metadata or fallback for failed downloads
+    description: >-
+      `<a href="report.pdf" download>` does not announce file format
+      or size, and the `download` attribute is silently ignored on
+      cross-origin URLs (the file opens inline instead). Users on
+      restricted environments may lose the file.
+    fix: >-
+      Pair the download link with file-type and size metadata in
+      visible text or an accessible-name suffix: "Download Q3 report
+      (PDF, 2 MB)". Document the cross-origin caveat: download links
+      to other origins require server-side `Content-Disposition:
+      attachment` to enforce download.
+
+  - id: link-visited-color-only
+    title: Visited state distinguished by color alone
+    description: >-
+      The link's `:visited` colour is the only differentiator from
+      `:link`. Users with colour-vision deficiencies or in high
+      ambient light cannot tell visited from unvisited.
+    fix: >-
+      Pair colour with a non-color visited cue — a small dot, a
+      checkmark, or a slightly different weight or underline style.
+      The CSS `:visited` selector is privacy-restricted (limited
+      properties); the visited marker slot in the canonical anatomy
+      handles non-restricted properties.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-link>` host element internally rendering a real `<a>` with `href` reflected from a `to` attribute; named slots for icon-trailing
+    variantMechanism: attributes (`variant="standalone"`, `external`, `download`, `size="md"`); reflected to host classes
+  react:
+    structureMechanism: a single `<Link>` component that wraps `<a>` (or framework router's `<Link>` like Next.js, React Router); accepts `to` plus icon-trailing children
+    variantMechanism: props with class-variance-authority; `external` and `download` boolean props drive both attributes and visual indicator
+  angularSignals:
+    structureMechanism: a `[uiLink]` directive on `<a>` plus optional `<ui-link>` component that wraps internal `<a>`; supports Angular Router `[routerLink]` for in-app navigation
+    variantMechanism: input<'inline' | 'standalone' | 'button-styled'>(); `[external]`, `[download]` host bindings reflect to attributes
+  vue:
+    structureMechanism: a `<Link>` SFC wrapping `<a>` (or `<router-link>` for Vue Router); slot for icon-trailing
+    variantMechanism: defineProps with literal-union types; `:external` boolean drives the indicator and rel attribute
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the link in document order. Disabled-styled
+        links (via aria-disabled) remain focusable so SR users hear
+        the disabled-link state; truly unavailable links should be
+        rendered as plain text instead.
+    - keys: Enter
+      expected: >-
+        Activates the link — navigates to the `href`. Spacebar does
+        not activate (anchors are Enter-only by native convention,
+        unlike buttons).
+    - keys: Shift+Click or middle-click (when the underlying device supports)
+      expected: >-
+        Opens the link in a new tab. Native `<a>` honours this for
+        free; bespoke `role="link"` divs do not.
+  announcements:
+    - trigger: Focus enters an internal link
+      expected: >-
+        SR announces the link's accessible name followed by "link"
+        (e.g. "Q3 report, link"). The destination URL is *not*
+        spoken automatically; verbose verbosity modes may include
+        it.
+    - trigger: 'Focus enters an external link with `external: true`'
+      expected: >-
+        SR announces "<label>, link, opens in new tab" (or
+        equivalent — "external link"). The "opens in new tab"
+        portion comes from the canonical announcement pattern
+        (visually-hidden suffix or `aria-label` extension).
+    - trigger: 'Focus enters a download link with `download: true`'
+      expected: >-
+        SR announces the link followed by file metadata:
+        "<label> (PDF, 2 MB), link". The metadata lives in the link
+        text or an accessible-name suffix; SR does not infer it
+        from the file extension.
+    - trigger: Visited state set
+      expected: >-
+        Visited is rendered visually only; SR does not announce
+        "visited" by default. For revisit-aware lists, the
+        accessible name may include a "visited" suffix via
+        `aria-describedby`.
+  axeRules:
+    - link-name
+    - link-in-text-block
+    - color-contrast
+    - target-size
+    - identical-links-same-purpose
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps inline / standalone / button-styled.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg. Mostly relevant for standalone variant; inline links inherit surrounding text size.
+  - figma: Emphasis
+    code: emphasis
+    type: Variant
+    notes: subtle / default / strong. Drives colour intensity and underline thickness.
+  - figma: External
+    code: external
+    type: Boolean
+    notes: Toggles trailing-icon visibility and adds `target="_blank" rel="noopener noreferrer"` plus a "(opens in new tab)" SR announcement.
+  - figma: Download
+    code: download
+    type: Boolean
+    notes: Toggles trailing-icon visibility and sets the `download` attribute. Cross-origin caveat documented in mistakes.
+  - figma: Has Trailing Icon
+    code: iconTrailing
+    type: Boolean
+    notes: Slot-visibility toggle; auto-true when external or download is true.
+  - figma: Trailing Icon
+    code: iconTrailing
+    type: Instance Swap
+    notes: Swap the trailing-icon component (chevron, arrow, download-arrow, external-square).
+  - figma: Label
+    code: children
+    type: Text
+    notes: Default slot — the link text.
+  - figma: Visited
+    code: 'data-visited'
+    type: Boolean
+    notes: >-
+      Figma-only state for design preview; in production the
+      `:visited` pseudo-class drives the visual without a code prop.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Underline and text alignment follow the document direction
+      (LTR underline below the baseline; RTL same — underlines are
+      direction-neutral). Trailing icons (external arrow, download
+      arrow) move from inline-end to inline-start visually but
+      remain semantically "trailing"; their glyphs do *not* mirror
+      (a download arrow points down in both directions; an
+      external-square glyph is direction-neutral). Numerals in link
+      text follow the locale's preferred numeral system. Chevrons
+      indicating jump direction (anchor-down, see-also-right) flip
+      horizontally to preserve semantic direction.
+  textExpansion: >-
+    Link labels can grow significantly. Inline links inside prose
+    inherit line-wrap; standalone links may need a larger
+    inline-size budget. Avoid hard-coding link min-width; use the
+    label's natural width plus padding (button-styled variant only).
+    Generic phrases like "Read more" / "Learn more" expand
+    differently in DE / RU / FI — DE "Mehr erfahren" is shorter
+    than "Read more"; RU "Подробнее" is longer; the canonical
+    surface is sized for the longest expected expansion.
+
+whenToUse:
+  use: >-
+    When the user needs to navigate to another resource — another
+    page, an anchor on the current page, an external URL, a
+    downloadable file, or a `mailto:` / `tel:` target. Default
+    activator for navigation.
+  avoid: >-
+    For in-page actions that do not navigate (form submit, modal
+    open, panel toggle) — that is `Button`. For the disclosure
+    affordance of a menu — that is `MenuButton`. For decorative
+    in-prose markers that should not be interactive — that is
+    plain text (or a `<dfn>` / `<abbr>` element).
+  vsRelated:
+    - id: button
+      difference: >-
+        `Link` navigates; `Button` performs an action without
+        navigation. Visual styling may converge (button-styled
+        link, link-styled button), but the semantic choice never
+        does — middle-click, copy-link, status-bar URL preview, and
+        keyboard activation (Enter-only vs Enter+Space) all depend
+        on the underlying element.
+    - id: icon-button
+      difference: >-
+        `IconButton` is a button rendered as an icon plus
+        `aria-label`. A link rendered as an icon (`<a>` wrapping an
+        icon with `aria-label`) is still a Link if it navigates;
+        IconButton only when it triggers an action.
+    - id: menu-button
+      difference: >-
+        `MenuButton` opens a menu of options and exposes
+        `aria-haspopup="menu"`. `Link` navigates immediately on
+        activation. A "links-list rendered as a menu" pattern is
+        either a real menu (MenuButton + menu items) or a
+        navigation list with `<a>` items — never both.
+
+notes: >-
+  Link is one of the few canonical components whose anatomy is
+  effectively the native HTML element. The structure / variant /
+  property axis exists primarily to capture the design-system
+  decisions layered on top of `<a>`: visual variants for the
+  inline / standalone / button-styled treatments, properties for
+  external and download (which gate native attributes plus visual
+  indicators), and the rich a11y story around accessible names and
+  external-link announcements. Most divergence between
+  implementations lives in how the `external` and `download`
+  properties wire up announcements and metadata — not in the
+  underlying element.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/practices/links/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a
+  - https://www.w3.org/TR/WCAG22/#use-of-color
+  - https://www.w3.org/TR/WCAG22/#link-purpose-in-context
+  - https://polaris.shopify.com/components/actions/link
+  - https://carbondesignsystem.com/components/link/usage/
+  - https://m3.material.io/styles/typography/applying-type#tabs (link styles in body)
+  - https://atlassian.design/components/link/examples
+  - https://www.gov.uk/service-manual/design/links
+  - https://inclusive-components.design/links-vs-buttons/
+
+lastReviewed: '2026-04-29'
