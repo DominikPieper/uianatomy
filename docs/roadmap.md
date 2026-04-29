@@ -12,12 +12,12 @@ A pragmatic, phased plan. Phases are sequential — each builds on what's stable
   - **Card** — first component, format-defining
   - **Modal** — validates the schema on a different anatomy
   - **Tabs** — multi-region anatomy with state
-  - **Combobox** — first complex component, likely first override SVG
+  - **Combobox** — first complex component, validates layout on dense anatomy
   - **Button** — small but high-traffic; tests that simple components also fit the schema
 - Astro site with three views and global view switcher
 - MCP server with the core tools (`list_components`, `get_component`, `get_anatomy`, etc.)
 - Static JSON API
-- Anatomy SVG generator (with override path verified on Combobox)
+- Anatomy SVG generator (auto-layout from YAML; override path deferred to Phase 3 if needed)
 - Public deployment on Netlify
 - Domain and basic visual identity
 

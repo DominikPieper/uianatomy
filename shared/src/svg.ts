@@ -53,6 +53,19 @@ function truncate(s: string, n = LABEL_MAX): string {
   return flat.length > n ? flat.slice(0, n - 1) + '…' : flat;
 }
 
+// Width-aware truncation for SVG slot labels.
+// Avg char widths at 12px chosen empirically from rendered serif-italic / mono samples,
+// with safety margin so the label never crosses the rect border.
+function truncateForBox(s: string, boxWidth: number, fontKind: 'serif' | 'mono' = 'serif'): string {
+  const flat = s.replace(/\s+/g, ' ').trim();
+  const charPx = fontKind === 'mono' ? 7.2 : 6.5;
+  const padding = 12;
+  const usable = Math.max(0, boxWidth - padding);
+  const maxChars = Math.max(4, Math.floor(usable / charPx));
+  if (flat.length <= maxChars) return flat;
+  return flat.slice(0, Math.max(1, maxChars - 1)) + '…';
+}
+
 interface LayoutResult {
   boxes: Map<string, SlotBoxes>;
   overlaySlot: AnatomySlot | null;
@@ -284,9 +297,9 @@ function emitSlotGroup(
 ): string {
   const { x, y, w, h } = isPrimary ? boxes.primary : boxes.repeats[index]!;
   const dasharray = slot.required ? '' : ' stroke-dasharray="6 4"';
-  const figma = escape(truncate(slot.figma.hint));
-  const code = escape(`slot="${slot.code.slot}"`);
-  const bridge = escape(slot.id);
+  const figma = escape(truncateForBox(slot.figma.hint, w, 'serif'));
+  const code = escape(truncateForBox(`slot="${slot.code.slot}"`, w, 'mono'));
+  const bridge = escape(truncateForBox(slot.id, w, 'mono'));
   const cls = isPrimary ? 'anatomy-slot' : 'anatomy-slot anatomy-repeat-ghost';
   const idAttr = isPrimary ? ` id="slot-${escape(slot.id)}"` : '';
   const cy = y + h / 2;
