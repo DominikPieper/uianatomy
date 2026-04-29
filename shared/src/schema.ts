@@ -13,15 +13,30 @@ export const layoutSpan = z.union([
   z.number().int().positive(),
 ]);
 
-export const layoutHintSchema = z.object({
-  row: z.number().int().positive(),
-  col: z.number().int().positive().optional(),
-  span: layoutSpan,
-  aspect: z
-    .string()
-    .regex(/^\d+:\d+$/, "aspect must look like '16:9'")
-    .optional(),
+export const floatingHintSchema = z.object({
+  anchor: slug,
+  position: z.enum(['below', 'right', 'above', 'left']),
+  offset: z.number().int().nonnegative().optional(),
 });
+
+export const layoutHintSchema = z
+  .object({
+    row: z.number().int().positive().optional(),
+    col: z.number().int().positive().optional(),
+    span: layoutSpan.optional(),
+    aspect: z
+      .string()
+      .regex(/^\d+:\d+$/, "aspect must look like '16:9'")
+      .optional(),
+    parent: slug.optional(),
+    repeats: z.number().int().min(2).max(5).optional(),
+    overlay: z.boolean().optional(),
+    floating: floatingHintSchema.optional(),
+  })
+  .refine(
+    (l) => l.parent !== undefined || l.overlay === true || l.floating !== undefined || l.row !== undefined,
+    { message: 'layout requires `row` unless `parent`, `overlay`, or `floating` is set' },
+  );
 
 export const figmaHintSchema = z.object({
   type: z.string().min(1),
@@ -106,6 +121,7 @@ export const componentSchema = z.object({
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
+export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Axes = z.infer<typeof axesSchema>;

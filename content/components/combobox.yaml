@@ -86,9 +86,11 @@ anatomy:
       Popup container that renders the option list. Floats above
       adjacent content; positioned relative to the input.
     layout:
-      row: 2
-      col: 1
-      span: full
+      floating:
+        anchor: input
+        position: below
+        offset: 12
+      span: 8
     figma:
       type: frame
       hint: Floating frame (overlay layer); width matches input by default
@@ -108,9 +110,10 @@ anatomy:
       describes the role; one component instance is rendered per
       filtered match.
     layout:
-      row: 3
-      col: 1
+      parent: listbox
+      row: 1
       span: full
+      repeats: 3
     figma:
       type: instance
       hint: Option component instance with selected and highlighted variants
@@ -131,8 +134,8 @@ anatomy:
       current input value. Substitutes for the option list rather
       than appearing alongside it.
     layout:
-      row: 4
-      col: 1
+      parent: listbox
+      row: 2
       span: full
     figma:
       type: frame

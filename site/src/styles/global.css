@@ -216,7 +216,7 @@ ul.component-index p {
   border-radius: 6px;
   padding: 12px;
   background: white;
-  color: var(--fg);
+  color: var(--accent-active);
   margin: 12px 0 24px;
 }
 
@@ -226,7 +226,54 @@ ul.component-index p {
   height: auto;
 }
 
+.anatomy-host .anatomy-slot rect {
+  stroke: currentColor;
+}
+
+.anatomy-host .anatomy-slot text {
+  fill: var(--fg);
+}
+
 .anatomy-host .anatomy-slot:hover rect {
   fill: var(--accent-active);
   fill-opacity: 0.08;
+}
+
+.anatomy-host .anatomy-overlay rect {
+  stroke: var(--accent-active);
+  stroke-opacity: 0.5;
+}
+
+.anatomy-host .anatomy-overlay text {
+  font-style: italic;
+  fill: var(--fg-muted);
+}
+
+.anatomy-host .anatomy-repeat-ghost rect {
+  stroke-opacity: 0.45;
+}
+
+.anatomy-host .anatomy-repeat-ghost text {
+  fill-opacity: 0.5;
+}
+
+.anatomy-host .anatomy-floating-connector {
+  stroke: var(--accent-active);
+  stroke-opacity: 0.6;
+}
+
+.anatomy-host .anatomy-label {
+  display: none;
+}
+
+[data-view='designer'] .anatomy-host .label-figma {
+  display: block;
+}
+
+[data-view='dev'] .anatomy-host .label-code {
+  display: block;
+}
+
+[data-view='bridge'] .anatomy-host .label-bridge {
+  display: block;
 }

@@ -40,9 +40,10 @@ anatomy:
       anatomy slot describes the *role*; in practice one component
       instance is rendered per tab.
     layout:
-      row: 2
-      col: 1
-      span: quarter
+      parent: tablist
+      row: 1
+      span: 4
+      repeats: 3
     figma:
       type: instance
       hint: Tab item component instance; selected state via component property
@@ -63,9 +64,12 @@ anatomy:
       (typically an underline). Not part of the semantic structure;
       driven from the selected tab's geometry.
     layout:
-      row: 3
-      col: 1
-      span: quarter
+      floating:
+        anchor: tab
+        position: below
+        offset: 4
+      span: 4
+      aspect: '32:1'
     figma:
       type: rectangle
       hint: 2-3px line component variant; position bound to selected tab
@@ -84,7 +88,7 @@ anatomy:
       The content region revealed by selecting a tab. One per tab in
       practice; one anatomy slot describes the role.
     layout:
-      row: 4
+      row: 2
       col: 1
       span: full
     figma:

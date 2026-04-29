@@ -20,10 +20,7 @@ anatomy:
       from the dialog container so it can be styled and animated
       independently.
     layout:
-      row: 1
-      col: 1
-      span: full
-      aspect: '16:3'
+      overlay: true
     figma:
       type: frame
       hint: Full-bleed frame with semi-transparent fill below the container
@@ -42,7 +39,7 @@ anatomy:
       The dialog box itself — the bounded surface that renders header,
       body, and footer. Carries the focus trap and the dialog role.
     layout:
-      row: 2
+      row: 1
       col: 1
       span: full
     figma:
@@ -66,8 +63,8 @@ anatomy:
       some dialogs (alert dialogs, confirmation dialogs) inline the
       title with the body and place the close affordance in the footer.
     layout:
-      row: 3
-      col: 1
+      parent: container
+      row: 1
       span: full
     figma:
       type: frame
@@ -86,7 +83,8 @@ anatomy:
       The dialog's name. The first thing announced after the dialog
       opens and the value of `aria-labelledby` on the container.
     layout:
-      row: 4
+      parent: header
+      row: 1
       col: 1
       span: 9
     figma:
@@ -108,7 +106,8 @@ anatomy:
       its primary action. Conventionally an "×" icon in the trailing
       edge of the header, but may live in the footer for alert dialogs.
     layout:
-      row: 4
+      parent: header
+      row: 1
       col: 2
       span: 3
     figma:
@@ -130,8 +129,8 @@ anatomy:
       collect. Keep scrolling self-contained within the body if the
       content overflows; the header and footer should remain pinned.
     layout:
-      row: 5
-      col: 1
+      parent: container
+      row: 2
       span: full
     figma:
       type: frame
@@ -152,8 +151,8 @@ anatomy:
       and emphasis (primary on leading vs. trailing edge) is a
       platform-convention decision documented in the variants table.
     layout:
-      row: 6
-      col: 1
+      parent: container
+      row: 3
       span: full
     figma:
       type: frame

@@ -56,6 +56,43 @@ describe('anatomy SVG generator', () => {
     expect(svg).toMatch(/stroke-dasharray="6 4"/);
   });
 
+  it('emits all three view labels per slot', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const svg = renderAnatomySVG(card);
+    const figmaCount = (svg.match(/class="anatomy-label label-figma"/g) ?? []).length;
+    const codeCount = (svg.match(/class="anatomy-label label-code"/g) ?? []).length;
+    const bridgeCount = (svg.match(/class="anatomy-label label-bridge"/g) ?? []).length;
+    expect(figmaCount).toBeGreaterThanOrEqual(card.anatomy.length);
+    expect(codeCount).toBeGreaterThanOrEqual(card.anatomy.length);
+    expect(bridgeCount).toBeGreaterThanOrEqual(card.anatomy.length);
+  });
+
+  it('renders Modal overlay slot at canvas dimensions', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const svg = renderAnatomySVG(modal);
+    expect(svg).toContain('class="anatomy-slot anatomy-overlay"');
+    expect(svg).toContain('id="slot-backdrop"');
+  });
+
+  it('renders Tabs tab repeats and indicator floating connector', async () => {
+    const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
+    const svg = renderAnatomySVG(tabs);
+    expect(svg).toContain('id="slot-tab"');
+    const ghosts = (svg.match(/anatomy-repeat-ghost/g) ?? []).length;
+    expect(ghosts).toBeGreaterThanOrEqual(2);
+    expect(svg).toContain('anatomy-floating-connector');
+  });
+
+  it('renders Combobox listbox floating below input with options nested', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    const svg = renderAnatomySVG(combobox);
+    expect(svg).toContain('id="slot-listbox"');
+    expect(svg).toContain('id="slot-option"');
+    expect(svg).toContain('anatomy-floating-connector');
+    const optionGhosts = (svg.match(/anatomy-repeat-ghost/g) ?? []).length;
+    expect(optionGhosts).toBeGreaterThanOrEqual(2);
+  });
+
   it('validates override slot ids against YAML anatomy', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const goodOverride = card.anatomy.map((s) => `<g id="slot-${s.id}"></g>`).join('');
