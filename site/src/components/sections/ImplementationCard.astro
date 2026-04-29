@@ -1,0 +1,126 @@
+---
+import { Code } from 'astro:components';
+import type { Implementation } from '@uianatomy/shared/schema';
+import DivergenceTable from './DivergenceTable.astro';
+
+interface Props {
+  implementation: Implementation;
+}
+const { implementation: impl } = Astro.props;
+
+const LANG_BY_LIBRARY: Record<string, 'tsx' | 'vue' | 'typescript' | 'html'> = {
+  radix: 'tsx',
+  headlessui: 'vue',
+  cdk: 'typescript',
+};
+const lang = LANG_BY_LIBRARY[impl.libraryId] ?? 'tsx';
+---
+<article class="impl-card">
+  <header class="impl-card__header">
+    <div class="impl-card__heading">
+      <span class="impl-card__library">{impl.libraryId}</span>
+      <code class="impl-card__name">{impl.componentName}</code>
+    </div>
+  </header>
+
+  {impl.exampleCode && (
+    <div class="impl-card__example">
+      <Code code={impl.exampleCode} lang={lang} wrap={true} />
+    </div>
+  )}
+
+  {impl.divergence && impl.divergence.length > 0 && (
+    <div class="impl-card__divergence">
+      <h4 class="impl-card__sub">Divergence</h4>
+      <DivergenceTable divergence={impl.divergence} />
+    </div>
+  )}
+
+  {impl.rationale && (
+    <details class="impl-card__rationale">
+      <summary>Why this audit reads the way it does</summary>
+      <p>{impl.rationale}</p>
+    </details>
+  )}
+</article>
+
+<style>
+  .impl-card {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 0 0 20px;
+    background: var(--surface-bg);
+  }
+  .impl-card__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 14px;
+  }
+  .impl-card__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .impl-card__library {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-active, var(--text-primary));
+    color: var(--surface-bg);
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+  }
+  .impl-card__name {
+    font-size: var(--text-step-0);
+    font-weight: 600;
+  }
+  .impl-card__example {
+    margin: 0 0 16px;
+  }
+  .impl-card__example :global(.astro-code) {
+    border-radius: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-subtle);
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .impl-card__sub {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    margin: 0 0 8px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+  .impl-card__divergence {
+    margin: 0 0 16px;
+  }
+  .impl-card__rationale {
+    margin: 0;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 12px;
+  }
+  .impl-card__rationale summary {
+    cursor: pointer;
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    list-style: none;
+  }
+  .impl-card__rationale summary::before {
+    content: '▸ ';
+    margin-right: 4px;
+  }
+  .impl-card__rationale[open] summary::before {
+    content: '▾ ';
+  }
+  .impl-card__rationale p {
+    margin: 10px 0 0;
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

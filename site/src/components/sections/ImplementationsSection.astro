@@ -1,0 +1,46 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ImplementationCard from './ImplementationCard.astro';
+
+interface Props {
+  implementations: CollectionEntry<'implementations'>[];
+}
+const { implementations } = Astro.props;
+
+const sorted = implementations
+  .slice()
+  .sort((a, b) => a.data.libraryId.localeCompare(b.data.libraryId));
+---
+{sorted.length > 0 && (
+  <section class="implementations" aria-labelledby="implementations-heading">
+    <header class="implementations__header">
+      <h2 id="implementations-heading">Implementations</h2>
+      <p class="implementations__lede">
+        How specific libraries realise the canonical anatomy. Each entry records the
+        deltas between the canon and the library's surface.
+      </p>
+    </header>
+    {sorted.map((entry) => (
+      <ImplementationCard implementation={entry.data} />
+    ))}
+  </section>
+)}
+
+<style>
+  .implementations {
+    margin: 0 0 32px;
+  }
+  .implementations__header {
+    margin: 0 0 14px;
+  }
+  .implementations__header h2 {
+    margin: 0 0 6px;
+    font-size: var(--text-step-1);
+    font-weight: 600;
+  }
+  .implementations__lede {
+    margin: 0;
+    color: var(--fg-muted);
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

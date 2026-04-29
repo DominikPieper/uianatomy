@@ -1,0 +1,105 @@
+---
+import type { Divergence } from '@uianatomy/shared/schema';
+
+interface Props {
+  divergence: Divergence[];
+}
+const { divergence } = Astro.props;
+
+function targetLabel(d: Divergence): string {
+  switch (d.type) {
+    case 'omitted':
+      return '—';
+    case 'renamed':
+      return d.to;
+    case 'reshaped':
+      return d.to;
+    case 'extended':
+      return `+ ${d.addition}`;
+  }
+}
+
+const TYPE_LABEL: Record<Divergence['type'], string> = {
+  omitted: 'omitted',
+  renamed: 'renamed',
+  extended: 'extended',
+  reshaped: 'reshaped',
+};
+---
+<div class="table-scroll">
+  <table class="divergence-table">
+    <thead>
+      <tr>
+        <th>From</th>
+        <th>Type</th>
+        <th>→ To</th>
+        <th>Rationale</th>
+      </tr>
+    </thead>
+    <tbody>
+      {divergence.map((d) => (
+        <tr>
+          <td><code class="divergence-from">{d.from}</code></td>
+          <td>
+            <span class={`divergence-type divergence-type--${d.type}`}>
+              {TYPE_LABEL[d.type]}
+            </span>
+          </td>
+          <td class="divergence-to">
+            {d.type === 'omitted' ? <span class="divergence-to--empty">—</span> : <code>{targetLabel(d)}</code>}
+          </td>
+          <td class="divergence-rationale">{d.rationale}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .divergence-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .divergence-table th {
+    text-align: left;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    color: var(--fg-muted);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .divergence-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .divergence-table tr:last-child td {
+    border-bottom: 0;
+  }
+  .divergence-from {
+    white-space: nowrap;
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .divergence-to code {
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .divergence-to--empty {
+    color: var(--fg-muted);
+  }
+  .divergence-rationale {
+    min-width: 280px;
+  }
+  .divergence-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    white-space: nowrap;
+  }
+</style>

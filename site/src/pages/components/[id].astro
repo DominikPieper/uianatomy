@@ -6,6 +6,7 @@ import DesignerView from '../../components/views/DesignerView.astro';
 import DevView from '../../components/views/DevView.astro';
 import BridgeView from '../../components/views/BridgeView.astro';
 import WhenToUseSection from '../../components/sections/WhenToUseSection.astro';
+import ImplementationsSection from '../../components/sections/ImplementationsSection.astro';
 import Icon from '../../components/Icon.astro';
 
 export async function getStaticPaths() {
@@ -16,6 +17,11 @@ export async function getStaticPaths() {
 interface Props { entry: CollectionEntry<'components'> }
 const { entry } = Astro.props;
 const component = entry.data;
+
+const implementations = await getCollection(
+  'implementations',
+  (e) => e.data.componentId === component.id,
+);
 ---
 <Base
   title={component.name}
@@ -41,6 +47,8 @@ const component = entry.data;
         <span data-anatomy-caption></span>
       </p>
     </section>
+
+    <ImplementationsSection implementations={implementations} />
 
     <DesignerView component={component} />
     <DevView component={component} />
