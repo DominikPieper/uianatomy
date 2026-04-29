@@ -252,6 +252,45 @@ export const whenToUseSchema = z
   })
   .strict();
 
+const axeRuleId = z
+  .string()
+  .regex(
+    /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/,
+    'axe rule id must be kebab-case (e.g. button-name, color-contrast)',
+  );
+
+export const keyboardWalkEntrySchema = z
+  .object({
+    keys: z.string().min(1),
+    expected: z.string().min(1),
+  })
+  .strict();
+
+export const announcementEntrySchema = z
+  .object({
+    trigger: z.string().min(1),
+    expected: z.string().min(1),
+  })
+  .strict();
+
+export const a11yAcceptanceSchema = z
+  .object({
+    keyboardWalk: z.array(keyboardWalkEntrySchema).min(1).optional(),
+    announcements: z.array(announcementEntrySchema).min(1).optional(),
+    axeRules: z.array(axeRuleId).min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      v.keyboardWalk !== undefined ||
+      v.announcements !== undefined ||
+      v.axeRules !== undefined,
+    {
+      message:
+        'a11yAcceptance must declare at least one of keyboardWalk, announcements, axeRules',
+    },
+  );
+
 const canonicalRefPath = z
   .string()
   .regex(
@@ -334,6 +373,7 @@ export const componentSchema = z.object({
   motion: motionSchema.optional(),
   responsive: responsiveSchema.optional(),
   events: z.array(eventSchema).min(1).optional(),
+  a11yAcceptance: a11yAcceptanceSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -355,6 +395,9 @@ export type EventFrameworkNotes = z.infer<typeof eventFrameworkNotesSchema>;
 export type ComponentEvent = z.infer<typeof eventSchema>;
 export type VsRelatedEntry = z.infer<typeof vsRelatedEntrySchema>;
 export type WhenToUse = z.infer<typeof whenToUseSchema>;
+export type KeyboardWalkEntry = z.infer<typeof keyboardWalkEntrySchema>;
+export type AnnouncementEntry = z.infer<typeof announcementEntrySchema>;
+export type A11yAcceptance = z.infer<typeof a11yAcceptanceSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
 export type Component = z.infer<typeof componentSchema>;

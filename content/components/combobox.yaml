@@ -509,6 +509,64 @@ events:
         `@update:open` for `v-model:open`; suppressed when the open
         state is computed and not externally controlled.
 
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the input. Focus never moves into the listbox even
+        when the popup is open — DOM focus stays on the input throughout.
+        From the input, Tab leaves the combobox entirely.
+    - keys: ArrowDown / ArrowUp
+      expected: >-
+        With popup closed, opens the popup and highlights the first /
+        last option. With popup open, moves the highlight to the next /
+        previous option via `aria-activedescendant`. The input retains
+        DOM focus.
+    - keys: Enter
+      expected: >-
+        With popup open and an option highlighted, commits the
+        highlighted option (input value updates, popup closes for
+        single-select). With popup closed, behaves like default form
+        submission if applicable.
+    - keys: Escape
+      expected: >-
+        With popup open, closes the popup without changing the value.
+        With popup already closed, clears the input value (matches APG
+        guidance for combobox).
+    - keys: Home / End
+      expected: >-
+        With popup open, highlights first / last option in the listbox.
+        With popup closed, default text-input caret behavior (line start
+        / end).
+  announcements:
+    - trigger: Input focused, popup closed
+      expected: >-
+        SR announces "<label>, combobox, expanded false" plus the current
+        input value. The combobox role is on the input itself, not on a
+        wrapping element.
+    - trigger: Option highlighted via ArrowDown
+      expected: >-
+        SR announces "<option label>, <position> of <total>". The
+        announcement is driven by `aria-activedescendant` updating to the
+        highlighted option's id.
+    - trigger: Async filter results return
+      expected: >-
+        A live region (`aria-live="polite"` inside the listbox or as a
+        sibling) announces the result count — e.g. "12 results". Without
+        this, SR users have no signal that filtering completed.
+    - trigger: '`strict: true` blur with unmatched value'
+      expected: >-
+        Input gets `aria-invalid="true"`; the inline error referenced
+        via `aria-describedby` is announced ("Pick a value from the
+        list").
+  axeRules:
+    - aria-required-attr
+    - aria-valid-attr-value
+    - aria-roles
+    - aria-input-field-name
+    - color-contrast
+    - focus-order-semantics
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/combobox_role

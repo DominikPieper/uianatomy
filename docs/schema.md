@@ -250,6 +250,39 @@ events:                                            # optional
 
 `frameworkNotes` is reference data, not a binding contract. Phase-2 implementations (`implementations/<lib>/<id>.yaml`) record the actual handler signatures via a future `eventBindings` field. The canonical notes describe what is *idiomatic*, not what is shipped in any specific library version.
 
+## `a11yAcceptance` (optional, top-level)
+
+Per-component accessibility acceptance criteria. Three independently optional sub-arrays — `keyboardWalk`, `announcements`, `axeRules` — at least one required when the field is present. The full rationale is in [ADR-014](./adr/014-a11y-acceptance.md).
+
+```yaml
+a11yAcceptance:                       # optional
+  keyboardWalk:                       # optional, min 1 when present
+    - keys: Tab
+      expected: Focus moves to the next focusable inside the dialog.
+    - keys: Shift+Tab
+      expected: Focus moves to the previous focusable inside the dialog.
+  announcements:                      # optional, min 1 when present
+    - trigger: Dialog opens
+      expected: SR announces the title via `aria-labelledby`, then "dialog".
+  axeRules:                           # optional, min 1 when present
+    - aria-dialog-name
+    - aria-modal-misuse
+    - color-contrast
+```
+
+**Shape rules:**
+
+- `a11yAcceptance` itself is optional. Components without testable canonical a11y vocabulary omit the field.
+- When present, at least one of `keyboardWalk`, `announcements`, `axeRules` must be declared (Zod refine).
+- Each sub-array is non-empty when present.
+- `keyboardWalk` entries are `{ keys, expected }` — both prose. `keys` is the key combo or compound condition (`'ArrowLeft / ArrowRight (horizontal)'`). `expected` is the prose acceptance criterion.
+- `announcements` entries are `{ trigger, expected }`. `trigger` names what causes the announcement; `expected` describes what assistive tech should say.
+- `axeRules` is a flat array of axe-core rule ids in kebab-case (regex `/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/`). Membership is not validated against axe-core; CI catches invalid ids when `axe.run()` rejects them.
+
+**YAML gotcha:** colons inside prose values (e.g. `` `dismissible: true` ``) require single-quoting the surrounding string, or rephrasing to drop the colon. The YAML parser otherwise interprets the colon as a mapping separator and fails the file at the indentation check.
+
+**Render:** `A11yAcceptanceTable.astro` renders in Dev view and Bridge view after the per-slot `A11yTable`. Designer view is intentionally not changed; per-slot `a11y.hint` continues to cover designer needs.
+
 ## `axes`
 
 The three-way distinction between variants, properties, and states.

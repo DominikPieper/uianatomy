@@ -1,0 +1,121 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+
+const a = component.a11yAcceptance;
+---
+{a && (
+  <div class="a11y-acceptance">
+    {a.keyboardWalk && a.keyboardWalk.length > 0 && (
+      <section class="a11y-acceptance__block">
+        <h4>Keyboard walk</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Keys</th><th>Expected</th></tr></thead>
+            <tbody>
+              {a.keyboardWalk.map((k) => (
+                <tr>
+                  <td><code class="a11y-acceptance__keys">{k.keys}</code></td>
+                  <td>{k.expected}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+
+    {a.announcements && a.announcements.length > 0 && (
+      <section class="a11y-acceptance__block">
+        <h4>Screen-reader announcements</h4>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Trigger</th><th>Expected</th></tr></thead>
+            <tbody>
+              {a.announcements.map((n) => (
+                <tr>
+                  <td class="a11y-acceptance__trigger">{n.trigger}</td>
+                  <td>{n.expected}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+
+    {a.axeRules && a.axeRules.length > 0 && (
+      <section class="a11y-acceptance__block">
+        <h4>axe-core rules to assert</h4>
+        <ul class="a11y-acceptance__rules">
+          {a.axeRules.map((r) => (
+            <li><code>{r}</code></li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+)}
+
+<style>
+  .a11y-acceptance {
+    display: grid;
+    gap: 22px;
+    margin: 0 0 24px;
+  }
+  .a11y-acceptance__block h4 {
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    margin: 0 0 8px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+  .a11y-acceptance__block table {
+    width: 100%;
+  }
+  .a11y-acceptance__block th {
+    text-align: left;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    color: var(--fg-muted);
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .a11y-acceptance__block td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .a11y-acceptance__block tr:last-child td {
+    border-bottom: 0;
+  }
+  .a11y-acceptance__keys {
+    white-space: nowrap;
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .a11y-acceptance__trigger {
+    min-width: 200px;
+    font-weight: 500;
+  }
+  .a11y-acceptance__rules {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .a11y-acceptance__rules li {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: var(--text-step--1);
+  }
+  .a11y-acceptance__rules code {
+    font-size: inherit;
+  }
+</style>

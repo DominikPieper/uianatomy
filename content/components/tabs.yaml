@@ -427,6 +427,55 @@ events:
         `@activate` event in manual mode; `automatic` mode collapses it
         into `@update:modelValue`.
 
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the tablist on the currently selected tab (roving
+        tabindex — only the selected tab has `tabindex="0"`). One more
+        Tab leaves the tablist toward the tabpanel or its first
+        focusable descendant; further Tabs walk into and through the
+        panel content.
+    - keys: ArrowLeft / ArrowRight (horizontal) or ArrowUp / ArrowDown (vertical)
+      expected: >-
+        Moves focus to the previous/next tab inside the tablist. In
+        `activation: automatic` mode the tab activates on focus
+        (`aria-selected="true"`, panel swaps); in `activation: manual`
+        mode focus moves but selection is unchanged.
+    - keys: Home / End
+      expected: >-
+        Focus moves to the first/last tab in the tablist. Activation
+        follows the active activation mode.
+    - keys: Enter or Space (in manual mode)
+      expected: >-
+        Activates the focused tab — `aria-selected` flips, the panel
+        renders. In automatic mode this is a no-op (already activated by
+        focus).
+  announcements:
+    - trigger: Focus enters a tab
+      expected: >-
+        SR announces "<label>, tab, selected" for the currently selected
+        tab, or "<label>, tab" for non-selected tabs, followed by
+        position ("1 of 3"). Position comes from the `aria-posinset` /
+        `aria-setsize` pair when the tablist is large or generated.
+    - trigger: Lazy panel mounts with `aria-busy="true"`
+      expected: >-
+        SR announces the busy state on the tabpanel; once
+        `aria-busy="false"` and content lands, SR reads the panel content
+        starting with the next focusable inside.
+    - trigger: Selection changes via arrow keys (automatic mode)
+      expected: >-
+        Old panel is removed from the AT tree (or marked
+        `aria-hidden="true"` if kept in DOM); new panel is announced via
+        its `aria-labelledby` relationship to the newly selected tab.
+  axeRules:
+    - aria-required-children
+    - aria-required-parent
+    - aria-roles
+    - tabindex
+    - color-contrast
+    - focus-order-semantics
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/tab_role

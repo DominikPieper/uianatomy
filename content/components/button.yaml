@@ -310,6 +310,40 @@ frameworkMap:
     structureMechanism: a `<Button>` SFC with named slots for leading and trailing icons and a default slot for the label
     variantMechanism: defineProps with literal-union types; `:loading` boolean prop drives `aria-busy`
 
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the button when reachable in tab order. The visible
+        focus ring matches `color.border.focus`; non-disabled buttons are
+        always reachable, `disabled` buttons are skipped.
+    - keys: Enter or Space
+      expected: >-
+        Activates the button (same handler path as a pointer click). For
+        Space, activation fires on key release, not on key down — matches
+        the native `<button>` behavior.
+  announcements:
+    - trigger: Focus enters the button
+      expected: >-
+        The button's accessible name followed by "button" (e.g. "Save
+        changes, button"). Icon-only buttons announce the `aria-label` in
+        place of the missing visible label.
+    - trigger: '`loading` data state set to true'
+      expected: >-
+        Screen readers announce the busy state via `aria-busy="true"`.
+        The accessible name remains the original label ("Save changes,
+        busy, button") rather than being replaced with "loading".
+    - trigger: Disabled state set
+      expected: >-
+        Native `disabled` removes the button from focus order silently.
+        `aria-disabled="true"` keeps it focusable; SR announces "<label>,
+        dimmed, button" or equivalent (varies by SR vendor).
+  axeRules:
+    - button-name
+    - aria-allowed-role
+    - color-contrast
+    - focus-order-semantics
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/button/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button

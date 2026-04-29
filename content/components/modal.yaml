@@ -492,6 +492,55 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves to the next focusable inside the dialog. After the
+        last focusable, focus cycles back to the first — never escapes
+        into the page beneath the backdrop while the dialog is open.
+    - keys: Shift+Tab
+      expected: >-
+        Focus moves to the previous focusable inside the dialog. From the
+        first focusable, cycles to the last.
+    - keys: 'Escape (when dismissible is true)'
+      expected: >-
+        Closes the dialog along the canonical `open → closing → closed`
+        path; focus restores to the trigger that opened the dialog. When
+        `dismissible: false` (e.g. an in-flight commit), Escape is a
+        no-op.
+    - keys: Enter (in form-style dialog)
+      expected: >-
+        Activates the default form action (commit) only when the focus is
+        on a form element with implicit submission. Modal does not bind
+        Enter at the container level — that would conflict with multi-line
+        text inputs.
+  announcements:
+    - trigger: Dialog opens (`closed → opening → open`)
+      expected: >-
+        Once `aria-modal="true"` is set on the container and focus moves
+        inside, the SR announces the dialog title (via `aria-labelledby`)
+        followed by "dialog" — e.g. "Edit profile, dialog". The previous
+        page context is silenced via `inert` on siblings.
+    - trigger: Dialog closes (`open → closing → closed`)
+      expected: >-
+        Focus returns to the trigger; the trigger's accessible name and
+        role are re-announced. No automatic announcement is required for
+        the close itself — the focus restoration is the cue.
+    - trigger: Alert dialog opens (alertdialog variant)
+      expected: >-
+        Same as dialog but with role `alertdialog`. SR announces
+        "<title>, alert dialog"; the body content (referenced via
+        `aria-describedby`) is read after the title.
+  axeRules:
+    - aria-dialog-name
+    - aria-required-attr
+    - aria-modal-misuse
+    - color-contrast
+    - focus-order-semantics
+    - landmark-unique
+    - duplicate-id-active
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog

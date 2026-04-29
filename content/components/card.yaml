@@ -377,6 +377,38 @@ responsive:
         authored. Density `compact` becomes the default for cards rendered
         in multi-column grids; `comfortable` for full-width detail cards.
 
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        For non-interactive cards, focus skips the card surface and lands
+        on nested interactive elements (buttons, links inside actions or
+        the body) in document order. For `interactive: true` cards using
+        the overlay pattern, the title's `<a>` is the single tab stop for
+        the card; nested actions remain individually reachable on
+        subsequent Tab presses (kept on a higher stacking context).
+    - keys: Enter (on overlay link)
+      expected: >-
+        Activates the card-as-link target. Spacebar does not activate —
+        anchors are Enter-only by native convention.
+  announcements:
+    - trigger: Focus enters card-as-link
+      expected: >-
+        The title's accessible name followed by "link" (e.g. "Q3 revenue
+        report, link"). The eyebrow, subtitle, and body are not part of
+        the link's accessible name unless explicitly tied via
+        `aria-labelledby`.
+    - trigger: '`selected` data state set'
+      expected: >-
+        Selection is announced via `aria-selected="true"` on the card's
+        primary actionable element. SR reads "selected" before the
+        accessible name (varies slightly by SR).
+  axeRules:
+    - link-name
+    - color-contrast
+    - heading-order
+    - image-alt
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article

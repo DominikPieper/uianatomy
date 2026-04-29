@@ -230,6 +230,72 @@ describe('responsive field', () => {
   });
 });
 
+describe('a11yAcceptance field', () => {
+  it('parses modal a11yAcceptance with all three sub-arrays', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    expect(modal.a11yAcceptance?.keyboardWalk?.length).toBeGreaterThan(0);
+    expect(modal.a11yAcceptance?.announcements?.length).toBeGreaterThan(0);
+    expect(modal.a11yAcceptance?.axeRules).toContain('aria-dialog-name');
+  });
+
+  it('parses combobox a11yAcceptance with five keyboard walk entries', async () => {
+    const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
+    expect(combobox.a11yAcceptance?.keyboardWalk?.length).toBe(5);
+  });
+
+  it('all five components declare at least axeRules', async () => {
+    const ids = ['button', 'card', 'modal', 'tabs', 'combobox'];
+    for (const id of ids) {
+      const c = await loadComponent(join(contentDir, `${id}.yaml`));
+      expect(c.a11yAcceptance?.axeRules?.length ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it('rejects axe rule id that is not kebab-case', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      a11yAcceptance: {
+        axeRules: ['Color_Contrast'],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a11yAcceptance with no sub-arrays declared', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      a11yAcceptance: {},
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects keyboardWalk entry with empty expected', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      a11yAcceptance: {
+        keyboardWalk: [{ keys: 'Tab', expected: '' }],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty axeRules array', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      a11yAcceptance: { axeRules: [] },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('implementation schema', () => {
   it('parses radix/modal.yaml', async () => {
     const impl = await loadImplementation(join(implementationsDir, 'radix', 'modal.yaml'));

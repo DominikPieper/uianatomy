@@ -7,6 +7,7 @@ import AxesTable from '../sections/AxesTable.astro';
 import TransitionsTable from '../sections/TransitionsTable.astro';
 import FrameworkMapTable from '../sections/FrameworkMapTable.astro';
 import EventsTable from '../sections/EventsTable.astro';
+import A11yAcceptanceTable from '../sections/A11yAcceptanceTable.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
 import MistakesList from '../sections/MistakesList.astro';
 import A11yTable from '../sections/A11yTable.astro';
@@ -47,6 +48,13 @@ const { component } = Astro.props;
 
   <SectionHeader role="both" title="Accessibility" id="a11y" />
   <A11yTable component={component} />
+
+  {component.a11yAcceptance && (
+    <>
+      <SectionHeader role="both" title="Accessibility acceptance" id="a11y-acceptance" />
+      <A11yAcceptanceTable component={component} />
+    </>
+  )}
 
   <SectionHeader role="both" title="Common mistakes" id="mistakes" />
   <MistakesList component={component} />
