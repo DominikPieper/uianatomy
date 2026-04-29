@@ -124,6 +124,9 @@ axes:
       - disabled
     data:
       - selected
+      - busy
+      - lazy
+      - error
 
 mismatches:
   - figma: Each tab state (default / hover / selected / disabled) modeled as a separate Figma variant on the tab component
@@ -174,6 +177,21 @@ mismatches:
       cheap, static content; manual for tabs that load expensive
       content per panel.
 
+  - figma: A tablist that overflows the available width drawn either as wrapped onto a second row or simply truncated at the edge
+    code: Overflowing tablists scroll horizontally with edge-fade affordances and Home / End / arrow keys that scroll the focused tab into view
+    consequence: >-
+      Designers either invent a wrapping pattern that breaks the
+      single-row keyboard model, or hide the overflow with no
+      affordance, leaving developers to invent the scroll behavior
+      ad hoc. Keyboard users on overflowing tablists land on tabs
+      that are visually offscreen.
+    correct: >-
+      Standardise horizontal scroll for overflowing tablists with
+      edge-fade affordances and explicit "scroll focused tab into
+      view" behaviour on Home / End / arrow navigation. Reserve
+      wrapping for explicit multi-row layouts (rare; usually a sign
+      the structure should be rethought).
+
 mistakes:
   - id: tabs-no-arrow-keys
     title: Tab key cycles through every tab instead of arrow keys
@@ -221,6 +239,47 @@ mistakes:
       activation (Enter / Space) is the operation that becomes a
       no-op.
 
+  - id: tabs-lazy-panel-no-aria-busy
+    title: Lazy-loaded tabpanel renders empty without an `aria-busy` announcement
+    description: >-
+      Selecting a tab fetches its panel content asynchronously. The
+      panel is mounted immediately but empty, so screen-reader users
+      land on a tabpanel with no perceivable content and no signal
+      that anything is loading.
+    fix: >-
+      Set `aria-busy="true"` on the tabpanel while content is in
+      flight, render a visible loading affordance, and announce the
+      transition (e.g. via `aria-live="polite"` on a status region
+      inside the panel). Clear `aria-busy` when content is ready.
+
+  - id: tabs-overflow-no-scroll-into-view
+    title: Overflowing tablist does not scroll the focused tab into view
+    description: >-
+      The tablist scrolls horizontally on overflow, but pressing
+      arrow keys, Home, or End moves focus to a tab that remains
+      offscreen. Sighted keyboard users lose track of focus; screen
+      magnifier users see no movement.
+    fix: >-
+      On focus change inside the tablist (arrow keys, Home, End),
+      call `element.scrollIntoView({ block: 'nearest', inline:
+      'nearest' })` on the newly focused tab, or compute the scroll
+      offset manually so the focused tab is fully visible with a
+      small inline padding.
+
+  - id: tabs-indicator-not-rtl-aware
+    title: Indicator animation hard-codes left-to-right movement
+    description: >-
+      The selected-tab indicator animates by interpolating `left` /
+      `transform: translateX(...)` from the previous tab to the
+      next. Under `dir="rtl"` the indicator slides the wrong way or
+      ends up offset from the active tab.
+    fix: >-
+      Compute the indicator position from the selected tab's
+      bounding box (`getBoundingClientRect`) relative to the
+      tablist, not from a directional offset. Use logical
+      properties (`inset-inline-start`) or transform values that
+      respect writing direction.
+
 frameworkMap:
   webComponents:
     structureMechanism: A `<ui-tabs>` host element with named slots for `tablist` and content panels exposed through `<slot name="panel-{id}">`
@@ -247,4 +306,4 @@ sources:
   - https://atlassian.design/components/tabs/examples
   - https://inclusive-components.design/tabbed-interfaces/
 
-lastReviewed: '2026-04-28'
+lastReviewed: '2026-04-29'

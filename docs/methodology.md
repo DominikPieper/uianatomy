@@ -82,13 +82,29 @@ Before a component is considered ready:
 - [ ] Anatomy researched against ≥3 mature libraries and ≥2 design systems
 - [ ] Each slot has a documented purpose and rationale
 - [ ] Variants/properties/states cleanly separated with test applied
-- [ ] At least 3 common mistakes documented with fixes
-- [ ] Figma↔Code mismatches identified
-- [ ] Cross-framework map populated
 - [ ] All library-specific claims verified against current docs (with date)
 - [ ] Schema validation passes
 - [ ] Anatomy SVG generates correctly
 - [ ] All three views render coherently
+
+## Minimum depth contract
+
+These thresholds are the *editorial* minimum for any component on the site (separate from the structural Zod schema, which only enforces presence). They are enforced automatically by `shared/tests/depth.test.ts`; `pnpm -r test` fails when a component falls below.
+
+| Dimension | Minimum | Rationale |
+|---|---|---|
+| Anatomy slots | ≥ 3 | Below 3 there is no real anatomy worth documenting; the component is a primitive |
+| Variants | ≥ 2 | Single-variant components do not justify a `variants` axis |
+| Properties | ≥ 2 | Reflects that real components have parameterisable surfaces |
+| States (interactive + data combined) | ≥ 4 | Allows containers like Modal (few interactive states, many data states) and controls like Button (the inverse) |
+| Mistakes | ≥ 4 | Three feels editorial, four forces a fourth angle the author had to think about |
+| Mismatches | ≥ 4 | The Figma↔Code section is the project's USP — under-investing here defeats the point |
+| Sources | ≥ 3 | Forces triangulation across spec / library / design-system categories |
+| `lastReviewed` | present | Library claims rot; no entry means the file is implicitly stale |
+
+State-matrix mutual-exclusivity (which states cannot co-occur) must be addressed in prose where non-obvious. A formal `transitions[]` schema is on the backlog (see `docs/backlog.md` P1-8) but not yet enforced.
+
+If a component genuinely cannot meet a threshold (rare), document the exception inline in the YAML with a `notes:` block explaining why, and add a per-component override to the depth test rather than silently lowering the bar.
 
 ## Consistency across components
 
