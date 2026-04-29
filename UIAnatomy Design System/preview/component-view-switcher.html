@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:24px;background:var(--paper-50)}
+  .card{width:652px}
+  .group-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:14px}
+  .switcher{display:inline-flex;border:1px solid var(--paper-300);border-radius:999px;background:var(--paper-100);padding:3px}
+  .seg{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    padding:8px 16px;border-radius:999px;cursor:default;color:var(--ink-500)}
+  .seg.active-d{background:#FBEEDF;color:#B5471F;box-shadow:inset 0 0 0 1px rgba(181,71,31,.2)}
+  .seg.active-x{background:#E6F0F5;color:#1F5D7A;box-shadow:inset 0 0 0 1px rgba(31,93,122,.2)}
+  .seg.active-b{background:#ECE7DA;color:#4A463E;box-shadow:inset 0 0 0 1px rgba(74,70,62,.2)}
+  .stack{display:flex;flex-direction:column;gap:10px}
+</style></head><body>
+<div class="card">
+  <div class="group-label">View-mode switcher · pill segmented control</div>
+  <div class="stack">
+    <div class="switcher"><div class="seg active-d">Designer</div><div class="seg">Dev</div><div class="seg">Bridge</div></div>
+    <div class="switcher"><div class="seg">Designer</div><div class="seg active-x">Dev</div><div class="seg">Bridge</div></div>
+    <div class="switcher"><div class="seg">Designer</div><div class="seg">Dev</div><div class="seg active-b">Bridge</div></div>
+  </div>
+</div>
+</body></html>

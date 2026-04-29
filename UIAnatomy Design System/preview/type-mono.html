@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin:0; padding:24px; background: var(--paper-50); }
+  .card { width: 652px; }
+  .group-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 14px; }
+  .row { display:flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .eyebrow, .label { display: inline-block; }
+  pre { margin:0; }
+</style></head><body>
+<div class="card">
+  <div class="group-label">Mono · JetBrains Mono — labels, code, callouts</div>
+  <div class="row" style="margin-bottom:16px">
+    <span class="eyebrow">CANONICAL ANATOMY</span>
+    <span class="label">SLOT · header</span>
+    <span class="label" style="color:#B5471F">DESIGNER VIEW</span>
+    <span class="label" style="color:#1F5D7A">DEV VIEW</span>
+  </div>
+  <pre><code>const &lt;Card.Root&gt; = ({ children, ...props }) =&gt; (
+  &lt;div data-slot="card-root" {...props}&gt;{children}&lt;/div&gt;
+)</code></pre>
+</div>
+</body></html>

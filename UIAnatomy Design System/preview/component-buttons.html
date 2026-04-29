@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:24px;background:var(--paper-50)}
+  .card{width:652px}
+  .group-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{font-family:var(--font-sans);font-size:14px;font-weight:500;padding:9px 16px;border-radius:3px;border:1px solid;cursor:default;transition:all .2s}
+  .primary{background:#1B1A17;color:#FBF8F2;border-color:#1B1A17}
+  .secondary{background:#FBF8F2;color:#1B1A17;border-color:#D9CDB2}
+  .ghost{background:transparent;color:#1B1A17;border-color:transparent}
+  .accent-d{background:#B5471F;color:#FBF8F2;border-color:#B5471F}
+  .accent-x{background:#1F5D7A;color:#FBF8F2;border-color:#1F5D7A}
+  .small{font-size:12px;padding:5px 10px}
+  .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--ink-500);width:100%;margin:8px 0 0}
+</style></head><body>
+<div class="card">
+  <div class="group-label">Buttons · primary, secondary, ghost, accent</div>
+  <div class="row">
+    <div class="btn primary">View anatomy</div>
+    <div class="btn secondary">Open in Figma</div>
+    <div class="btn ghost">Cancel</div>
+  </div>
+  <div class="lbl">View-mode accents · only inside themed sections</div>
+  <div class="row" style="margin-top:8px">
+    <div class="btn accent-d">Designer action</div>
+    <div class="btn accent-x">Dev action</div>
+    <div class="btn secondary small">Small</div>
+    <div class="btn primary small">Small primary</div>
+  </div>
+</div>
+</body></html>

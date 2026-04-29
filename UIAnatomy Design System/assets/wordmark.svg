@@ -1,0 +1,13 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 64" fill="none">
+  <g transform="translate(8 8)">
+    <circle cx="24" cy="24" r="22.5" stroke="#1B1A17" stroke-width="1.5" fill="#FBF8F2"></circle>
+    <line x1="1.5" y1="24" x2="46.5" y2="24" stroke="#1B1A17" stroke-width="1"></line>
+    <circle cx="24" cy="24" r="3" fill="#1B1A17"></circle>
+    <line x1="24" y1="24" x2="38" y2="10" stroke="#B5471F" stroke-width="1"></line>
+    <circle cx="38" cy="10" r="2" fill="#B5471F"></circle>
+  </g>
+  <text x="72" y="42" font-family="Newsreader, Iowan Old Style, Georgia, serif" font-size="32" font-weight="400" fill="#1B1A17" letter-spacing="-0.5">
+    UI<tspan font-style="italic">Anatomy</tspan>
+  </text>
+</svg>

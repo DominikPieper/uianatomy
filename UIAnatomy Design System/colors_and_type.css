@@ -1,0 +1,320 @@
+/* =============================================================
+   UIAnatomy — Design Tokens
+   A canonical reference site for UI component anatomy.
+   Editorial, calm, technical. Paper-tone canvas, three view-mode
+   accents, serif-display + sans-body + mono diagrams.
+   ============================================================= */
+
+/* Webfont sources — Google Fonts (closest matches; flagged in README).
+   When self-hosting, drop woff2 files into fonts/ and replace these
+   imports with @font-face rules. */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Inter:wght@300..700&family=JetBrains+Mono:wght@300..700&display=swap");
+
+:root {
+  /* ---------- Color · Paper canvas ----------
+     Warm off-white. The site reads like an anatomy textbook —
+     ink on paper, not pixels on glass. */
+  --paper-50:  #FBF8F2;   /* page background, full-bleed */
+  --paper-100: #F5F0E6;   /* card / sunken panel */
+  --paper-200: #ECE4D2;   /* dividers, hairline grids */
+  --paper-300: #D9CDB2;   /* heavy rule, callout border */
+
+  /* ---------- Color · Ink ----------
+     Soft black, never pure #000. Multiple inks for hierarchy. */
+  --ink-900: #1B1A17;     /* headlines, primary body */
+  --ink-700: #3B3833;     /* body */
+  --ink-500: #6B665C;     /* secondary, captions */
+  --ink-400: #8C8678;     /* labels, axis text in diagrams */
+  --ink-300: #B8B1A0;     /* placeholder, disabled */
+
+  /* ---------- Color · View-mode accents ----------
+     The product's central interaction: switching between
+     Designer / Dev / Bridge views. Each has a single accent
+     used for active state, links within that view, and
+     anatomy callouts. Never used together on the same surface. */
+  --designer-700: #B5471F;  /* warm — clay / sienna */
+  --designer-500: #D26B3D;
+  --designer-100: #F4DCC9;  /* tinted background */
+  --designer-50:  #FBEEDF;
+
+  --dev-700: #1F5D7A;       /* cool — slate teal */
+  --dev-500: #3F87A8;
+  --dev-100: #CFE2EC;
+  --dev-50:  #E6F0F5;
+
+  --bridge-700: #4A463E;    /* neutral — graphite */
+  --bridge-500: #6E6A60;
+  --bridge-100: #DCD6C8;
+  --bridge-50:  #ECE7DA;
+
+  /* ---------- Color · Semantic / utility ---------- */
+  --rule:        var(--paper-300);   /* default hairline */
+  --rule-strong: var(--ink-400);
+  --highlight:   #F0E3B8;            /* mismatch / annotation */
+  --error:       #A8392B;
+  --success:     #5C7A3E;
+
+  /* Anatomy-diagram tokens — used inside SVG figures */
+  --diagram-stroke:    var(--ink-400);
+  --diagram-stroke-w:  1px;
+  --diagram-fill:      var(--paper-100);
+  --diagram-callout:   var(--ink-700);
+  --diagram-leader:    var(--ink-300);
+
+  /* ---------- Type · Families ---------- */
+  --font-serif: "Newsreader", "Source Serif Pro", "Iowan Old Style",
+                "Apple Garamond", "Baskerville", Georgia, serif;
+  --font-sans:  "Inter", -apple-system, BlinkMacSystemFont,
+                "Segoe UI", system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono", "SF Mono", "Menlo", "Consolas",
+                ui-monospace, monospace;
+
+  /* ---------- Type · Scale ----------
+     Editorial scale; body anchor is 16px sans, headlines serif. */
+  --fs-12:  12px;   /* caption, label */
+  --fs-13:  13px;   /* meta, breadcrumb */
+  --fs-14:  14px;   /* secondary body, table */
+  --fs-16:  16px;   /* body */
+  --fs-18:  18px;   /* lede */
+  --fs-20:  20px;   /* h4 */
+  --fs-24:  24px;   /* h3 */
+  --fs-32:  32px;   /* h2 */
+  --fs-44:  44px;   /* h1 */
+  --fs-64:  64px;   /* display */
+
+  /* Line heights paired to scale */
+  --lh-tight:  1.12;
+  --lh-snug:   1.28;
+  --lh-normal: 1.5;
+  --lh-loose:  1.65;
+
+  /* Letter spacing — tight serif headlines, neutral body, wide labels */
+  --ls-tight:  -0.02em;
+  --ls-normal: 0;
+  --ls-wide:   0.08em;
+  --ls-caps:   0.14em;
+
+  /* ---------- Spacing · 4-base scale ---------- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+
+  /* Editorial measure — never run lines past this */
+  --measure: 64ch;
+  --measure-tight: 48ch;
+
+  /* ---------- Radii ----------
+     The site avoids decoration. Radii are small or zero. */
+  --r-0: 0;
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 6px;
+  --r-pill: 999px;
+
+  /* ---------- Borders ---------- */
+  --bw-hair: 1px;
+  --bw-rule: 1.5px;
+  --bw-bold: 2px;
+
+  /* ---------- Shadows ----------
+     Used sparingly. Paper has weight, not glow. */
+  --shadow-1: 0 1px 0 rgba(27, 26, 23, 0.04),
+              0 0 0 1px rgba(27, 26, 23, 0.06);
+  --shadow-2: 0 1px 2px rgba(27, 26, 23, 0.06),
+              0 0 0 1px rgba(27, 26, 23, 0.06);
+  --shadow-pop: 0 8px 24px -8px rgba(27, 26, 23, 0.18),
+                0 0 0 1px rgba(27, 26, 23, 0.08);
+
+  /* ---------- Motion ----------
+     Restrained. Crossfades and small slides. No bounces. */
+  --ease-out:  cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in:   cubic-bezier(0.55, 0.06, 0.68, 0.19);
+  --ease-std:  cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+
+  /* ---------- Z ---------- */
+  --z-rule:    1;
+  --z-callout: 5;
+  --z-tooltip: 50;
+  --z-modal:   100;
+}
+
+/* =============================================================
+   Semantic element styles
+   Apply to bare HTML so prose drops into place.
+   ============================================================= */
+
+html, body {
+  background: var(--paper-50);
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .h1 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-44);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--ink-900);
+  margin: 0 0 var(--s-4);
+}
+h2, .h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-32);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  color: var(--ink-900);
+  margin: var(--s-10) 0 var(--s-3);
+}
+h3, .h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--fs-24);
+  line-height: var(--lh-snug);
+  color: var(--ink-900);
+  margin: var(--s-8) 0 var(--s-2);
+}
+h4, .h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-16);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--ink-700);
+  margin: var(--s-6) 0 var(--s-2);
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--fs-12);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+.display {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: var(--fs-64);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+}
+
+p, .p {
+  font-size: var(--fs-16);
+  line-height: var(--lh-loose);
+  color: var(--ink-700);
+  max-width: var(--measure);
+  margin: 0 0 var(--s-4);
+  text-wrap: pretty;
+}
+.lede {
+  font-family: var(--font-serif);
+  font-size: var(--fs-20);
+  line-height: var(--lh-loose);
+  color: var(--ink-700);
+  font-style: italic;
+  max-width: var(--measure-tight);
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-13);
+  line-height: var(--lh-normal);
+  color: var(--ink-500);
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+code, kbd, samp, .code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--paper-100);
+  padding: 1px 6px;
+  border-radius: var(--r-1);
+  color: var(--ink-900);
+  border: 1px solid var(--paper-200);
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  line-height: var(--lh-normal);
+  background: var(--paper-100);
+  border: 1px solid var(--paper-200);
+  border-radius: var(--r-2);
+  padding: var(--s-4);
+  overflow-x: auto;
+  color: var(--ink-900);
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--paper-300);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur-2) var(--ease-out);
+}
+a:hover { text-decoration-color: currentColor; }
+
+hr {
+  border: 0;
+  border-top: var(--bw-hair) solid var(--rule);
+  margin: var(--s-8) 0;
+}
+
+/* Anatomy callout — leader line + label, used everywhere */
+.anatomy-callout {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--ink-700);
+}
+
+/* View-mode root — set this on a section to retheme accents */
+[data-view="designer"] {
+  --accent-700: var(--designer-700);
+  --accent-500: var(--designer-500);
+  --accent-100: var(--designer-100);
+  --accent-50:  var(--designer-50);
+}
+[data-view="dev"] {
+  --accent-700: var(--dev-700);
+  --accent-500: var(--dev-500);
+  --accent-100: var(--dev-100);
+  --accent-50:  var(--dev-50);
+}
+[data-view="bridge"] {
+  --accent-700: var(--bridge-700);
+  --accent-500: var(--bridge-500);
+  --accent-100: var(--bridge-100);
+  --accent-50:  var(--bridge-50);
+}
+:root {
+  --accent-700: var(--bridge-700);
+  --accent-500: var(--bridge-500);
+  --accent-100: var(--bridge-100);
+  --accent-50:  var(--bridge-50);
+}

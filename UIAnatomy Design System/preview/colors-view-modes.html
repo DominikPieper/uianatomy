@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 24px; background: var(--paper-50); }
+  .card { width: 652px; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .mode-row { display: flex; align-items: center; gap: 14px; }
+  .chip { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 999px; border: 1px solid currentColor; }
+  .swatches { flex: 1; display: flex; gap: 8px; }
+  .sw { flex: 1; height: 44px; border-radius: 3px; border: 1px solid rgba(27,26,23,0.08);
+    display: flex; align-items: flex-end; padding: 4px 6px;
+    font-family: var(--font-mono); font-size: 10px; }
+  .group-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 12px; }
+</style></head>
+<body>
+<div class="card">
+  <div class="group-label">View-mode accents · Designer / Dev / Bridge</div>
+  <div class="stack">
+    <div class="mode-row">
+      <div class="chip" style="color:#B5471F">DESIGNER</div>
+      <div class="swatches">
+        <div class="sw" style="background:#FBEEDF">50</div>
+        <div class="sw" style="background:#F4DCC9">100</div>
+        <div class="sw" style="background:#D26B3D;color:#FBF8F2">500</div>
+        <div class="sw" style="background:#B5471F;color:#FBF8F2">700</div>
+      </div>
+    </div>
+    <div class="mode-row">
+      <div class="chip" style="color:#1F5D7A">DEV</div>
+      <div class="swatches">
+        <div class="sw" style="background:#E6F0F5">50</div>
+        <div class="sw" style="background:#CFE2EC">100</div>
+        <div class="sw" style="background:#3F87A8;color:#FBF8F2">500</div>
+        <div class="sw" style="background:#1F5D7A;color:#FBF8F2">700</div>
+      </div>
+    </div>
+    <div class="mode-row">
+      <div class="chip" style="color:#4A463E">BRIDGE</div>
+      <div class="swatches">
+        <div class="sw" style="background:#ECE7DA">50</div>
+        <div class="sw" style="background:#DCD6C8">100</div>
+        <div class="sw" style="background:#6E6A60;color:#FBF8F2">500</div>
+        <div class="sw" style="background:#4A463E;color:#FBF8F2">700</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

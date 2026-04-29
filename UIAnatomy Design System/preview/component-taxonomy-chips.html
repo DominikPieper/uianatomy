@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;padding:24px;background:var(--paper-50)}
+  .card{width:652px}
+  .group-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin-bottom:14px}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:999px;border:1px solid currentColor;display:inline-flex;align-items:center;gap:6px}
+  .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+  .axis{color:#3B3833;background:#FBF8F2}
+  .variant{color:#B5471F;background:#FBEEDF;border-color:rgba(181,71,31,.4)}
+  .prop{color:#1F5D7A;background:#E6F0F5;border-color:rgba(31,93,122,.4)}
+  .state{color:#4A463E;background:#ECE7DA;border-color:rgba(74,70,62,.4)}
+  .mismatch{color:#A8392B;background:#F5E1DD;border-color:rgba(168,57,43,.4)}
+  .lbl{font-family:var(--font-mono);font-size:10px;color:var(--ink-400);margin:10px 0 6px;letter-spacing:.08em}
+</style></head><body>
+<div class="card">
+  <div class="group-label">Taxonomy chips · variant / property / state / mismatch</div>
+  <div class="lbl">VARIANTS</div>
+  <div class="row">
+    <div class="chip variant"><span class="dot"></span>elevated</div>
+    <div class="chip variant"><span class="dot"></span>outlined</div>
+    <div class="chip variant"><span class="dot"></span>filled</div>
+  </div>
+  <div class="lbl">PROPERTIES</div>
+  <div class="row">
+    <div class="chip prop">size = sm | md | lg</div>
+    <div class="chip prop">interactive</div>
+  </div>
+  <div class="lbl">STATES</div>
+  <div class="row">
+    <div class="chip state">hover</div>
+    <div class="chip state">focus-visible</div>
+    <div class="chip state">disabled</div>
+  </div>
+  <div class="lbl">MISMATCHES</div>
+  <div class="row">
+    <div class="chip mismatch">Figma "elevated" → CSS shadow-2 (no token)</div>
+  </div>
+</div>
+</body></html>

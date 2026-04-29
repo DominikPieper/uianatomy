@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tabs · Anatomy — UIAnatomy</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="icon" href="assets/glyph.svg">
+<style>
+  /* ---------- Page shell ---------- */
+  html, body { margin: 0; min-height: 100vh; }
+  body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  /* Top bar */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-50);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; }
+  .topbar .brand img { height: 28px; width: auto; }
+  .topbar .crumbs {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--ink-500); letter-spacing: .05em;
+  }
+  .topbar .crumbs .here { color: var(--ink-900); }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--rule);
+    padding: 24px 18px;
+    background: var(--paper-50);
+  }
+  .sidebar .group {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-500);
+    margin: 18px 8px 8px;
+  }
+  .sidebar .group:first-child { margin-top: 0; }
+  .sidebar a {
+    display: block;
+    padding: 7px 10px;
+    font-size: 14px;
+    color: var(--ink-700);
+    text-decoration: none;
+    border-radius: var(--r-2);
+  }
+  .sidebar a:hover { background: var(--paper-100); }
+  .sidebar a.current {
+    background: var(--paper-100);
+    color: var(--ink-900);
+    box-shadow: inset 2px 0 0 var(--accent-500);
+  }
+
+  /* Main column */
+  main {
+    padding: 40px 56px 96px;
+    max-width: 980px;
+  }
+  main > header { margin-bottom: 32px; }
+  main > header .eyebrow { display: block; margin-bottom: 10px; }
+  main > header h1 { margin: 0 0 14px; }
+  main > header .lede { margin: 0; max-width: 56ch; }
+
+  /* View switcher (top-right of content area) */
+  .view-bar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin: 0 0 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .view-bar .label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .switcher {
+    display: inline-flex;
+    border: 1px solid var(--paper-300);
+    border-radius: var(--r-pill);
+    background: var(--paper-100);
+    padding: 3px;
+  }
+  .switcher button {
+    appearance: none; background: transparent; border: 0; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase;
+    padding: 7px 16px; border-radius: var(--r-pill);
+    color: var(--ink-500);
+    transition: all var(--dur-2) var(--ease-out);
+  }
+  .switcher button:hover { color: var(--ink-900); }
+  .switcher button.active { color: var(--ink-900); background: var(--paper-50);
+    box-shadow: inset 0 0 0 1px var(--paper-300); }
+  body[data-view="designer"] .switcher button.active.designer { background: var(--designer-50); color: var(--designer-700); box-shadow: inset 0 0 0 1px rgba(181,71,31,.35); }
+  body[data-view="dev"]      .switcher button.active.dev      { background: var(--dev-50); color: var(--dev-700); box-shadow: inset 0 0 0 1px rgba(31,93,122,.35); }
+  body[data-view="bridge"]   .switcher button.active.bridge   { background: var(--bridge-50); color: var(--bridge-700); box-shadow: inset 0 0 0 1px rgba(74,70,62,.35); }
+
+  /* Section frame */
+  section.s {
+    margin-top: var(--s-12);
+  }
+  section.s > .head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: var(--s-5);
+  }
+  section.s h2 { margin: 0; }
+  section.s .num {
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: .14em; color: var(--ink-400);
+  }
+
+  /* Anatomy figure */
+  .figure {
+    background: var(--paper-100);
+    border: 1px solid var(--paper-200);
+    border-radius: var(--r-2);
+    padding: 56px 96px;
+    position: relative;
+  }
+  .figure-caption {
+    margin-top: var(--s-3);
+    text-align: center;
+  }
+
+  /* Tabs specimen (drawn for the diagram) */
+  .specimen-tabs {
+    width: 360px; margin: 0 auto;
+    background: var(--paper-50);
+    border: 1px solid var(--paper-300);
+    border-radius: var(--r-2);
+  }
+  .specimen-tabs .tablist {
+    display: flex;
+    border-bottom: 1px solid var(--paper-300);
+    padding: 0 var(--s-3);
+  }
+  .specimen-tabs .tab {
+    font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+    color: var(--ink-500);
+    padding: 12px 14px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .specimen-tabs .tab[aria-selected="true"] {
+    color: var(--ink-900);
+    border-bottom-color: var(--accent-500);
+  }
+  .specimen-tabs .panel {
+    padding: var(--s-4);
+    font-size: 13px;
+    color: var(--ink-700);
+    min-height: 78px;
+  }
+
+  /* Leader-line callouts */
+  .callout {
+    position: absolute;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent-700);
+  }
+  .callout .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-500); flex: none; }
+  .callout .line { height: 1px; background: var(--accent-500); flex: 1; min-width: 24px; }
+  .callout.left { left: 18px; right: auto; justify-content: flex-end; width: 130px; }
+  .callout.right { right: 18px; left: auto; width: 130px; }
+
+  /* View panes */
+  .view-panes > .pane { display: none; }
+  body[data-view="designer"] .pane.designer,
+  body[data-view="dev"]      .pane.dev,
+  body[data-view="bridge"]   .pane.bridge { display: block; }
+
+  /* Designer pane content */
+  .props-grid {
+    display: grid; grid-template-columns: 180px 1fr; gap: var(--s-3) var(--s-5);
+    border: 1px solid var(--paper-200); border-top: 0;
+  }
+  .props-grid > div {
+    border-top: 1px solid var(--paper-200);
+    padding: 12px 14px;
+  }
+  .props-grid .k {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em;
+    color: var(--ink-700); background: var(--paper-100);
+  }
+  .props-grid .v { font-family: var(--font-sans); font-size: 14px; color: var(--ink-900); }
+  .props-grid .v code { background: transparent; border: 0; padding: 0; }
+  .panel-head {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-500);
+    background: var(--paper-100);
+    border: 1px solid var(--paper-200);
+    border-bottom: 0;
+    padding: 10px 14px;
+  }
+
+  /* Variants gallery */
+  .variants {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--s-5);
+  }
+  .variants .v-cell {
+    background: var(--paper-100);
+    border: 1px solid var(--paper-200);
+    border-radius: var(--r-2);
+    padding: var(--s-5);
+  }
+  .variants .v-name {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-500); margin-bottom: var(--s-3);
+  }
+
+  /* Code block */
+  .codeblock {
+    background: #1B1A17;
+    color: #ECE4D2;
+    border-radius: var(--r-2);
+    padding: var(--s-5);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .codeblock .cm { color: #8C8678; }
+  .codeblock .kw { color: #D26B3D; }
+  .codeblock .st { color: #E0C28A; }
+  .codeblock .tg { color: #9FC4D6; }
+  .codeblock .at { color: #B8B1A0; }
+  .codeblock .pn { color: #FBF8F2; }
+
+  /* Mismatch list */
+  .mismatch-list { display: flex; flex-direction: column; gap: var(--s-4); }
+  .mismatch {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    gap: 0;
+    border: 1px solid var(--paper-200);
+    border-radius: var(--r-2);
+    overflow: hidden;
+    background: var(--paper-50);
+  }
+  .mismatch .side {
+    padding: 14px 16px;
+    background: var(--paper-50);
+  }
+  .mismatch .side.figma { background: var(--designer-50); }
+  .mismatch .side.code  { background: var(--dev-50); }
+  .mismatch .side .h {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-500); margin-bottom: 6px;
+  }
+  .mismatch .side.figma .h { color: var(--designer-700); }
+  .mismatch .side.code .h { color: var(--dev-700); }
+  .mismatch .side .b { font-family: var(--font-sans); font-size: 14px; color: var(--ink-900); line-height: 1.5; }
+  .mismatch .side .b code { font-size: 12px; }
+  .mismatch .gap {
+    background: var(--highlight);
+    display: flex; align-items: center; justify-content: center;
+    color: #6B5C18;
+    font-family: var(--font-mono); font-size: 12px;
+    border-left: 1px solid var(--paper-200);
+    border-right: 1px solid var(--paper-200);
+  }
+  .mismatch-title {
+    font-family: var(--font-serif); font-size: 18px; font-weight: 500;
+    margin: 0 0 4px;
+  }
+  .mismatch-rationale {
+    font-family: var(--font-sans); font-size: 13px; color: var(--ink-500);
+    margin: 0 0 10px; max-width: 60ch;
+  }
+
+  /* Slot tree */
+  .slot-tree {
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.85;
+    background: var(--paper-100);
+    border: 1px solid var(--paper-200);
+    border-radius: var(--r-2);
+    padding: var(--s-4) var(--s-5);
+    color: var(--ink-700);
+  }
+  .slot-tree .role {
+    color: var(--ink-400); font-size: 11px;
+    margin-left: 10px; letter-spacing: .08em;
+  }
+  .slot-tree b { color: var(--ink-900); font-weight: 500; }
+
+  /* Bridge: side-by-side */
+  .bridge-cols {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5);
+  }
+  .bridge-cols > .col {
+    border: 1px solid var(--paper-200); border-radius: var(--r-2);
+    overflow: hidden;
+  }
+  .bridge-cols .col h3 {
+    margin: 0; padding: 12px 16px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--paper-200);
+  }
+  .bridge-cols .col.figma h3 { background: var(--designer-50); color: var(--designer-700); }
+  .bridge-cols .col.code h3  { background: var(--dev-50); color: var(--dev-700); }
+  .bridge-cols .col .body { padding: var(--s-4) var(--s-5); }
+  .bridge-cols .col .body p { margin: 0 0 10px; font-size: 13px; }
+  .bridge-cols .col .body p:last-child { margin: 0; }
+
+  /* Sources list */
+  .sources { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--paper-200); }
+  .sources .src {
+    display: grid; grid-template-columns: 200px 1fr 80px;
+    gap: var(--s-4); padding: 12px 0;
+    border-bottom: 1px solid var(--paper-200);
+    align-items: baseline;
+  }
+  .sources .src .name { font-family: var(--font-sans); font-size: 14px; font-weight: 500; }
+  .sources .src .desc { font-size: 13px; color: var(--ink-500); }
+  .sources .src .ver { font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); text-align: right; }
+
+  @media (max-width: 960px) {
+    body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    main { padding: 32px 24px 64px; }
+  }
+</style>
+</head>
+<body data-view="designer">
+
+  <!-- ============== TOP BAR ============== -->
+  <header class="topbar">
+    <a class="brand" href="#" style="text-decoration:none;color:inherit">
+      <img src="assets/wordmark.svg" alt="UIAnatomy">
+    </a>
+    <div class="crumbs">
+      Components · Disclosure · <span class="here">Tabs</span>
+    </div>
+  </header>
+
+  <!-- ============== SIDEBAR ============== -->
+  <nav class="sidebar">
+    <div class="group">Containers</div>
+    <a href="#">Card</a>
+    <a href="#">Accordion</a>
+    <a href="#">Sheet</a>
+
+    <div class="group">Disclosure</div>
+    <a href="#" class="current">Tabs</a>
+    <a href="#">Collapsible</a>
+    <a href="#">Disclosure</a>
+
+    <div class="group">Inputs</div>
+    <a href="#">Combobox</a>
+    <a href="#">Select</a>
+    <a href="#">Slider</a>
+
+    <div class="group">Overlay</div>
+    <a href="#">Dialog</a>
+    <a href="#">Popover</a>
+    <a href="#">Tooltip</a>
+
+    <div class="group">Feedback</div>
+    <a href="#">Alert</a>
+    <a href="#">Toast</a>
+  </nav>
+
+  <!-- ============== MAIN ============== -->
+  <main>
+    <header>
+      <span class="eyebrow">Disclosure · Component</span>
+      <h1>Tabs</h1>
+      <p class="lede">A Tabs component lets one of several panels be visible at a time, with a row of tab triggers selecting between them. The selected tab is announced via <code>aria-controls</code> and <code>aria-selected</code>; the active panel is referenced back via <code>aria-labelledby</code>.</p>
+    </header>
+
+    <!-- View switcher -->
+    <div class="view-bar">
+      <span class="label">View</span>
+      <div class="switcher" role="tablist" aria-label="View mode">
+        <button class="designer active" data-view="designer" type="button">Designer</button>
+        <button class="dev" data-view="dev" type="button">Dev</button>
+        <button class="bridge" data-view="bridge" type="button">Bridge</button>
+      </div>
+    </div>
+
+    <!-- ============== ANATOMY ============== -->
+    <section class="s">
+      <div class="head"><h2>Anatomy</h2><span class="num">§ 1</span></div>
+      <div class="figure">
+        <div class="specimen-tabs">
+          <div class="tablist" role="tablist">
+            <div class="tab" role="tab" aria-selected="true">Anatomy</div>
+            <div class="tab" role="tab">Axes</div>
+            <div class="tab" role="tab">Bridge</div>
+          </div>
+          <div class="panel" role="tabpanel">
+            A short description of the active panel sits in this region.
+          </div>
+        </div>
+        <!-- callouts -->
+        <div class="callout left" style="top: 60px"><span>Tabs.Root</span><span class="line"></span><span class="dot"></span></div>
+        <div class="callout right" style="top: 90px"><span class="dot"></span><span class="line"></span><span>TabList</span></div>
+        <div class="callout left" style="top: 110px"><span>Tab</span><span class="line"></span><span class="dot"></span></div>
+        <div class="callout right" style="bottom: 92px"><span class="dot"></span><span class="line"></span><span>Indicator</span></div>
+        <div class="callout left" style="bottom: 70px"><span>TabPanel</span><span class="line"></span><span class="dot"></span></div>
+      </div>
+      <p class="caption figure-caption">Fig 1.1 · Specimen with leader-line callouts. Five canonical slots: <b>Tabs.Root</b>, <b>TabList</b>, <b>Tab</b>, <b>Indicator</b>, <b>TabPanel</b>.</p>
+
+      <h4 style="margin-top: var(--s-8)">Slot tree</h4>
+      <div class="slot-tree">
+<b>Tabs.Root</b>             <span class="role">role="presentation" — owns selection state</span>
+&nbsp;├─ <b>TabList</b>           <span class="role">role="tablist"</span>
+&nbsp;│   ├─ <b>Tab</b>            <span class="role">role="tab" · aria-selected · aria-controls</span>
+&nbsp;│   ├─ <b>Tab</b>
+&nbsp;│   └─ <b>Indicator</b>      <span class="role">presentational · animated underline</span>
+&nbsp;└─ <b>TabPanel</b> (× n)    <span class="role">role="tabpanel" · aria-labelledby · hidden when inactive</span>
+      </div>
+    </section>
+
+    <!-- ============== AXES ============== -->
+    <section class="s">
+      <div class="head"><h2>Axes</h2><span class="num">§ 2</span></div>
+      <p>The taxonomy is strict: <b>variants</b> are visual treatments, <b>properties</b> are configurable behavior, <b>states</b> are runtime conditions. Mismatches between Figma and code most often appear at the <i>variant</i> ↔ <i>property</i> boundary.</p>
+
+      <h4>Variants</h4>
+      <div class="variants" style="margin-top:8px">
+        <div class="v-cell">
+          <div class="v-name">underline</div>
+          <div class="specimen-tabs" style="width:auto">
+            <div class="tablist"><div class="tab" aria-selected="true">One</div><div class="tab">Two</div><div class="tab">Three</div></div>
+            <div class="panel" style="min-height:40px"></div>
+          </div>
+        </div>
+        <div class="v-cell">
+          <div class="v-name">pill</div>
+          <div style="background: var(--paper-100); border-radius: 999px; padding: 4px; display: inline-flex">
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:6px 14px;border-radius:999px;background:var(--paper-50);box-shadow:inset 0 0 0 1px var(--paper-300);color:var(--ink-900)">One</div>
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:6px 14px;border-radius:999px;color:var(--ink-500)">Two</div>
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:6px 14px;border-radius:999px;color:var(--ink-500)">Three</div>
+          </div>
+          <div class="panel" style="min-height:40px;padding:14px 0 0"></div>
+        </div>
+        <div class="v-cell">
+          <div class="v-name">enclosed</div>
+          <div style="display:flex">
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:8px 14px;border:1px solid var(--paper-300);border-bottom:0;background:var(--paper-50);color:var(--ink-900);border-radius:4px 4px 0 0">One</div>
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:8px 14px;border:1px solid transparent;color:var(--ink-500)">Two</div>
+            <div style="font-family:var(--font-sans);font-size:13px;font-weight:500;padding:8px 14px;border:1px solid transparent;color:var(--ink-500)">Three</div>
+          </div>
+          <div style="border-top:1px solid var(--paper-300); margin-top:-1px;height:40px"></div>
+        </div>
+      </div>
+
+      <h4 style="margin-top: var(--s-8)">Properties · States</h4>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(31,93,122,.4);background:var(--dev-50);color:var(--dev-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">orientation = horizontal | vertical</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(31,93,122,.4);background:var(--dev-50);color:var(--dev-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">activation = automatic | manual</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(31,93,122,.4);background:var(--dev-50);color:var(--dev-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">defaultValue</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(31,93,122,.4);background:var(--dev-50);color:var(--dev-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">value (controlled)</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(74,70,62,.4);background:var(--bridge-50);color:var(--bridge-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">selected</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(74,70,62,.4);background:var(--bridge-50);color:var(--bridge-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">hover</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(74,70,62,.4);background:var(--bridge-50);color:var(--bridge-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">focus-visible</span>
+        <span class="anatomy-callout" style="padding:5px 11px;border-radius:999px;border:1px solid rgba(74,70,62,.4);background:var(--bridge-50);color:var(--bridge-700);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase">disabled</span>
+      </div>
+    </section>
+
+    <!-- ============== VIEW PANES ============== -->
+    <div class="view-panes">
+
+      <!-- DESIGNER PANE -->
+      <section class="s pane designer">
+        <div class="head"><h2>Designer view</h2><span class="num">§ 3</span></div>
+        <p>How Tabs is set up as a Figma component — variants, instance properties, and the tokens it consumes.</p>
+
+        <div class="panel-head">Component properties · Tabs.Root</div>
+        <div class="props-grid">
+          <div class="k">variant</div>          <div class="v"><code>variant</code> · <i>Variant</i> · underline / pill / enclosed</div>
+          <div class="k">orientation</div>     <div class="v"><code>orientation</code> · <i>Variant</i> · horizontal / vertical</div>
+          <div class="k">size</div>            <div class="v"><code>size</code> · <i>Variant</i> · sm / md / lg</div>
+          <div class="k">tabs</div>            <div class="v"><code>tabs</code> · <i>Instance Swap</i> · accepts Tab list</div>
+          <div class="k">selectedIndex</div>   <div class="v"><code>selectedIndex</code> · <i>Number</i> · 0–n (designer-only)</div>
+        </div>
+
+        <div class="panel-head" style="margin-top: var(--s-6)">Token references</div>
+        <div class="props-grid">
+          <div class="k">--ink-900</div>        <div class="v">Active tab label</div>
+          <div class="k">--ink-500</div>        <div class="v">Inactive tab label</div>
+          <div class="k">--accent-500</div>     <div class="v">Indicator (themed by view)</div>
+          <div class="k">--paper-300</div>      <div class="v">TabList rule</div>
+          <div class="k">--paper-100</div>      <div class="v">Pill TabList background</div>
+        </div>
+      </section>
+
+      <!-- DEV PANE -->
+      <section class="s pane dev">
+        <div class="head"><h2>Dev view</h2><span class="num">§ 3</span></div>
+        <p>Compound component pattern. Selection state lives on <code>Tabs.Root</code> and is shared via context. Slots are referenced by name, not by DOM order.</p>
+
+        <div class="codeblock"><span class="cm">// Headless API · framework-agnostic shape</span>
+&lt;<span class="tg">Tabs.Root</span> <span class="at">defaultValue</span>=<span class="st">"anatomy"</span> <span class="at">orientation</span>=<span class="st">"horizontal"</span>&gt;
+  &lt;<span class="tg">Tabs.List</span>&gt;
+    &lt;<span class="tg">Tabs.Trigger</span> <span class="at">value</span>=<span class="st">"anatomy"</span>&gt;Anatomy&lt;/<span class="tg">Tabs.Trigger</span>&gt;
+    &lt;<span class="tg">Tabs.Trigger</span> <span class="at">value</span>=<span class="st">"axes"</span>&gt;Axes&lt;/<span class="tg">Tabs.Trigger</span>&gt;
+    &lt;<span class="tg">Tabs.Trigger</span> <span class="at">value</span>=<span class="st">"bridge"</span>&gt;Bridge&lt;/<span class="tg">Tabs.Trigger</span>&gt;
+    &lt;<span class="tg">Tabs.Indicator</span> /&gt;
+  &lt;/<span class="tg">Tabs.List</span>&gt;
+  &lt;<span class="tg">Tabs.Panel</span> <span class="at">value</span>=<span class="st">"anatomy"</span>&gt;…&lt;/<span class="tg">Tabs.Panel</span>&gt;
+  &lt;<span class="tg">Tabs.Panel</span> <span class="at">value</span>=<span class="st">"axes"</span>&gt;…&lt;/<span class="tg">Tabs.Panel</span>&gt;
+  &lt;<span class="tg">Tabs.Panel</span> <span class="at">value</span>=<span class="st">"bridge"</span>&gt;…&lt;/<span class="tg">Tabs.Panel</span>&gt;
+&lt;/<span class="tg">Tabs.Root</span>&gt;
+        </div>
+
+        <h4 style="margin-top: var(--s-6)">Cross-framework mapping</h4>
+        <div class="props-grid" style="grid-template-columns: 140px 1fr 1fr 1fr; border-top:1px solid var(--paper-200)">
+          <div class="k">Slot</div>
+          <div class="k">Radix</div>
+          <div class="k">React Aria</div>
+          <div class="k">Headless UI</div>
+
+          <div class="v">Root</div>
+          <div class="v"><code>Tabs.Root</code></div>
+          <div class="v"><code>useTabList</code> hook</div>
+          <div class="v"><code>Tab.Group</code></div>
+
+          <div class="v">List</div>
+          <div class="v"><code>Tabs.List</code></div>
+          <div class="v"><code>useTabList</code> + ref</div>
+          <div class="v"><code>Tab.List</code></div>
+
+          <div class="v">Trigger</div>
+          <div class="v"><code>Tabs.Trigger</code></div>
+          <div class="v"><code>useTab</code></div>
+          <div class="v"><code>Tab</code></div>
+
+          <div class="v">Panel</div>
+          <div class="v"><code>Tabs.Content</code></div>
+          <div class="v"><code>useTabPanel</code></div>
+          <div class="v"><code>Tab.Panel</code></div>
+        </div>
+      </section>
+
+      <!-- BRIDGE PANE -->
+      <section class="s pane bridge">
+        <div class="head"><h2>Bridge view</h2><span class="num">§ 3</span></div>
+        <p>Where Figma and code line up — and where they don't. The yellow column marks every point at which the designer artifact and the implementation drift.</p>
+
+        <div class="bridge-cols">
+          <div class="col figma">
+            <h3>Figma</h3>
+            <div class="body">
+              <p><b>Tabs</b> is a single component with three Variants and one Instance Swap (<code>tabs</code>).</p>
+              <p>Selected tab is captured by a <code>selectedIndex</code> Number property — purely visual.</p>
+              <p>Each Tab is its own component instance; the list is reorderable in the layer panel.</p>
+            </div>
+          </div>
+          <div class="col code">
+            <h3>Code</h3>
+            <div class="body">
+              <p><b>Tabs.Root</b> is a context provider; children are addressed by <code>value</code> not index.</p>
+              <p>Selection lives in state — controlled (<code>value</code>) or uncontrolled (<code>defaultValue</code>).</p>
+              <p>Order is determined by JSX position, but matching is by <code>value</code> string.</p>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-top: var(--s-8)">Mismatches</h4>
+        <div class="mismatch-list">
+
+          <div>
+            <h5 class="mismatch-title">1 · Index vs. value</h5>
+            <p class="mismatch-rationale">Figma selects by integer index; code selects by string value. A reorder in Figma silently shifts the "selected" tab; in code it does nothing.</p>
+            <div class="mismatch">
+              <div class="side figma"><div class="h">FIGMA</div><div class="b"><code>selectedIndex = 1</code></div></div>
+              <div class="gap">⇄</div>
+              <div class="side code"><div class="h">CODE</div><div class="b"><code>value="axes"</code> · <code>defaultValue="axes"</code></div></div>
+            </div>
+          </div>
+
+          <div>
+            <h5 class="mismatch-title">2 · Indicator animation</h5>
+            <p class="mismatch-rationale">The animated underline that slides between tabs is captured in Figma as an Auto Layout transition between variants — it is implemented in code as a measured offset on a single absolutely-positioned element.</p>
+            <div class="mismatch">
+              <div class="side figma"><div class="h">FIGMA</div><div class="b">Smart Animate between variants</div></div>
+              <div class="gap">⇄</div>
+              <div class="side code"><div class="h">CODE</div><div class="b"><code>Tabs.Indicator</code> with measured <code>transform: translateX()</code></div></div>
+            </div>
+          </div>
+
+          <div>
+            <h5 class="mismatch-title">3 · Manual activation</h5>
+            <p class="mismatch-rationale">"Manual activation" (arrow keys move focus, Enter selects) has no Figma representation — designers see only the selected state, not the focus-but-not-selected intermediate.</p>
+            <div class="mismatch">
+              <div class="side figma"><div class="h">FIGMA</div><div class="b"><i>Not represented</i></div></div>
+              <div class="gap">⇄</div>
+              <div class="side code"><div class="h">CODE</div><div class="b"><code>activationMode="manual"</code> · <code>tabIndex</code> rotation</div></div>
+            </div>
+          </div>
+
+          <div>
+            <h5 class="mismatch-title">4 · Disabled tab semantics</h5>
+            <p class="mismatch-rationale">A disabled tab in Figma is a state on the Tab variant. In code it is <i>both</i> <code>aria-disabled="true"</code> and removal from arrow-key rotation — the latter is not visible in the design.</p>
+            <div class="mismatch">
+              <div class="side figma"><div class="h">FIGMA</div><div class="b">Tab · state = disabled</div></div>
+              <div class="gap">⇄</div>
+              <div class="side code"><div class="h">CODE</div><div class="b"><code>aria-disabled</code> + skip in roving tabindex</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ============== SOURCES ============== -->
+    <section class="s">
+      <div class="head"><h2>Sources</h2><span class="num">§ 4</span></div>
+      <p>The canonical anatomy on this page is synthesized from the following references. Specific implementations are audited separately.</p>
+      <div class="sources">
+        <div class="src">
+          <div class="name">W3C ARIA APG</div>
+          <div class="desc">Tabs pattern · roles, keyboard, manual vs. automatic activation</div>
+          <div class="ver">v1.2</div>
+        </div>
+        <div class="src">
+          <div class="name">Radix UI</div>
+          <div class="desc">Compound component shape · controlled / uncontrolled split · indicator</div>
+          <div class="ver">v1.1.x</div>
+        </div>
+        <div class="src">
+          <div class="name">React Aria</div>
+          <div class="desc">Hooks split · selection state separated from list rendering</div>
+          <div class="ver">v3.x</div>
+        </div>
+        <div class="src">
+          <div class="name">Headless UI</div>
+          <div class="desc">Tab.Group naming · default uncontrolled, opt-in controlled</div>
+          <div class="ver">v2.x</div>
+        </div>
+        <div class="src">
+          <div class="name">Polaris (Shopify)</div>
+          <div class="desc">Variant taxonomy · "fitted" prop is non-canonical</div>
+          <div class="ver">v12.x</div>
+        </div>
+        <div class="src">
+          <div class="name">Material 3</div>
+          <div class="desc">Indicator behavior · "Primary" vs. "Secondary" tabs separation</div>
+          <div class="ver">v1.x</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // View switcher
+    const body = document.body;
+    const buttons = document.querySelectorAll('.switcher button');
+    buttons.forEach(b => {
+      b.addEventListener('click', () => {
+        const v = b.dataset.view;
+        body.dataset.view = v;
+        buttons.forEach(x => x.classList.toggle('active', x === b));
+        // also update sidebar accent
+        document.documentElement.style.setProperty('--accent-bar', `var(--${v === 'designer' ? 'designer' : v === 'dev' ? 'dev' : 'bridge'}-500)`);
+      });
+    });
+  </script>
+</body>
+</html>
