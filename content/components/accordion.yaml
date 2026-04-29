@@ -1,0 +1,696 @@
+id: accordion
+name: Accordion
+description: >-
+  A vertically-stacked set of disclosure controls, each pairing a
+  header button with a panel of content that expands or collapses.
+  Distinct from Tabs (always shows one panel, replaces on selection)
+  by allowing zero, one, or multiple panels open at once and by
+  preserving all panel labels on screen. Used for FAQs, settings
+  groupings, progressive disclosure of dense reference content, and
+  any list of named regions where content is browsable but not all
+  needed simultaneously.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The outer container holding the accordion items. Establishes
+      the accordion's visual treatment (bordered / contained /
+      flush) and its single-vs-multi expansion contract via
+      properties. Contains no semantics of its own — accessibility
+      lives on the items inside.
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; gap and border treatment from variant
+    code:
+      slot: root
+      semantic: presentational-list
+    a11y:
+      hint: >-
+        The root has no required ARIA role. APG explicitly forbids
+        `role="region"` on the root because the regions live on the
+        panels inside (each panel is its own region). Adding a
+        wrapping role creates redundant landmark navigation.
+    tokens:
+      spacing:
+        gap: spacing.tight
+      color:
+        border: color.border.subtle
+
+  - id: item
+    required: true
+    purpose: >-
+      A single accordion item — one disclosable unit. One anatomy
+      slot describes the role; in practice multiple item instances
+      render per accordion. Encapsulates the header-trigger-panel
+      grouping.
+    layout:
+      parent: root
+      row: 1
+      span: full
+      repeats: 3
+    figma:
+      type: instance
+      hint: Accordion item component instance; expanded state via component property
+    code:
+      slot: item
+      semantic: container
+    a11y:
+      hint: >-
+        Item is a structural grouping; no ARIA role. The header
+        and panel inside carry the canonical APG semantics
+        (heading + button + region).
+    tokens:
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.bg
+
+  - id: header
+    required: true
+    purpose: >-
+      Heading wrapper around the trigger button. Provides the
+      accessible heading semantics required by APG for accordion
+      items. Each item header is a heading element of the same
+      level (typically h3 or h4 depending on document outline).
+    layout:
+      parent: item
+      row: 1
+      span: full
+    figma:
+      type: text
+      hint: Heading text style; same level for every item in the accordion
+    code:
+      slot: header
+      semantic: heading
+    a11y:
+      hint: >-
+        Header is a heading element — `<h2>` to `<h4>` depending on
+        document outline. The button inside is what carries
+        `aria-expanded`; the heading itself does not. Using
+        non-heading wrappers (a `<div>` with `role="heading"`)
+        breaks APG conformance.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: trigger
+    required: true
+    purpose: >-
+      The button that toggles the panel's expanded state. Fills the
+      header's visible surface so the entire header is clickable.
+      Carries the accessible name (the header text) and the
+      `aria-expanded` / `aria-controls` wiring.
+    layout:
+      parent: header
+      row: 1
+      col: 1
+      span: 11
+    figma:
+      type: instance
+      hint: Button component instance filling the header; bound to expanded state
+    code:
+      slot: trigger
+      semantic: button
+    a11y:
+      hint: >-
+        Real `<button>` — never a `<div>` with click handler.
+        Carries `aria-expanded` reflecting state, `aria-controls`
+        referencing the panel id, and the accessible name from
+        the header text. Disabled headers use `aria-disabled` to
+        stay focusable; sequential focus skips disabled items
+        only via roving tabindex (rare in accordion canon).
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+      color:
+        ring: color.border.focus
+
+  - id: icon
+    required: false
+    purpose: >-
+      Optional chevron or plus-minus glyph at the inline-end of
+      the trigger, indicating expansion direction or current state.
+      Rotates 180° (chevron) or swaps glyph (plus → minus) on
+      expand. Decorative — state is also communicated through
+      `aria-expanded` and through the visual height change of the
+      panel.
+    layout:
+      parent: header
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; rotation or swap bound to expanded state
+    code:
+      slot: icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Expansion state is
+        communicated through `aria-expanded` on the trigger and
+        through the panel's visible height; the icon is visual
+        reinforcement only. Icon-only state cues without
+        `aria-expanded` violate APG.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: panel
+    required: true
+    purpose: >-
+      The content region revealed when the item is expanded.
+      Contains the disclosed content — prose, forms, lists,
+      embedded media. Visibility is driven by `aria-expanded` on
+      the trigger plus matching CSS / `hidden` attribute on the
+      panel itself.
+    layout:
+      parent: item
+      row: 2
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; visibility bound to expanded state of the parent item
+    code:
+      slot: panel
+      semantic: region
+    a11y:
+      hint: >-
+        Apply `role="region"` with `aria-labelledby` referencing
+        the trigger's id. The panel is hidden via the `hidden`
+        attribute or `display: none` when collapsed (not just
+        zero-height) so SR users do not encounter ghost content.
+        For `motion: collapse` animations, swap `hidden` for a
+        `aria-hidden="true"` plus `pointer-events: none` while
+        the height transition runs, then apply `hidden` at the
+        end.
+    tokens:
+      spacing:
+        padding: spacing.compact
+      typography:
+        size: text.md
+        lineHeight: leading.normal
+      color:
+        foreground: color.text.primary
+
+axes:
+  variants:
+    - bordered
+    - contained
+    - flush
+  properties:
+    - { name: multi, kind: primitive, of: boolean }
+    - { name: collapsible, kind: primitive, of: boolean }
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - closed
+      - expanding
+      - expanded
+      - collapsing
+    transitions:
+      - from: closed
+        to: expanding
+        trigger: >-
+          User activates the trigger (Enter / Space / click) on a
+          closed item. `aria-expanded` flips to true; the panel
+          begins its enter animation.
+      - from: expanding
+        to: expanded
+        trigger: >-
+          The expand animation completes (or, under
+          prefers-reduced-motion reduce, immediately). The panel
+          is fully visible and reachable by keyboard via Tab.
+      - from: expanded
+        to: collapsing
+        trigger: >-
+          User activates the trigger on an expanded item (when
+          `collapsible: true` for single-open variant, or always
+          for multi-open variant); or another item is activated
+          in single-open non-collapsible mode and this item
+          collapses to make way.
+      - from: collapsing
+        to: closed
+        trigger: >-
+          The collapse animation completes (or immediately under
+          reduced motion). The panel is removed from the
+          accessibility tree and from the keyboard tab order via
+          the `hidden` attribute or `display: none`.
+
+mismatches:
+  - figma: Accordion item header drawn as plain text with a chevron icon
+    code: A real `<button>` inside a `<h2>`/`<h3>`/`<h4>` element with `aria-expanded`
+    consequence: >-
+      Designers may treat the header as a styled label with a
+      chevron affordance. Implementations following the Figma
+      file ship a `<div>` with click handler — the click works
+      for mouse users but the entire keyboard, SR, and APG
+      contract is broken (no focus, no Enter/Space activation,
+      no announced state, no heading semantics).
+    correct: >-
+      Document the canonical structure as heading-wraps-button.
+      The Figma component must encode "header is heading; trigger
+      is button" — even if the visual treatment puts no
+      button-styling on the trigger, the underlying element is a
+      real `<button>` inside a real heading.
+
+  - figma: Single-open and multi-open drawn as the same component
+    code: A `multi` boolean property toggling whether multiple panels can be open simultaneously
+    consequence: >-
+      Designers do not differentiate the two modes in the design
+      file; developers ship one or the other depending on what
+      the Figma mock implies. The mode is canonical-meaningful —
+      single-open accordions imply mutually-exclusive disclosure
+      (FAQ patterns); multi-open imply independent collapsible
+      regions (settings groups). Mixing them confuses users.
+    correct: >-
+      Treat `multi` as a first-class property on the canonical
+      reference. Designers and developers both consult the canon
+      to confirm which mode they're using; the Figma component
+      carries `multi` as a Boolean property.
+
+  - figma: Animated chevron rotation drawn but no panel-height transition
+    code: Both the chevron rotation AND the panel height-transition animate together
+    consequence: >-
+      Designers animate the chevron in mocks but the panel
+      appears instantly (Figma cannot easily mock smooth
+      height-transitions). Developers shipping faithful-to-mock
+      get jumpy panel transitions; SR users get no announcement
+      while the visible content shifts.
+    correct: >-
+      Document both animations as canonical: chevron rotation +
+      panel height-transition share the same duration token (per
+      ADR-007 motion). Implementations using
+      `[hidden]` toggle without animation are valid for
+      `prefers-reduced-motion: reduce`.
+
+  - figma: Each item header drawn at a different heading level for "visual variety"
+    code: All item headers at the same heading level (consistent with document outline)
+    consequence: >-
+      Designers may use h2 for important items, h3 for secondary,
+      h4 for tertiary in the same accordion to create visual
+      hierarchy. Implementations following the design break SR
+      heading navigation (the user expects a flat list of
+      siblings; gets a hierarchy). Heading levels in an
+      accordion communicate document structure, not item
+      importance.
+    correct: >-
+      All accordion item headers MUST be the same heading level.
+      Choose the level relative to the document outline (h2 if
+      the accordion is a top-level region; h3 if nested under
+      a top-level h2). Communicate item importance through
+      content order, not heading hierarchy.
+
+mistakes:
+  - id: accordion-no-heading-wrap
+    title: Trigger button not wrapped in a heading element
+    description: >-
+      The trigger is a `<button>` directly inside a `<div>` or
+      a list item, not wrapped in a heading. SR users navigating
+      by heading skip the accordion entirely; the structure
+      lacks the canonical APG semantics.
+    fix: >-
+      Wrap each trigger in a heading element (`<h2>`, `<h3>`,
+      `<h4>`) of consistent level across all items. The heading
+      is what SR users use to navigate to and within the
+      accordion; the button inside the heading is what carries
+      the toggle behaviour.
+
+  - id: accordion-no-aria-expanded
+    title: Trigger missing `aria-expanded` toggle
+    description: >-
+      The button has no `aria-expanded` attribute. Visually the
+      panel reveals; SR users hear "button" with no state cue,
+      and the icon alone is not discoverable to non-sighted
+      users.
+    fix: >-
+      `aria-expanded="true"` on the button when the panel is
+      open, `false` when closed. Always pair with
+      `aria-controls` referencing the panel's id. Style the icon
+      from `[aria-expanded="true"]` rather than introducing a
+      parallel `data-expanded` attribute.
+
+  - id: accordion-icon-only-state-cue
+    title: Expansion state communicated only by chevron rotation
+    description: >-
+      The chevron rotates on expand, but `aria-expanded` is
+      missing or stuck at one value. Sighted users see the
+      state; SR users do not. The icon is decorative; without
+      `aria-expanded` it carries the entire state-meaning load.
+    fix: >-
+      `aria-expanded` is the source of truth for expansion
+      state; the icon visualises it. The icon is
+      `aria-hidden="true"`; the announced state comes from
+      `aria-expanded`. Style icon rotation from
+      `[aria-expanded="true"]`.
+
+  - id: accordion-anchor-link-no-expand
+    title: Page anchor link to accordion content does not expand the panel
+    description: >-
+      A link elsewhere in the document points at content inside
+      a closed accordion panel (e.g. `href="#shipping-policy"`).
+      The user follows the link; the page scrolls to the panel
+      but the panel is collapsed and the content is not visible.
+      Anchor navigation without auto-expand is a dead-end.
+    fix: >-
+      On hashchange, expand the accordion item containing the
+      target. Common pattern: bind a `hashchange` listener on
+      the accordion that finds the matching item and toggles
+      it open before scrolling. Mature primitives (Radix
+      Accordion plus a `toItem` API; React Aria) expose hooks
+      for this.
+
+  - id: accordion-multi-vs-single-confusion
+    title: Single-open mode silently switches to multi when user expects mutual exclusion
+    description: >-
+      The accordion's `multi` mode is set by config but not
+      communicated to users. Users expanding one item expect the
+      previously-open item to collapse (single-open assumption);
+      it does not, and the layout grows unexpectedly.
+    fix: >-
+      Choose `multi` mode based on content: single-open for
+      mutually-exclusive content (FAQ patterns), multi-open for
+      independent regions (settings groups). The mode should be
+      visually obvious — single-open's collapse-others behaviour
+      gives a recognisable "only one open" feeling. Avoid
+      switching modes mid-flow; the choice is canonical per use
+      case.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-accordion>` host with `<ui-accordion-item>` children; each item composes a `<button>` inside a heading element plus a `<div>` panel; light DOM for content projection
+    variantMechanism: attributes (`variant="bordered"`, `multi`, `collapsible`, `density="comfortable"`); `data-state="closed|expanded|expanding|collapsing"` on each item
+  react:
+    structureMechanism: Compound components (Radix `Accordion.Root` / `Accordion.Item` / `Accordion.Header` / `Accordion.Trigger` / `Accordion.Content`); React Aria `useDisclosure` plus a custom collection composer
+    variantMechanism: props on `Accordion.Root` (variant / type / collapsible); `data-state` exposed for styling; `Accordion.Trigger` automatically wires the heading semantics via `asChild`
+  angularSignals:
+    structureMechanism: Angular CDK A11y `cdk-accordion` plus signal-based items; content projection for header content and panel content
+    variantMechanism: input<'bordered' | 'contained' | 'flush'>(); `[multi]`, `[collapsible]` host bindings; per-item `[expanded]` two-way binding
+  vue:
+    structureMechanism: Headless UI does not ship Accordion as of 2026-04; third-party (Radix Vue, vue-collapsible); custom composable `useAccordion` plus per-item `useDisclosure`
+    variantMechanism: defineProps with literal-union types; `:multi`, `:collapsible` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    expand: motion.duration.base
+    collapse: motion.duration.base
+    chevronRotate: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, density compact becomes the canonical
+        default — narrow viewports cannot accommodate
+        comfortable density without crowding. Trigger padding
+        reduces; panel padding stays consistent. Variant
+        `flush` (no borders, no item gap) is preferred to
+        preserve vertical space.
+    - at: breakpoint.md
+      change: >-
+        Above this width, density and variant render as
+        authored. Items render at their authored gap and
+        border treatment.
+
+events:
+  - name: expandedChange
+    payload: >-
+      `{ itemId: string, expanded: boolean }`. Fires when an
+      individual item's expanded state changes. For multi-open
+      accordions the event fires per item; for single-open
+      accordions activating one item may fire two events
+      (the previously-open item closing, the new item
+      expanding).
+    frameworkNotes:
+      webComponents: >-
+        `expandedChange` CustomEvent on the host with
+        `event.detail = { itemId, expanded }`.
+      react: >-
+        `onValueChange(value: string | string[])` on Radix
+        `Accordion.Root` — for `type="single"` the value is the
+        currently-open item id (or empty string when none);
+        for `type="multiple"` the value is an array of open
+        ids. Consumers may derive per-item events from the
+        before/after diff.
+      angularSignals: >-
+        `output<{ itemId: string, expanded: boolean }>('expandedChange')`
+        on the accordion or per-item.
+      vue: >-
+        `@update:modelValue` for `v-model` on the accordion's
+        open-items list.
+
+  - name: itemActivate
+    payload: >-
+      `{ itemId: string }`. Fires when the user activates an
+      item's trigger — distinct from `expandedChange` because
+      activating an already-expanded single-open item with
+      `collapsible: false` does NOT emit `expandedChange`
+      (state unchanged) but DOES emit `itemActivate`. Lets
+      consumers track user intent independently of state
+      changes.
+    frameworkNotes:
+      webComponents: >-
+        `itemActivate` CustomEvent with `event.detail = { itemId }`.
+      react: >-
+        Uncommon as a discrete event; consumers wire `onClick`
+        on `Accordion.Trigger` to capture activation.
+      angularSignals: >-
+        `output<string>('itemActivate')`.
+      vue: >-
+        `@activate` event with payload `{ itemId }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the first item's trigger. Subsequent Tab
+        moves to the next focusable INSIDE the open panel, then
+        out of the panel to the next item's trigger, then
+        through the rest of the document. Closed panels skip
+        from focus order entirely.
+    - keys: Shift+Tab
+      expected: >-
+        Reverse direction — moves backwards through panel
+        contents and trigger buttons.
+    - keys: Enter or Space (focus on trigger)
+      expected: >-
+        Toggles the item's expanded state. For single-open
+        non-collapsible mode, activating the currently-expanded
+        item is a no-op (panel stays open); collapsible mode
+        allows close.
+    - keys: ArrowDown / ArrowUp (focus on trigger)
+      expected: >-
+        Moves focus to the next / previous trigger in the
+        accordion (per APG optional-but-recommended). Wraps
+        from last to first and vice versa. NOT activation —
+        focus only.
+    - keys: Home / End (focus on trigger)
+      expected: >-
+        Moves focus to the first / last trigger in the
+        accordion (per APG optional).
+  announcements:
+    - trigger: Focus enters trigger, item closed
+      expected: >-
+        SR announces the heading text as part of heading
+        navigation, then the trigger as "<heading text>,
+        button, collapsed" (or "expanded" if open).
+        `aria-expanded` provides the state portion.
+    - trigger: Trigger activated, item expands
+      expected: >-
+        SR re-announces the trigger with its new state:
+        "<heading text>, button, expanded". The panel content
+        becomes part of the document; subsequent Tab into the
+        panel announces its content normally.
+    - trigger: Anchor-link auto-expands a closed item
+      expected: >-
+        On hashchange + auto-expand, focus should move to the
+        target inside the panel (or to the panel's heading if
+        no specific target). The user is not surprised by
+        invisible expansion.
+  axeRules:
+    - aria-allowed-role
+    - aria-required-attr
+    - aria-valid-attr-value
+    - heading-order
+    - color-contrast
+    - region
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: Maps bordered / contained / flush.
+  - figma: Multi
+    code: multi
+    type: Boolean
+    notes: >-
+      Toggles single-vs-multi-open behaviour. Default false
+      (single-open) for FAQ patterns; true for settings groups.
+  - figma: Collapsible
+    code: collapsible
+    type: Boolean
+    notes: >-
+      In single-open mode, allows the currently-open item to
+      collapse (state with no items expanded). Multi-mode
+      always allows collapse; this property is only meaningful
+      for single-mode.
+  - figma: Density
+    code: density
+    type: Variant
+    notes: comfortable / compact. At and below `breakpoint.sm` density compact is the canonical default.
+  - figma: Item Count
+    code: 'items.length'
+    type: Variant
+    notes: >-
+      Figma exposes 2/3/4/5/6+ item counts as a Variant for
+      preview-time layout review. Code accepts an array of item
+      definitions.
+  - figma: Has Icon
+    code: hasIcon
+    type: Boolean
+    notes: Toggles the trigger-icon (chevron / plus-minus) visibility per item.
+  - figma: Default Open Items
+    code: defaultOpen
+    type: Variant
+    notes: >-
+      Figma exposes "first item open", "all items open", "no
+      items open" as Variant for preview; in code it's a
+      configuration prop (single-string id for single-mode,
+      array of ids for multi-mode).
+
+i18n:
+  rtl:
+    mirroring: >-
+      Vertical orientation is direction-neutral (top-to-bottom
+      stacking unchanged). Trigger inline-content
+      (heading-text · chevron) reverses logical order — the
+      chevron moves from inline-end (visual right in LTR) to
+      inline-end (visual left in RTL) via logical positioning.
+      ArrowDown / ArrowUp keyboard navigation is unchanged.
+      Chevron rotation is direction-neutral (down/up arrows
+      are symmetric); plus-minus glyph is also
+      direction-neutral.
+  textExpansion: >-
+    Trigger heading text wraps to additional lines under heavy
+    expansion (DE / RU / FI). Panel content follows its own
+    text-flow. Density compact risks crowding long-text
+    headings; density comfortable is the safer default in
+    long-text locales. Multi-line trigger headings continue to
+    behave correctly with the chevron icon — the chevron
+    aligns with the first line of the heading by canonical
+    convention.
+
+performance:
+  - name: lazyMountThreshold
+    metric: panel-payload-size
+    threshold: 50
+    unit: kb
+    rationale: >-
+      Accordion panels above ~50kb of rendered DOM payload
+      should lazy-mount on first expand. Below the threshold,
+      eager-render all panels (allows `[hidden]` toggle without
+      mount cost). Above the threshold, the per-mount cost
+      dominates and the lazy-mount pattern (per the
+      `tabs-lazy-panel-no-aria-busy` mistake on Tabs which also
+      applies to Accordion) earns its complexity. Threshold is
+      lower than Tabs (100kb) because accordions tend to render
+      more total items in the open state simultaneously
+      (multi-open variant).
+  - name: itemCount
+    metric: total-items
+    threshold: 12
+    unit: items
+    rationale: >-
+      Above ~12 accordion items, the disclosure pattern stops
+      working — the user cannot scan the list of headers
+      without scrolling, and the cognitive load of remembering
+      which items have been expanded exceeds disclosure's
+      benefit. Above 12 items, redesign as a paginated list, a
+      filterable list, or split the content into nested
+      accordions by category.
+
+whenToUse:
+  use: >-
+    For a list of named regions where content is browsable but
+    not all needed simultaneously — FAQs, settings groupings,
+    progressive disclosure of dense reference content. The user
+    can scan all headers, expand the items they need, and
+    collapse the ones they don't. Accordion preserves all panel
+    labels on screen.
+  avoid: >-
+    For mutually-exclusive parallel views of the same subject
+    (settings tabs, alternative presentations of the same data)
+    — that is `Tabs`. For a single collapsible region not part
+    of a list — that is `Disclosure`. For navigation between
+    independent pages — that is `SidebarNav`. For sequential
+    flows that must complete in order — that is `Stepper`.
+  vsRelated:
+    - id: tabs
+      difference: >-
+        `Tabs` always shows one panel and replaces it on
+        selection; `Accordion` allows zero, one, or multiple
+        panels open at once. Tabs are lateral (peer content
+        chunks at the same level); Accordion is hierarchical
+        (each header is a heading in the document outline).
+        Vertical Tabs and single-mode Accordion can look
+        similar — the distinguisher is whether all labels stay
+        visible (Accordion) or only the selected label is
+        emphasised (Tabs).
+    - id: disclosure
+      difference: >-
+        `Disclosure` is a single collapsible region with one
+        toggle; `Accordion` is a list of disclosures grouped
+        as a unit with shared keyboard navigation (ArrowDown /
+        Up between items). A standalone collapsible region is
+        Disclosure, not Accordion-of-one-item.
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` navigates between independent pages with
+        their own URLs; `Accordion` discloses inline content
+        within a single page. A nav-style accordion (clicking
+        an item navigates) is a SidebarNav with collapsible
+        sections, not an Accordion.
+
+notes: >-
+  Accordion is one of the most-implemented patterns and one of
+  the most-broken in production. The "trigger inside heading"
+  rule (APG canonical) is routinely violated; the
+  "aria-expanded as source of truth" rule even more so. The
+  canonical reference documents both as non-negotiable
+  contracts. Animation handling is the second-most-common
+  failure mode — implementations either ship without animation
+  (jumpy) or with animation but no `prefers-reduced-motion`
+  fallback. The motion block plus `reducedMotionFallback:
+  instant` is the canonical answer.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/accordion/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details
+  - https://www.radix-ui.com/primitives/docs/components/accordion
+  - https://react-spectrum.adobe.com/react-aria/Disclosure.html
+  - https://headlessui.com/react/disclosure
+  - https://polaris.shopify.com/components/utilities/collapsible
+  - https://carbondesignsystem.com/components/accordion/usage/
+  - https://atlassian.design/components/expand/examples
+  - https://m3.material.io/components/dividers/overview
+  - https://inclusive-components.design/collapsible-sections/
+
+lastReviewed: '2026-04-29'
