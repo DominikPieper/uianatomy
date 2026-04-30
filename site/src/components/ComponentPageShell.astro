@@ -2,6 +2,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import AnatomyDiagram from './AnatomyDiagram.astro';
+import AnatomyFilterBar from './AnatomyFilterBar.astro';
 import SiteSidebar from './SiteSidebar.astro';
 import WhenToUseSection from './sections/WhenToUseSection.astro';
 import ImplementationsSection from './sections/ImplementationsSection.astro';
@@ -57,6 +58,7 @@ const VIEW_LABEL: Record<View, string> = {
 
       <section aria-label="Anatomy">
         <figure class="figure anatomy-frame">
+          <AnatomyFilterBar componentName={component.name} />
           <AnatomyDiagram component={component} />
           <figcaption class="figure-caption">Fig 1.1 · {component.name} · {VIEW_LABEL[view]}</figcaption>
         </figure>
@@ -76,3 +78,52 @@ const VIEW_LABEL: Record<View, string> = {
     </article>
   </div>
 </Base>
+
+<script>
+  function findSlotId(el: Element | null): string | null {
+    if (!el) return null;
+    const target = (el as HTMLElement).closest('[data-slot]') as HTMLElement | null;
+    return target?.dataset.slot ?? null;
+  }
+  function setHighlight(slotId: string | null) {
+    document.querySelectorAll('.is-cross-highlighted').forEach((n) =>
+      n.classList.remove('is-cross-highlighted'),
+    );
+    if (!slotId) return;
+    const matches = document.querySelectorAll(
+      `[data-slot="${CSS.escape(slotId)}"]`,
+    );
+    matches.forEach((m) => {
+      if (!m.classList.contains('is-cross-pinned')) {
+        m.classList.add('is-cross-highlighted');
+      }
+    });
+  }
+  let pinnedSlot: string | null = null;
+  function setPin(slotId: string | null) {
+    document.querySelectorAll('.is-cross-pinned').forEach((n) =>
+      n.classList.remove('is-cross-pinned'),
+    );
+    pinnedSlot = slotId;
+    if (!slotId) return;
+    document
+      .querySelectorAll(`[data-slot="${CSS.escape(slotId)}"]`)
+      .forEach((m) => m.classList.add('is-cross-pinned'));
+  }
+  document.body.addEventListener('mouseover', (e) => {
+    const slot = findSlotId(e.target as Element);
+    setHighlight(slot);
+  });
+  document.body.addEventListener('mouseout', (e) => {
+    const slot = findSlotId(e.target as Element);
+    if (slot) setHighlight(null);
+  });
+  document.body.addEventListener('click', (e) => {
+    const slot = findSlotId(e.target as Element);
+    if (slot === null) {
+      if (pinnedSlot) setPin(null);
+      return;
+    }
+    setPin(slot === pinnedSlot ? null : slot);
+  });
+</script>

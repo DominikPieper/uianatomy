@@ -37,6 +37,7 @@ anatomy:
       Visual representation associated with the card's subject. Typically
       full-bleed at the top (or leading edge in horizontal orientation) to
       anchor scanning before the title.
+    slotKind: content
     layout:
       row: 1
       col: 1
@@ -61,6 +62,7 @@ anatomy:
     purpose: >-
       Short categorical label sitting above the title (kicker, tag, or
       timestamp). Establishes context before the headline.
+    slotKind: content
     layout:
       row: 2
       col: 1
@@ -90,6 +92,7 @@ anatomy:
       The card's primary identifier. Should be readable as a standalone
       label outside of the card's context (e.g., when surfaced in a list of
       results).
+    slotKind: content
     layout:
       row: 3
       col: 1
@@ -120,6 +123,7 @@ anatomy:
     purpose: >-
       Secondary descriptor below the title, narrowing or clarifying its
       meaning. Not a place for body prose.
+    slotKind: content
     layout:
       row: 4
       col: 1
@@ -146,6 +150,7 @@ anatomy:
     required: true
     purpose: >-
       Supporting prose, summary, or structured content. The card's payload.
+    slotKind: content
     layout:
       row: 5
       col: 1
@@ -176,6 +181,7 @@ anatomy:
       Primary call(s) to action associated with the card's content
       (e.g., "View details", "Add to cart"). Distinct from card-as-link
       affordance.
+    slotKind: structural
     layout:
       row: 6
       col: 1
@@ -201,6 +207,7 @@ anatomy:
     purpose: >-
       Tertiary metadata below the actions (e.g., timestamps, status chips,
       author attribution). Lower visual weight than actions.
+    slotKind: structural
     layout:
       row: 7
       col: 1

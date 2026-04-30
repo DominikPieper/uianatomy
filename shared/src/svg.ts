@@ -70,9 +70,17 @@ function truncateForBox(s: string, boxWidth: number, fontKind: 'serif' | 'mono' 
 interface LayoutResult {
   boxes: Map<string, SlotBoxes>;
   childrenByParent: Map<string, AnatomySlot[]>;
+  depthById: Map<string, number>;
   overlaySlot: AnatomySlot | null;
   totalHeight: number;
   width: number;
+}
+
+function hasTokens(slot: AnatomySlot): boolean {
+  if (!slot.tokens) return false;
+  return Object.values(slot.tokens).some(
+    (cat) => cat !== undefined && Object.keys(cat).length > 0,
+  );
 }
 
 function layoutGrid(
@@ -245,6 +253,28 @@ function layoutFloating(
   }
 }
 
+function computeDepths(
+  component: Component,
+  childrenByParent: Map<string, AnatomySlot[]>,
+): Map<string, number> {
+  const depths = new Map<string, number>();
+  const visit = (slot: AnatomySlot, depth: number) => {
+    depths.set(slot.id, depth);
+    for (const child of childrenByParent.get(slot.id) ?? []) {
+      visit(child, depth + 1);
+    }
+  };
+  for (const slot of component.anatomy) {
+    if (!slot.layout.parent && !slot.layout.overlay) {
+      visit(slot, 0);
+    }
+  }
+  for (const slot of component.anatomy) {
+    if (!depths.has(slot.id)) depths.set(slot.id, 0);
+  }
+  return depths;
+}
+
 function buildLayout(component: Component, width: number): LayoutResult {
   const boxes = new Map<string, SlotBoxes>();
   const slotsById = new Map<string, AnatomySlot>();
@@ -260,6 +290,7 @@ function buildLayout(component: Component, width: number): LayoutResult {
       childrenByParent.set(p, list);
     }
   }
+  const depthById = computeDepths(component, childrenByParent);
 
   const roots = component.anatomy.filter(
     (s) => !s.layout.parent && !s.layout.overlay && !s.layout.floating,
@@ -320,7 +351,7 @@ function buildLayout(component: Component, width: number): LayoutResult {
     for (const r of repeats) totalHeight = Math.max(totalHeight, r.y + r.h + PADDING);
   }
 
-  return { boxes, childrenByParent, overlaySlot, totalHeight, width };
+  return { boxes, childrenByParent, depthById, overlaySlot, totalHeight, width };
 }
 
 function emitSlotGroup(
@@ -329,6 +360,7 @@ function emitSlotGroup(
   isPrimary: boolean,
   index: number,
   hasChildren: boolean,
+  depth: number,
 ): string {
   const { x, y, w, h } = isPrimary ? boxes.primary : boxes.repeats[index]!;
   const dasharray = slot.required ? '' : ' stroke-dasharray="6 4"';
@@ -338,19 +370,30 @@ function emitSlotGroup(
   const bridge = escape(truncateForBox(slot.id, labelMaxWidth, 'mono'));
   const isFloating = slot.layout.floating !== undefined;
   const totalReps = boxes.repeats.length + 1;
+  const depthClamped = Math.min(2, Math.max(0, depth));
+  const slotKindClass = slot.slotKind ? `anatomy-kind-${slot.slotKind}` : '';
+  const slotHasTokens = hasTokens(slot);
 
-  const classes = ['anatomy-slot'];
+  const classes = ['anatomy-slot', `anatomy-depth-${depthClamped}`];
+  if (slotKindClass) classes.push(slotKindClass);
   if (!isPrimary) classes.push('anatomy-repeat-ghost');
   if (isFloating && isPrimary) classes.push('anatomy-floating');
   if (hasChildren) classes.push('anatomy-parent');
+  if (slotHasTokens) classes.push('anatomy-has-tokens');
+  if (totalReps > 1) classes.push('anatomy-has-repeats');
   const cls = classes.join(' ');
   const idAttr = isPrimary ? ` id="slot-${escape(slot.id)}"` : '';
+  const dataSlot = ` data-slot="${escape(slot.id)}"`;
   const cy = y + h / 2;
   const cx = x + w / 2;
   const labelX = hasChildren ? x + 12 : cx;
   const labelY = hasChildren ? y + 14 : cy;
   const textAnchor = hasChildren ? 'start' : 'middle';
   const baseline = hasChildren ? 'hanging' : 'middle';
+
+  const titleText = isPrimary
+    ? `<title>${escape(slot.purpose)}</title>`
+    : '';
 
   let badges = '';
   if (isPrimary && isFloating) {
@@ -374,13 +417,25 @@ function emitSlotGroup(
       `</g>`;
   }
 
+  let indicators = '';
+  if (isPrimary && slotHasTokens) {
+    const ix = x + w - 8;
+    const iy = y + h - 8;
+    indicators =
+      `<g class="anatomy-indicators" aria-hidden="true">` +
+      `<circle class="anatomy-indicator anatomy-indicator-tokens" cx="${ix}" cy="${iy}" r="3"/>` +
+      `</g>`;
+  }
+
   return (
-    `  <g${idAttr} class="${cls}" data-required="${slot.required}">` +
-    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="white" stroke="currentColor" stroke-width="1"${dasharray}/>` +
+    `  <g${idAttr}${dataSlot} class="${cls}" data-required="${slot.required}">` +
+    titleText +
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" stroke="currentColor" stroke-width="1"${dasharray}/>` +
     `<text class="anatomy-label label-figma" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">${figma}</text>` +
     `<text class="anatomy-label label-code"  x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${code}</text>` +
     `<text class="anatomy-label label-bridge" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${bridge}</text>` +
     badges +
+    indicators +
     `</g>`
   );
 }
@@ -389,8 +444,10 @@ function emitOverlay(slot: AnatomySlot, width: number, height: number): string {
   const figma = escape(truncate(slot.figma.hint));
   const code = escape(`slot="${slot.code.slot}"`);
   const bridge = escape(slot.id);
+  const slotKindClass = slot.slotKind ? ` anatomy-kind-${slot.slotKind}` : '';
   return (
-    `  <g id="slot-${escape(slot.id)}" class="anatomy-slot anatomy-overlay" data-required="${slot.required}">` +
+    `  <g id="slot-${escape(slot.id)}" data-slot="${escape(slot.id)}" class="anatomy-slot anatomy-overlay${slotKindClass}" data-required="${slot.required}">` +
+    `<title>${escape(slot.purpose)}</title>` +
     `<rect x="0" y="0" width="${width}" height="${height}" fill="rgba(0,0,0,0.06)" stroke="currentColor" stroke-width="1" stroke-dasharray="6 4"/>` +
     `<text class="anatomy-label label-figma" x="${PADDING}" y="${PADDING + 4}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" fill="currentColor">${figma}</text>` +
     `<text class="anatomy-label label-code"  x="${PADDING}" y="${PADDING + 4}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="currentColor">${code}</text>` +
@@ -428,7 +485,7 @@ export interface RenderOptions {
 export function renderAnatomySVG(component: Component, options: RenderOptions = {}): string {
   const width = options.width ?? CANVAS_WIDTH;
   const layout = buildLayout(component, width);
-  const { boxes, childrenByParent, overlaySlot, totalHeight } = layout;
+  const { boxes, childrenByParent, depthById, overlaySlot, totalHeight } = layout;
 
   const parts: string[] = [];
   parts.push(
@@ -449,9 +506,10 @@ export function renderAnatomySVG(component: Component, options: RenderOptions = 
     const slotBoxes = boxes.get(slot.id);
     if (!slotBoxes) continue;
     const hasChildren = (childrenByParent.get(slot.id) ?? []).length > 0;
-    parts.push(emitSlotGroup(slot, slotBoxes, true, 0, hasChildren));
+    const depth = depthById.get(slot.id) ?? 0;
+    parts.push(emitSlotGroup(slot, slotBoxes, true, 0, hasChildren, depth));
     for (let i = 0; i < slotBoxes.repeats.length; i++) {
-      parts.push(emitSlotGroup(slot, slotBoxes, false, i, hasChildren));
+      parts.push(emitSlotGroup(slot, slotBoxes, false, i, hasChildren, depth));
     }
   }
 

@@ -20,6 +20,7 @@ anatomy:
       stepper's purpose ("Checkout progress", "Signup steps")
       and the orientation property. Visual rhythm: equal
       spacing between steps, consistent connector lengths.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -51,6 +52,7 @@ anatomy:
       Encapsulates the indicator + label + optional
       description grouping. The state of each step (pending,
       active, completed, error) drives visual treatment.
+    slotKind: interactive
     layout:
       parent: root
       row: 1
@@ -86,6 +88,7 @@ anatomy:
       step's state at a glance. Conventionally a circle of
       consistent diameter across all states for visual
       rhythm.
+    slotKind: content
     layout:
       parent: step
       row: 1
@@ -124,6 +127,7 @@ anatomy:
       Visually positioned beside or below the indicator
       depending on orientation; for `dot` variant the
       label is visually-hidden.
+    slotKind: content
     layout:
       parent: step
       row: 2
@@ -156,6 +160,7 @@ anatomy:
       brief context per step ("Review your items", "Enter
       delivery details"). Single line or short paragraph;
       omitted in compact / dot variants.
+    slotKind: content
     layout:
       parent: step
       row: 3
@@ -191,6 +196,7 @@ anatomy:
       changes between connectors: solid for completed-to-
       completed; muted for pending-to-pending; mixed for
       the active-step transition edge.
+    slotKind: decorative
     layout:
       parent: root
       row: 1

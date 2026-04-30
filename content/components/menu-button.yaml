@@ -21,6 +21,7 @@ anatomy:
       identity. Common forms: caret-suffixed button ("Actions ▾"),
       icon-only kebab/meatball ("⋮" or "⋯") for overflow menus,
       avatar-as-trigger for user menus.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -57,6 +58,7 @@ anatomy:
       `aria-expanded="true"` for visual reinforcement. Omitted
       on icon-only kebab triggers where the icon itself
       communicates the menu intent.
+    slotKind: decorative
     layout:
       row: 1
       col: 2
@@ -84,6 +86,7 @@ anatomy:
       adjacent content via portal-mount and Floating UI
       positioning. Auto-flips when the authored placement
       collides with the viewport.
+    slotKind: structural
     layout:
       floating:
         anchor: trigger
@@ -123,6 +126,7 @@ anatomy:
       (toggleable boolean), or `role="menuitemradio"` (mutually-
       exclusive choice within a group). One anatomy slot
       describes the role; multiple instances render per menu.
+    slotKind: interactive
     layout:
       parent: menu
       row: 1
@@ -160,6 +164,7 @@ anatomy:
       Visual only — does not affect keyboard navigation. Used
       for visual separation between command groups (e.g. file
       operations · edit operations · sharing operations).
+    slotKind: decorative
     layout:
       parent: menu
       row: 2

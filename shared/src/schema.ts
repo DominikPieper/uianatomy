@@ -71,10 +71,18 @@ export const slotTokensSchema = z
   })
   .strict();
 
+export const slotKindSchema = z.enum([
+  'structural',
+  'interactive',
+  'content',
+  'decorative',
+]);
+
 export const anatomySlotSchema = z.object({
   id: slug,
   required: z.boolean(),
   purpose: z.string().min(1),
+  slotKind: slotKindSchema.optional(),
   layout: layoutHintSchema,
   figma: figmaHintSchema,
   code: codeHintSchema,
@@ -453,6 +461,7 @@ export const componentSchema = z.object({
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
 export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
+export type SlotKind = z.infer<typeof slotKindSchema>;
 export type SlotTokens = z.infer<typeof slotTokensSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Transition = z.infer<typeof transitionSchema>;

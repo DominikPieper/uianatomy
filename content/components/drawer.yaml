@@ -16,6 +16,7 @@ anatomy:
       active. Intercepts pointer events and visually de-emphasises the
       underlying content. Absent on the `non-modal` variant — the page
       remains fully interactive while the drawer is open.
+    slotKind: decorative
     layout:
       overlay: true
     figma:
@@ -40,6 +41,7 @@ anatomy:
       The drawer panel itself — the bounded surface that renders header,
       body, and footer. Anchored to one viewport edge via the `side`
       property. Carries the focus trap when `modal: true`.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -75,6 +77,7 @@ anatomy:
       some drawers (in-flow filter panels, simple navigation drawers)
       embed the title directly in the body or omit a title entirely in
       favour of an external trigger label.
+    slotKind: structural
     layout:
       parent: container
       row: 1
@@ -100,6 +103,7 @@ anatomy:
       The drawer's name. The value referenced by `aria-labelledby` on
       the container. First content announced when focus enters a modal
       drawer.
+    slotKind: content
     layout:
       parent: header
       row: 1
@@ -133,6 +137,7 @@ anatomy:
       navigation-drawer patterns where dismissal happens via outside
       tap or swipe; required when `dismissible: true` and no other
       visible close affordance exists.
+    slotKind: interactive
     layout:
       parent: header
       row: 1
@@ -164,6 +169,7 @@ anatomy:
       Primary payload — the content the drawer exists to surface or
       collect. Scrolls internally when content overflows; header and
       footer remain pinned to their respective edges.
+    slotKind: content
     layout:
       parent: container
       row: 2
@@ -196,6 +202,7 @@ anatomy:
       Optional — many drawers (navigation, detail-view) commit changes
       automatically via in-body controls and need no explicit footer.
       When present, pinned to the inline-end edge of the container.
+    slotKind: structural
     layout:
       parent: container
       row: 3
@@ -223,6 +230,7 @@ anatomy:
       typical on mobile bottom-sheet patterns. A small horizontal pill
       at the inline-start edge (top edge for top/bottom drawers).
       Decorative on pointer devices; functional on touch.
+    slotKind: interactive
     layout:
       parent: container
       row: 1

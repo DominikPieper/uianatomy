@@ -19,6 +19,7 @@ anatomy:
       (aria-haspopup, aria-expanded, aria-controls) to it. The
       anatomy diagram shows the trigger to clarify the
       anchor-and-floating-surface relationship.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -47,6 +48,7 @@ anatomy:
       trigger via the `side` and `align` properties; auto-flips to
       the opposite side when the authored placement collides with the
       viewport edge (when `flip: true`).
+    slotKind: structural
     layout:
       floating:
         anchor: trigger
@@ -86,6 +88,7 @@ anatomy:
       Always rendered for the `tip` variant, never for the `standard`
       variant. Position auto-tracks the trigger when the popover
       flips or shifts.
+    slotKind: decorative
     layout:
       parent: container
       row: 1
@@ -113,6 +116,7 @@ anatomy:
       Top region grouping title and close affordance. Optional —
       smaller popovers (single-paragraph helper text, single-action
       menus) often skip the header in favour of inline content.
+    slotKind: structural
     layout:
       parent: container
       row: 1
@@ -139,6 +143,7 @@ anatomy:
       May contain prose, forms, lists, or any interactive content.
       Scrolls internally only when content exceeds the popover's
       max-height; the canonical surface is sized to its content.
+    slotKind: content
     layout:
       parent: container
       row: 2
@@ -171,6 +176,7 @@ anatomy:
       content discourages outside-click dismissal (forms with
       unsaved input). Conventionally an "×" icon in the inline-end
       corner of the header.
+    slotKind: interactive
     layout:
       parent: header
       row: 1

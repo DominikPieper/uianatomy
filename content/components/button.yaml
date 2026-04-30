@@ -39,6 +39,7 @@ anatomy:
     purpose: >-
       The interactive surface itself. Carries the `<button>` element,
       the focus ring, the variant treatment, and the press affordance.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -81,6 +82,7 @@ anatomy:
       Optional decorative or semantic icon before the label, anchoring
       the action visually. Conventionally aligned to the leading edge
       with consistent gap to the label.
+    slotKind: decorative
     layout:
       row: 2
       col: 1
@@ -107,6 +109,7 @@ anatomy:
       The text that names the action. Carries the button's accessible
       name when no `aria-label` overrides it. Should read as a verb
       phrase ("Save changes", not "Changes").
+    slotKind: content
     layout:
       row: 2
       col: 2
@@ -137,6 +140,7 @@ anatomy:
       Optional icon after the label, conventionally a chevron or
       arrow indicating direction (advance, external link, dropdown
       disclosure).
+    slotKind: decorative
     layout:
       row: 2
       col: 3

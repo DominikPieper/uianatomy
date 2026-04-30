@@ -18,6 +18,7 @@ anatomy:
       The bounded surface containing the icon, input, and optional
       affordances. Carries the focus ring and the
       `role="search"` landmark when standalone.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -53,6 +54,7 @@ anatomy:
       Decorative — communicates the search affordance visually.
       Optional because some compact variants embed the magnifier
       as the submit button instead of as a leading icon.
+    slotKind: decorative
     layout:
       row: 1
       col: 1
@@ -81,6 +83,7 @@ anatomy:
       the `type="search"` (which provides browser-default clear
       affordance and Enter-submit behaviour), and the typeahead
       / suggestion wiring for the with-suggestions variant.
+    slotKind: interactive
     layout:
       row: 1
       col: 2
@@ -116,6 +119,7 @@ anatomy:
       Conventionally an "×" icon at the inline-end of the input,
       visible when the input has a value. Fast clear-and-retype
       flow.
+    slotKind: interactive
     layout:
       row: 1
       col: 3
@@ -151,6 +155,7 @@ anatomy:
       patterns where Enter-submission is not obvious or where
       the search must be initiated via pointer (compact
       variants where the leading icon is omitted).
+    slotKind: interactive
     layout:
       row: 1
       col: 4
@@ -185,6 +190,7 @@ anatomy:
       searches, or live preview of top-matching results. Floats
       via portal-mount; positioning relative to the input
       anchored at its inline-start edge.
+    slotKind: structural
     layout:
       floating:
         anchor: input

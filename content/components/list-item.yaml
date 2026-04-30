@@ -19,6 +19,7 @@ anatomy:
       inside `role="list"` for non-semantic-list compositions
       like Carbon's `<StructuredList>`). Width fills the
       parent list; height intrinsic to content density.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -53,6 +54,7 @@ anatomy:
       file-type indicators, status icons, category markers.
       Mutually exclusive with avatar (a row may have one or
       the other, not both — the same slot position).
+    slotKind: decorative
     layout:
       row: 1
       col: 1
@@ -81,6 +83,7 @@ anatomy:
       or organisation image, alternative to a leading icon.
       Same slot position; mutually exclusive with
       leading-icon.
+    slotKind: content
     layout:
       row: 1
       col: 1
@@ -111,6 +114,7 @@ anatomy:
       direct text content of the activator). Single line by
       canon; longer text indicates two-line or three-line
       variant.
+    slotKind: content
     layout:
       row: 1
       col: 2
@@ -139,6 +143,7 @@ anatomy:
       Optional supporting text below the primary label. One
       or two lines depending on variant. Used for metadata,
       timestamps, brief descriptions, status text.
+    slotKind: content
     layout:
       row: 2
       col: 2
@@ -170,6 +175,7 @@ anatomy:
       indicating navigation, a status indicator, a sort
       direction marker. Decorative or status-bearing depending
       on context.
+    slotKind: decorative
     layout:
       row: 1
       col: 7
@@ -198,6 +204,7 @@ anatomy:
       typically between secondary text and trailing-icon (or
       replacing trailing-icon for high-attention rows). Used
       for unread counts, attention markers, "new" pulses.
+    slotKind: content
     layout:
       row: 1
       col: 6
@@ -235,6 +242,7 @@ anatomy:
       single button. Distinct from the row's whole-row click
       affordance; the action takes a different action than
       activating the row.
+    slotKind: interactive
     layout:
       row: 1
       col: 8

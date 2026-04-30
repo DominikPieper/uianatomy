@@ -47,6 +47,7 @@ anatomy:
       The container that holds the tab triggers. Establishes the
       tablist semantic, the orientation, and the keyboard model
       (arrow keys cycle through tabs within the list).
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -77,6 +78,7 @@ anatomy:
       Individual trigger that activates its associated tabpanel. One
       anatomy slot describes the *role*; in practice one component
       instance is rendered per tab.
+    slotKind: interactive
     layout:
       parent: tablist
       row: 1
@@ -112,6 +114,7 @@ anatomy:
       Optional decorative element that emphasises the selected tab
       (typically an underline). Not part of the semantic structure;
       driven from the selected tab's geometry.
+    slotKind: decorative
     layout:
       floating:
         anchor: tab
@@ -141,6 +144,7 @@ anatomy:
     purpose: >-
       The content region revealed by selecting a tab. One per tab in
       practice; one anatomy slot describes the role.
+    slotKind: structural
     layout:
       row: 2
       col: 1

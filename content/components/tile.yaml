@@ -18,6 +18,7 @@ anatomy:
       consistent aspect ratio (canonical default 1:1 square; portrait
       and landscape are property-driven). Carries the selection or
       activation affordance for the whole surface.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -54,6 +55,7 @@ anatomy:
       The primary visual content — image, video, or rendered
       preview. Full-bleed at the surface or inset with consistent
       padding. Sized to fill the tile's aspect-ratio box.
+    slotKind: content
     layout:
       row: 1
       col: 1
@@ -82,6 +84,7 @@ anatomy:
       to ensure text legibility against arbitrary image
       backgrounds. Decorative — communicates no information of
       its own.
+    slotKind: decorative
     layout:
       row: 1
       col: 1
@@ -110,6 +113,7 @@ anatomy:
       pattern, more accessible for long labels). One line by
       canon; longer text indicates Card may be the right
       pattern.
+    slotKind: content
     layout:
       row: 2
       col: 1
@@ -144,6 +148,7 @@ anatomy:
       (selected state, current page); informational when carrying
       unique meaning (verified-content checkmark on a profile
       tile).
+    slotKind: content
     layout:
       row: 1
       col: 1
@@ -178,6 +183,7 @@ anatomy:
       `selectable` variant. Conventionally at the inline-start
       top corner. Visible only in selectable mode (or on hover
       for hover-to-reveal selection patterns).
+    slotKind: interactive
     layout:
       row: 1
       col: 1

@@ -977,7 +977,7 @@ describe('anatomy SVG generator', () => {
   it('renders Modal overlay slot at canvas dimensions', async () => {
     const modal = await loadComponent(join(contentDir, 'modal.yaml'));
     const svg = renderAnatomySVG(modal);
-    expect(svg).toContain('class="anatomy-slot anatomy-overlay"');
+    expect(svg).toMatch(/class="[^"]*\banatomy-overlay\b[^"]*"/);
     expect(svg).toContain('id="slot-backdrop"');
   });
 
@@ -1003,7 +1003,7 @@ describe('anatomy SVG generator', () => {
   it('marks floating slots with the floating class and a "z" badge', async () => {
     const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
     const svg = renderAnatomySVG(combobox);
-    expect(svg).toMatch(/class="anatomy-slot anatomy-floating( anatomy-parent)?"/);
+    expect(svg).toMatch(/class="[^"]*\banatomy-floating\b[^"]*"/);
     expect(svg).toContain('anatomy-z-badge');
     expect(svg).toMatch(/<text [^>]*>z<\/text>/);
   });
@@ -1021,5 +1021,96 @@ describe('anatomy SVG generator', () => {
     const badOverride = `<g id="slot-not-real"></g>`;
     expect(validateOverride(goodOverride, card).ok).toBe(true);
     expect(validateOverride(badOverride, card).ok).toBe(false);
+  });
+
+  it('emits anatomy-depth-N classes per slot nesting level', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const svg = renderAnatomySVG(modal);
+    expect(svg).toMatch(/data-slot="container"[^>]*class="[^"]*anatomy-depth-0/);
+    expect(svg).toMatch(/data-slot="header"[^>]*class="[^"]*anatomy-depth-1/);
+    expect(svg).toMatch(/data-slot="title"[^>]*class="[^"]*anatomy-depth-2/);
+  });
+
+  it('emits anatomy-kind-X class for slots with slotKind', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const svg = renderAnatomySVG(modal);
+    expect(svg).toMatch(/data-slot="title"[^>]*class="[^"]*anatomy-kind-content/);
+    expect(svg).toMatch(/data-slot="close-button"[^>]*class="[^"]*anatomy-kind-interactive/);
+    expect(svg).toMatch(/data-slot="container"[^>]*class="[^"]*anatomy-kind-structural/);
+    expect(svg).toMatch(/data-slot="backdrop"[^>]*class="[^"]*anatomy-kind-decorative/);
+  });
+
+  it('emits <title> with slot purpose for primary slot groups', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const svg = renderAnatomySVG(modal);
+    const titleSlot = modal.anatomy.find((s) => s.id === 'title')!;
+    const expected = titleSlot.purpose.replace(/\s+/g, ' ').trim();
+    const titleRegex = new RegExp(
+      `data-slot="title"[\\s\\S]*?<title>([^<]*)</title>`,
+    );
+    const match = titleRegex.exec(svg);
+    expect(match).not.toBeNull();
+    expect(match![1]!.replace(/\s+/g, ' ').trim()).toBe(expected);
+  });
+
+  it('emits anatomy-indicator-tokens only for slots with non-empty tokens', async () => {
+    const popover = await loadComponent(join(contentDir, 'popover.yaml'));
+    const svg = renderAnatomySVG(popover);
+    // container has tokens → indicator
+    const containerSection = /<g[^>]*data-slot="container"[\s\S]*?(?=<g[^>]*data-slot=)/.exec(svg);
+    expect(containerSection).not.toBeNull();
+    expect(containerSection![0]).toContain('anatomy-indicator-tokens');
+    // trigger has no tokens → no indicator
+    const triggerSection = /<g[^>]*data-slot="trigger"[\s\S]*?(?=<g[^>]*data-slot=|<\/svg>)/.exec(svg);
+    expect(triggerSection).not.toBeNull();
+    expect(triggerSection![0]).not.toContain('anatomy-indicator-tokens');
+  });
+});
+
+describe('slotKind schema', () => {
+  it('accepts a slot with each legal slotKind value', () => {
+    const slotBase = {
+      id: 'x',
+      required: true,
+      purpose: 'p',
+      layout: { row: 1 },
+      figma: { type: 'frame', hint: 'h' },
+      code: { slot: 'x', semantic: 'div' },
+      a11y: { hint: 'h' },
+    };
+    for (const kind of ['structural', 'interactive', 'content', 'decorative']) {
+      const result = componentSchema.shape.anatomy.element.safeParse({
+        ...slotBase,
+        slotKind: kind,
+      });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('accepts a slot without slotKind (optional)', () => {
+    const result = componentSchema.shape.anatomy.element.safeParse({
+      id: 'x',
+      required: true,
+      purpose: 'p',
+      layout: { row: 1 },
+      figma: { type: 'frame', hint: 'h' },
+      code: { slot: 'x', semantic: 'div' },
+      a11y: { hint: 'h' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an invalid slotKind value', () => {
+    const result = componentSchema.shape.anatomy.element.safeParse({
+      id: 'x',
+      required: true,
+      purpose: 'p',
+      slotKind: 'wibble',
+      layout: { row: 1 },
+      figma: { type: 'frame', hint: 'h' },
+      code: { slot: 'x', semantic: 'div' },
+      a11y: { hint: 'h' },
+    });
+    expect(result.success).toBe(false);
   });
 });

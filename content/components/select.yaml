@@ -22,6 +22,7 @@ anatomy:
       `role="combobox"` (per APG Combobox-with-Listbox pattern,
       which also covers the no-text-input case) plus
       `aria-expanded`, `aria-controls`, `aria-activedescendant`.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -62,6 +63,7 @@ anatomy:
       a comma-separated list). Acts as the trigger's accessible
       name when no `aria-label` is present. Falls back to
       placeholder text when nothing is selected.
+    slotKind: content
     layout:
       row: 1
       col: 1
@@ -94,6 +96,7 @@ anatomy:
       trigger, showing that the trigger opens a popup. Rotates
       180° on `aria-expanded="true"` (or swaps glyph) to reinforce
       the open state.
+    slotKind: decorative
     layout:
       row: 1
       col: 2
@@ -120,6 +123,7 @@ anatomy:
       Floating UI / CSS anchor positioning. Native `<select>`
       uses the platform's native listbox (OS picker on mobile);
       custom implementations portal-mount.
+    slotKind: structural
     layout:
       floating:
         anchor: trigger
@@ -156,6 +160,7 @@ anatomy:
       Individual selectable item inside the listbox. One anatomy
       slot describes the role; one component instance is rendered
       per option in the value list.
+    slotKind: interactive
     layout:
       parent: listbox
       row: 1
@@ -191,6 +196,7 @@ anatomy:
       selects, a `<div role="group">` with `aria-labelledby`
       pointing at the label. Used for categorising long option
       lists (countries by continent, files by folder).
+    slotKind: structural
     layout:
       parent: listbox
       row: 2

@@ -18,6 +18,7 @@ anatomy:
       visually as a single text-input field, but internally holds a
       tag-list and an `<input>`. Carries the focus ring; accepts
       pointer focus that delegates to the input.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -53,6 +54,7 @@ anatomy:
       Carries a label and an optional remove affordance. One
       anatomy slot describes the role; multiple instances render
       per committed value.
+    slotKind: content
     layout:
       parent: root
       row: 1
@@ -92,6 +94,7 @@ anatomy:
       icon at the inline-end of the tag. Activation removes the
       tag from the value list. Omitted on read-only tag inputs
       where tokens cannot be removed by the user.
+    slotKind: interactive
     layout:
       parent: tag
       row: 1
@@ -127,6 +130,7 @@ anatomy:
       inline space after tags. Carries the form `name` attribute
       (or hidden form-state) and the typeahead behaviour for
       constrained / creatable variants.
+    slotKind: interactive
     layout:
       parent: root
       row: 1
@@ -162,6 +166,7 @@ anatomy:
       Optional placeholder text shown in the input when both the
       input is empty AND the tag list is empty. Disappears when
       the user types or commits a tag.
+    slotKind: content
     layout:
       parent: input
       row: 1

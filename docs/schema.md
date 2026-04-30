@@ -46,6 +46,48 @@ The list of slots/regions the component is composed of. Each entry:
 
 **Why `required` matters:** drives how the slot is rendered in the diagram (solid vs. dashed outline) and informs the implementation (slot-conditional vs. always-rendered container).
 
+### `slotKind` (optional, per slot)
+
+A four-value enum capturing the slot's *function* — orthogonal to `figma.type` (authoring surface) and `code.semantic` (rendered element). The full rationale is in [ADR-020](./adr/020-slot-kind.md).
+
+```yaml
+- id: backdrop
+  required: true
+  purpose: Dim the page behind the dialog
+  slotKind: decorative
+  ...
+- id: close-button
+  required: false
+  purpose: Dismiss the dialog
+  slotKind: interactive
+  ...
+- id: title
+  required: true
+  purpose: Heading of the dialog
+  slotKind: content
+  ...
+- id: container
+  required: true
+  purpose: Surface that frames the dialog content
+  slotKind: structural
+  ...
+```
+
+**Legal values:**
+
+| Value | Use for |
+|---|---|
+| `structural` | Scaffolding that holds other slots (container, header, footer, region wrappers, body). Renders with the default neutral stroke. |
+| `interactive` | Invokes user action (button, trigger, close, link, control). Renders with the accent-active stroke. |
+| `content` | Carries information (title, label, description, body text, helper). Renders with the warm-mix stroke. |
+| `decorative` | Non-essential affordance (backdrop, overlay, divider, ornament). Renders with the faint stroke. |
+
+**Shape rules:**
+
+- The field is **optional**. Slots that omit it render with the default neutral stroke — identical to `structural`. Migrating roster YAMLs is incremental, not gated.
+- Pick the *dominant* role when a slot straddles two; capture the nuance in `purpose` if needed.
+- The vocabulary is closed; new values require a follow-up ADR.
+
 ### `tokens` (optional, per slot)
 
 Each anatomy slot may declare semantic token *names* — never values — across five fixed categories. Concrete values live in `implementations/<lib>/<id>.yaml` via `tokenBindings` (Phase 2). The full rationale is in [ADR-006](./adr/006-token-layer.md).

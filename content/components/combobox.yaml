@@ -50,6 +50,7 @@ anatomy:
       Single-line text field that accepts user input. The combobox's
       primary surface; carries the editable value, the focus, and the
       `aria-controls` relationship to the listbox.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -86,6 +87,7 @@ anatomy:
       Affordance to clear the current input value. Conventionally an
       "×" icon inside the trailing edge of the input; appears only
       when the input has a value.
+    slotKind: interactive
     layout:
       row: 1
       col: 2
@@ -115,6 +117,7 @@ anatomy:
       Disclosure affordance that toggles the listbox without typing.
       Conventionally a chevron at the trailing edge of the input.
       Optional because some comboboxes only open on typing.
+    slotKind: interactive
     layout:
       row: 1
       col: 3
@@ -143,6 +146,7 @@ anatomy:
     purpose: >-
       Popup container that renders the option list. Floats above
       adjacent content; positioned relative to the input.
+    slotKind: structural
     layout:
       floating:
         anchor: input
@@ -177,6 +181,7 @@ anatomy:
       Individual selectable item inside the listbox. One anatomy slot
       describes the role; one component instance is rendered per
       filtered match.
+    slotKind: interactive
     layout:
       parent: listbox
       row: 1
@@ -210,6 +215,7 @@ anatomy:
       Message rendered inside the listbox when no options match the
       current input value. Substitutes for the option list rather
       than appearing alongside it.
+    slotKind: content
     layout:
       parent: listbox
       row: 2

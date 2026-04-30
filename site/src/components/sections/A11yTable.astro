@@ -22,7 +22,7 @@ function pickIcon(hint: string): 'keyboard' | 'volume-2' | 'accessibility' {
     </thead>
     <tbody>
       {component.anatomy.map((s) => (
-        <tr>
+        <tr data-slot={s.id}>
           <td><Icon class="a11y-icon" name={pickIcon(s.a11y.hint)} size={14} /></td>
           <td><code>{s.id}</code></td>
           <td>{s.a11y.hint}</td>

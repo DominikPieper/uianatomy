@@ -30,7 +30,7 @@ const slotPanels: SlotPanel[] = component.anatomy
 ) : (
   <div class="tokens-grid">
     {slotPanels.map((panel) => (
-      <article class="tokens-panel">
+      <article class="tokens-panel" data-slot={panel.id}>
         <header class="tokens-panel__head">
           <code class="tokens-panel__slot">{panel.id}</code>
         </header>

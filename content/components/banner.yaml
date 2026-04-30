@@ -21,6 +21,7 @@ anatomy:
       width when pinned to the document root, region width when
       scoped to a section. Carries the variant-driven visual
       treatment.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -57,6 +58,7 @@ anatomy:
       for informational, a tag for promotional, an exclamation for
       warning). Decorative — intent is also communicated through
       visible text and the variant's accessible role.
+    slotKind: decorative
     layout:
       row: 1
       col: 1
@@ -84,6 +86,7 @@ anatomy:
       "New beta features". Used for banners with substantial body
       content; omit for one-line banners where the body is the
       headline.
+    slotKind: content
     layout:
       row: 1
       col: 2
@@ -114,6 +117,7 @@ anatomy:
       short paragraphs maximum; longer content belongs in body
       prose or a Modal. The first user-facing text the SR
       announces.
+    slotKind: content
     layout:
       row: 2
       col: 2
@@ -145,6 +149,7 @@ anatomy:
       button. Banner actions may navigate (Link semantic) or
       trigger in-page state changes (Button semantic); choose per
       action.
+    slotKind: structural
     layout:
       row: 3
       col: 2
@@ -176,6 +181,7 @@ anatomy:
       banners conveying ongoing system state (maintenance,
       service degradation), `dismissible: false` is canonical —
       the banner persists until the underlying state resolves.
+    slotKind: interactive
     layout:
       row: 1
       col: 3

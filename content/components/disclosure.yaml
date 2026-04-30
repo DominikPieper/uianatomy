@@ -19,6 +19,7 @@ anatomy:
       verb-phrase like "Show shipping details"), the
       `aria-expanded` reflecting state, and the `aria-controls`
       reference to the panel's id.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -57,6 +58,7 @@ anatomy:
       `aria-expanded="true"` (chevron) or swaps glyph (plus →
       minus). Decorative — state is also communicated via
       `aria-expanded` and the visible content height change.
+    slotKind: decorative
     layout:
       row: 1
       col: 2
@@ -84,6 +86,7 @@ anatomy:
       any non-modal content. Visibility driven by
       `aria-expanded` on the trigger plus matching CSS or the
       `hidden` attribute on the panel.
+    slotKind: structural
     layout:
       row: 2
       col: 1

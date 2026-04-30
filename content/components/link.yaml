@@ -17,6 +17,7 @@ anatomy:
       the visual variant treatment, and the underline affordance.
       Determines accessible name via its text content (or
       `aria-label` / `aria-labelledby` when content is non-textual).
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -51,6 +52,7 @@ anatomy:
       accessible name in the absence of `aria-label`. Should describe
       the destination meaningfully out of context — "Download Q3
       report (PDF, 2 MB)", not "click here".
+    slotKind: content
     layout:
       row: 2
       col: 1
@@ -84,6 +86,7 @@ anatomy:
       download (down-arrow), or anchor-jump (down-chevron). Its
       meaning is communicated by the icon's visual semantics paired
       with the link's `external` / `download` property.
+    slotKind: decorative
     layout:
       row: 2
       col: 2
@@ -115,6 +118,7 @@ anatomy:
       label. Driven by the `:visited` CSS pseudo-class, which is
       privacy-restricted (only colour, opacity, and outline-color
       can be set on `:visited`).
+    slotKind: decorative
     layout:
       row: 2
       col: 3

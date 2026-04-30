@@ -48,6 +48,7 @@ anatomy:
       the underlying content and intercepts pointer events. Distinct
       from the dialog container so it can be styled and animated
       independently.
+    slotKind: decorative
     layout:
       overlay: true
     figma:
@@ -70,6 +71,7 @@ anatomy:
     purpose: >-
       The dialog box itself — the bounded surface that renders header,
       body, and footer. Carries the focus trap and the dialog role.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -104,6 +106,7 @@ anatomy:
       Top region grouping title and close affordance. Optional because
       some dialogs (alert dialogs, confirmation dialogs) inline the
       title with the body and place the close affordance in the footer.
+    slotKind: structural
     layout:
       parent: container
       row: 1
@@ -128,6 +131,7 @@ anatomy:
     purpose: >-
       The dialog's name. The first thing announced after the dialog
       opens and the value of `aria-labelledby` on the container.
+    slotKind: content
     layout:
       parent: header
       row: 1
@@ -158,6 +162,7 @@ anatomy:
       Visible affordance for dismissing the dialog without committing
       its primary action. Conventionally an "×" icon in the trailing
       edge of the header, but may live in the footer for alert dialogs.
+    slotKind: interactive
     layout:
       parent: header
       row: 1
@@ -189,6 +194,7 @@ anatomy:
       Primary payload — the content the dialog exists to surface or
       collect. Keep scrolling self-contained within the body if the
       content overflows; the header and footer should remain pinned.
+    slotKind: content
     layout:
       parent: container
       row: 2
@@ -219,6 +225,7 @@ anatomy:
       Bottom region grouping the dialog's commit/cancel actions. Order
       and emphasis (primary on leading vs. trailing edge) is a
       platform-convention decision documented in the variants table.
+    slotKind: structural
     layout:
       parent: container
       row: 3

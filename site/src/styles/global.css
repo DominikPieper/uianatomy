@@ -1247,6 +1247,90 @@ th {
   stroke-width: 1;
 }
 
+/* Depth tints — Fill axis: nesting depth.
+   Level 0 (root) keeps surface-raised; level 1 picks up paper-100; level 2+ paper-200.
+   Floating overrides via specificity below; overlay stays transparent. */
+.anatomy-host .anatomy-slot.anatomy-depth-1 > rect:not([fill='rgba(0,0,0,0.06)']) {
+  fill: var(--paper-100);
+}
+.anatomy-host .anatomy-slot.anatomy-depth-2 > rect:not([fill='rgba(0,0,0,0.06)']) {
+  fill: var(--paper-200);
+}
+
+/* slotKind stroke hues — Stroke axis: semantic role.
+   structural = default ink (no override). interactive/content/decorative tint stroke
+   via currentColor on the <g>. */
+.anatomy-host .anatomy-slot.anatomy-kind-interactive {
+  color: var(--accent-active);
+}
+.anatomy-host .anatomy-slot.anatomy-kind-content {
+  color: color-mix(in oklab, var(--accent-warm) 65%, var(--fg) 35%);
+}
+.anatomy-host .anatomy-slot.anatomy-kind-decorative {
+  color: var(--fg-faint);
+}
+/* Labels remain readable regardless of slotKind hue. */
+.anatomy-host .anatomy-slot.anatomy-kind-interactive text,
+.anatomy-host .anatomy-slot.anatomy-kind-content text,
+.anatomy-host .anatomy-slot.anatomy-kind-decorative text {
+  fill: var(--fg);
+}
+
+/* Token indicator — small filled circle, bottom-right. */
+.anatomy-host .anatomy-indicator-tokens {
+  fill: var(--accent-active);
+  fill-opacity: 0.8;
+}
+.anatomy-host--compact .anatomy-indicators {
+  display: none;
+}
+
+/* Cross-highlight: hover-driven, transient. */
+.anatomy-host .anatomy-slot.is-cross-highlighted > rect {
+  fill: var(--accent-active-soft);
+  stroke: var(--accent-active);
+  stroke-width: 1.5;
+}
+tr.is-cross-highlighted,
+li.is-cross-highlighted {
+  background: var(--accent-active-soft);
+  outline: 1px solid var(--accent-active);
+  outline-offset: -1px;
+}
+
+/* Pin: click-driven, persistent, stronger than hover. */
+.anatomy-host .anatomy-slot.is-cross-pinned > rect {
+  fill: var(--accent-active-soft);
+  stroke: var(--accent-active);
+  stroke-width: 2;
+}
+tr.is-cross-pinned,
+li.is-cross-pinned {
+  background: color-mix(in oklab, var(--accent-active) 18%, transparent);
+  outline: 2px solid var(--accent-active);
+  outline-offset: -2px;
+}
+
+/* Filter dimming — applied via data-filter token list on .anatomy-host.
+   Pin survives all filter dimming. */
+.anatomy-host[data-filter~='required-only'] .anatomy-slot[data-required='false'] {
+  opacity: 0.25;
+}
+.anatomy-host[data-filter~='floating'] .anatomy-slot:not(.anatomy-floating) {
+  opacity: 0.35;
+}
+.anatomy-host[data-filter~='repeats'] .anatomy-slot:not(.anatomy-has-repeats):not(.anatomy-repeat-ghost) {
+  opacity: 0.25;
+}
+.anatomy-host[data-filter~='tokens'] .anatomy-slot:not(.anatomy-has-tokens) {
+  opacity: 0.25;
+}
+
+/* Pin override — gepinnter Slot überschreibt jedes Filter-Dimming. */
+.anatomy-host .anatomy-slot.is-cross-pinned {
+  opacity: 1 !important;
+}
+
 .anatomy-caption {
   display: flex;
   align-items: center;

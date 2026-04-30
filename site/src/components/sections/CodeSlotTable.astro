@@ -14,7 +14,7 @@ const { component } = Astro.props;
     </thead>
     <tbody>
       {component.anatomy.map((s) => (
-        <tr>
+        <tr data-slot={s.id}>
           <td><code>{s.id}</code></td>
           <td><code>{s.code.slot}</code></td>
           <td>{s.code.semantic}</td>

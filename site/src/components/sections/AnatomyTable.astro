@@ -14,7 +14,7 @@ const { component } = Astro.props;
     </thead>
     <tbody>
       {component.anatomy.map((slot) => (
-        <tr data-slot-row={slot.id}>
+        <tr data-slot={slot.id}>
           <td><code>{slot.id}</code></td>
           <td>{slot.required ? 'required' : 'optional'}</td>
           <td>{slot.purpose}</td>

@@ -1,0 +1,104 @@
+---
+interface Props {
+  componentName: string;
+}
+const { componentName } = Astro.props;
+---
+
+<div class="anatomy-filter-bar" role="group" aria-label={`Filter ${componentName} anatomy diagram`}>
+  <span class="anatomy-filter-bar__label">Highlight</span>
+  <label class="anatomy-filter-toggle">
+    <input type="checkbox" data-filter="required-only" />
+    <span>Required only</span>
+  </label>
+  <label class="anatomy-filter-toggle">
+    <input type="checkbox" data-filter="floating" />
+    <span>Floating</span>
+  </label>
+  <label class="anatomy-filter-toggle">
+    <input type="checkbox" data-filter="repeats" />
+    <span>Repeats</span>
+  </label>
+  <label class="anatomy-filter-toggle">
+    <input type="checkbox" data-filter="tokens" />
+    <span>Tokens</span>
+  </label>
+</div>
+
+<script>
+  function findHostFor(bar: HTMLElement): HTMLElement | null {
+    const root = bar.closest('figure, section, .anatomy-frame') ?? bar.parentElement;
+    return (root?.querySelector('.anatomy-host') as HTMLElement | null) ?? null;
+  }
+  function wire(bar: HTMLElement) {
+    const host = findHostFor(bar);
+    if (!host) return;
+    const inputs = bar.querySelectorAll<HTMLInputElement>('input[data-filter]');
+    const sync = () => {
+      const tokens: string[] = [];
+      inputs.forEach((i) => {
+        if (i.checked && i.dataset.filter) tokens.push(i.dataset.filter);
+      });
+      if (tokens.length === 0) host.removeAttribute('data-filter');
+      else host.setAttribute('data-filter', tokens.join(' '));
+    };
+    inputs.forEach((i) => i.addEventListener('change', sync));
+  }
+  document.querySelectorAll<HTMLElement>('.anatomy-filter-bar').forEach(wire);
+</script>
+
+<style>
+  .anatomy-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-4);
+    margin: 0 0 var(--s-3);
+    background: var(--paper-50);
+    border: var(--bw-hair) solid var(--paper-200);
+    border-radius: var(--r-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+  }
+  .anatomy-filter-bar__label {
+    color: var(--ink-500);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-caps);
+    margin-right: var(--s-2);
+  }
+  .anatomy-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: var(--bw-hair) solid var(--paper-300);
+    border-radius: var(--r-1);
+    background: var(--paper-100);
+    cursor: pointer;
+    user-select: none;
+    color: var(--ink-700);
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  .anatomy-filter-toggle:hover {
+    border-color: var(--accent-active);
+  }
+  .anatomy-filter-toggle:has(input:checked) {
+    background: var(--accent-active-soft);
+    border-color: var(--accent-active);
+    color: var(--accent-active);
+  }
+  .anatomy-filter-toggle input {
+    accent-color: var(--accent-active);
+    margin: 0;
+  }
+  @media (max-width: 600px) {
+    .anatomy-filter-bar {
+      gap: var(--s-2);
+    }
+    .anatomy-filter-bar__label {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+  }
+</style>

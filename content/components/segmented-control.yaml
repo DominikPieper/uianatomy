@@ -19,6 +19,7 @@ anatomy:
       mutually-exclusive choices, not navigation tabs). Visual
       treatment connects the segments — single border, shared
       background, no gap between segments by default.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -53,6 +54,7 @@ anatomy:
       control. Carries the segment's accessible name, the
       `aria-checked` reflecting selection state, and the focus
       affordance.
+    slotKind: interactive
     layout:
       parent: root
       row: 1
@@ -91,6 +93,7 @@ anatomy:
       used to compactly represent the option's view (a list-
       icon vs grid-icon for "view as list / grid"). May be the
       sole content of icon-only-variant segments.
+    slotKind: decorative
     layout:
       parent: segment
       row: 1
@@ -120,6 +123,7 @@ anatomy:
       accessible name when the segment is not icon-only. Should
       be brief — one to two words — because the control is
       sized to fit segments inline.
+    slotKind: content
     layout:
       parent: segment
       row: 1
@@ -153,6 +157,7 @@ anatomy:
       selection state is communicated via `aria-checked`. May
       be a filled background, a contrast-coloured pill, or an
       underline depending on the variant treatment.
+    slotKind: decorative
     layout:
       parent: root
       row: 1

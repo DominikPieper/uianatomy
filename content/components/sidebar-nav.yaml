@@ -19,6 +19,7 @@ anatomy:
       shells). Carries the `<nav>` landmark with an
       `aria-label`. Visual treatment: distinct background or
       border separating it from main content.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -52,6 +53,7 @@ anatomy:
       label. Used for categorising long item lists (Account,
       Settings, Help). One anatomy slot describes the role;
       multiple instances render per group.
+    slotKind: structural
     layout:
       parent: root
       row: 1
@@ -80,6 +82,7 @@ anatomy:
       Heading or label for a group of items. Visible in expanded
       variant; visually-hidden in collapsed variant (kept in
       DOM for SR users).
+    slotKind: content
     layout:
       parent: group
       row: 1
@@ -112,6 +115,7 @@ anatomy:
       current-page state via `aria-current="page"` when active.
       One anatomy slot describes the role; multiple instances
       render per nav item.
+    slotKind: interactive
     layout:
       parent: root
       row: 2
@@ -152,6 +156,7 @@ anatomy:
       element). Decorative when paired with a visible label;
       meaningful in collapsed variant where it must
       communicate the destination.
+    slotKind: decorative
     layout:
       parent: item
       row: 1
@@ -181,6 +186,7 @@ anatomy:
       The text content of each nav item. Visible in expanded
       variant; visually-hidden in collapsed variant (kept in
       DOM for SR users). Acts as the link's accessible name.
+    slotKind: content
     layout:
       parent: item
       row: 1
@@ -211,6 +217,7 @@ anatomy:
       Optional notification count or status indicator at the
       inline-end of the item label. Shows unread counts,
       attention-required indicators, or new-feature pulses.
+    slotKind: content
     layout:
       parent: item
       row: 1
@@ -250,6 +257,7 @@ anatomy:
       controls, sign-out, theme toggles, version info — content
       that should remain accessible regardless of scroll
       position in the main item list.
+    slotKind: structural
     layout:
       parent: root
       row: 3

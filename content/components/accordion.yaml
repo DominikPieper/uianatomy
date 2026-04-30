@@ -19,6 +19,7 @@ anatomy:
       flush) and its single-vs-multi expansion contract via
       properties. Contains no semantics of its own — accessibility
       lives on the items inside.
+    slotKind: structural
     layout:
       row: 1
       col: 1
@@ -48,6 +49,7 @@ anatomy:
       slot describes the role; in practice multiple item instances
       render per accordion. Encapsulates the header-trigger-panel
       grouping.
+    slotKind: structural
     layout:
       parent: root
       row: 1
@@ -77,6 +79,7 @@ anatomy:
       accessible heading semantics required by APG for accordion
       items. Each item header is a heading element of the same
       level (typically h3 or h4 depending on document outline).
+    slotKind: structural
     layout:
       parent: item
       row: 1
@@ -108,6 +111,7 @@ anatomy:
       header's visible surface so the entire header is clickable.
       Carries the accessible name (the header text) and the
       `aria-expanded` / `aria-controls` wiring.
+    slotKind: interactive
     layout:
       parent: header
       row: 1
@@ -143,6 +147,7 @@ anatomy:
       expand. Decorative — state is also communicated through
       `aria-expanded` and through the visual height change of the
       panel.
+    slotKind: decorative
     layout:
       parent: header
       row: 1
@@ -173,6 +178,7 @@ anatomy:
       embedded media. Visibility is driven by `aria-expanded` on
       the trigger plus matching CSS / `hidden` attribute on the
       panel itself.
+    slotKind: structural
     layout:
       parent: item
       row: 2

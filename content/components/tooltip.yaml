@@ -18,6 +18,7 @@ anatomy:
       Not rendered by the Tooltip component itself; the consumer
       wires the element and the Tooltip attaches the
       describedby relationship plus hover and focus listeners.
+    slotKind: interactive
     layout:
       row: 1
       col: 1
@@ -46,6 +47,7 @@ anatomy:
       max-inline-size (commonly 240–320px) to prevent paragraph-
       length tooltips. Auto-flips when the authored side collides
       with the viewport.
+    slotKind: structural
     layout:
       floating:
         anchor: trigger
@@ -87,6 +89,7 @@ anatomy:
       back to the trigger. Visual reinforcement of the anchor
       relationship. Position auto-tracks the trigger when the
       tooltip flips or shifts.
+    slotKind: decorative
     layout:
       parent: container
       row: 1
