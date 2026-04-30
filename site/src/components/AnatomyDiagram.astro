@@ -18,6 +18,6 @@ const svg = await resolveAnatomySVG(component, { contentDir });
 const hostClass = compact ? 'anatomy-host anatomy-host--compact' : 'anatomy-host';
 ---
 
-<figure class={hostClass} aria-label={`${component.name} anatomy diagram`}>
+<div class={hostClass} role="img" aria-label={`${component.name} anatomy diagram`}>
   <Fragment set:html={svg} />
-</figure>
+</div>

@@ -7,9 +7,10 @@ interface Props {
   role: Role;
   title: string;
   id?: string;
+  numeral?: string;
 }
 
-const { role, title, id } = Astro.props;
+const { role, title, id, numeral } = Astro.props;
 const iconName = role === 'designer' ? 'palette' : role === 'dev' ? 'code' : 'git-compare';
 const labelText = role === 'designer' ? 'Designer' : role === 'dev' ? 'Dev' : 'Both';
 ---
@@ -19,4 +20,16 @@ const labelText = role === 'designer' ? 'Designer' : role === 'dev' ? 'Dev' : 'B
     <span class="role-badge__label">{labelText}</span>
   </span>
   <h2 id={id}>{title}</h2>
+  {numeral && <span class="section-header__numeral" aria-hidden="true">{numeral}</span>}
 </header>
+
+<style>
+  .section-header__numeral {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    letter-spacing: var(--ls-caps);
+    color: var(--ink-400);
+    text-transform: uppercase;
+  }
+</style>

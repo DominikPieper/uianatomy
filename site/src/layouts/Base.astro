@@ -23,6 +23,7 @@ const dataView = view ?? 'bridge';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} — UI Anatomy</title>
     {description && <meta name="description" content={description} />}
     <link rel="preconnect" href="data:" />
@@ -41,9 +42,8 @@ const dataView = view ?? 'bridge';
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="shell site-header__inner">
-        <a href="/" class="site-header__brand">
-          <Icon name="square-stack" size={18} />
-          <span>UI Anatomy</span>
+        <a href="/" class="site-header__brand" aria-label="UI Anatomy home">
+          <img class="site-header__wordmark" src="/brand/wordmark.svg" alt="UI Anatomy" width="158" height="28" />
         </a>
         {breadcrumb && breadcrumb.length > 0 && (
           <nav class="site-header__breadcrumb" aria-label="Breadcrumb">

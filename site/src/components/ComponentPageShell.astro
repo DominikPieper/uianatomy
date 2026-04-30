@@ -2,6 +2,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import AnatomyDiagram from './AnatomyDiagram.astro';
+import SiteSidebar from './SiteSidebar.astro';
 import WhenToUseSection from './sections/WhenToUseSection.astro';
 import ImplementationsSection from './sections/ImplementationsSection.astro';
 import Icon from './Icon.astro';
@@ -34,38 +35,44 @@ const VIEW_LABEL: Record<View, string> = {
   componentId={component.id}
   view={view}
 >
-  <article
-    class="shell measure-wide"
-    style="margin-inline:auto;"
-    data-pagefind-body={view === 'designer' ? '' : undefined}
-    data-pagefind-ignore={view === 'designer' ? undefined : ''}
-    data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
-  >
-    <section class="component-hero">
-      <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
-      <h1 class="component-name">{component.name}</h1>
-      <p class="component-description">{component.description}</p>
-    </section>
-
-    <WhenToUseSection component={component} />
-
-    <section aria-label="Anatomy">
-      <div class="anatomy-frame">
-        <AnatomyDiagram component={component} />
+  <div class="component-shell">
+    <SiteSidebar />
+    <article
+      class="component-shell__content"
+      data-pagefind-body={view === 'designer' ? '' : undefined}
+      data-pagefind-ignore={view === 'designer' ? undefined : ''}
+      data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
+    >
+      <div data-pagefind-ignore>
+        <SiteSidebar variant="mobile" />
       </div>
-      <p class="anatomy-caption">{VIEW_LABEL[view]}</p>
-    </section>
 
-    <ImplementationsSection implementations={implementations} />
+      <section class="component-hero">
+        <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
+        <h1 class="component-name">{component.name}</h1>
+        <p class="component-description">{component.description}</p>
+      </section>
 
-    <slot />
+      <WhenToUseSection component={component} />
 
-    {component.lastReviewed && (
-      <footer class="component-footer">
-        <span>
-          <Icon name="clock" size={12} /> Last reviewed <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
-        </span>
-      </footer>
-    )}
-  </article>
+      <section aria-label="Anatomy">
+        <figure class="figure anatomy-frame">
+          <AnatomyDiagram component={component} />
+          <figcaption class="figure-caption">Fig 1.1 · {component.name} · {VIEW_LABEL[view]}</figcaption>
+        </figure>
+      </section>
+
+      <ImplementationsSection implementations={implementations} />
+
+      <slot />
+
+      {component.lastReviewed && (
+        <footer class="component-footer">
+          <span>
+            <Icon name="clock" size={12} /> Last reviewed <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
+          </span>
+        </footer>
+      )}
+    </article>
+  </div>
 </Base>

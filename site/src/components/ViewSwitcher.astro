@@ -10,7 +10,9 @@ interface Props {
 
 const { componentId, activeView } = Astro.props;
 
-const VIEWS: Array<{ value: View; label: string; icon: string; href: string }> = [
+type IconName = 'palette' | 'code' | 'git-compare';
+
+const VIEWS: Array<{ value: View; label: string; icon: IconName; href: string }> = [
   { value: 'designer', label: 'Designer', icon: 'palette', href: `/components/${componentId}` },
   { value: 'dev', label: 'Dev', icon: 'code', href: `/components/${componentId}/dev` },
   { value: 'bridge', label: 'Bridge', icon: 'git-compare', href: `/components/${componentId}/bridge` },

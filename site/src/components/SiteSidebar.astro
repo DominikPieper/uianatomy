@@ -1,0 +1,192 @@
+---
+import { getCollection } from 'astro:content';
+import { CATEGORIES } from '../data/categories';
+
+interface Props {
+  variant?: 'desktop' | 'mobile';
+}
+
+const { variant = 'desktop' } = Astro.props;
+
+const components = await getCollection('components');
+const byId = new Map(components.map((c) => [c.data.id, c.data]));
+
+const pathname = Astro.url.pathname.replace(/\/$/, '');
+const isCurrent = (id: string): boolean => {
+  const base = `/components/${id}`;
+  return pathname === base || pathname.startsWith(`${base}/`);
+};
+
+const currentName = (() => {
+  const match = pathname.match(/^\/components\/([^/]+)/);
+  if (!match) return null;
+  return byId.get(match[1])?.name ?? null;
+})();
+
+interface SidebarItem { id: string; name: string }
+interface SidebarGroup { name: string; items: SidebarItem[] }
+
+const groups: SidebarGroup[] = CATEGORIES.map((cat) => ({
+  name: cat.name,
+  items: cat.components
+    .map((id) => byId.get(id))
+    .filter((c): c is NonNullable<ReturnType<typeof byId.get>> => Boolean(c))
+    .map((c) => ({ id: c.id, name: c.name })),
+})).filter((g) => g.items.length > 0);
+---
+{variant === 'desktop' ? (
+  <nav class="sidebar" aria-label="Components">
+    {groups.map((group) => (
+      <div class="sidebar__group">
+        <div class="sidebar__label">{group.name}</div>
+        <ul class="sidebar__list">
+          {group.items.map((c) => (
+            <li>
+              <a
+                href={`/components/${c.id}`}
+                class:list={['sidebar__link', { 'is-current': isCurrent(c.id) }]}
+                aria-current={isCurrent(c.id) ? 'page' : undefined}
+              >{c.name}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </nav>
+) : (
+  <details class="sidebar-mobile">
+    <summary class="sidebar-mobile__summary">
+      <span class="sidebar-mobile__label">Components</span>
+      {currentName && <span class="sidebar-mobile__current">{currentName}</span>}
+      <svg class="sidebar-mobile__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </summary>
+    <nav class="sidebar-mobile__nav" aria-label="Components">
+      {groups.map((group) => (
+        <div class="sidebar__group">
+          <div class="sidebar__label">{group.name}</div>
+          <ul class="sidebar__list">
+            {group.items.map((c) => (
+              <li>
+                <a
+                  href={`/components/${c.id}`}
+                  class:list={['sidebar__link', { 'is-current': isCurrent(c.id) }]}
+                  aria-current={isCurrent(c.id) ? 'page' : undefined}
+                >{c.name}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  </details>
+)}
+
+<style is:global>
+  .sidebar {
+    border-right: var(--bw-hair) solid var(--rule);
+    padding: var(--s-6) var(--s-4);
+    background: var(--paper-50);
+    align-self: stretch;
+    min-height: 100%;
+  }
+  .sidebar__group + .sidebar__group {
+    margin-top: var(--s-5);
+  }
+  .sidebar__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--ink-500);
+    padding: 0 var(--s-2);
+    margin-bottom: var(--s-2);
+  }
+  .sidebar__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar__link {
+    display: block;
+    padding: 7px var(--s-3);
+    font-family: var(--font-sans);
+    font-size: var(--fs-14);
+    color: var(--ink-700);
+    text-decoration: none;
+    border-radius: var(--r-2);
+    transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+  }
+  .sidebar__link:hover {
+    background: var(--paper-100);
+    color: var(--ink-900);
+    text-decoration: none;
+  }
+  .sidebar__link.is-current {
+    background: var(--paper-100);
+    color: var(--ink-900);
+    box-shadow: inset 2px 0 0 var(--accent-active);
+  }
+
+  /* Mobile disclosure — visible only ≤960px (paired with .sidebar hide rule */
+  /* in global.css). Closed by default on every page load (native <details>). */
+  .sidebar-mobile {
+    display: none;
+    border: var(--bw-hair) solid var(--rule);
+    border-radius: var(--r-2);
+    background: var(--paper-50);
+    margin-bottom: var(--s-4);
+  }
+  @media (max-width: 960px) {
+    .sidebar-mobile {
+      display: block;
+    }
+  }
+  .sidebar-mobile__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--ink-500);
+    list-style: none;
+    user-select: none;
+  }
+  .sidebar-mobile__summary::-webkit-details-marker {
+    display: none;
+  }
+  .sidebar-mobile__label {
+    flex-shrink: 0;
+  }
+  .sidebar-mobile__current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font-size: var(--fs-14);
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-900);
+  }
+  .sidebar-mobile__chevron {
+    flex-shrink: 0;
+    color: var(--ink-500);
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+  .sidebar-mobile[open] .sidebar-mobile__chevron {
+    transform: rotate(180deg);
+  }
+  .sidebar-mobile__nav {
+    padding: var(--s-3) var(--s-3) var(--s-4);
+    border-top: var(--bw-hair) solid var(--rule);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+</style>

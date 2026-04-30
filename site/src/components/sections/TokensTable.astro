@@ -6,63 +6,112 @@ const { component } = Astro.props;
 const CATEGORIES = ['spacing', 'radius', 'color', 'elevation', 'typography'] as const;
 type Category = typeof CATEGORIES[number];
 
-const presentCategories: Category[] = CATEGORIES.filter((cat) =>
-  component.anatomy.some((slot) => {
-    const map = (slot.tokens as SlotTokens | undefined)?.[cat];
-    return map !== undefined && Object.keys(map).length > 0;
-  }),
-);
+interface SlotPanel {
+  id: string;
+  rows: { category: Category; entries: [string, string][] }[];
+}
+
+const slotPanels: SlotPanel[] = component.anatomy
+  .map((slot) => {
+    const tokens = slot.tokens as SlotTokens | undefined;
+    const rows = CATEGORIES
+      .map((category) => {
+        const map = tokens?.[category];
+        const entries: [string, string][] = map ? Object.entries(map) : [];
+        return { category, entries };
+      })
+      .filter((row) => row.entries.length > 0);
+    return { id: slot.id, rows };
+  })
+  .filter((panel) => panel.rows.length > 0);
 ---
-{presentCategories.length === 0 ? (
+{slotPanels.length === 0 ? (
   <p class="tokens-empty">No tokens declared for this component yet.</p>
 ) : (
-  <div class="table-scroll">
-    <table>
-      <thead>
-        <tr>
-          <th>Slot</th>
-          {presentCategories.map((cat) => (<th>{cat}</th>))}
-        </tr>
-      </thead>
-      <tbody>
-        {component.anatomy.map((slot) => (
-          <tr>
-            <td><code>{slot.id}</code></td>
-            {presentCategories.map((cat) => {
-              const map = (slot.tokens as SlotTokens | undefined)?.[cat];
-              const entries = map ? Object.entries(map) : [];
-              return (
-                <td>
-                  {entries.length === 0 ? (
-                    <span class="tokens-empty-cell">—</span>
-                  ) : (
-                    <ul class="tokens-list">
-                      {entries.map(([prop, name]) => (
-                        <li>
-                          <span class="tokens-prop">{prop}</span>
-                          <code class="tokens-name">{name}</code>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </td>
-              );
-            })}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+  <div class="tokens-grid">
+    {slotPanels.map((panel) => (
+      <article class="tokens-panel">
+        <header class="tokens-panel__head">
+          <code class="tokens-panel__slot">{panel.id}</code>
+        </header>
+        <dl class="tokens-panel__body">
+          {panel.rows.map((row) => (
+            <div class="tokens-row">
+              <dt class="tokens-row__cat">{row.category}</dt>
+              <dd class="tokens-row__values">
+                <ul class="tokens-list">
+                  {row.entries.map(([prop, name]) => (
+                    <li>
+                      <span class="tokens-prop">{prop}</span>
+                      <code class="tokens-name">{name}</code>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </article>
+    ))}
   </div>
 )}
 
 <style>
   .tokens-empty {
-    color: var(--fg-muted);
+    color: var(--ink-500);
     font-style: italic;
-    margin: 0 0 24px;
+    margin: 0 0 var(--s-6);
   }
-  .tokens-empty-cell {
-    color: var(--fg-muted);
+  .tokens-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--s-4);
+    margin: 0 0 var(--s-6);
+  }
+  .tokens-panel {
+    background: var(--paper-50);
+    border: var(--bw-hair) solid var(--paper-200);
+    border-radius: var(--r-2);
+    overflow: hidden;
+  }
+  .tokens-panel__head {
+    padding: var(--s-2) var(--s-4);
+    background: var(--paper-100);
+    border-bottom: var(--bw-hair) solid var(--paper-200);
+  }
+  .tokens-panel__slot {
+    font-family: var(--font-mono);
+    font-size: var(--fs-13);
+    color: var(--ink-900);
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+  .tokens-panel__body {
+    margin: 0;
+    padding: 0;
+  }
+  .tokens-row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    border-top: var(--bw-hair) solid var(--paper-200);
+  }
+  .tokens-row:first-child {
+    border-top: 0;
+  }
+  .tokens-row__cat {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--ink-500);
+    padding-top: 2px;
+  }
+  .tokens-row__values {
+    margin: 0;
   }
   .tokens-list {
     list-style: none;
@@ -70,20 +119,27 @@ const presentCategories: Category[] = CATEGORIES.filter((cat) =>
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--s-2);
   }
   .tokens-list li {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: var(--s-3);
+    align-items: baseline;
   }
   .tokens-prop {
-    font-size: var(--text-step--1);
-    color: var(--fg-muted);
-    text-transform: lowercase;
-    letter-spacing: 0.02em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    color: var(--ink-500);
+    letter-spacing: var(--ls-wide);
   }
   .tokens-name {
-    font-size: var(--text-step-0);
+    font-family: var(--font-mono);
+    font-size: var(--fs-13);
+    color: var(--ink-900);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    word-break: break-all;
   }
 </style>
