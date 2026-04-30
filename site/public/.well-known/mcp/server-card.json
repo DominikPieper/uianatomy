@@ -1,0 +1,11 @@
+{
+  "serverInfo": {
+    "name": "uianatomy",
+    "version": "0.0.0"
+  },
+  "endpoint": "https://uianatomy.dev/mcp",
+  "transport": "streamable-http",
+  "capabilities": {
+    "tools": {}
+  }
+}

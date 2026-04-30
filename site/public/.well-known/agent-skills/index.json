@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "uianatomy-mcp",
+      "type": "skill-md",
+      "description": "Query the UI Anatomy MCP server for canonical UI component anatomy, axes, slots, transitions, motion, tokens, events, and cross-framework mapping.",
+      "url": "https://uianatomy.dev/.well-known/agent-skills/uianatomy-mcp/SKILL.md",
+      "digest": "sha256:a955c285f2cf35b376c964971b58523f82fddb1d01f995b27d7556941191d7a8"
+    }
+  ]
+}

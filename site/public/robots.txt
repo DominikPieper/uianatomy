@@ -1,7 +1,15 @@
 # https://www.rfc-editor.org/rfc/rfc9309
 # All paths are public documentation. No restricted areas.
+#
+# Content-Signal: declares AI usage preferences per
+# https://contentsignals.org/ and
+# https://datatracker.ietf.org/doc/draft-romm-aipref-contentsignals/
+#   ai-train=no   — content may not be used for training corpora
+#   search=yes    — indexable by search engines
+#   ai-input=yes  — agents may consume content per request
 
 User-agent: *
+Content-Signal: ai-train=no, search=yes, ai-input=yes
 Allow: /
 
 Sitemap: https://uianatomy.dev/sitemap-index.xml

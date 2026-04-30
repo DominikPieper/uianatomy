@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev --open",
+    "prebuild": "node scripts/build-mcp-card.mjs && node scripts/build-agent-skills-index.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
