@@ -16,7 +16,12 @@
     // Accept header on requests for HTML pages, which the asset server
     // would otherwise serve without invoking the worker at all.
     "run_worker_first": true,
-    "html_handling": "auto-trailing-slash",
+    // drop-trailing-slash matches Astro's `trailingSlash: 'never'` config —
+    // /components/modal serves directly without a 307 redirect to
+    // /components/modal/. Removes a redirect hop from the SEO crawl path
+    // and keeps canonical URLs (emitted as `<link rel="canonical">`) in
+    // sync with what's actually served.
+    "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page"
   },
   "observability": {
