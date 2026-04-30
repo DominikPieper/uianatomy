@@ -702,12 +702,6 @@ whenToUse:
         the popup contains options-to-commit (Combobox) or
         suggestions-to-fill-and-submit / result-previews-to-
         navigate (SearchInput).
-    - id: input
-      difference: >-
-        `Input` is generic free-text without search semantics
-        — no canonical magnifier icon, no clear-on-Escape,
-        no debounced typeahead architecture. `SearchInput`
-        layers search-specific affordances on top of input.
     - id: tag-input
       difference: >-
         `TagInput` accepts multiple discrete values rendered

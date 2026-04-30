@@ -461,12 +461,6 @@ whenToUse:
         does — middle-click, copy-link, status-bar URL preview, and
         keyboard activation (Enter-only vs Enter+Space) all depend
         on the underlying element.
-    - id: icon-button
-      difference: >-
-        `IconButton` is a button rendered as an icon plus
-        `aria-label`. A link rendered as an icon (`<a>` wrapping an
-        icon with `aria-label`) is still a Link if it navigates;
-        IconButton only when it triggers an action.
     - id: menu-button
       difference: >-
         `MenuButton` opens a menu of options and exposes

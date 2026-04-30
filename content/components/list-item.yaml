@@ -805,17 +805,6 @@ whenToUse:
         `ListItem` is text/metadata-led and arranges in a
         1D list. ListItem suits dense metadata layouts;
         Tile suits image-led visual layouts.
-    - id: table
-      difference: >-
-        `Table` shows tabular data with sortable columns
-        and column-aligned cells; `ListItem` is a
-        free-form row with semantic slots (leading,
-        primary, secondary, trailing). For data with
-        multiple comparable attributes (price, date, sku,
-        stock), use Table. For data where each row's
-        content is heterogeneous or where visual variety
-        matters per-row, use ListItem.
-
 notes: >-
   ListItem vocabulary varies: Material 3 calls this "List
   item" (with single-line / two-line / three-line variants

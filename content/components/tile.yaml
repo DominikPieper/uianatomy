@@ -687,16 +687,6 @@ whenToUse:
         position. List is one-dimensional; tile grid is
         two-dimensional. ListItem favours dense metadata
         layouts; Tile favours image-led visual layouts.
-    - id: image-gallery
-      difference: >-
-        An "image gallery" pattern is the composed
-        arrangement of multiple Tiles with consistent
-        layout, lazy-loading, and (optionally) lightbox
-        navigation. Tile is the atomic unit; the gallery is
-        the compositional pattern. Document the gallery as
-        a usage pattern of Tile, not as a separate
-        component.
-
 notes: >-
   Tile vocabulary varies: Material 3 calls this "Carousel"
   (for horizontal-scrolling tile rows) or "Cards / Image

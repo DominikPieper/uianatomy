@@ -722,15 +722,6 @@ whenToUse:
         the "scrollable popup is annoying" threshold (~25
         items in practice) or when the user benefits from
         partial-match filtering.
-    - id: radio
-      difference: >-
-        `Radio` shows all options visible side-by-side or
-        stacked, mutually-exclusive; `Select` hides options
-        until the trigger is activated. Use Radio for 2–4
-        options where the choice itself communicates the
-        decision (gender, plan tier, payment method). Use
-        Select for 5+ options or when screen real estate is
-        constrained.
     - id: tag-input
       difference: >-
         `TagInput` accepts multi-select with selected values

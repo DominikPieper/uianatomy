@@ -13,3 +13,4 @@ coverage/
 .claude/
 .mcp.json
 files.zip
+/.link-checker/

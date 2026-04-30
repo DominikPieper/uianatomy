@@ -565,23 +565,6 @@ whenToUse:
         (`tablist` vs `radiogroup`) and the keyboard model
         (Tabs may use manual activation; SegmentedControl
         always uses auto-activation per APG radiogroup).
-    - id: radio
-      difference: >-
-        `RadioGroup` is the semantic foundation —
-        SegmentedControl IS a radio group, just rendered as
-        connected-segment buttons rather than as separate
-        radio inputs. Use Radio when the choices are part of
-        a form being submitted (gender, plan tier); use
-        SegmentedControl when the choice controls in-page
-        view-presentation.
-    - id: toggle
-      difference: >-
-        `Toggle` (a.k.a. Switch) is binary on/off;
-        `SegmentedControl` is n-way mutual exclusion. Two-
-        segment SegmentedControls and Toggles can look
-        similar — the distinguisher is whether the option
-        space is binary (Toggle) or could expand (Segmented).
-
 notes: >-
   SegmentedControl vocabulary varies: Apple HIG calls this
   "Segmented Control" (the canonical name); Material 3 calls

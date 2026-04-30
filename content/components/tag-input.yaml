@@ -704,13 +704,6 @@ whenToUse:
         variant) and renders selected values as inline tokens.
         Select is for bounded fixed lists; TagInput is for
         open-ended or visible-accumulation use cases.
-    - id: input
-      difference: >-
-        `Input` accepts free-text without structured multi-
-        value semantics — the user types one value. `TagInput`
-        structures multi-value input with explicit per-value
-        tokens, paste-split, and per-value validation.
-
 notes: >-
   TagInput vocabulary varies: Material 3 calls this "Chip
   input"; Atlassian uses "Tag picker"; Polaris uses "Tag" but

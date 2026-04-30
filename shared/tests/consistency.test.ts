@@ -281,4 +281,18 @@ describe('cross-component consistency', () => {
     }
     expect(failures, failures.join('\n')).toEqual([]);
   });
+
+  it('whenToUse.vsRelated[].id resolves to an existing canonical component', async () => {
+    const map = await loadComponents({ contentDir });
+    const ids = new Set(map.keys());
+    const failures: string[] = [];
+    for (const c of map.values()) {
+      for (const ref of c.whenToUse?.vsRelated ?? []) {
+        if (!ids.has(ref.id)) {
+          failures.push(`${c.id}: vsRelated.id "${ref.id}" does not resolve to a canonical component`);
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
 });

@@ -704,15 +704,6 @@ whenToUse:
         within a single multi-step flow. SidebarNav is
         persistent global navigation; Stepper is contextual
         to the current flow.
-    - id: progress-bar
-      difference: >-
-        A `ProgressBar` shows continuous progress as a
-        percentage or fraction; `Stepper` shows discrete
-        step-by-step progress with named milestones.
-        Progress bars are for indeterminate or
-        percentage-based progress (file upload, page
-        load); Stepper is for named-step processes
-        (checkout, wizard).
 
 notes: >-
   Stepper vocabulary varies: Material 3 calls this "Stepper"

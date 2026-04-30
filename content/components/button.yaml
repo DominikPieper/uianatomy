@@ -22,11 +22,6 @@ whenToUse:
         performs an action without navigation. Visual styling may
         converge but semantics never do — middle-click, "open in new
         tab", and copy-as-URL all rely on `<a>`.
-    - id: icon-button
-      difference: >-
-        `IconButton` is the same component family rendered with
-        `iconOnly: true` plus a required `aria-label`. Document as a
-        configuration of `Button`, not a separate component.
     - id: menu-button
       difference: >-
         `MenuButton` opens a menu with multiple options and carries
