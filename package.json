@@ -15,6 +15,10 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint"
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@uianatomy/shared": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^6.0.3",
     "wrangler": "^3.114.0"
