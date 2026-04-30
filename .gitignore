@@ -10,4 +10,6 @@ dist/
 coverage/
 .vscode/
 .idea/
+.claude/
+.mcp.json
 files.zip
