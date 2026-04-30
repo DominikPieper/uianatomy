@@ -76,6 +76,9 @@ const pageTitle = `${title} — UI Anatomy`;
         )}
         <div class="site-header__cluster">
           {componentId && view && <ViewSwitcher componentId={componentId} activeView={view} />}
+          <a href="/compare" class="site-header__compare" aria-label="Compare two components">
+            <Icon name="git-compare" size={16} />
+          </a>
           <a href="/search" class="site-header__search" aria-label="Search">
             <Icon name="search" size={16} />
           </a>

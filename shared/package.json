@@ -29,6 +29,10 @@
     "./format": {
       "types": "./dist/format.d.ts",
       "import": "./dist/format.js"
+    },
+    "./compare": {
+      "types": "./dist/compare.d.ts",
+      "import": "./dist/compare.js"
     }
   },
   "scripts": {

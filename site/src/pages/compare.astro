@@ -1,0 +1,345 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import AnatomyDiagram from '../components/AnatomyDiagram.astro';
+import CompareSelector from '../components/compare/CompareSelector.astro';
+import CompareDiff from '../components/compare/CompareDiff.astro';
+import { computeCompareDiff } from '@uianatomy/shared/compare';
+
+// /compare is a static page. The query string `?a=&b=` is read at runtime by
+// a client-side script that fetches /api/components/<id>.json for each side
+// and re-renders the comparison. The server-rendered fallback below uses
+// Card + Tile (a canonical pair that cross-references itself in vsRelated)
+// so the page is non-empty without JS and so the layout is testable.
+
+const components = await getCollection('components');
+const byId = new Map(components.map((c) => [c.id, c.data]));
+
+const DEFAULT_A = 'card';
+const DEFAULT_B = 'tile';
+
+const aData = byId.get(DEFAULT_A)!;
+const bData = byId.get(DEFAULT_B)!;
+const diff = computeCompareDiff(aData, bData);
+
+// Inline JSON for the client script to drive its select dropdowns and
+// validate query-string ids. Only the slim {id, name} shape is needed.
+const ROSTER = components
+  .map((c) => ({ id: c.id, name: c.data.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<Base
+  title="Compare components"
+  description="Side-by-side anatomy and axes diff for two canonical UI Anatomy components — surfaces every place the canon distinguishes them."
+  breadcrumb={[{ name: 'Compare' }]}
+>
+  <article class="shell measure-wide compare-page">
+    <header class="compare-page__header">
+      <p class="hero-eyebrow">Compare</p>
+      <h1 class="compare-page__title">Side-by-side</h1>
+      <p class="compare-page__lede">
+        Pick two components. The diff panel below surfaces every place the
+        canon distinguishes them — required slots, variants, properties, state
+        sets, schema sections, and axe rules. When the canon already pins a
+        distinction (via <code>whenToUse.vsRelated</code>), that prose is
+        quoted verbatim at the top.
+      </p>
+    </header>
+
+    <CompareSelector selectedA={DEFAULT_A} selectedB={DEFAULT_B} />
+
+    <div class="compare-page__sides" data-compare-sides>
+      <section class="compare-page__side" data-side="a" aria-labelledby="compare-side-a-heading">
+        <h2 id="compare-side-a-heading" class="compare-page__side-title">
+          <a href={`/components/${aData.id}`} data-compare-link="a">{aData.name}</a>
+        </h2>
+        <p class="compare-page__side-desc" data-compare-desc="a">{aData.description}</p>
+        <div class="compare-page__anatomy" data-compare-anatomy="a">
+          <AnatomyDiagram component={aData} compact />
+        </div>
+      </section>
+      <section class="compare-page__side" data-side="b" aria-labelledby="compare-side-b-heading">
+        <h2 id="compare-side-b-heading" class="compare-page__side-title">
+          <a href={`/components/${bData.id}`} data-compare-link="b">{bData.name}</a>
+        </h2>
+        <p class="compare-page__side-desc" data-compare-desc="b">{bData.description}</p>
+        <div class="compare-page__anatomy" data-compare-anatomy="b">
+          <AnatomyDiagram component={bData} compact />
+        </div>
+      </section>
+    </div>
+
+    <div data-compare-diff-mount>
+      <CompareDiff diff={diff} />
+    </div>
+  </article>
+
+  <script is:inline type="application/json" id="compare-roster" set:html={JSON.stringify(ROSTER)} />
+  <script>
+    import { computeCompareDiff } from '@uianatomy/shared/compare';
+    import type { Component } from '@uianatomy/shared/schema';
+
+    interface RosterEntry { id: string; name: string }
+
+    const rosterScript = document.getElementById('compare-roster');
+    if (!rosterScript) throw new Error('compare-roster script tag missing');
+    const roster: RosterEntry[] = JSON.parse(rosterScript.textContent ?? '[]');
+    const ids = new Set(roster.map((r) => r.id));
+
+    function readSelection(): { a: string | null; b: string | null } {
+      const params = new URLSearchParams(window.location.search);
+      const a = params.get('a');
+      const b = params.get('b');
+      return { a: a && ids.has(a) ? a : null, b: b && ids.has(b) ? b : null };
+    }
+
+    function syncSelectors(a: string | null, b: string | null) {
+      const aSel = document.querySelector<HTMLSelectElement>('[data-compare-select="a"]');
+      const bSel = document.querySelector<HTMLSelectElement>('[data-compare-select="b"]');
+      if (aSel && a) aSel.value = a;
+      if (bSel && b) bSel.value = b;
+    }
+
+    async function fetchComponent(id: string): Promise<Component> {
+      const res = await fetch(`/api/components/${encodeURIComponent(id)}.json`);
+      if (!res.ok) throw new Error(`Failed to load /api/components/${id}.json`);
+      return res.json();
+    }
+
+    function escape(s: string): string {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function applySide(side: 'a' | 'b', c: Component): void {
+      const titleLink = document.querySelector<HTMLAnchorElement>(`[data-compare-link="${side}"]`);
+      if (titleLink) {
+        titleLink.textContent = c.name;
+        titleLink.href = `/components/${c.id}`;
+      }
+      const desc = document.querySelector<HTMLElement>(`[data-compare-desc="${side}"]`);
+      if (desc) desc.textContent = c.description;
+    }
+
+    function renderCodeList(items: string[]): string {
+      return items.map((id) => `<code>${escape(id)}</code>`).join(' ');
+    }
+
+    function renderDl(rows: Array<[string, string]>): string {
+      if (rows.length === 0) return '';
+      return `<dl>${rows.map(([dt, dd]) => `<dt>${escape(dt)}</dt><dd>${dd}</dd>`).join('')}</dl>`;
+    }
+
+    function renderDiffHTML(diff: ReturnType<typeof computeCompareDiff>): string {
+      const optionalLabels: Record<string, string> = {
+        motion: 'motion',
+        responsive: 'responsive',
+        transitions: 'state transitions',
+        events: 'events',
+        formIntegration: 'form integration',
+        a11yAcceptance: 'a11y acceptance',
+        performance: 'performance thresholds',
+      };
+
+      const vsBlock =
+        diff.vsRelated.aMentionsB || diff.vsRelated.bMentionsA
+          ? `<div class="compare-diff__vs"><h3 class="compare-diff__h3">From the canon</h3>${
+              diff.vsRelated.aMentionsB
+                ? `<p class="compare-diff__quote"><strong>${escape(diff.names.a)}</strong> on <strong>${escape(diff.names.b)}</strong>: <em>${escape(diff.vsRelated.aMentionsB)}</em></p>`
+                : ''
+            }${
+              diff.vsRelated.bMentionsA
+                ? `<p class="compare-diff__quote"><strong>${escape(diff.names.b)}</strong> on <strong>${escape(diff.names.a)}</strong>: <em>${escape(diff.vsRelated.bMentionsA)}</em></p>`
+                : ''
+            }</div>`
+          : '';
+
+      const anatomyRows: Array<[string, string]> = [];
+      if (diff.anatomy.requiredOnlyInA.length > 0)
+        anatomyRows.push([`Required only in ${diff.names.a}`, renderCodeList(diff.anatomy.requiredOnlyInA)]);
+      if (diff.anatomy.requiredOnlyInB.length > 0)
+        anatomyRows.push([`Required only in ${diff.names.b}`, renderCodeList(diff.anatomy.requiredOnlyInB)]);
+      if (diff.anatomy.optionalOnlyInA.length > 0)
+        anatomyRows.push([`Optional only in ${diff.names.a}`, renderCodeList(diff.anatomy.optionalOnlyInA)]);
+      if (diff.anatomy.optionalOnlyInB.length > 0)
+        anatomyRows.push([`Optional only in ${diff.names.b}`, renderCodeList(diff.anatomy.optionalOnlyInB)]);
+      if (diff.anatomy.shared.length > 0)
+        anatomyRows.push(['Slot ids in both', renderCodeList(diff.anatomy.shared)]);
+
+      const variantRows: Array<[string, string]> = [];
+      if (diff.variants.onlyInA.length > 0)
+        variantRows.push([`Only in ${diff.names.a}`, escape(diff.variants.onlyInA.join(', '))]);
+      if (diff.variants.onlyInB.length > 0)
+        variantRows.push([`Only in ${diff.names.b}`, escape(diff.variants.onlyInB.join(', '))]);
+      if (diff.variants.shared.length > 0)
+        variantRows.push(['Shared', escape(diff.variants.shared.join(', '))]);
+
+      const propRows: Array<[string, string]> = [];
+      if (diff.properties.onlyInA.length > 0)
+        propRows.push([`Only in ${diff.names.a}`, escape(diff.properties.onlyInA.join(', '))]);
+      if (diff.properties.onlyInB.length > 0)
+        propRows.push([`Only in ${diff.names.b}`, escape(diff.properties.onlyInB.join(', '))]);
+      if (diff.properties.sharedDifferentKind.length > 0) {
+        const lines = diff.properties.sharedDifferentKind
+          .map(
+            (p) =>
+              `<div><code>${escape(p.name)}</code> — ${escape(diff.names.a)}: <em>${escape(p.aKind)}</em> · ${escape(diff.names.b)}: <em>${escape(p.bKind)}</em></div>`,
+          )
+          .join('');
+        propRows.push(['Same name, different kind', lines]);
+      }
+      if (diff.properties.sharedSameKind.length > 0)
+        propRows.push(['Same name and kind', escape(diff.properties.sharedSameKind.join(', '))]);
+
+      const intRows: Array<[string, string]> = [];
+      if (diff.interactiveStates.onlyInA.length > 0)
+        intRows.push([`Only in ${diff.names.a}`, escape(diff.interactiveStates.onlyInA.join(', '))]);
+      if (diff.interactiveStates.onlyInB.length > 0)
+        intRows.push([`Only in ${diff.names.b}`, escape(diff.interactiveStates.onlyInB.join(', '))]);
+      if (diff.interactiveStates.shared.length > 0)
+        intRows.push(['Shared', escape(diff.interactiveStates.shared.join(', '))]);
+
+      const dataRows: Array<[string, string]> = [];
+      if (diff.dataStates.onlyInA.length > 0)
+        dataRows.push([`Only in ${diff.names.a}`, escape(diff.dataStates.onlyInA.join(', '))]);
+      if (diff.dataStates.onlyInB.length > 0)
+        dataRows.push([`Only in ${diff.names.b}`, escape(diff.dataStates.onlyInB.join(', '))]);
+      if (diff.dataStates.shared.length > 0)
+        dataRows.push(['Shared', escape(diff.dataStates.shared.join(', '))]);
+
+      const matrixRows = (Object.keys(optionalLabels) as Array<keyof typeof diff.optionalBlocks>)
+        .map((key) => {
+          const row = diff.optionalBlocks[key];
+          const diffClass = row.a !== row.b ? ' class="is-diff"' : '';
+          return `<tr><th scope="row">${optionalLabels[key]}</th><td${diffClass}>${row.a ? '✓' : '—'}</td><td${diffClass}>${row.b ? '✓' : '—'}</td></tr>`;
+        })
+        .join('');
+
+      const axeRows: Array<[string, string]> = [];
+      if (diff.axeRules.onlyInA.length > 0)
+        axeRows.push([`Only in ${diff.names.a}`, renderCodeList(diff.axeRules.onlyInA)]);
+      if (diff.axeRules.onlyInB.length > 0)
+        axeRows.push([`Only in ${diff.names.b}`, renderCodeList(diff.axeRules.onlyInB)]);
+      if (diff.axeRules.shared.length > 0)
+        axeRows.push(['Shared', renderCodeList(diff.axeRules.shared)]);
+
+      return `
+        <section class="compare-diff" aria-labelledby="compare-diff-heading">
+          <h2 id="compare-diff-heading" class="section-rule">Diff</h2>
+          ${vsBlock}
+          <div class="compare-diff__grid">
+            ${anatomyRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Anatomy slots</h3>${renderDl(anatomyRows)}</div>` : ''}
+            ${variantRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Variants</h3>${renderDl(variantRows)}</div>` : ''}
+            ${propRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Properties</h3>${renderDl(propRows)}</div>` : ''}
+            ${intRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Interactive states</h3>${renderDl(intRows)}</div>` : ''}
+            ${dataRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Data states</h3>${renderDl(dataRows)}</div>` : ''}
+            <div class="compare-diff__row">
+              <h3 class="compare-diff__h3">Schema sections declared</h3>
+              <table class="compare-diff__matrix"><thead><tr><th></th><th>${escape(diff.names.a)}</th><th>${escape(diff.names.b)}</th></tr></thead><tbody>${matrixRows}</tbody></table>
+            </div>
+            ${axeRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">axe-core rules</h3>${renderDl(axeRows)}</div>` : ''}
+          </div>
+        </section>
+      `;
+    }
+
+    async function refresh(): Promise<void> {
+      const { a, b } = readSelection();
+      if (!a || !b) return;
+      syncSelectors(a, b);
+      // Also clear anatomy and re-fetch — client can't render the SVG (it
+      // requires the build-time generator), so swap the anatomy host for a
+      // textual stub pointing at the component page until full hydration.
+      const [aData, bData] = await Promise.all([fetchComponent(a), fetchComponent(b)]);
+      applySide('a', aData);
+      applySide('b', bData);
+      // Anatomy SVG is build-time-only — replace with a link rather than
+      // duplicate the generator client-side.
+      for (const side of ['a', 'b'] as const) {
+        const host = document.querySelector<HTMLElement>(`[data-compare-anatomy="${side}"]`);
+        if (host) {
+          const c = side === 'a' ? aData : bData;
+          host.innerHTML = `<p class="compare-page__anatomy-stub"><a href="/components/${escape(c.id)}">Open ${escape(c.name)} for full anatomy diagram →</a></p>`;
+        }
+      }
+      const mount = document.querySelector<HTMLElement>('[data-compare-diff-mount]');
+      if (mount) mount.innerHTML = renderDiffHTML(computeCompareDiff(aData, bData));
+    }
+
+    void refresh();
+  </script>
+
+  <style>
+    .compare-page {
+      margin-inline: auto;
+      padding-block: var(--s-8);
+    }
+    .compare-page__header {
+      margin: 0 0 var(--s-6);
+    }
+    .compare-page__title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: var(--s-2) 0 var(--s-4);
+    }
+    .compare-page__lede {
+      margin: 0;
+      max-width: var(--measure-prose);
+      color: var(--ink-500);
+      line-height: var(--lh-loose);
+    }
+    .compare-page__sides {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-6);
+      margin: 0 0 var(--s-6);
+    }
+    .compare-page__side {
+      border: var(--bw-hair) solid var(--rule);
+      border-radius: var(--r-2);
+      padding: var(--s-5);
+      background: var(--paper-50);
+    }
+    .compare-page__side-title {
+      font-family: var(--font-display);
+      font-size: var(--fs-24);
+      font-weight: 500;
+      margin: 0 0 var(--s-2);
+    }
+    .compare-page__side-title a {
+      color: var(--ink-900);
+      text-decoration: none;
+    }
+    .compare-page__side-title a:hover {
+      color: var(--accent-active);
+    }
+    .compare-page__side-desc {
+      margin: 0 0 var(--s-4);
+      color: var(--ink-500);
+      line-height: var(--lh-loose);
+      font-size: var(--fs-14);
+    }
+    .compare-page__anatomy {
+      background: var(--paper-100);
+      border-radius: var(--r-2);
+      padding: var(--s-3);
+    }
+    .compare-page__anatomy-stub {
+      margin: 0;
+      padding: var(--s-4) var(--s-3);
+      text-align: center;
+      font-size: var(--fs-14);
+    }
+    @media (max-width: 720px) {
+      .compare-page__sides {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</Base>

@@ -597,7 +597,8 @@ main {
 }
 
 /* Search trigger in header */
-.site-header__search {
+.site-header__search,
+.site-header__compare {
   appearance: none;
   background: transparent;
   border: 1px solid var(--border-subtle);
@@ -612,11 +613,13 @@ main {
   text-decoration: none;
   transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
 }
-.site-header__search:hover {
+.site-header__search:hover,
+.site-header__compare:hover {
   color: var(--fg);
   border-color: var(--border-strong);
 }
-.site-header__search:focus-visible {
+.site-header__search:focus-visible,
+.site-header__compare:focus-visible {
   outline: 2px solid var(--accent-active);
   outline-offset: 2px;
 }

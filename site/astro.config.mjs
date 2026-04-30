@@ -27,7 +27,7 @@ export default defineConfig({
       generateIndividualMd: true,
       generateLlmsTxt: true,
       generateLlmsFullTxt: true,
-      exclude: ['404', '404.html', '_astro', '**.xml', '**.txt', 'node_modules', 'api/**', 'pagefind/**', 'og/**'],
+      exclude: ['404', '404.html', '_astro', '**.xml', '**.txt', 'node_modules', 'api/**', 'pagefind/**', 'og/**', 'compare', 'compare/**'],
     }),
     brokenLinks({
       checkExternalLinks: false,

@@ -20,7 +20,7 @@ Designs new components or extends existing ones; needs the canonical anatomy + t
 
 **Gaps**
 
-- [ ] **Side-by-side component compare** (`/compare?a=button&b=link`). Today designers open two tabs to do `vsRelated` decisions manually. Recommendation #3 from the 2026-04-30 deep-think.
+- [x] **Side-by-side component compare** (`/compare?a=button&b=link`). Closed by P3-38.
 - [ ] **Rendered example next to anatomy SVG.** SVG is wireframe-only — "what does a canonical Card actually look like?" goes unanswered.
 - [ ] **Copy-as-CSS-vars / copy-as-JSON for the tokens table.** Pattern exists but no one-click copy.
 - [ ] **Figma plugin** that consumes `/api/components/<id>.json` and surfaces canon mismatches inline. Big project; held intentionally.

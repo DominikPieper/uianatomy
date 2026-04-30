@@ -1,0 +1,105 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  // Initial selection rendered server-side; client script may overwrite from
+  // window.location.search after hydration.
+  selectedA?: string | null;
+  selectedB?: string | null;
+}
+
+const { selectedA = null, selectedB = null } = Astro.props;
+
+const components = await getCollection('components');
+const options = components
+  .map((c) => ({ id: c.id, name: c.data.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<form class="compare-selector" id="compare-selector" method="get" action="/compare">
+  <label class="compare-selector__field">
+    <span class="compare-selector__label">A</span>
+    <select name="a" data-compare-select="a">
+      <option value="">— pick a component —</option>
+      {options.map((o) => (
+        <option value={o.id} selected={o.id === selectedA}>{o.name}</option>
+      ))}
+    </select>
+  </label>
+  <span class="compare-selector__divider" aria-hidden="true">vs</span>
+  <label class="compare-selector__field">
+    <span class="compare-selector__label">B</span>
+    <select name="b" data-compare-select="b">
+      <option value="">— pick a component —</option>
+      {options.map((o) => (
+        <option value={o.id} selected={o.id === selectedB}>{o.name}</option>
+      ))}
+    </select>
+  </label>
+  <button type="submit" class="compare-selector__go">Compare</button>
+</form>
+
+<style>
+  .compare-selector {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto;
+    align-items: end;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    background: var(--paper-50);
+    border: var(--bw-hair) solid var(--rule);
+    border-radius: var(--r-2);
+    margin: 0 0 var(--s-8);
+  }
+  .compare-selector__field {
+    display: grid;
+    gap: var(--s-1);
+  }
+  .compare-selector__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    font-weight: 500;
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .compare-selector select {
+    width: 100%;
+    padding: var(--s-2) var(--s-3);
+    border: var(--bw-hair) solid var(--rule);
+    border-radius: var(--r-2);
+    background: var(--paper-50);
+    color: var(--ink-900);
+    font: inherit;
+  }
+  .compare-selector__divider {
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-caps);
+    color: var(--ink-500);
+    padding-bottom: var(--s-2);
+  }
+  .compare-selector__go {
+    padding: var(--s-2) var(--s-5);
+    background: var(--ink-900);
+    color: var(--paper-50);
+    border: var(--bw-hair) solid var(--ink-900);
+    border-radius: var(--r-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-12);
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .compare-selector__go:hover {
+    background: var(--ink-700);
+  }
+  @media (max-width: 640px) {
+    .compare-selector {
+      grid-template-columns: 1fr;
+    }
+    .compare-selector__divider {
+      display: none;
+    }
+  }
+</style>
