@@ -126,14 +126,14 @@ export const statesSchema = z
     states.transitions.forEach((t, i) => {
       if (!declared.has(t.from)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['transitions', i, 'from'],
           message: `from "${t.from}" must reference a declared interactive or data state`,
         });
       }
       if (!declared.has(t.to)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['transitions', i, 'to'],
           message: `to "${t.to}" must reference a declared interactive or data state`,
         });
