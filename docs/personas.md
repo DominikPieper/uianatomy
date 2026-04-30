@@ -40,7 +40,7 @@ Implements canonical components in React / Vue / Angular / web components; needs
 
 **Gaps**
 
-- [ ] **A11y test-fixture export** at `/api/components/<id>/a11y-fixture.json` — keyboardWalk + announcements + axe rules in a Playwright + jest-axe-friendly shape. Recommendation #2 from the 2026-04-30 deep-think. Highest-leverage dev-side gap because the friction between "documented" and "tested" is the #1 reason canonical a11y promises rot.
+- [x] **A11y test-fixture export** at `/api/components/<id>/a11y-fixture.json` — keyboardWalk + announcements + axe rules in a Playwright + jest-axe-friendly shape. Closed by P3-37.
 - [ ] **Library coverage at depth.** Three audits exist, all for Modal. Need ≥1 audit per framework family for ≥3 components before pattern recognition kicks in.
 - [ ] **`validate_implementation` MCP tool** — agent passes `{ componentId, code, framework }`, server returns heuristic checks against canon (slot presence, axe-rule mention, event coverage). Lets agents self-verify generated UI code.
 - [x] **`get_implementations(componentId)` + `list_implementations()` on MCP** — closed by P3-36.

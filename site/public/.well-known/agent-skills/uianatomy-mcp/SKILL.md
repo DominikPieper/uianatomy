@@ -83,6 +83,7 @@ If a client cannot speak MCP, the same data is available as static JSON:
 
 - `GET https://uianatomy.dev/api/components.json` — index.
 - `GET https://uianatomy.dev/api/components/{id}.json` — full canonical schema for one component.
+- `GET https://uianatomy.dev/api/components/{id}/a11y-fixture.json` — `keyboardWalk` + `announcements` + `axeRules` for one component, shaped for direct ingestion into Playwright + `@axe-core/playwright` or Jest + `jest-axe`. Includes an `_about` field describing wiring per assertion type.
 
 Pages also serve markdown on `Accept: text/markdown` (with `Content-Type: text/markdown; charset=utf-8` and `x-markdown-tokens` headers); useful for agents that prefer prose context over JSON schemas.
 

@@ -55,6 +55,13 @@ const a = component.a11yAcceptance;
         </ul>
       </section>
     )}
+
+    <p class="a11y-acceptance__fixture">
+      Same data as JSON for direct ingestion into Playwright + <code>@axe-core/playwright</code> or Jest + <code>jest-axe</code>:
+      {' '}<a href={`/api/components/${component.id}/a11y-fixture.json`}>
+        <code>/api/components/{component.id}/a11y-fixture.json</code>
+      </a>
+    </p>
   </div>
 )}
 
@@ -116,6 +123,15 @@ const a = component.a11yAcceptance;
     font-size: var(--text-step--1);
   }
   .a11y-acceptance__rules code {
+    font-size: inherit;
+  }
+  .a11y-acceptance__fixture {
+    margin: 0;
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+    line-height: var(--leading-normal, 1.5);
+  }
+  .a11y-acceptance__fixture code {
     font-size: inherit;
   }
 </style>
