@@ -5,6 +5,7 @@ import AnatomyDiagram from '../components/AnatomyDiagram.astro';
 import CompareSelector from '../components/compare/CompareSelector.astro';
 import CompareDiff from '../components/compare/CompareDiff.astro';
 import { computeCompareDiff } from '@uianatomy/shared/compare';
+import { compareJsonLd } from '../lib/jsonLd';
 
 // /compare is a static page. The query string `?a=&b=` is read at runtime by
 // a client-side script that fetches /api/components/<id>.json for each side
@@ -32,6 +33,7 @@ const ROSTER = components
   title="Compare components"
   description="Side-by-side anatomy and axes diff for two canonical UI Anatomy components — surfaces every place the canon distinguishes them."
   breadcrumb={[{ name: 'Compare' }]}
+  jsonLd={compareJsonLd({ pathname: '/compare' })}
 >
   <article class="shell measure-wide compare-page">
     <header class="compare-page__header">

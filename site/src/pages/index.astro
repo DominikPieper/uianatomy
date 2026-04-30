@@ -2,11 +2,16 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ComponentCard from '../components/ComponentCard.astro';
+import { siteJsonLd } from '../lib/jsonLd';
 
 const components = await getCollection('components');
 components.sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
-<Base title="Components" description="Canonical reference for UI component anatomy — the same truth, in three views.">
+<Base
+  title="Components"
+  description="Canonical reference for UI component anatomy — the same truth, in three views (designer, developer, bridge), queryable via MCP and a JSON API."
+  jsonLd={siteJsonLd()}
+>
   <article class="shell">
     <section class="component-hero">
       <p class="hero-eyebrow">A canonical reference</p>

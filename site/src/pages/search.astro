@@ -1,13 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
 import Search from 'astro-pagefind/components/Search';
+import { searchPageJsonLd } from '../lib/jsonLd';
 
 const initialQuery = Astro.url.searchParams.get('q') ?? '';
 ---
 <Base
   title="Search"
-  description="Search the UI Anatomy canon — components, slots, mismatches, mistakes, accessibility acceptance."
+  description="Search the UI Anatomy canon — components, slots, mismatches, mistakes, accessibility acceptance, framework mappings."
   breadcrumb={[{ name: 'Search' }]}
+  jsonLd={searchPageJsonLd({ pathname: '/search' })}
 >
   <article class="shell measure-wide" style="margin-inline:auto;">
     <section class="search-page">

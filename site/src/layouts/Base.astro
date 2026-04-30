@@ -12,9 +12,33 @@ interface Props {
   breadcrumb?: { name: string; href?: string }[];
   componentId?: string;
   view?: View;
+  /**
+   * OpenGraph type. Defaults to "website"; component pages override to
+   * "article" so og:type matches the article:modified_time signal.
+   */
+  ogType?: 'website' | 'article';
+  /**
+   * ISO date emitted as <meta property="article:modified_time">. Pass the
+   * canonical lastReviewed value for component pages.
+   */
+  articleModifiedTime?: string;
+  /**
+   * Per-page Schema.org JSON-LD object. Built via site/src/lib/jsonLd.ts
+   * helpers. Stringified into a `<script type="application/ld+json">` tag.
+   */
+  jsonLd?: unknown;
 }
 
-const { title, description, breadcrumb, componentId, view } = Astro.props;
+const {
+  title,
+  description,
+  breadcrumb,
+  componentId,
+  view,
+  ogType = 'website',
+  articleModifiedTime,
+  jsonLd,
+} = Astro.props;
 const dataView = view ?? 'bridge';
 
 // Per-page OpenGraph image. URL convention mirrors the page tree:
@@ -25,6 +49,14 @@ const trimmedPath = Astro.url.pathname.replace(/\/$/, '');
 const ogPath = trimmedPath === '' ? '/og/index.png' : `/og${trimmedPath}.png`;
 const ogImage = Astro.site ? new URL(ogPath, Astro.site).toString() : ogPath;
 const pageTitle = `${title} — UI Anatomy`;
+
+// Canonical URL — strip trailing slash, drop query string. With CF Workers
+// Static Assets configured for `drop-trailing-slash` we serve at the
+// no-slash form, so canonical follows that convention. Index and 404 page
+// canonicals fall back to the site origin.
+const canonicalUrl = Astro.site
+  ? new URL(trimmedPath === '' ? '/' : trimmedPath, Astro.site).toString()
+  : trimmedPath === '' ? '/' : trimmedPath;
 ---
 
 <!doctype html>
@@ -33,18 +65,24 @@ const pageTitle = `${title} — UI Anatomy`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
     <title>{pageTitle}</title>
     {description && <meta name="description" content={description} />}
+    <meta property="og:site_name" content="UI Anatomy" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content={pageTitle} />
     {description && <meta property="og:description" content={description} />}
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    {articleModifiedTime && <meta property="article:modified_time" content={articleModifiedTime} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     {description && <meta name="twitter:description" content={description} />}
     <meta name="twitter:image" content={ogImage} />
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <link rel="preconnect" href="data:" />
     <script is:inline>
       (() => {

@@ -7,6 +7,7 @@ import SiteSidebar from './SiteSidebar.astro';
 import WhenToUseSection from './sections/WhenToUseSection.astro';
 import ImplementationsSection from './sections/ImplementationsSection.astro';
 import Icon from './Icon.astro';
+import { componentJsonLd } from '../lib/jsonLd';
 
 type View = 'designer' | 'dev' | 'bridge';
 
@@ -28,13 +29,34 @@ const VIEW_LABEL: Record<View, string> = {
   dev: 'Dev view',
   bridge: 'Bridge view',
 };
+
+// View-aware title + description so the three URLs per component show
+// distinct entries in search results (avoiding "thin variation"
+// duplicate-content signals). Designer is the default landing surface
+// and keeps the bare component name; dev / bridge tag the variant.
+const VIEW_TITLE: Record<View, string> = {
+  designer: component.name,
+  dev: `${component.name} · Dev view`,
+  bridge: `${component.name} · Bridge view`,
+};
+const VIEW_DESCRIPTION: Record<View, string> = {
+  designer: component.description,
+  dev: `Code-side hints, framework mapping, events, form integration, accessibility acceptance, and performance thresholds for ${component.name}. ${component.description}`,
+  bridge: `Figma↔code mismatches, common implementation mistakes, and cross-framework expression mapping for ${component.name}. ${component.description}`,
+};
+
+const trimmedPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
 ---
 <Base
-  title={component.name}
-  description={component.description}
+  title={VIEW_TITLE[view]}
+  description={VIEW_DESCRIPTION[view]}
   breadcrumb={[{ name: 'Components', href: '/' }, { name: component.name }]}
   componentId={component.id}
   view={view}
+  ogType="article"
+  articleModifiedTime={component.lastReviewed}
+  jsonLd={jsonLd}
 >
   <div class="component-shell">
     <SiteSidebar />
