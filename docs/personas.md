@@ -42,7 +42,7 @@ Implements canonical components in React / Vue / Angular / web components; needs
 
 - [x] **A11y test-fixture export** at `/api/components/<id>/a11y-fixture.json` — keyboardWalk + announcements + axe rules in a Playwright + jest-axe-friendly shape. Closed by P3-37.
 - [ ] **Library coverage at depth.** Three audits exist, all for Modal. Need ≥1 audit per framework family for ≥3 components before pattern recognition kicks in.
-- [ ] **`validate_implementation` MCP tool** — agent passes `{ componentId, code, framework }`, server returns heuristic checks against canon (slot presence, axe-rule mention, event coverage). Lets agents self-verify generated UI code.
+- [x] **`validate_implementation` MCP tool** — closed by P3-40. Heuristic substring check covering required slots, variants, properties, and events (framework-aware event detection). Pairs with the a11y-fixture endpoint for behavioural assertions.
 - [x] **`get_implementations(componentId)` + `list_implementations()` on MCP** — closed by P3-36.
 
 ---
@@ -80,7 +80,7 @@ Reads the canon to answer questions about components and to scaffold implementat
 
 **Gaps**
 
-- [ ] **`validate_implementation` MCP tool** — same gap as the developer persona. Lets agents self-check what they generate.
+- [x] **`validate_implementation` MCP tool** — same gap as the developer persona, closed by the same P3-40 work. Lets agents self-check what they generate.
 - [ ] **More MCP tools as audit count grows.** Today every audit is for `modal`. Tools like `compare_implementations(libraryId, otherLibraryId, componentId)` only become valuable when there's enough audit data to compare.
 - [ ] **WebMCP parity with HTTP MCP.** Browser tools list 3 reads, HTTP MCP exposes 17. Drift is fine for now (browser context has different capability surface) but worth revisiting when the WebMCP spec stabilises.
 - [x] **`get_implementations` not on MCP** — closed by P3-36.

@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getComponents, getImplementations } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
+import { validateImplementation } from '@uianatomy/shared/validate';
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
 type View = (typeof VIEW_VALUES)[number];
@@ -292,6 +293,22 @@ export function createServer(): McpServer {
       }
       matches.sort((a, b) => a.libraryId.localeCompare(b.libraryId));
       return jsonResult(matches);
+    },
+  );
+
+  server.tool(
+    'validate_implementation',
+    'Heuristic structural conformance check: given component code and a target framework, reports which canonical required slots, variants, properties, and events appear (or are missing) in the code. Framework-aware event-name detection: react = on<PascalCase>, vue = @event / v-on:event / emit("event"), angular = (event), webComponents = bare event-name strings. Substring search only, no parser — false negatives possible on aliased or minified identifiers. NOT a substitute for behavioural assertions: pair with the per-component a11y-fixture endpoint plus a real Playwright + axe-core run.',
+    {
+      componentId: z.string(),
+      code: z.string().min(1),
+      framework: z.enum(['react', 'vue', 'angular', 'webComponents']),
+    },
+    async ({ componentId, code, framework }) => {
+      const map = await getComponents();
+      const c = map.get(componentId);
+      if (!c) return notFound(componentId);
+      return jsonResult(validateImplementation({ component: c, code, framework }));
     },
   );
 

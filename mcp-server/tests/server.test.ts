@@ -60,6 +60,7 @@ describe('mcp server', () => {
         'list_components',
         'list_implementations',
         'search_components',
+        'validate_implementation',
       ].sort(),
     );
   });
@@ -266,5 +267,55 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     expect(parsed).toEqual([]);
+  });
+
+  it('validate_implementation reports zero matches on garbage code', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'validate_implementation',
+      arguments: { componentId: 'modal', code: '// nothing canonical here', framework: 'react' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.componentId).toBe('modal');
+    expect(parsed.framework).toBe('react');
+    expect(parsed.summary.slotsMatched).toBe(0);
+    expect(parsed.missing.requiredSlots.length).toBe(parsed.summary.slotsRequired);
+  });
+
+  it('validate_implementation flags an unknown componentId as an error', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'validate_implementation',
+      arguments: { componentId: 'definitely-not-a-component', code: 'x', framework: 'react' },
+    });
+    expect((result as any).isError).toBe(true);
+  });
+
+  it('validate_implementation produces a well-formed report shape on a real example', async () => {
+    const { client } = await connect();
+    // Pull the example from get_implementations so the test stays in sync
+    // with the canon without duplicating the YAML payload.
+    const implResult = await client.callTool({
+      name: 'get_implementations',
+      arguments: { componentId: 'modal' },
+    });
+    const impls = parseJson(implResult as any);
+    const radixModal = impls.find((i: any) => i.libraryId === 'radix');
+    expect(radixModal?.exampleCode).toBeTypeOf('string');
+
+    const result = await client.callTool({
+      name: 'validate_implementation',
+      arguments: {
+        componentId: 'modal',
+        code: radixModal.exampleCode,
+        framework: 'react',
+      },
+    });
+    const report = parseJson(result as any);
+    expect(report).toHaveProperty('summary');
+    expect(report.summary).toHaveProperty('slotsRequired');
+    expect(report.summary).toHaveProperty('slotsMatched');
+    expect(report.summary.slotsMatched).toBeLessThanOrEqual(report.summary.slotsRequired);
+    expect(report.notes.some((n: string) => n.includes('Heuristic'))).toBe(true);
   });
 });

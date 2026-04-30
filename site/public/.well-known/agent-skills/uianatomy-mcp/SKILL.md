@@ -7,7 +7,7 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 17 read-only tools.
+The MCP server exposes this knowledge as 18 tools.
 
 ## Endpoint
 
@@ -37,6 +37,7 @@ The MCP server exposes this knowledge as 17 read-only tools.
 | `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
 | `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. |
 | `get_implementations` | `componentId: string` | Every library audit for one canonical component as an array of `Implementation` records (`componentId`, `libraryId`, `componentName`, `exampleCode`, `divergence` list, `rationale`, `lastReviewed`). Empty array when no library has audited the component yet. |
+| `validate_implementation` | `componentId: string`, `code: string`, `framework: "react" \| "vue" \| "angular" \| "webComponents"` | Heuristic structural conformance check. Reports which canonical required slots, variants, properties, and events appear (or are missing) in the supplied code. Framework-aware event-name detection (`on<PascalCase>` for React, `@event` / `v-on:` / `emit('event')` for Vue, `(event)` for Angular, bare names for web components). Substring search only — false negatives possible. NOT a substitute for behavioural assertions (pair with the per-component a11y-fixture endpoint and a real Playwright + axe-core run). |
 
 ## Typical agent flows
 
@@ -60,6 +61,11 @@ The MCP server exposes this knowledge as 17 read-only tools.
 
 1. `get_implementations({ componentId: "modal" })` → array of audit records, one per library.
 2. Inspect the `radix` entry's `divergence` list (`omitted` / `renamed` / `extended` / `reshaped`) and `exampleCode` for a known-good wiring.
+
+**"I just generated a Modal in React. Did I miss anything canonical?"**
+
+1. `validate_implementation({ componentId: "modal", code: "<your code>", framework: "react" })` → structural report listing missing required slots, variants, properties, and events.
+2. Treat `missing` entries as a checklist, not as defects — substring search has false negatives. Run the matching `/api/components/modal/a11y-fixture.json` against your code in a Playwright + `@axe-core/playwright` test for behavioural conformance.
 
 ## Library implementations (Phase 2)
 

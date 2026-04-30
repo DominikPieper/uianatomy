@@ -33,6 +33,10 @@
     "./compare": {
       "types": "./dist/compare.d.ts",
       "import": "./dist/compare.js"
+    },
+    "./validate": {
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js"
     }
   },
   "scripts": {
