@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 import llms from 'astro-llms-md';
 import brokenLinks from 'astro-broken-links-checker';
 import icon from 'astro-icon';
+import expressiveCode from 'astro-expressive-code';
 
 export default defineConfig({
   site: 'https://uianatomy.dev',
@@ -14,6 +15,7 @@ export default defineConfig({
     format: 'directory',
   },
   integrations: [
+    expressiveCode(),
     icon(),
     pagefind(),
     sitemap({
@@ -32,16 +34,6 @@ export default defineConfig({
       throwError: false,
     }),
   ],
-  markdown: {
-    shikiConfig: {
-      themes: {
-        light: 'github-light',
-        dark: 'github-dark-default',
-      },
-      defaultColor: false,
-      wrap: true,
-    },
-  },
   vite: {
     plugins: [tailwind()],
   },

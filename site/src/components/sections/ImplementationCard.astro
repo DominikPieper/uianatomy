@@ -1,5 +1,5 @@
 ---
-import { Code } from 'astro:components';
+import { Code } from 'astro-expressive-code/components';
 import type { Implementation } from '@uianatomy/shared/schema';
 import DivergenceTable from './DivergenceTable.astro';
 
@@ -83,12 +83,6 @@ const lang = LANG_BY_LIBRARY[impl.libraryId] ?? 'tsx';
   }
   .impl-card__example {
     margin: 0 0 16px;
-  }
-  .impl-card__example :global(.astro-code) {
-    border-radius: 6px;
-    padding: 14px 16px;
-    border: 1px solid var(--border-subtle);
-    font-size: calc(var(--text-step-0) * 0.95);
   }
   .impl-card__sub {
     font-size: var(--text-step--1);

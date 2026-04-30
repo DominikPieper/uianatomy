@@ -1359,26 +1359,9 @@ li.is-cross-pinned {
 :root[data-view='designer'] [data-anatomy-caption]::before { content: 'Slot labels per Figma conventions'; }
 :root[data-view='dev'] [data-anatomy-caption]::before { content: 'Slot labels per code semantics'; }
 
-/* Shiki dual-theme bound to [data-theme]. Default uses --shiki-light; */
-/* dark theme overrides via attribute selector instead of media query. */
-:root[data-theme='dark'] .astro-code,
-:root[data-theme='dark'] .astro-code span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
-  font-style: var(--shiki-dark-font-style) !important;
-  font-weight: var(--shiki-dark-font-weight) !important;
-  text-decoration: var(--shiki-dark-text-decoration) !important;
-}
-.astro-code {
-  font-family: var(--font-mono);
-  font-size: var(--fs-13);
-  line-height: 1.7;
-  border: var(--bw-hair) solid var(--paper-200);
-  border-radius: var(--r-2);
-  padding: var(--s-4) var(--s-5);
-  margin: var(--s-4) 0;
-  overflow-x: auto;
-}
+/* Code blocks rendered via astro-expressive-code emit their own scoped */
+/* styles (.expressive-code, .ec-line, .frame). Theme switching is wired */
+/* via themeCssSelector in ec.config.mjs to [data-theme='light|dark']. */
 
 /* Mismatches — three-column grid (figma | gap | code) per the brief.
    Figma side tinted designer-50, code side tinted dev-50, gap on highlight. */
