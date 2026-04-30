@@ -1,0 +1,32 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://uianatomy.dev/",
+      "service-desc": [
+        {
+          "href": "https://uianatomy.dev/api/components.json",
+          "type": "application/json",
+          "title": "UI Anatomy components index (machine-readable)"
+        }
+      ],
+      "sitemap": [
+        {
+          "href": "https://uianatomy.dev/sitemap-index.xml",
+          "type": "application/xml"
+        }
+      ]
+    },
+    {
+      "anchor": "https://uianatomy.dev/mcp",
+      "describedby": [
+        {
+          "href": "https://modelcontextprotocol.io/specification",
+          "type": "text/html",
+          "title": "Model Context Protocol specification"
+        }
+      ],
+      "type": "application/json",
+      "title": "UI Anatomy MCP endpoint (Streamable HTTP transport)"
+    }
+  ]
+}
