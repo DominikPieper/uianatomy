@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getComponents } from './state.js';
-import type { Component } from '@uianatomy/shared';
+import type { Component } from '@uianatomy/shared/schema';
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
 type View = (typeof VIEW_VALUES)[number];

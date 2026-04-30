@@ -1,4 +1,4 @@
-import type { Component } from '@uianatomy/shared';
+import type { Component } from '@uianatomy/shared/schema';
 
 let cache: Promise<Map<string, Component>> | null = null;
 
