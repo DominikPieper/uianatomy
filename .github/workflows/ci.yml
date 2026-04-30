@@ -35,6 +35,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # Other packages import from @uianatomy/shared/schema and ./bundle —
+      # those subpath exports point at compiled dist/ output, so without an
+      # initial shared build the typecheck step can't resolve them on a
+      # cold runner.
+      - name: Build shared (types for downstream typecheck)
+        run: pnpm -F @uianatomy/shared build
+
       - name: Typecheck
         run: pnpm -r typecheck
 
