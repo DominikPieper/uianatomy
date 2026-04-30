@@ -1,3 +1,6 @@
+/*
+  Vary: Accept
+
 /
   Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
   Link: </api/components.json>; rel="service-desc"; type="application/json"
