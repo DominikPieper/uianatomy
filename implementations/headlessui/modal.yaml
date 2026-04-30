@@ -1,0 +1,273 @@
+componentId: modal
+libraryId: headlessui
+componentName: Dialog
+
+exampleCode: |
+  <script setup>
+  import { ref } from 'vue';
+  import {
+    Dialog, DialogPanel, DialogTitle, DialogDescription,
+    TransitionRoot, TransitionChild,
+  } from '@headlessui/vue';
+  const isOpen = ref(false);
+  </script>
+
+  <template>
+    <button @click="isOpen = true">Open</button>
+
+    <TransitionRoot :show="isOpen" as="template">
+      <Dialog @close="isOpen = false" class="relative z-50">
+        <TransitionChild
+          as="template"
+          enter="transition-opacity duration-200"
+          enter-from="opacity-0" enter-to="opacity-100"
+          leave="transition-opacity duration-150"
+          leave-from="opacity-100" leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/40" aria-hidden="true" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 grid place-items-center p-4">
+          <TransitionChild
+            as="template"
+            enter="transition duration-200"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="transition duration-150"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel class="bg-white rounded-lg p-6 max-w-md w-full">
+              <DialogTitle as="h2">Edit profile</DialogTitle>
+              <DialogDescription>
+                Make changes to your profile.
+              </DialogDescription>
+              {/* body content */}
+              <div class="mt-4 flex justify-end gap-2">
+                <button type="button" @click="isOpen = false">Cancel</button>
+                <button type="button" @click="save">Save</button>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </Dialog>
+    </TransitionRoot>
+  </template>
+
+divergence:
+  # Anatomy: Headless UI ships fewer named slots than Radix.
+  # Backdrop, header, footer, close-button are entirely consumer-composed.
+  - from: anatomy[backdrop]
+    type: omitted
+    rationale: >-
+      Headless UI does not ship a backdrop primitive. The consumer
+      renders an arbitrary `<div>` with full-viewport positioning and
+      animates it via TransitionChild. The aria-hidden attribute is
+      the consumer's responsibility; Headless UI's Dialog does not
+      mark sibling content inert (it does manage focus trap on
+      DialogPanel, but page-context inerting is consumer-implemented
+      via the Dialog's `:initialFocus` plus body-scroll-lock).
+
+  - from: anatomy[container]
+    type: reshaped
+    to: TransitionRoot + Dialog + DialogPanel composition (with TransitionChild for animation)
+    rationale: >-
+      Canonical container is one slot bearing dialog role + focus trap.
+      Headless UI splits this across:
+      (a) TransitionRoot — owns the show/hide lifecycle and animation
+          coordination,
+      (b) Dialog — owns ARIA role + controlled state + onClose,
+      (c) DialogPanel — owns the actual rendered surface and focus
+          trap.
+      Animation is a separate primitive (TransitionChild) wrapping
+      individual elements; Radix bundles animation hooks into
+      data-state attributes on a single Content element.
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      No header named slot. Consumer composes a `<div>` containing
+      DialogTitle plus a manual close button. Same omission as Radix
+      Dialog; matches the "consumer composes layout regions" pattern
+      shared across both libraries.
+
+  - from: anatomy[title]
+    type: renamed
+    to: DialogTitle
+    rationale: >-
+      Same role; auto wires `aria-labelledby` from the surrounding
+      Dialog without consumer wiring. The `as="h2"` prop renders the
+      title as an h2 element (or any other element); without `as` the
+      default render is `<h2>`. Matches Radix Dialog.Title exactly.
+
+  - from: anatomy[close-button]
+    type: omitted
+    rationale: >-
+      No close-button primitive. Consumer wires a `<button>` with
+      `@click="isOpen = false"` (or whatever consumer state-update
+      handler closes the dialog). The Dialog's `@close` event fires
+      automatically on Escape; backdrop click closes when the
+      consumer's backdrop element is wired with a click-to-close
+      handler. Headless UI does not unify these into a single close
+      affordance.
+
+  - from: anatomy[body]
+    type: reshaped
+    to: DialogDescription plus arbitrary children inside DialogPanel
+    rationale: >-
+      Canonical body is one slot for the dialog payload. Headless UI
+      splits the semantic description (DialogDescription, auto-wires
+      `aria-describedby`) from arbitrary body content (free children
+      of DialogPanel). For non-prose bodies — forms, lists, custom
+      layouts — DialogDescription may be omitted. Same shape as
+      Radix's split.
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      No footer primitive. Action buttons are placed as free children
+      of DialogPanel. Footer alignment, spacing, button-order are
+      consumer styling (typically Tailwind utilities like
+      `mt-4 flex justify-end gap-2`).
+
+  # Variants: canonical is dialog / alertdialog / fullscreen.
+  - from: axes.variants[fullscreen]
+    type: omitted
+    rationale: >-
+      No fullscreen variant. Consumer renders DialogPanel with
+      `class="fixed inset-0"` to fill the viewport. The canonical
+      responsive block already documents narrow-viewport degrade-to-
+      fullscreen as a CSS layer above the primitive — same situation
+      as Radix.
+
+  - from: axes.variants[alertdialog]
+    type: reshaped
+    to: Same Dialog primitive with `:initialFocus` set to the cancel button and consumer-applied role="alertdialog"
+    rationale: >-
+      Headless UI does not ship a separate AlertDialog package
+      (unlike Radix which splits @radix-ui/react-alert-dialog).
+      Consumers achieve alert-dialog semantics by setting
+      `as="div"` plus `role="alertdialog"` on Dialog, plus
+      `:initialFocus` pointing at the cancel button (canonical
+      behaviour for destructive confirmations). The contract holds
+      via consumer composition rather than via a distinct primitive.
+
+  # Properties:
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      No size prop. Width / max-width / height are consumer CSS on
+      DialogPanel. Canonical `size: sm | md | lg | xl` is a design-
+      system convention; Headless UI is unstyled-by-design and stops
+      at the accessibility primitive.
+
+  - from: axes.properties[dismissible]
+    type: reshaped
+    to: '@close event handler controlled state'
+    rationale: >-
+      Canonical models `dismissible: boolean` as a single switch.
+      Headless UI exposes `@close` as the only dismissal hook —
+      consumer's handler decides whether to actually close
+      (`isOpen = false`) or suppress the close (no state update).
+      For non-dismissible dialogs, consumer ignores the close event
+      conditionally based on in-flight commit state. There is no
+      built-in suppress mechanism; the responsibility shifts to the
+      consumer's handler logic.
+
+  - from: axes.properties[scrollBehavior]
+    type: omitted
+    rationale: >-
+      No scrollBehavior prop. Inside-scroll vs outside-scroll is
+      consumer CSS via `overflow` on DialogPanel and outer wrapper.
+
+  # Events:
+  - from: events[openChange]
+    type: renamed
+    to: '@close event (and consumer-managed isOpen ref)'
+    rationale: >-
+      Headless UI's @close fires on dismissal (Escape, programmatic).
+      Open-state is owned by consumer (`isOpen = ref(false)`); the
+      Dialog reads `:show` from TransitionRoot. There is no
+      onOpenChange-style boolean callback because the lifecycle is
+      split across Vue ref ownership (open) and Dialog event
+      (close).
+
+  - from: events[dismiss]
+    type: reshaped
+    to: '@close event without reason discrimination'
+    rationale: >-
+      Canonical `dismiss` carries `{ reason: 'escape' | 'backdrop' |
+      'closeButton' }`. Headless UI's @close fires for Escape +
+      programmatic close. Backdrop click and close-button click are
+      consumer-wired @click handlers — consumer must inspect event
+      source to recover the reason. No unified reason-carrying
+      event.
+
+  # Motion: separate primitive (TransitionRoot / TransitionChild).
+  - from: motion.durations
+    type: reshaped
+    to: TransitionChild's enter/leave Tailwind utility classes (or `enter`/`leave` props with custom CSS)
+    rationale: >-
+      Canonical motion.durations.{open, close, backdrop} maps to
+      TransitionChild's `enter` and `leave` props which accept CSS
+      class names (typically Tailwind transition utilities like
+      `duration-200`). Each TransitionChild instance composes its
+      own timing. Backdrop and panel each get their own
+      TransitionChild — they may animate at different durations,
+      which is more flexible than canonical's single `backdrop`
+      duration token.
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      TransitionChild does not implement
+      `prefers-reduced-motion: reduce` automatically. Consumer
+      applies `motion-safe:` Tailwind variants OR conditionally
+      omits the transition classes via media-query inspection. The
+      canonical `instant` fallback is implementable but
+      consumer-wired.
+
+  # State transitions:
+  - from: axes.states.transitions
+    type: reshaped
+    to: TransitionRoot's `:show` prop (boolean) plus Dialog's `@close` event; intermediate states (opening/closing) inferred from TransitionChild's render-prop slot scope
+    rationale: >-
+      Canonical four-state graph (closed → opening → open →
+      closing → closed). Headless UI realises the graph: the
+      `:show` boolean drives the TransitionRoot, which triggers
+      TransitionChild enter/leave animations. Consumers needing the
+      intermediate `opening` or `closing` states inspect
+      TransitionChild's slot scope via `v-slot="{ open }"` —
+      identical to Radix's data-state attribute pattern but
+      surfaced through Vue's render-prop mechanism.
+
+rationale: |
+  Headless UI Vue's Dialog is unstyled, low-ceremony, and follows
+  the same accessibility-primitive philosophy as Radix Dialog. The
+  divergences from the canonical Modal closely mirror Radix's
+  divergences (same omitted slots: backdrop, header, footer,
+  close-button; same reshaped slots: container split, body split;
+  same renamed slot: title). The notable differences from the Radix
+  audit are:
+
+  1. Animation is a separate composable primitive (TransitionRoot
+     + TransitionChild) rather than bundled hooks on the dialog
+     surface — consumers compose animation orthogonally to the
+     Dialog primitive.
+  2. State management is more decoupled: the consumer owns the
+     `isOpen` ref; Dialog only emits `@close` and reads `:show`
+     from a parent TransitionRoot. No onOpenChange-style boolean
+     callback.
+  3. AlertDialog is not a separate package; consumers compose
+     alert-dialog semantics on the same Dialog primitive (via
+     `role="alertdialog"` plus `:initialFocus`).
+
+  Pattern recap across the two implementation audits (Radix
+  React vs Headless UI Vue): both libraries stop at the
+  accessibility primitive; design-system specifics (size scales,
+  motion timing, dismissible flags, fullscreen variants) are a
+  consumer-composed layer above the library. Both shape the
+  canonical anatomy via "consumer composes layout regions"
+  rather than ship named slots for header / footer.
+
+lastReviewed: '2026-04-30'
