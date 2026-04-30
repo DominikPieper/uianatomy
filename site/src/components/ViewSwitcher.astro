@@ -1,71 +1,33 @@
 ---
 import Icon from './Icon.astro';
+
+type View = 'designer' | 'dev' | 'bridge';
+
+interface Props {
+  componentId: string;
+  activeView: View;
+}
+
+const { componentId, activeView } = Astro.props;
+
+const VIEWS: Array<{ value: View; label: string; icon: string; href: string }> = [
+  { value: 'designer', label: 'Designer', icon: 'palette', href: `/components/${componentId}` },
+  { value: 'dev', label: 'Dev', icon: 'code', href: `/components/${componentId}/dev` },
+  { value: 'bridge', label: 'Bridge', icon: 'git-compare', href: `/components/${componentId}/bridge` },
+];
 ---
-<div class="view-tabs" role="group" aria-label="View" data-view-switcher>
-  <button type="button" data-view-value="designer" aria-pressed="false">
-    <Icon name="palette" size={14} />
-    <span class="label">Designer</span>
-  </button>
-  <button type="button" data-view-value="dev" aria-pressed="false">
-    <Icon name="code" size={14} />
-    <span class="label">Dev</span>
-  </button>
-  <button type="button" data-view-value="bridge" aria-pressed="true">
-    <Icon name="git-compare" size={14} />
-    <span class="label">Bridge</span>
-  </button>
-</div>
-
-<script>
-  const KEY = 'uianatomy.view';
-  type View = 'designer' | 'dev' | 'bridge';
-
-  function applyView(view: View) {
-    document.documentElement.setAttribute('data-view', view);
-    document.querySelectorAll<HTMLButtonElement>('[data-view-switcher] button').forEach((btn) => {
-      btn.setAttribute('aria-pressed', String(btn.dataset.viewValue === view));
-    });
-  }
-
-  function init() {
-    let view: View = 'bridge';
-    try {
-      const stored = localStorage.getItem(KEY);
-      if (stored === 'designer' || stored === 'dev' || stored === 'bridge') view = stored;
-    } catch {}
-    applyView(view);
-
-    document.querySelectorAll<HTMLDivElement>('[data-view-switcher]').forEach((switcher) => {
-      const buttons = Array.from(switcher.querySelectorAll<HTMLButtonElement>('button'));
-      buttons.forEach((btn, idx) => {
-        btn.addEventListener('click', () => {
-          const next = btn.dataset.viewValue as View | undefined;
-          if (!next) return;
-          try { localStorage.setItem(KEY, next); } catch {}
-          applyView(next);
-        });
-        btn.addEventListener('keydown', (e) => {
-          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
-          e.preventDefault();
-          let target = idx;
-          if (e.key === 'ArrowRight') target = (idx + 1) % buttons.length;
-          if (e.key === 'ArrowLeft') target = (idx - 1 + buttons.length) % buttons.length;
-          if (e.key === 'Home') target = 0;
-          if (e.key === 'End') target = buttons.length - 1;
-          const next = buttons[target];
-          next.focus();
-          const value = next.dataset.viewValue as View | undefined;
-          if (!value) return;
-          try { localStorage.setItem(KEY, value); } catch {}
-          applyView(value);
-        });
-      });
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-</script>
+<nav class="view-tabs" aria-label="View">
+  {VIEWS.map(({ value, label, icon, href }) => {
+    const isActive = value === activeView;
+    return (
+      <a
+        href={href}
+        data-view-value={value}
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Icon name={icon} size={14} />
+        <span class="label">{label}</span>
+      </a>
+    );
+  })}
+</nav>

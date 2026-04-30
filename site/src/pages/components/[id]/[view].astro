@@ -1,0 +1,30 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ComponentPageShell from '../../../components/ComponentPageShell.astro';
+import DevView from '../../../components/views/DevView.astro';
+import BridgeView from '../../../components/views/BridgeView.astro';
+
+const ALT_VIEWS = ['dev', 'bridge'] as const;
+type AltView = (typeof ALT_VIEWS)[number];
+
+export async function getStaticPaths() {
+  const components = await getCollection('components');
+  return components.flatMap((entry) =>
+    (['dev', 'bridge'] as const).map((view) => ({
+      params: { id: entry.id, view },
+      props: { entry, view },
+    })),
+  );
+}
+
+interface Props {
+  entry: CollectionEntry<'components'>;
+  view: AltView;
+}
+const { entry, view } = Astro.props;
+const component = entry.data;
+---
+<ComponentPageShell entry={entry} view={view}>
+  {view === 'dev' && <DevView component={component} />}
+  {view === 'bridge' && <BridgeView component={component} />}
+</ComponentPageShell>

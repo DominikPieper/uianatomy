@@ -325,48 +325,48 @@ main {
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
 }
-.view-tabs button {
+.view-tabs a {
   appearance: none;
   background: transparent;
   border: 0;
+  border-radius: 999px;
   padding: 6px 12px;
   font: inherit;
   font-size: var(--text-step--1);
-  font-weight: 500;
   color: var(--fg-muted);
   cursor: pointer;
-  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  text-decoration: none;
   transition: color 120ms ease, background 120ms ease;
 }
-.view-tabs button:hover {
+.view-tabs a:hover {
   color: var(--fg);
 }
-.view-tabs button[aria-pressed='true'] {
+.view-tabs a[aria-current='page'] {
   background: var(--surface-raised);
   color: var(--fg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border-subtle);
 }
-.view-tabs button[data-view-value='designer'][aria-pressed='true'] {
+.view-tabs a[data-view-value='designer'][aria-current='page'] {
   color: var(--accent-warm);
 }
-.view-tabs button[data-view-value='dev'][aria-pressed='true'] {
+.view-tabs a[data-view-value='dev'][aria-current='page'] {
   color: var(--accent-cool);
 }
-.view-tabs button[data-view-value='bridge'][aria-pressed='true'] {
+.view-tabs a[data-view-value='bridge'][aria-current='page'] {
   color: var(--accent-neutral);
 }
-.view-tabs button .label {
+.view-tabs a .label {
   display: none;
 }
 @media (min-width: 768px) {
-  .view-tabs button .label {
+  .view-tabs a .label {
     display: inline;
   }
 }
-.view-tabs button:focus-visible {
+.view-tabs a:focus-visible {
   outline: 2px solid var(--accent-active);
   outline-offset: 2px;
 }
@@ -414,14 +414,16 @@ main {
   }
 }
 
-/* View section visibility */
+/* View section visibility — single view per page now (Option D), so no hiding */
 [data-view-section] {
-  display: none;
-}
-[data-view='designer'] [data-view-section='designer'],
-[data-view='dev'] [data-view-section='dev'],
-[data-view='bridge'] [data-view-section='bridge'] {
   display: block;
+}
+
+/* Browser-native cross-document view transitions (MPA mode).
+   Provides smooth fade between view-switches; degrades to instant
+   in browsers without View Transitions API support. */
+@view-transition {
+  navigation: auto;
 }
 
 /* Section header + role badges */

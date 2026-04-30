@@ -1,0 +1,65 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import AnatomyDiagram from './AnatomyDiagram.astro';
+import WhenToUseSection from './sections/WhenToUseSection.astro';
+import ImplementationsSection from './sections/ImplementationsSection.astro';
+import Icon from './Icon.astro';
+
+type View = 'designer' | 'dev' | 'bridge';
+
+interface Props {
+  entry: CollectionEntry<'components'>;
+  view: View;
+}
+
+const { entry, view } = Astro.props;
+const component = entry.data;
+
+const implementations = await getCollection(
+  'implementations',
+  (e) => e.data.componentId === component.id,
+);
+
+const VIEW_LABEL: Record<View, string> = {
+  designer: 'Designer view',
+  dev: 'Dev view',
+  bridge: 'Bridge view',
+};
+---
+<Base
+  title={component.name}
+  description={component.description}
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: component.name }]}
+  componentId={component.id}
+  view={view}
+>
+  <article class="shell measure-wide" style="margin-inline:auto;">
+    <section class="component-hero">
+      <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
+      <h1 class="component-name">{component.name}</h1>
+      <p class="component-description">{component.description}</p>
+    </section>
+
+    <WhenToUseSection component={component} />
+
+    <section aria-label="Anatomy">
+      <div class="anatomy-frame">
+        <AnatomyDiagram component={component} />
+      </div>
+      <p class="anatomy-caption">{VIEW_LABEL[view]}</p>
+    </section>
+
+    <ImplementationsSection implementations={implementations} />
+
+    <slot />
+
+    {component.lastReviewed && (
+      <footer class="component-footer">
+        <span>
+          <Icon name="clock" size={12} /> Last reviewed <time datetime={component.lastReviewed}>{component.lastReviewed}</time>
+        </span>
+      </footer>
+    )}
+  </article>
+</Base>

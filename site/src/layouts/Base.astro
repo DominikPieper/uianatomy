@@ -4,17 +4,22 @@ import ViewSwitcher from '../components/ViewSwitcher.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Icon from '../components/Icon.astro';
 
+type View = 'designer' | 'dev' | 'bridge';
+
 interface Props {
   title: string;
   description?: string;
   breadcrumb?: { name: string; href?: string }[];
+  componentId?: string;
+  view?: View;
 }
 
-const { title, description, breadcrumb } = Astro.props;
+const { title, description, breadcrumb, componentId, view } = Astro.props;
+const dataView = view ?? 'bridge';
 ---
 
 <!doctype html>
-<html lang="en" data-view="bridge">
+<html lang="en" data-view={dataView}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,10 +29,6 @@ const { title, description, breadcrumb } = Astro.props;
     <script is:inline>
       (() => {
         try {
-          const view = localStorage.getItem('uianatomy.view');
-          if (view === 'designer' || view === 'dev' || view === 'bridge') {
-            document.documentElement.setAttribute('data-view', view);
-          }
           const theme = localStorage.getItem('uianatomy.theme');
           if (theme === 'light' || theme === 'dark') {
             document.documentElement.setAttribute('data-theme', theme);
@@ -55,7 +56,7 @@ const { title, description, breadcrumb } = Astro.props;
           </nav>
         )}
         <div class="site-header__cluster">
-          <ViewSwitcher />
+          {componentId && view && <ViewSwitcher componentId={componentId} activeView={view} />}
           <ThemeToggle />
         </div>
       </div>
