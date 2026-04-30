@@ -3,6 +3,8 @@ import tailwind from '@tailwindcss/vite';
 import pagefind from 'astro-pagefind';
 import sitemap from '@astrojs/sitemap';
 import llms from 'astro-llms-md';
+import brokenLinks from 'astro-broken-links-checker';
+import icon from 'astro-icon';
 
 export default defineConfig({
   site: 'https://uianatomy.dev',
@@ -12,9 +14,10 @@ export default defineConfig({
     format: 'directory',
   },
   integrations: [
+    icon(),
     pagefind(),
     sitemap({
-      filter: (page) => !page.includes('/api/'),
+      filter: (page) => !page.includes('/api/') && !page.includes('/og/'),
     }),
     llms({
       contentSelector: 'article',
@@ -22,7 +25,11 @@ export default defineConfig({
       generateIndividualMd: true,
       generateLlmsTxt: true,
       generateLlmsFullTxt: true,
-      exclude: ['404', '404.html', '_astro', '**.xml', '**.txt', 'node_modules', 'api/**', 'pagefind/**'],
+      exclude: ['404', '404.html', '_astro', '**.xml', '**.txt', 'node_modules', 'api/**', 'pagefind/**', 'og/**'],
+    }),
+    brokenLinks({
+      checkExternalLinks: false,
+      throwError: false,
     }),
   ],
   markdown: {

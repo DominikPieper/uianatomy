@@ -16,6 +16,15 @@ interface Props {
 
 const { title, description, breadcrumb, componentId, view } = Astro.props;
 const dataView = view ?? 'bridge';
+
+// Per-page OpenGraph image. URL convention mirrors the page tree:
+//   /                        -> /og/index.png
+//   /components/modal        -> /og/components/modal.png
+//   /components/modal/dev    -> /og/components/modal/dev.png
+const trimmedPath = Astro.url.pathname.replace(/\/$/, '');
+const ogPath = trimmedPath === '' ? '/og/index.png' : `/og${trimmedPath}.png`;
+const ogImage = Astro.site ? new URL(ogPath, Astro.site).toString() : ogPath;
+const pageTitle = `${title} — UI Anatomy`;
 ---
 
 <!doctype html>
@@ -24,8 +33,18 @@ const dataView = view ?? 'bridge';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title} — UI Anatomy</title>
+    <title>{pageTitle}</title>
     {description && <meta name="description" content={description} />}
+    <meta property="og:title" content={pageTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={ogImage} />
     <link rel="preconnect" href="data:" />
     <script is:inline>
       (() => {
