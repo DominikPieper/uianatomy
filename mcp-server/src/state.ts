@@ -1,6 +1,7 @@
-import type { Component } from '@uianatomy/shared/schema';
+import type { Component, Implementation } from '@uianatomy/shared/schema';
 
 let cache: Promise<Map<string, Component>> | null = null;
+let implCache: Promise<Map<string, Map<string, Implementation>>> | null = null;
 
 export function setComponents(map: Map<string, Component>): void {
   cache = Promise.resolve(map);
@@ -17,6 +18,22 @@ export function getComponents(): Promise<Map<string, Component>> {
   return cache;
 }
 
+export function setImplementations(map: Map<string, Map<string, Implementation>>): void {
+  implCache = Promise.resolve(map);
+}
+
+export function setImplementationsPromise(p: Promise<Map<string, Map<string, Implementation>>>): void {
+  implCache = p;
+}
+
+export function getImplementations(): Promise<Map<string, Map<string, Implementation>>> {
+  if (!implCache) {
+    throw new Error('uianatomy implementations not initialized — call setImplementations() or setImplementationsDir() first');
+  }
+  return implCache;
+}
+
 export function resetCache(): void {
   cache = null;
+  implCache = null;
 }

@@ -7,7 +7,7 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 15 read-only tools.
+The MCP server exposes this knowledge as 17 read-only tools.
 
 ## Endpoint
 
@@ -35,6 +35,8 @@ The MCP server exposes this knowledge as 15 read-only tools.
 | `get_transitions` | `id: string` | State-machine transitions (`from` / `to` / `trigger`). `null` if absent. |
 | `get_events` | `id: string` | Events array (name, payload, per-framework notes). `null` if absent. |
 | `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
+| `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. |
+| `get_implementations` | `componentId: string` | Every library audit for one canonical component as an array of `Implementation` records (`componentId`, `libraryId`, `componentName`, `exampleCode`, `divergence` list, `rationale`, `lastReviewed`). Empty array when no library has audited the component yet. |
 
 ## Typical agent flows
 
@@ -54,9 +56,16 @@ The MCP server exposes this knowledge as 15 read-only tools.
 1. `search_components({ query: "filter" })` → ranked candidates.
 2. `get_when_to_use({ id: "combobox" })` → `use`, `avoid`, comparisons with related components.
 
-## Library implementations (Phase 2, not yet on MCP)
+**"How does Radix' Dialog diverge from canonical Modal?"**
 
-Beyond the canon, three library audits ship today (Radix Dialog, Headless UI Dialog, Angular CDK Dialog), each documenting its **divergence** from canonical Modal as `omitted` / `renamed` / `extended` / `reshaped` entries. This data is currently visible only via the rendered component pages (Implementations section under each `/components/<id>`), not via MCP. Tools like `get_implementations(componentId)` and `list_implementations()` are planned as the audit count grows; until then, fetch the rendered HTML or the component page's markdown sidecar with `Accept: text/markdown` and parse the Implementations section.
+1. `get_implementations({ componentId: "modal" })` → array of audit records, one per library.
+2. Inspect the `radix` entry's `divergence` list (`omitted` / `renamed` / `extended` / `reshaped`) and `exampleCode` for a known-good wiring.
+
+## Library implementations (Phase 2)
+
+Beyond the canon, three library audits ship today (Radix Dialog, Headless UI Dialog, Angular CDK Dialog), each documenting its **divergence** from canonical Modal as `omitted` / `renamed` / `extended` / `reshaped` entries.
+
+Use `list_implementations` for an inventory and `get_implementations({ componentId })` for the full audit records for one canonical component. The same data also renders in the Implementations section of every `/components/<id>` page.
 
 ## In-browser tools (WebMCP)
 

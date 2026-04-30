@@ -1,4 +1,9 @@
-import { componentSchema, type Component } from './schema.js';
+import {
+  componentSchema,
+  implementationSchema,
+  type Component,
+  type Implementation,
+} from './schema.js';
 
 export function loadComponentsFromBundle(
   bundle: Record<string, unknown>,
@@ -14,4 +19,24 @@ export function loadComponentsFromBundle(
     map.set(id, result.data);
   }
   return map;
+}
+
+export function loadImplementationsFromBundle(
+  bundle: Record<string, Record<string, unknown>>,
+): Map<string, Map<string, Implementation>> {
+  const byLibrary = new Map<string, Map<string, Implementation>>();
+  for (const [libraryId, byComponent] of Object.entries(bundle)) {
+    const components = new Map<string, Implementation>();
+    for (const [componentId, raw] of Object.entries(byComponent)) {
+      const result = implementationSchema.safeParse(raw);
+      if (!result.success) {
+        throw new Error(
+          `Bundle implementation "${libraryId}/${componentId}" failed validation: ${JSON.stringify(result.error.format())}`,
+        );
+      }
+      components.set(componentId, result.data);
+    }
+    byLibrary.set(libraryId, components);
+  }
+  return byLibrary;
 }

@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getComponents } from './state.js';
+import { getComponents, getImplementations } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
@@ -242,6 +242,55 @@ export function createServer(): McpServer {
           return haystack.toLowerCase().includes(q);
         })
         .map((c) => ({ id: c.id, name: c.name, description: c.description }));
+      return jsonResult(matches);
+    },
+  );
+
+  server.tool(
+    'list_implementations',
+    'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId.',
+    {},
+    async () => {
+      const byLibrary = await getImplementations();
+      const rows: Array<{
+        libraryId: string;
+        componentId: string;
+        componentName: string;
+        divergenceCount: number;
+        lastReviewed: string;
+      }> = [];
+      for (const [libraryId, byComponent] of byLibrary) {
+        for (const [componentId, impl] of byComponent) {
+          rows.push({
+            libraryId,
+            componentId,
+            componentName: impl.componentName,
+            divergenceCount: impl.divergence?.length ?? 0,
+            lastReviewed: impl.lastReviewed,
+          });
+        }
+      }
+      rows.sort(
+        (a, b) =>
+          a.libraryId.localeCompare(b.libraryId) ||
+          a.componentId.localeCompare(b.componentId),
+      );
+      return jsonResult(rows);
+    },
+  );
+
+  server.tool(
+    'get_implementations',
+    'Return every library audit for a canonical component as an array of Implementation records (componentId, libraryId, componentName, exampleCode, divergence list, rationale, lastReviewed). Returns an empty array when no library has audited this component yet.',
+    { componentId: z.string() },
+    async ({ componentId }) => {
+      const byLibrary = await getImplementations();
+      const matches = [];
+      for (const byComponent of byLibrary.values()) {
+        const impl = byComponent.get(componentId);
+        if (impl) matches.push(impl);
+      }
+      matches.sort((a, b) => a.libraryId.localeCompare(b.libraryId));
       return jsonResult(matches);
     },
   );

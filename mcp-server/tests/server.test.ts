@@ -4,10 +4,11 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { createServer } from '../src/server.js';
-import { setContentDir, resetCache } from '../src/data.js';
+import { setContentDir, setImplementationsDir, resetCache } from '../src/data.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = resolve(here, '..', '..', 'content', 'components');
+const implementationsDir = resolve(here, '..', '..', 'implementations');
 
 async function connect() {
   const server = createServer();
@@ -27,11 +28,13 @@ function parseJson(result: { content: Array<{ type: string; text?: string }> }) 
 describe('mcp server', () => {
   beforeAll(() => {
     setContentDir(contentDir);
+    setImplementationsDir(implementationsDir);
   });
 
   afterEach(() => {
     resetCache();
     setContentDir(contentDir);
+    setImplementationsDir(implementationsDir);
   });
 
   it('lists the registered tools', async () => {
@@ -47,6 +50,7 @@ describe('mcp server', () => {
         'get_component_view',
         'get_events',
         'get_framework_map',
+        'get_implementations',
         'get_mismatches',
         'get_motion',
         'get_responsive',
@@ -54,6 +58,7 @@ describe('mcp server', () => {
         'get_transitions',
         'get_when_to_use',
         'list_components',
+        'list_implementations',
         'search_components',
       ].sort(),
     );
@@ -194,5 +199,72 @@ describe('mcp server', () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'get_component', arguments: { id: 'nope' } });
     expect((result as any).isError).toBe(true);
+  });
+
+  it('list_implementations returns one entry per library/component pair, sorted', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_implementations', arguments: {} });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBeGreaterThanOrEqual(3);
+    const sorted = [...parsed].sort(
+      (a: any, b: any) =>
+        a.libraryId.localeCompare(b.libraryId) ||
+        a.componentId.localeCompare(b.componentId),
+    );
+    expect(parsed).toEqual(sorted);
+    for (const row of parsed) {
+      expect(row.libraryId).toBeTypeOf('string');
+      expect(row.componentId).toBeTypeOf('string');
+      expect(row.componentName).toBeTypeOf('string');
+      expect(row.divergenceCount).toBeTypeOf('number');
+      expect(row.lastReviewed).toBeTypeOf('string');
+    }
+  });
+
+  it('list_implementations covers all three Modal audits today', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_implementations', arguments: {} });
+    const parsed = parseJson(result as any);
+    const modalAudits = parsed.filter((r: any) => r.componentId === 'modal');
+    const libs = modalAudits.map((r: any) => r.libraryId).sort();
+    expect(libs).toEqual(['cdk', 'headlessui', 'radix']);
+  });
+
+  it('get_implementations(modal) returns all three library audits', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_implementations',
+      arguments: { componentId: 'modal' },
+    });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBe(3);
+    for (const impl of parsed) {
+      expect(impl.componentId).toBe('modal');
+      expect(['radix', 'headlessui', 'cdk']).toContain(impl.libraryId);
+      expect(impl.componentName).toBeTypeOf('string');
+      expect(impl.lastReviewed).toBeTypeOf('string');
+    }
+  });
+
+  it('get_implementations(button) returns empty array (no audits yet)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_implementations',
+      arguments: { componentId: 'button' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed).toEqual([]);
+  });
+
+  it('get_implementations(unknown) also returns empty array (not an error)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_implementations',
+      arguments: { componentId: 'definitely-not-a-component' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed).toEqual([]);
   });
 });

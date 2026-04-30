@@ -12,9 +12,10 @@ A canonical reference for UI component anatomy — see [README.md](./README.md) 
 2. **methodology.md** — how content is researched and written
 3. **schema.md** — the structure of canonical YAML files
 4. **views.md** — how content is presented (designer / dev / bridge)
-5. **decisions/** — the architectural decisions in order (001 → 005)
-6. **roadmap.md** — what's planned and in what order
-7. **backlog.md** — concrete open work items from the latest review (read before suggesting new work)
+5. **personas.md** — who the canon serves and where it currently fails them; gap-tracking ground for new feature work
+6. **decisions/** — the architectural decisions in order (001 → 005)
+7. **roadmap.md** — what's planned and in what order
+8. **backlog.md** — concrete open work items from the latest review (read before suggesting new work)
 
 ## The backlog is canonical workflow state
 
