@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getComponents } from './data.js';
+import { getComponents } from './state.js';
 import type { Component } from '@uianatomy/shared';
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;

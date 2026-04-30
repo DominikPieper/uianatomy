@@ -1,7 +1,10 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { loadComponents, type Component } from '@uianatomy/shared';
+import { loadComponents } from '@uianatomy/shared';
+import { setComponentsPromise } from './state.js';
+
+export { setComponents, resetCache, getComponents } from './state.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -19,21 +22,6 @@ function pickContentDir(): string {
 
 const DEFAULT_CONTENT_DIR = pickContentDir();
 
-let cache: Promise<Map<string, Component>> | null = null;
-
-export function setContentDir(_dir: string): void {
-  cache = loadComponents({ contentDir: _dir });
-}
-
-export function setComponents(map: Map<string, Component>): void {
-  cache = Promise.resolve(map);
-}
-
-export function getComponents(contentDir: string = DEFAULT_CONTENT_DIR): Promise<Map<string, Component>> {
-  if (!cache) cache = loadComponents({ contentDir });
-  return cache;
-}
-
-export function resetCache(): void {
-  cache = null;
+export function setContentDir(dir: string = DEFAULT_CONTENT_DIR): void {
+  setComponentsPromise(loadComponents({ contentDir: dir }));
 }

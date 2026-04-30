@@ -1,6 +1,6 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createServer } from '../mcp-server/src/server.js';
-import { setComponents } from '../mcp-server/src/data.js';
+import { setComponents } from '../mcp-server/src/state.js';
 import { loadComponentsFromBundle } from '@uianatomy/shared/bundle';
 import bundleJson from '@uianatomy/shared/content-bundle.json';
 
