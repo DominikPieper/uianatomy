@@ -18,7 +18,7 @@ A pragmatic, phased plan. Phases are sequential — each builds on what's stable
 - MCP server with the core tools (`list_components`, `get_component`, `get_anatomy`, etc.)
 - Static JSON API
 - Anatomy SVG generator (auto-layout from YAML; override path deferred to Phase 3 if needed)
-- Public deployment on Cloudflare Pages
+- Public deployment on Cloudflare Workers (Static Assets, ADR-022)
 - Domain and basic visual identity
 
 **Non-goals for Phase 1:**

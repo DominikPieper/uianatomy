@@ -1,6 +1,6 @@
 # ADR 003: MCP Server Architecture
 
-**Status:** Accepted (deployment target updated by [ADR-021](./021-host-cloudflare-pages.md): now a Cloudflare Pages Function. Architecture — standalone server, web-standard HTTP, shared YAML schema — unchanged.)
+**Status:** Accepted (deployment target updated by [ADR-022](./022-host-cloudflare-workers.md): now a Cloudflare Worker handler at `worker/index.ts`. Architecture — standalone server, web-standard HTTP, shared YAML schema — unchanged.)
 **Date:** 2026-04
 
 ## Context
@@ -16,7 +16,7 @@ The architecture needs to:
 
 ## Decision
 
-A standalone MCP server, deployed as a Cloudflare Pages Function (formerly Netlify Function — see ADR-021), that reads the same component data the site reads via the same shared Zod schemas. On Workers the data is loaded from a build-time JSON bundle; locally it still loads from the YAML source.
+A standalone MCP server, deployed as a Cloudflare Worker handler at `worker/index.ts` (history: Netlify Function → ADR-021 Cloudflare Pages Function → ADR-022 Cloudflare Workers Static Assets), that reads the same component data the site reads via the same shared Zod schemas. On Workers the data is loaded from a build-time JSON bundle; locally it still loads from the YAML source.
 
 The server uses `@modelcontextprotocol/sdk` (the official TypeScript SDK) and exposes the protocol over streamable HTTP.
 

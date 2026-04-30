@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uianatomy",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-04-30",
+  "compatibility_flags": ["nodejs_compat"],
+  // Workers Static Assets (replaces Cloudflare Pages). The site/dist
+  // directory holds astro build output (HTML + JSON APIs + .well-known
+  // files + .md sidecars + OG PNGs + Pagefind index + sitemap).
+  "assets": {
+    "directory": "./site/dist",
+    "binding": "ASSETS",
+    // run_worker_first lets the worker intercept every request, including
+    // ones that would otherwise be handled directly by the static-asset
+    // server. Required because markdown negotiation needs to inspect the
+    // Accept header on requests for HTML pages, which the asset server
+    // would otherwise serve without invoking the worker at all.
+    "run_worker_first": true,
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

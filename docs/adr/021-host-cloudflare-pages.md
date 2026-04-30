@@ -1,6 +1,6 @@
 # ADR 021: Host on Cloudflare Pages
 
-**Status:** Accepted (supersedes ADR-002 hosting decision; clarifies ADR-003 deployment target)
+**Status:** Superseded by ADR-022 (the project moved from Cloudflare Pages to Cloudflare Workers Static Assets on 2026-04-30 after Pages auto-deploy started failing during the wrangler-4 / Workers Static Assets convergence).
 **Date:** 2026-04-30
 
 ## Context

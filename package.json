@@ -9,8 +9,9 @@
   },
   "scripts": {
     "build": "pnpm -r build",
-    "deploy": "wrangler pages deploy site/dist --project-name=uianatomy --branch=main",
+    "deploy": "wrangler deploy",
     "dev": "pnpm --filter site dev",
+    "dev:worker": "wrangler dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint"
@@ -20,7 +21,8 @@
     "@uianatomy/shared": "workspace:*"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260430.1",
     "typescript": "^6.0.3",
-    "wrangler": "^3.114.0"
+    "wrangler": "^4.87.0"
   }
 }
