@@ -1,0 +1,327 @@
+componentId: modal
+libraryId: cdk
+componentName: Dialog (from @angular/cdk/dialog)
+
+exampleCode: |
+  // dialog.component.ts (consumer)
+  import { Component, inject } from '@angular/core';
+  import { Dialog, DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+
+  @Component({
+    selector: 'app-page',
+    template: `
+      <button (click)="openDialog()">Open</button>
+    `,
+  })
+  export class PageComponent {
+    private readonly dialog = inject(Dialog);
+
+    openDialog() {
+      const ref = this.dialog.open<EditProfileResult>(EditProfileDialog, {
+        data: { userId: 42 },
+        ariaLabel: 'Edit profile',
+        hasBackdrop: true,
+        disableClose: false,
+        restoreFocus: true,
+        autoFocus: 'first-tabbable',
+        width: '480px',
+        maxWidth: '90vw',
+      });
+
+      ref.closed.subscribe((result) => {
+        if (result?.saved) {
+          // commit-with-result pattern
+        }
+      });
+    }
+  }
+
+  // edit-profile.dialog.ts (the dialog content component)
+  @Component({
+    selector: 'app-edit-profile-dialog',
+    template: `
+      <div class="dialog-shell">
+        <h2 id="dialog-title">Edit profile</h2>
+        <p>Make changes to your profile.</p>
+        <!-- body content -->
+        <div class="dialog-actions">
+          <button type="button" (click)="ref.close()">Cancel</button>
+          <button type="button" (click)="save()">Save</button>
+        </div>
+      </div>
+    `,
+  })
+  export class EditProfileDialog {
+    readonly data = inject<{ userId: number }>(DIALOG_DATA);
+    readonly ref = inject<DialogRef<EditProfileResult>>(DialogRef);
+
+    save() {
+      this.ref.close({ saved: true });
+    }
+  }
+
+divergence:
+  # Anatomy: CDK provides the overlay shell; the consumer's content
+  # component provides everything inside. Most named slots from the
+  # canonical Modal anatomy live entirely in the consumer's
+  # template — CDK has no opinion about title, close-button, body,
+  # footer. Backdrop is the one slot CDK ships explicitly.
+
+  - from: anatomy[backdrop]
+    type: renamed
+    to: 'CDK Overlay backdrop (config: hasBackdrop, backdropClass)'
+    rationale: >-
+      Backdrop is a first-class CDK Overlay concern, configured via
+      the `hasBackdrop: true` flag on DialogConfig. The CDK manages
+      the backdrop element creation, pointer-event capture, and
+      animation hooks. Distinct from Radix and Headless UI which
+      delegate backdrop entirely to consumer-composition. Consumers
+      style the backdrop via the `backdropClass` config option
+      (CSS class applied to the backdrop element).
+
+  - from: anatomy[container]
+    type: reshaped
+    to: 'Dialog service (`dialog.open()` imperative API) + CDK overlay container + consumer-provided content component'
+    rationale: >-
+      Canonical container is one slot bearing dialog role + focus
+      trap + the rendered surface. CDK splits this across three
+      layers:
+      (a) Dialog service — singleton DI-injected entry point;
+          `dialog.open(ContentComponent, config)` is the imperative
+          API (no declarative `<Dialog>` markup),
+      (b) CDK overlay container — auto-managed; provides ARIA role
+          (default `dialog`), focus trap, restoreFocus,
+          backdrop, position strategy,
+      (c) Consumer's content component — the dialog body's actual
+          rendered template; receives `DIALOG_DATA` and `DialogRef`
+          via Angular DI.
+      Imperative-first vs declarative-first is the most fundamental
+      divergence between CDK and Radix/Headless UI.
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      No header primitive. Consumer's content component template
+      contains whatever heading + close-affordance composition the
+      consumer wants. (Angular Material's MatDialog ships
+      `<mat-dialog-title>` plus actions slots; pure CDK Dialog does
+      not.)
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      No title primitive in pure CDK Dialog. The accessible name
+      comes from the `ariaLabel` config option (or
+      `ariaLabelledBy` referencing an element id in the consumer's
+      template). Consumer's template renders the visible title via
+      whatever heading element they choose. The CDK does not
+      auto-wire `aria-labelledby` from a title slot to the
+      container — it is the consumer's responsibility to either set
+      `ariaLabel` or `ariaLabelledBy` on the DialogConfig.
+
+  - from: anatomy[close-button]
+    type: omitted
+    rationale: >-
+      No close-button primitive. Consumer wires
+      `(click)="ref.close()"` on whatever button they choose; the
+      DialogRef is injected via Angular DI. Escape dismissal is
+      handled by CDK based on `disableClose: false` config (default
+      true for Escape). Backdrop-click dismissal is also auto-
+      handled when `disableClose: false` and `hasBackdrop: true`.
+
+  - from: anatomy[body]
+    type: reshaped
+    to: Consumer's content component template (the entire component template IS the body)
+    rationale: >-
+      Canonical body is one slot for the dialog payload. CDK
+      passes a consumer-defined component class to `dialog.open()`;
+      that component's template is rendered inside the overlay
+      container. There is no body slot to compose into — the
+      consumer's whole component is the body. For prose vs form vs
+      list bodies, the consumer creates different content
+      components. This is significantly more component-creation
+      overhead than React's children prop, but matches Angular's
+      component-first architecture.
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      No footer primitive. Consumer's content component template
+      includes whatever action-row composition. (Angular Material
+      ships `<mat-dialog-actions>` with built-in flex layout +
+      align-end variants; CDK alone does not.)
+
+  # Variants:
+  - from: axes.variants[alertdialog]
+    type: reshaped
+    to: 'config option `role: ''alertdialog''`'
+    rationale: >-
+      CDK exposes the ARIA role via DialogConfig.role property;
+      setting `role: 'alertdialog'` produces the alert-dialog
+      semantic with the same Dialog primitive. Distinct from Radix
+      (separate @radix-ui/react-alert-dialog package) and Headless
+      UI (consumer-composed via role attribute). CDK's config-
+      driven approach is the cleanest of the three for this
+      specific variant.
+
+  - from: axes.variants[fullscreen]
+    type: reshaped
+    to: 'config options `width: ''100vw''`, `height: ''100vh''`, `maxWidth: ''100vw''`'
+    rationale: >-
+      No fullscreen variant; consumer sets viewport-filling
+      dimensions via DialogConfig. Same shape as Radix and Headless
+      UI but here the dimensions live in the imperative config
+      object rather than in CSS classes on a rendered element.
+
+  # Properties:
+  - from: axes.properties[size]
+    type: reshaped
+    to: DialogConfig `width` / `maxWidth` / `height` / `maxHeight` properties
+    rationale: >-
+      Canonical `size: sm | md | lg | xl | full` enum. CDK uses
+      free-form CSS-length strings on DialogConfig. A design-system
+      layer above CDK could expose the size enum and translate it
+      to specific px / vw values; canonical CDK alone is
+      lower-level.
+
+  - from: axes.properties[dismissible]
+    type: renamed
+    to: 'DialogConfig `disableClose: boolean` (inverted polarity)'
+    rationale: >-
+      Direct one-to-one mapping with inverted polarity:
+      `dismissible: true` ⇔ `disableClose: false` (default);
+      `dismissible: false` ⇔ `disableClose: true`. The CDK flag
+      controls both Escape-key and backdrop-click dismissal
+      together; canonical models the two paths as one switch
+      already, so the contracts align cleanly.
+
+  - from: axes.properties[scrollBehavior]
+    type: reshaped
+    to: 'DialogConfig `scrollStrategy` (CDK Overlay scroll strategy: noop / block / close / reposition)'
+    rationale: >-
+      Canonical `inside | outside` two-value enum. CDK's
+      scrollStrategy is the broader Overlay-level abstraction with
+      four values (noop, block, close, reposition). For modal
+      dialogs the canonical default maps to `block` (page scroll
+      locked while dialog open); `inside` scrollBehavior
+      (canonical) is achieved via CSS overflow on the consumer's
+      content template plus `block` scroll strategy.
+
+  # Events: significant reshape — Observables, not callbacks.
+  - from: events[openChange]
+    type: reshaped
+    to: 'DialogRef `afterOpened` and `closed` Observables (rxjs)'
+    rationale: >-
+      CDK exposes lifecycle events via rxjs Observables on
+      DialogRef:
+      - `dialogRef.afterOpened()` emits void after enter animation
+        completes,
+      - `dialogRef.closed` emits the close-result value after exit
+        animation completes.
+      Consumers subscribe via standard rxjs operators. There is no
+      single onOpenChange-style boolean callback — the lifecycle
+      is decomposed into discrete observables. Closed-with-result
+      is a feature CDK ships natively (matches Vue's `<form
+      method="dialog">` returnValue concept) — Radix and Headless
+      UI achieve this via consumer state management.
+
+  - from: events[dismiss]
+    type: reshaped
+    to: 'DialogRef `closed` Observable with optional result discriminator'
+    rationale: >-
+      Canonical `dismiss` carries `{ reason: 'escape' | 'backdrop'
+      | 'closeButton' }`. CDK's `closed` Observable carries the
+      consumer-supplied result value. To recover the canonical
+      reason, consumers pass discriminated result objects:
+      `ref.close()` (no result, dismissed) vs
+      `ref.close({ saved: true })` (committed). The CDK does NOT
+      expose which dismissal path triggered the close (Escape vs
+      backdrop vs explicit ref.close()) — that information is
+      lost unless the consumer wires Escape and backdrop handlers
+      to call `ref.close({ reason: 'escape' })` etc. explicitly.
+
+  # Motion: Angular animations or CDK overlay animation hooks.
+  - from: motion.durations
+    type: reshaped
+    to: '@angular/animations `trigger`/`transition` blocks on the consumer''s content component (or CDK Overlay animation config)'
+    rationale: >-
+      Canonical motion.durations.{open, close, backdrop} maps to
+      Angular's animation system. The consumer's content component
+      declares animations via `@Component({ animations: [trigger(
+      'enterExit', [...]) ] })`. Backdrop animation is configured
+      separately via CDK Overlay's animation hooks or via CSS on
+      the `backdropClass` element. Significantly more orchestration
+      than the data-state-attribute pattern (Radix) or the
+      TransitionChild composition (Headless UI) — Angular
+      animations are powerful but verbose.
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Angular animations does not auto-detect
+      `prefers-reduced-motion: reduce`. Consumers either inject
+      MediaMatcher and conditionally disable the trigger, or use
+      CSS-level animation media queries. Canonical `instant`
+      fallback is implementable but consumer-wired.
+
+  # State transitions:
+  - from: axes.states.transitions
+    type: reshaped
+    to: 'DialogRef state surfaced via Observables (`afterOpened`, `closed`); intermediate animating-states accessible via Angular animation lifecycle hooks (`@enterExit.start`, `@enterExit.done`)'
+    rationale: >-
+      Canonical four-state graph. CDK realises the graph through
+      two layers: Observable lifecycle (open → opened, closing →
+      closed) and Angular animation lifecycle hooks (start / done
+      events on the animation trigger). Consumers needing the
+      `opening` and `closing` intermediate states bind to the
+      animation trigger's `(@trigger.start)` and `(@trigger.done)`
+      events. More verbose than data-state attributes but more
+      explicit.
+
+rationale: |
+  Angular CDK Dialog is the most-divergent of the three audited
+  libraries (Radix React, Headless UI Vue, CDK Angular). Where
+  Radix and Headless UI follow declarative-component-tree shapes
+  with consumer-composed slots, CDK uses an imperative service-
+  based API with consumer-defined content components passed by
+  reference to `dialog.open()`. This is idiomatic Angular and
+  matches the framework's component-first architecture, but it
+  reshapes the canonical anatomy considerably — most named slots
+  (header, title, close-button, body, footer) live entirely in
+  the consumer's content component template rather than in
+  composable library primitives.
+
+  Notable CDK strengths over Radix and Headless UI:
+  1. Built-in backdrop primitive (`hasBackdrop` config) — no
+     consumer composition required.
+  2. Native commit-with-result pattern via DialogRef.closed
+     Observable — Vue-style `<form method="dialog">` returnValue
+     baked into the API.
+  3. Config-driven role variant (`role: 'alertdialog'`) — no
+     separate package needed (vs Radix), no consumer-composition
+     needed (vs Headless UI).
+  4. Comprehensive CDK Overlay scroll-strategy abstraction —
+     four named strategies cover canonical scrollBehavior plus
+     more.
+
+  Notable CDK weaknesses vs Radix and Headless UI:
+  1. Imperative-first API requires consumer to write a separate
+     content component for every dialog instance — significantly
+     more boilerplate than `<Dialog><DialogPanel>...</DialogPanel></Dialog>`.
+  2. `closed` Observable does not surface dismissal reason —
+     consumers wire Escape and backdrop handlers manually to
+     recover the canonical { reason } payload.
+  3. Angular animation system is verbose for declaring open/
+     close transitions (vs Radix's data-state-attribute hooks
+     or Headless UI's TransitionChild props).
+
+  Pattern-recap across all three audits: every library stops at
+  the accessibility primitive; design-system specifics
+  (size scales, motion timing, dismissible flags, fullscreen
+  variants) are a consumer-composed layer above the library.
+  The three differ on *how* consumer-composition is shaped —
+  declarative children (Radix), declarative wrappers + render-
+  props (Headless UI), imperative service + consumer content
+  components (CDK).
+
+lastReviewed: '2026-04-30'
