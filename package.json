@@ -9,12 +9,14 @@
   },
   "scripts": {
     "build": "pnpm -r build",
+    "deploy": "wrangler pages deploy site/dist --project-name=uianatomy --branch=main",
     "dev": "pnpm --filter site dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^3.114.0"
   }
 }
