@@ -1,0 +1,228 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const components = await getCollection('components');
+
+// 404.astro is rendered once at build time, so Astro.url.pathname is always
+// "/404" here — there's no server to inspect the actually-requested URL.
+// Pass the canonical roster to the browser and let a tiny client-side script
+// read window.location.pathname and surface a "did you mean…?" hint.
+const ROSTER = components
+  .map((c) => ({ id: c.id, name: c.data.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+// Five top-of-roster components grouped alphabetically — short browsing
+// affordance for any 404, slug-related or not.
+const popular = components
+  .map((c) => c.data)
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .slice(0, 5);
+---
+<Base
+  title="Not found"
+  description="The page you requested isn't part of the UI Anatomy canon."
+  breadcrumb={[{ name: 'Not found' }]}
+>
+  <article class="shell measure-wide not-found">
+    <p class="hero-eyebrow">404 · Not found</p>
+    <h1 class="not-found__title">No canon at this URL.</h1>
+
+    <p class="not-found__path" data-not-found-path hidden>
+      <code data-not-found-slug></code> isn't part of the canonical roster.
+    </p>
+
+    <p class="not-found__suggestion" data-not-found-suggestion hidden>
+      Did you mean <a data-not-found-suggestion-link><strong data-not-found-suggestion-name></strong></a>?
+    </p>
+
+    <p class="not-found__lede">
+      The canon ships {ROSTER.length} components. Browse them by name or
+      jump to search.
+    </p>
+
+    <div class="not-found__actions">
+      <a class="not-found__action not-found__action--primary" href="/">All components</a>
+      <a class="not-found__action" href="/search">Search the canon</a>
+    </div>
+
+    <section class="not-found__list" aria-labelledby="popular-heading">
+      <h2 id="popular-heading" class="section-rule">A few to start with</h2>
+      <ul>
+        {popular.map((c) => (
+          <li>
+            <a href={`/components/${c.id}`}>
+              <strong>{c.name}</strong>
+              <span>{c.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </article>
+
+  <script is:inline type="application/json" id="canon-roster" set:html={JSON.stringify(ROSTER)} />
+  <script>
+    interface RosterEntry { id: string; name: string }
+
+    function levenshtein(a: string, b: string): number {
+      if (a === b) return 0;
+      if (a.length === 0) return b.length;
+      if (b.length === 0) return a.length;
+      const m = a.length;
+      const n = b.length;
+      const prev = new Array<number>(n + 1);
+      const curr = new Array<number>(n + 1);
+      for (let j = 0; j <= n; j++) prev[j] = j;
+      for (let i = 1; i <= m; i++) {
+        curr[0] = i;
+        for (let j = 1; j <= n; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+        }
+        for (let j = 0; j <= n; j++) prev[j] = curr[j];
+      }
+      return prev[n];
+    }
+
+    const rosterScript = document.getElementById('canon-roster');
+    if (rosterScript) {
+      const roster: RosterEntry[] = JSON.parse(rosterScript.textContent ?? '[]');
+      const ids = new Set(roster.map((r) => r.id));
+      const match = window.location.pathname.replace(/\/$/, '').match(/^\/components\/([^/]+)/);
+      const slug = match?.[1] ?? null;
+
+      if (slug && !ids.has(slug)) {
+        const pathEl = document.querySelector<HTMLElement>('[data-not-found-path]');
+        const slugEl = document.querySelector<HTMLElement>('[data-not-found-slug]');
+        if (pathEl && slugEl) {
+          slugEl.textContent = `/components/${slug}`;
+          pathEl.hidden = false;
+        }
+
+        const threshold = Math.max(2, Math.floor(slug.length / 3));
+        const closest = roster
+          .map((r) => ({ ...r, d: levenshtein(slug, r.id) }))
+          .sort((a, b) => a.d - b.d)
+          .find((r) => r.d <= threshold);
+
+        if (closest) {
+          const wrap = document.querySelector<HTMLElement>('[data-not-found-suggestion]');
+          const link = document.querySelector<HTMLAnchorElement>('[data-not-found-suggestion-link]');
+          const name = document.querySelector<HTMLElement>('[data-not-found-suggestion-name]');
+          if (wrap && link && name) {
+            link.href = `/components/${closest.id}`;
+            name.textContent = closest.name;
+            wrap.hidden = false;
+          }
+        }
+      }
+    }
+  </script>
+</Base>
+
+<style>
+  .not-found {
+    margin-inline: auto;
+    padding-block: var(--s-12);
+  }
+  .not-found__title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: var(--s-2) 0 var(--s-6);
+    max-width: var(--measure-tight);
+  }
+  .not-found__path {
+    margin: 0 0 var(--s-3);
+    color: var(--ink-700);
+  }
+  .not-found__path code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-14);
+    background: var(--paper-100);
+    padding: 2px 6px;
+    border-radius: var(--r-2);
+  }
+  .not-found__suggestion {
+    margin: 0 0 var(--s-5);
+    color: var(--ink-700);
+  }
+  .not-found__lede {
+    margin: 0 0 var(--s-6);
+    color: var(--ink-500);
+    max-width: var(--measure-prose);
+    line-height: var(--lh-loose);
+  }
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin: 0 0 var(--s-12);
+  }
+  .not-found__action {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--s-3) var(--s-5);
+    border: var(--bw-hair) solid var(--rule);
+    border-radius: var(--r-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-13);
+    letter-spacing: var(--ls-caps);
+    text-transform: uppercase;
+    color: var(--ink-900);
+    text-decoration: none;
+    transition: background var(--dur-1) var(--ease-out);
+  }
+  .not-found__action:hover {
+    background: var(--paper-100);
+    text-decoration: none;
+  }
+  .not-found__action--primary {
+    background: var(--ink-900);
+    color: var(--paper-50);
+    border-color: var(--ink-900);
+  }
+  .not-found__action--primary:hover {
+    background: var(--ink-700);
+  }
+  .not-found__list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: var(--bw-hair) solid var(--rule);
+  }
+  .not-found__list li {
+    border-bottom: var(--bw-hair) solid var(--rule);
+  }
+  .not-found__list a {
+    display: grid;
+    grid-template-columns: minmax(140px, 200px) 1fr;
+    gap: var(--s-5);
+    padding: var(--s-4) 0;
+    color: inherit;
+    text-decoration: none;
+    transition: background var(--dur-1) var(--ease-out);
+  }
+  .not-found__list a:hover {
+    background: var(--paper-100);
+  }
+  .not-found__list strong {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--fs-18);
+  }
+  .not-found__list span {
+    color: var(--ink-500);
+    line-height: var(--lh-loose);
+    font-size: var(--fs-14);
+  }
+  @media (max-width: 640px) {
+    .not-found__list a {
+      grid-template-columns: 1fr;
+      gap: var(--s-1);
+    }
+  }
+</style>
