@@ -7,9 +7,21 @@
 #   ai-train=no   — content may not be used for training corpora
 #   search=yes    — indexable by search engines
 #   ai-input=yes  — agents may consume content per request
+#
+# Disallow rules below keep crawlers focused on the canonical HTML pages
+# in search indexes. The disallowed paths remain reachable for AI agents
+# (Content-Signal: ai-input=yes); robots.txt only gates indexing, not
+# fetching. The .md sidecars and JSON APIs are duplicates of the HTML
+# content from a search-engine perspective and would dilute ranking signal.
 
 User-agent: *
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 Allow: /
+Disallow: /api/
+Disallow: /og/
+Disallow: /pagefind/
+Disallow: /llms.txt
+Disallow: /llms-full.txt
+Disallow: /*.md$
 
 Sitemap: https://uianatomy.dev/sitemap-index.xml

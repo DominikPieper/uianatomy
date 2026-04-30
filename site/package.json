@@ -29,11 +29,13 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@iconify-json/lucide": "^1.2.105",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22",
     "astro-broken-links-checker": "^1.1.0",
     "astro-llms-md": "^2.0.0",
     "astro-og-canvas": "^0.11.1",
     "canvaskit-wasm": "^0.41.1",
+    "js-yaml": "^4.1.1",
     "typescript": "^6.0.3"
   }
 }

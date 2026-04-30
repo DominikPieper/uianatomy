@@ -117,6 +117,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.105
         version: 1.2.105
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: ^22
         version: 22.19.17
@@ -132,6 +135,9 @@ importers:
       canvaskit-wasm:
         specifier: ^0.41.1
         version: 0.41.1
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
