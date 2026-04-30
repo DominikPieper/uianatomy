@@ -1,0 +1,5 @@
+# https://www.rfc-editor.org/rfc/rfc9309
+# All paths are public documentation. No restricted areas.
+
+User-agent: *
+Allow: /
