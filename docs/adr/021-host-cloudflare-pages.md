@@ -14,7 +14,7 @@ The author has decided to move hosting to Cloudflare. The technical surface is s
 - **Host:** Cloudflare Pages, single project, repo root.
 - **Site:** unchanged Astro static build, published from `site/dist`.
 - **MCP server:** ships as a Cloudflare Pages Function at `functions/mcp.ts`, file-routed to `/mcp`.
-- **Workers compatibility:** `compatibility_flags = ["nodejs_compat"]` in `wrangler.toml`.
+- **Workers compatibility:** `compatibility_flags = ["nodejs_compat"]` and `compatibility_date = "2026-04-30"` configured in the Pages Dashboard (Settings → Functions). No root `wrangler.toml` — Wrangler 4's workspace-detection logic refuses to run at a pnpm-workspace root, which broke the Pages CI deploy step. Dashboard config is the source of truth.
 - **YAML data delivery on Workers:** YAML files are bundled to JSON at `shared` build time (`shared/dist/content-bundle.json`) and imported by the Pages Function. Local dev and tests still load YAML from disk.
 
 ## Rationale
@@ -74,16 +74,24 @@ repo/
 ├── functions/
 │   └── mcp.ts                 # Pages Function entry, /mcp
 ├── site/                      # unchanged
-├── wrangler.toml              # pages_build_output_dir, nodejs_compat
-└── (no netlify.toml)
+└── (no netlify.toml, no root wrangler.toml — see Dashboard config below)
 ```
 
-Build (Cloudflare Pages dashboard):
+Cloudflare Pages Dashboard configuration (no root `wrangler.toml`):
 
-- Framework preset: **None**
-- Build command: `pnpm install --frozen-lockfile && pnpm --filter @uianatomy/shared build && pnpm --filter site build`
-- Build output: `site/dist`
-- Env: `NODE_VERSION=22`, `PNPM_VERSION=9.12.0`
+- **Settings → Builds & deployments**
+  - Framework preset: **None**
+  - Build command: `pnpm install --frozen-lockfile && pnpm --filter @uianatomy/shared build && pnpm --filter site build`
+  - Build output directory: `site/dist`
+  - Root directory: empty (repo root)
+- **Settings → Functions**
+  - Compatibility date: `2026-04-30`
+  - Compatibility flags: `nodejs_compat` — set for both Production and Preview
+- **Settings → Environment variables** (Production + Preview)
+  - `NODE_VERSION=22`
+  - `PNPM_VERSION=9.12.0`
+
+A root `wrangler.toml` was tried first, but Wrangler 4.x's workspace-detection logic refuses to run any command (including `wrangler pages deploy`) at the root of a pnpm workspace. CF Pages CI invokes Wrangler internally, so the deploy step failed with `The Wrangler application detection logic has been run in the root of a workspace`. Removing root `wrangler.toml` and configuring everything via the Dashboard avoids the detection path entirely. Functions in `functions/` are still auto-mounted by Pages without a config file.
 
 Local verification:
 
