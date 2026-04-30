@@ -34,7 +34,13 @@ const VIEW_LABEL: Record<View, string> = {
   componentId={component.id}
   view={view}
 >
-  <article class="shell measure-wide" style="margin-inline:auto;">
+  <article
+    class="shell measure-wide"
+    style="margin-inline:auto;"
+    data-pagefind-body={view === 'designer' ? '' : undefined}
+    data-pagefind-ignore={view === 'designer' ? undefined : ''}
+    data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
+  >
     <section class="component-hero">
       <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
       <h1 class="component-name">{component.name}</h1>

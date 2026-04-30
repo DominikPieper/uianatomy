@@ -57,6 +57,9 @@ const dataView = view ?? 'bridge';
         )}
         <div class="site-header__cluster">
           {componentId && view && <ViewSwitcher componentId={componentId} activeView={view} />}
+          <a href="/search" class="site-header__search" aria-label="Search">
+            <Icon name="search" size={16} />
+          </a>
           <ThemeToggle />
         </div>
       </div>

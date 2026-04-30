@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@tailwindcss/vite';
+import pagefind from 'astro-pagefind';
 
 export default defineConfig({
   output: 'static',
@@ -7,6 +8,7 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+  integrations: [pagefind()],
   markdown: {
     shikiConfig: {
       themes: {

@@ -371,6 +371,31 @@ main {
   outline-offset: 2px;
 }
 
+/* Search trigger in header */
+.site-header__search {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.site-header__search:hover {
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+.site-header__search:focus-visible {
+  outline: 2px solid var(--accent-active);
+  outline-offset: 2px;
+}
+
 /* Theme toggle */
 .theme-toggle {
   appearance: none;
