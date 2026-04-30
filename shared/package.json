@@ -16,6 +16,11 @@
       "types": "./dist/loader.d.ts",
       "import": "./dist/loader.js"
     },
+    "./bundle": {
+      "types": "./dist/bundle.d.ts",
+      "import": "./dist/bundle.js"
+    },
+    "./content-bundle.json": "./dist/content-bundle.json",
     "./svg": {
       "types": "./dist/svg.d.ts",
       "import": "./dist/svg.js"
@@ -26,7 +31,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/bundle-content.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

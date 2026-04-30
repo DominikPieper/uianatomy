@@ -8,5 +8,5 @@
     "moduleResolution": "Bundler",
     "types": ["node"]
   },
-  "include": ["src/**/*", "netlify/**/*"]
+  "include": ["src/**/*"]
 }

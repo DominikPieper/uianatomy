@@ -14,7 +14,6 @@
     "@uianatomy/shared": "workspace:*"
   },
   "devDependencies": {
-    "@netlify/functions": "^5.2.0",
     "@types/node": "^22",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",

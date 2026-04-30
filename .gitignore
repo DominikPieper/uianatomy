@@ -1,7 +1,7 @@
 node_modules/
 dist/
 .astro/
-.netlify/
+.wrangler/
 .env
 .env.*
 !.env.example

@@ -1,6 +1,6 @@
 # ADR 002: Astro + Netlify + Standalone MCP Server
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-021](./021-host-cloudflare-pages.md) (hosting moved to Cloudflare Pages 2026-04-30). Astro + standalone MCP server decisions still hold.
 **Date:** 2026-04
 
 ## Context

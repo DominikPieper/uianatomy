@@ -25,6 +25,10 @@ export function setContentDir(_dir: string): void {
   cache = loadComponents({ contentDir: _dir });
 }
 
+export function setComponents(map: Map<string, Component>): void {
+  cache = Promise.resolve(map);
+}
+
 export function getComponents(contentDir: string = DEFAULT_CONTENT_DIR): Promise<Map<string, Component>> {
   if (!cache) cache = loadComponents({ contentDir });
   return cache;

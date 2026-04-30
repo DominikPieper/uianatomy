@@ -1,6 +1,6 @@
 # ADR 003: MCP Server Architecture
 
-**Status:** Accepted
+**Status:** Accepted (deployment target updated by [ADR-021](./021-host-cloudflare-pages.md): now a Cloudflare Pages Function. Architecture — standalone server, web-standard HTTP, shared YAML schema — unchanged.)
 **Date:** 2026-04
 
 ## Context
@@ -16,7 +16,7 @@ The architecture needs to:
 
 ## Decision
 
-A standalone MCP server, deployed as a Netlify Function, that reads the same YAML files the site reads via the same shared Zod schemas.
+A standalone MCP server, deployed as a Cloudflare Pages Function (formerly Netlify Function — see ADR-021), that reads the same component data the site reads via the same shared Zod schemas. On Workers the data is loaded from a build-time JSON bundle; locally it still loads from the YAML source.
 
 The server uses `@modelcontextprotocol/sdk` (the official TypeScript SDK) and exposes the protocol over streamable HTTP.
 
@@ -97,6 +97,6 @@ If the server sees abuse or unexpected traffic, Cloudflare can be put in front f
 
 **MCP server embedded in Astro endpoints:** rejected because it forces Astro into SSR mode for what is otherwise a static site, and couples concerns that should be independent.
 
-**Cloudflare Workers instead of Netlify Functions:** rejected because Dominik Pieper already operates on Netlify; consolidation outweighs the marginal latency benefit. See ADR-002.
+**Cloudflare Workers instead of Netlify Functions:** initially rejected per ADR-002; revisited and accepted in ADR-021 (Cloudflare Pages Function).
 
 **Local-only stdio MCP server:** insufficient for the public, AI-assistant-facing use case. May still be added later as a development-time convenience.

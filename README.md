@@ -10,8 +10,8 @@ See [`docs/README.md`](./docs/README.md) for the full pitch and [`docs/CLAUDE.md
 content/components/   # canonical YAML (ADR-004)
 implementations/      # per-library implementations (Phase 2+)
 shared/               # Zod schema, YAML loader, anatomy SVG generator
-site/                 # Astro 5 static site (ADR-002)
-mcp-server/           # MCP server, Netlify Function (ADR-003)
+site/                 # Astro 6 static site (ADR-002, ADR-021)
+mcp-server/           # MCP server, Cloudflare Pages Function (ADR-003, ADR-021)
 docs/                 # canon: README, methodology, schema, views, roadmap, ADRs
 ```
 
