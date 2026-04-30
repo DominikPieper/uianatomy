@@ -581,6 +581,22 @@ lastReviewed: 2026-04-29          # required ISO date
 
 **Loader:** `loadImplementations({ implementationsDir })` returns `Map<libraryId, Map<componentId, Implementation>>`. The loader enforces `libraryId === parentDirectoryName` and rejects duplicate componentIds within a library.
 
+## Cross-component consistency (CI-enforced)
+
+Beyond the per-field Zod validation, eight cross-component consistency checks run in CI via `shared/tests/consistency.test.ts`. They catch vocabulary drift across the canonical roster — token names not in the canonical set, motion durations using non-canonical values, properties named `density` with non-canonical enum values, etc. Full rationale in [ADR-019](./adr/019-consistency-audit.md).
+
+The checks cover:
+
+- Token references (spacing / radius / color / elevation / typography) must be members of the canonical token vocabulary.
+- Motion durations and easing must be canonical motion-token values.
+- Responsive breakpoint anchors (`at:`) must be canonical breakpoint-token values.
+- Properties named `density` declare exactly `[comfortable, compact]`; properties named `size` declare values in `[sm, md, lg, xl, full]`.
+- Interactive state names are subset of `{hover, focus-visible, active, disabled, visited, current}`.
+- `tokens.color.ring`, when present, equals `color.border.focus` (canonical focus-ring discipline).
+- axe rule ids are kebab-case; event names are camelCase.
+
+The canonical vocabularies are mirrored into the test file as constants. Extending a vocabulary (a new token name lands in an ADR) is a same-PR update of both `docs/schema.md` and `shared/tests/consistency.test.ts`. Drift between the two is itself a review signal.
+
 ## Schema evolution
 
 The schema will evolve. When it does:
