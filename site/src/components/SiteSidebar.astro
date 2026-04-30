@@ -54,7 +54,7 @@ const groups: SidebarGroup[] = CATEGORIES.map((cat) => ({
     ))}
   </nav>
 ) : (
-  <details class="sidebar-mobile">
+  <details class="sidebar-mobile" data-pagefind-ignore>
     <summary class="sidebar-mobile__summary">
       <span class="sidebar-mobile__label">Components</span>
       {currentName && <span class="sidebar-mobile__current">{currentName}</span>}

@@ -38,16 +38,13 @@ const VIEW_LABEL: Record<View, string> = {
 >
   <div class="component-shell">
     <SiteSidebar />
+    <SiteSidebar variant="mobile" />
     <article
       class="component-shell__content"
       data-pagefind-body={view === 'designer' ? '' : undefined}
       data-pagefind-ignore={view === 'designer' ? undefined : ''}
       data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
     >
-      <div data-pagefind-ignore>
-        <SiteSidebar variant="mobile" />
-      </div>
-
       <section class="component-hero">
         <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
         <h1 class="component-name">{component.name}</h1>
