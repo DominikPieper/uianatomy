@@ -1,0 +1,228 @@
+id: confirmation-flow
+name: Confirmation Flow
+description: >-
+  A modal interruption that asks the user to commit to or back out of a
+  consequential action — typically a destructive one (delete, discard,
+  unsubscribe, sign out of every device). The pattern composes a Modal
+  in its `alertdialog` variant with a destructive primary Button and a
+  cancel secondary Button. The Modal blocks the page; the user must
+  resolve before continuing.
+composition:
+  - componentId: modal
+    role: container
+    notes: >-
+      Use the `alertdialog` variant. `alertdialog` raises the screen
+      reader announcement priority — assistive tech announces the
+      contents the moment focus enters, instead of waiting for the user
+      to navigate. `dialog` is wrong here even when the dialog asks for
+      a decision; the variant exists precisely to mark "this is a
+      decision the user must hear."
+  - componentId: button
+    role: primary action (destructive)
+    notes: >-
+      Use the `destructive` variant for the action that completes the
+      consequential operation. The button text names the action, not
+      the agreement — "Delete account", not "OK" or "Yes". Destructive
+      tone is a brand-warm-mix accent in the canonical palette; it
+      signals risk before the click, not after.
+  - componentId: button
+    role: cancel action
+    notes: >-
+      Use the `secondary` or `tertiary` variant. Cancel is the
+      defensive default; it should be the focused button when the
+      modal opens (per APG alertdialog guidance) so a reflexive Enter
+      keypress does not commit the destructive action.
+whenToUse:
+  use: >-
+    When committing to the action would lose data, charge money,
+    notify a third party, or otherwise produce an effect that is hard
+    or impossible to reverse. Use whenever the action's consequence
+    materially exceeds its undo cost.
+  avoid: >-
+    For low-stakes actions that have a clean undo (`Toast` with an
+    Undo button is the right pattern instead). For multi-step flows
+    where the destructive step is part of the flow rather than the
+    end (use a `Stepper` with an explicit final commit step). For
+    confirming success — that is a `Toast` or `Banner`.
+decisions:
+  - question: >-
+      Why `alertdialog` instead of `dialog` for confirmations?
+    answer: >-
+      `alertdialog` is the variant; `dialog` is wrong here.
+    rationale: >-
+      The W3C ARIA Authoring Practices Guide reserves `alertdialog`
+      for "dialogs that interrupt the user with an important message
+      and require a response." Screen readers announce alertdialog
+      contents on focus rather than waiting for the user to navigate
+      into the surface; that announcement *is* the consent moment.
+      Using `dialog` here forces the user to hunt for the message
+      before they can respond.
+  - question: >-
+      Should Cancel or Confirm receive initial focus?
+    answer: >-
+      Cancel.
+    rationale: >-
+      A reflexive Enter or Space keypress should not commit the
+      destructive action. Initial focus on Cancel is the canonical
+      defensive default; users who genuinely intend the destructive
+      action explicitly Tab to it. APG, Polaris, Carbon, Material 3,
+      and GOV.UK all converge on this rule for destructive
+      confirmations specifically. Non-destructive confirmations may
+      focus the primary action.
+  - question: >-
+      Are Escape and backdrop-click acceptable dismissal paths?
+    answer: >-
+      Escape: yes. Backdrop-click: only if the dismissal path is
+      semantically equivalent to Cancel.
+    rationale: >-
+      Escape is keyboard-canonical for any modal and never commits
+      the action — APG. Backdrop-click is contested: Radix and
+      Material 3 disable it for `alertdialog` to prevent accidental
+      dismissal of an important decision; Headless UI and React Aria
+      allow it. The canonical recommendation is to disable
+      backdrop-click for destructive confirmations specifically and
+      keep it enabled for low-stakes confirmations.
+  - question: >-
+      Can the title state the question, or must it state the
+      consequence?
+    answer: >-
+      State the consequence in the title; ask the question in the body.
+    rationale: >-
+      Screen readers announce the title first. "Are you sure?" gives
+      the user no information; "Delete this account?" or "Discard
+      your draft?" puts the consequence in the announcement and lets
+      the body explain why. The body is also where you state the
+      undo cost ("This cannot be undone") if it applies.
+mistakes:
+  - id: dialog-instead-of-alertdialog
+    title: Confirmations rendered as `dialog` instead of `alertdialog`
+    description: >-
+      The Modal renders with `role="dialog"` even though the entire
+      surface is a binary decision the user must respond to. Screen
+      readers do not announce dialog contents on focus, so the user
+      lands on a Cancel button without context.
+    fix: >-
+      Switch to the `alertdialog` variant of Modal whenever the
+      surface is a single yes/no decision. If the surface contains
+      additional input that requires reading (a destructive action
+      that requires the user to type the resource name to confirm),
+      `dialog` is correct — the auto-announcement of alertdialog
+      becomes noise once there is more content than the question.
+  - id: confirm-as-default-focus
+    title: Initial focus on Confirm for destructive actions
+    description: >-
+      The destructive button receives initial focus, so a reflexive
+      Enter or Space (often the way users dismiss surfaces) commits
+      the destructive action immediately. Common in libraries that
+      autofocus the first focusable element by default.
+    fix: >-
+      Explicitly set initial focus to the Cancel button for
+      destructive confirmations. In Radix Dialog, set
+      `initialFocus={cancelRef}`; in Headless UI, `:initialFocus`
+      slot prop; in CDK, `autoFocus: 'cancelButton'`. Reserve
+      Confirm-as-default for non-destructive confirmations only.
+  - id: vague-title
+    title: Title that asks a question without naming the consequence
+    description: >-
+      The dialog title reads "Are you sure?" or "Confirm action."
+      Screen readers announce the title first; this announcement
+      gives the user no information about what they are confirming.
+    fix: >-
+      Title the consequence: "Delete this account?", "Discard your
+      draft?", "Cancel your subscription?". Use the body for
+      explanation and the undo-cost statement.
+  - id: missing-undo-cost
+    title: No statement of the undo cost
+    description: >-
+      The dialog asks for confirmation but does not state whether
+      the action is reversible. Users who have lost data to an
+      ambiguous confirmation become permanently more cautious and
+      slower across the whole product.
+    fix: >-
+      State the cost of the action in the body. "This cannot be
+      undone." "You will lose access immediately." "We will email
+      everyone in this thread." Brief, factual, no marketing-soft
+      hedging.
+  - id: confirm-button-is-ok
+    title: Destructive button labelled "OK" or "Yes"
+    description: >-
+      The destructive button reads "OK", "Yes", "Confirm", or any
+      other non-action label. Users who skim the buttons (which is
+      most users, most of the time) lose the only remaining signal
+      of what the click does.
+    fix: >-
+      Name the action on the button. "Delete", "Discard",
+      "Unsubscribe", "Sign out of all devices". The button text
+      should be a verb that completes the title.
+frameworkSkeletons:
+  webComponents: |
+    <ui-modal variant="alertdialog" open>
+      <h2 slot="title">Delete this project?</h2>
+      <p slot="body">
+        This will permanently remove the project and its history. This
+        cannot be undone.
+      </p>
+      <div slot="footer">
+        <ui-button variant="secondary" data-modal-cancel autofocus>
+          Cancel
+        </ui-button>
+        <ui-button variant="destructive" data-modal-confirm>
+          Delete project
+        </ui-button>
+      </div>
+    </ui-modal>
+  react: |
+    <Modal variant="alertdialog" open={open} onOpenChange={setOpen}>
+      <Modal.Title>Delete this project?</Modal.Title>
+      <Modal.Body>
+        This will permanently remove the project and its history.
+        This cannot be undone.
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" ref={cancelRef} onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+        <Button variant="destructive" onClick={handleDelete}>
+          Delete project
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  vue: |
+    <Modal variant="alertdialog" v-model:open="open" :initial-focus="cancelRef">
+      <template #title>Delete this project?</template>
+      <template #body>
+        This will permanently remove the project and its history.
+        This cannot be undone.
+      </template>
+      <template #footer>
+        <Button ref="cancelRef" variant="secondary" @click="open = false">
+          Cancel
+        </Button>
+        <Button variant="destructive" @click="handleDelete">
+          Delete project
+        </Button>
+      </template>
+    </Modal>
+  angularSignals: |
+    <ui-modal variant="alertdialog" [open]="open()" (openChange)="open.set($event)">
+      <h2 ui-modal-title>Delete this project?</h2>
+      <p ui-modal-body>
+        This will permanently remove the project and its history.
+        This cannot be undone.
+      </p>
+      <div ui-modal-footer>
+        <ui-button #cancelRef variant="secondary" cdkFocusInitial (click)="open.set(false)">
+          Cancel
+        </ui-button>
+        <ui-button variant="destructive" (click)="handleDelete()">
+          Delete project
+        </ui-button>
+      </div>
+    </ui-modal>
+notes: >-
+  This is the first canonical pattern entry. Prose was triangulated
+  against APG (alertdialog role), Radix, Headless UI, CDK, Polaris,
+  and Material 3 documentation as of 2026-04. Library APIs change;
+  re-validate the framework skeletons against current docs before
+  citing them in production reviews.
+lastReviewed: "2026-05-01"

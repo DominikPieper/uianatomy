@@ -4,11 +4,12 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { createServer } from '../src/server.js';
-import { setContentDir, setImplementationsDir, resetCache } from '../src/data.js';
+import { setContentDir, setImplementationsDir, setPatternsDir, resetCache } from '../src/data.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = resolve(here, '..', '..', 'content', 'components');
 const implementationsDir = resolve(here, '..', '..', 'implementations');
+const patternsDir = resolve(here, '..', '..', 'content', 'patterns');
 
 async function connect() {
   const server = createServer();
@@ -29,12 +30,14 @@ describe('mcp server', () => {
   beforeAll(() => {
     setContentDir(contentDir);
     setImplementationsDir(implementationsDir);
+    setPatternsDir(patternsDir);
   });
 
   afterEach(() => {
     resetCache();
     setContentDir(contentDir);
     setImplementationsDir(implementationsDir);
+    setPatternsDir(patternsDir);
   });
 
   it('lists the registered tools', async () => {
@@ -54,12 +57,15 @@ describe('mcp server', () => {
         'get_implementations',
         'get_mismatches',
         'get_motion',
+        'get_pattern',
+        'get_patterns_for_component',
         'get_responsive',
         'get_tokens',
         'get_transitions',
         'get_when_to_use',
         'list_components',
         'list_implementations',
+        'list_patterns',
         'search_components',
         'validate_implementation',
       ].sort(),
@@ -202,6 +208,55 @@ describe('mcp server', () => {
     const result = await client.callTool({ name: 'get_changelog', arguments: { id: 'card' } });
     const parsed = parseJson(result as any);
     expect(parsed).toBeNull();
+  });
+
+  it('list_patterns returns confirmation-flow row', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_patterns', arguments: {} });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    const conf = parsed.find((p: any) => p.id === 'confirmation-flow');
+    expect(conf).toBeTruthy();
+    expect(conf.components).toEqual(expect.arrayContaining(['modal', 'button']));
+  });
+
+  it('get_pattern returns full confirmation-flow record', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_pattern',
+      arguments: { id: 'confirmation-flow' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('confirmation-flow');
+    expect(parsed.composition.length).toBeGreaterThanOrEqual(2);
+    expect(parsed.frameworkSkeletons.react).toContain('Modal');
+  });
+
+  it('get_pattern errors on unknown id', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_pattern', arguments: { id: 'nope' } });
+    expect((result as any).isError).toBe(true);
+  });
+
+  it('get_patterns_for_component(modal) returns confirmation-flow', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_patterns_for_component',
+      arguments: { componentId: 'modal' },
+    });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.some((p: any) => p.patternId === 'confirmation-flow')).toBe(true);
+  });
+
+  it('get_patterns_for_component returns empty for unused component', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_patterns_for_component',
+      arguments: { componentId: 'tooltip' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed).toEqual([]);
   });
 
   it('get_changelog errors on unknown component id', async () => {

@@ -1,0 +1,134 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const SITE_ORIGIN = 'https://uianatomy.dev';
+const url = `${SITE_ORIGIN}/patterns`;
+
+const patterns = await getCollection('patterns');
+patterns.sort((a, b) => a.data.name.localeCompare(b.data.name));
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${url}#collection`,
+  url,
+  name: 'Patterns — UI Anatomy',
+  description:
+    'Canonical compositions of UI Anatomy components — login forms, confirmation flows, empty states, and other recurring UI assemblies. Each pattern is library-agnostic and documents the why, not just the what.',
+  inLanguage: 'en-US',
+  isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+  hasPart: patterns.map((p) => ({
+    '@type': 'TechArticle',
+    '@id': `${SITE_ORIGIN}/patterns/${p.data.id}#article`,
+    name: p.data.name,
+    url: `${SITE_ORIGIN}/patterns/${p.data.id}`,
+    description: p.data.description,
+  })),
+};
+---
+<Base
+  title="Patterns"
+  description="Canonical compositions of UI Anatomy components. Library-agnostic, decision-rich, three-perspective."
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: 'Patterns' }]}
+  jsonLd={jsonLd}
+>
+  <article class="shell patterns-index" data-pagefind-body>
+    <header class="patterns-index__hero">
+      <p class="hero-eyebrow">Compositions</p>
+      <h1 class="patterns-index__title">Patterns</h1>
+      <p class="patterns-index__lede">
+        Canonical compositions of UI Anatomy components — same canon-first
+        discipline as the atomic anatomy, applied to recurring assemblies.
+      </p>
+    </header>
+
+    <ul class="patterns-grid" role="list">
+      {patterns.map((entry) => (
+        <li>
+          <a href={`/patterns/${entry.data.id}`} class="pattern-card">
+            <h2 class="pattern-card__name">{entry.data.name}</h2>
+            <p class="pattern-card__description">{entry.data.description}</p>
+            <p class="pattern-card__composition">
+              <span class="pattern-card__composition-label">Composes</span>
+              {entry.data.composition
+                .map((c) => c.componentId)
+                .filter((id, i, arr) => arr.indexOf(id) === i)
+                .map((id) => <code>{id}</code>)
+                .reduce((acc: any[], el, i) => (i === 0 ? [el] : [...acc, ' + ', el]), [])}
+            </p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </article>
+</Base>
+
+<style>
+  .patterns-index {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+  .patterns-index__hero {
+    margin-bottom: 48px;
+  }
+  .patterns-index__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 16px;
+  }
+  .patterns-index__lede {
+    color: var(--fg-muted);
+    margin: 0;
+  }
+  .patterns-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 24px;
+  }
+  .pattern-card {
+    display: grid;
+    gap: 8px;
+    padding: 24px;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 120ms ease;
+  }
+  .pattern-card:hover {
+    border-color: var(--accent-active);
+  }
+  .pattern-card__name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 0;
+  }
+  .pattern-card__description {
+    margin: 0;
+    color: var(--fg-muted);
+  }
+  .pattern-card__composition {
+    margin: 8px 0 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--fg-muted);
+  }
+  .pattern-card__composition-label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 11px;
+    margin-inline-end: 8px;
+  }
+  .pattern-card__composition code {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+  }
+</style>

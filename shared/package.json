@@ -22,6 +22,7 @@
     },
     "./content-bundle.json": "./dist/content-bundle.json",
     "./implementations-bundle.json": "./dist/implementations-bundle.json",
+    "./patterns-bundle.json": "./dist/patterns-bundle.json",
     "./svg": {
       "types": "./dist/svg.d.ts",
       "import": "./dist/svg.js"
@@ -40,7 +41,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/bundle-content.mjs && node scripts/bundle-implementations.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/bundle-content.mjs && node scripts/bundle-implementations.mjs && node scripts/bundle-patterns.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

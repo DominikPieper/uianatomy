@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getComponents, getImplementations } from './state.js';
+import { getComponents, getImplementations, getPatterns } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
 
@@ -306,6 +306,68 @@ export function createServer(): McpServer {
       }
       matches.sort((a, b) => a.libraryId.localeCompare(b.libraryId));
       return jsonResult(matches);
+    },
+  );
+
+  server.tool(
+    'list_patterns',
+    'List every canonical pattern with id, name, description, lastReviewed, and the canonical componentIds it composes. Patterns are compositions on top of canonical atomic components — login forms, confirmation flows, empty states, settings pages.',
+    {},
+    async () => {
+      const map = await getPatterns();
+      const rows = [...map.values()]
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          components: [...new Set(p.composition.map((c) => c.componentId))],
+          lastReviewed: p.lastReviewed,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      return jsonResult(rows);
+    },
+  );
+
+  server.tool(
+    'get_pattern',
+    'Return the full canonical definition for one pattern (composition, whenToUse, decisions, mistakes, frameworkSkeletons, lastReviewed). Returns an error result for unknown ids.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getPatterns();
+      const p = map.get(id);
+      if (!p) return notFound(id);
+      return jsonResult(p);
+    },
+  );
+
+  server.tool(
+    'get_patterns_for_component',
+    'Return every pattern that composes the given canonical component, sorted by pattern name. Each entry reports the pattern id, name, description, the role this component plays in the composition, and any composition-specific notes. Returns an empty array when no pattern uses the component.',
+    { componentId: z.string() },
+    async ({ componentId }) => {
+      const map = await getPatterns();
+      const rows: Array<{
+        patternId: string;
+        patternName: string;
+        description: string;
+        role: string;
+        notes?: string;
+      }> = [];
+      for (const p of map.values()) {
+        for (const c of p.composition) {
+          if (c.componentId === componentId) {
+            rows.push({
+              patternId: p.id,
+              patternName: p.name,
+              description: p.description,
+              role: c.role,
+              notes: c.notes,
+            });
+          }
+        }
+      }
+      rows.sort((a, b) => a.patternName.localeCompare(b.patternName));
+      return jsonResult(rows);
     },
   );
 

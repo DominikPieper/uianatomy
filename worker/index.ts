@@ -13,18 +13,21 @@
 
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createServer } from '../mcp-server/src/server.js';
-import { setComponents, setImplementations } from '../mcp-server/src/state.js';
+import { setComponents, setImplementations, setPatterns } from '../mcp-server/src/state.js';
 import {
   loadComponentsFromBundle,
   loadImplementationsFromBundle,
+  loadPatternsFromBundle,
 } from '@uianatomy/shared/bundle';
 import bundleJson from '@uianatomy/shared/content-bundle.json';
 import implBundleJson from '@uianatomy/shared/implementations-bundle.json';
+import patternsBundleJson from '@uianatomy/shared/patterns-bundle.json';
 
 setComponents(loadComponentsFromBundle(bundleJson as Record<string, unknown>));
 setImplementations(
   loadImplementationsFromBundle(implBundleJson as Record<string, Record<string, unknown>>),
 );
+setPatterns(loadPatternsFromBundle(patternsBundleJson as Record<string, unknown>));
 
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };

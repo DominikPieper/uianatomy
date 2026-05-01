@@ -4,8 +4,10 @@ import yaml from 'js-yaml';
 import {
   componentSchema,
   implementationSchema,
+  patternSchema,
   type Component,
   type Implementation,
+  type Pattern,
 } from './schema.js';
 
 export interface LoaderOptions {
@@ -14,6 +16,20 @@ export interface LoaderOptions {
 
 export interface ImplementationLoaderOptions {
   implementationsDir: string;
+}
+
+export interface PatternLoaderOptions {
+  patternsDir: string;
+}
+
+export class PatternValidationError extends Error {
+  constructor(
+    public readonly file: string,
+    public readonly issues: unknown,
+  ) {
+    super(`Pattern validation failed: ${file}`);
+    this.name = 'PatternValidationError';
+  }
 }
 
 export class ComponentValidationError extends Error {
@@ -102,4 +118,30 @@ export async function loadImplementations(
     byLibrary.set(lib.name, components);
   }
   return byLibrary;
+}
+
+export async function loadPattern(filePath: string): Promise<Pattern> {
+  const raw = await readFile(filePath, 'utf-8');
+  const parsed = yaml.load(raw);
+  const result = patternSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new PatternValidationError(filePath, result.error.format());
+  }
+  return result.data;
+}
+
+export async function loadPatterns({ patternsDir }: PatternLoaderOptions): Promise<Map<string, Pattern>> {
+  const entries = await readdir(patternsDir, { withFileTypes: true });
+  const yamls = entries
+    .filter((e) => e.isFile() && e.name.endsWith('.yaml'))
+    .map((e) => join(patternsDir, e.name));
+  const patterns = new Map<string, Pattern>();
+  for (const file of yamls) {
+    const pattern = await loadPattern(file);
+    if (patterns.has(pattern.id)) {
+      throw new Error(`Duplicate pattern id "${pattern.id}" in ${file}`);
+    }
+    patterns.set(pattern.id, pattern);
+  }
+  return patterns;
 }

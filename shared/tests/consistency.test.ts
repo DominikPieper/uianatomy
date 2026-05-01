@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadComponents } from '../src/loader.js';
+import { loadComponents, loadPatterns } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
+const patternsDir = join(here, '..', '..', 'content', 'patterns');
 
 // Canonical vocabularies (mirrored from docs/schema.md).
 const CANON_SPACING = new Set([
@@ -292,6 +293,23 @@ describe('cross-component consistency', () => {
           failures.push(`${c.id}: vsRelated.id "${ref.id}" does not resolve to a canonical component`);
         }
       }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('pattern.composition[].componentId resolves to an existing canonical component', async () => {
+    const components = await loadComponents({ contentDir });
+    const patterns = await loadPatterns({ patternsDir });
+    const ids = new Set(components.keys());
+    const failures: string[] = [];
+    for (const p of patterns.values()) {
+      p.composition.forEach((c, i) => {
+        if (!ids.has(c.componentId)) {
+          failures.push(
+            `${p.id}: composition[${i}].componentId "${c.componentId}" does not resolve to a canonical component`,
+          );
+        }
+      });
     }
     expect(failures, failures.join('\n')).toEqual([]);
   });

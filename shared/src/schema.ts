@@ -501,6 +501,53 @@ export const changelogSchema = z
     { message: 'changelog versions must be unique' },
   );
 
+export const compositionEntrySchema = z
+  .object({
+    componentId: slug,
+    role: z.string().min(1),
+    notes: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const patternDecisionSchema = z
+  .object({
+    question: z.string().min(1),
+    answer: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+export const frameworkSkeletonsSchema = z
+  .object({
+    webComponents: z.string().min(1),
+    react: z.string().min(1),
+    vue: z.string().min(1),
+    angularSignals: z.string().min(1),
+  })
+  .strict();
+
+export const patternSchema = z
+  .object({
+    id: slug,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    composition: z.array(compositionEntrySchema).min(2),
+    whenToUse: z
+      .object({
+        use: z.string().min(1),
+        avoid: z.string().min(1),
+      })
+      .strict(),
+    decisions: z.array(patternDecisionSchema).min(1),
+    mistakes: z.array(mistakeSchema).min(3),
+    frameworkSkeletons: frameworkSkeletonsSchema,
+    notes: z.string().min(1).optional(),
+    lastReviewed: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD'),
+  })
+  .strict();
+
 export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
@@ -567,3 +614,7 @@ export type VariantDeprecation = z.infer<typeof variantDeprecationSchema>;
 export type ChangelogEntry = z.infer<typeof changelogEntrySchema>;
 export type Changelog = z.infer<typeof changelogSchema>;
 export type Component = z.infer<typeof componentSchema>;
+export type CompositionEntry = z.infer<typeof compositionEntrySchema>;
+export type PatternDecision = z.infer<typeof patternDecisionSchema>;
+export type FrameworkSkeletons = z.infer<typeof frameworkSkeletonsSchema>;
+export type Pattern = z.infer<typeof patternSchema>;

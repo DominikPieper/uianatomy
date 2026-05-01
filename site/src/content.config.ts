@@ -1,6 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { componentSchema, implementationSchema } from '@uianatomy/shared/schema';
+import { componentSchema, implementationSchema, patternSchema } from '@uianatomy/shared/schema';
 
 const components = defineCollection({
   loader: glob({ pattern: '*.yaml', base: '../content/components' }),
@@ -24,4 +24,9 @@ const changelog = defineCollection({
   }),
 });
 
-export const collections = { components, implementations, changelog };
+const patterns = defineCollection({
+  loader: glob({ pattern: '*.yaml', base: '../content/patterns' }),
+  schema: patternSchema,
+});
+
+export const collections = { components, implementations, changelog, patterns };

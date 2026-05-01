@@ -1,8 +1,10 @@
 import {
   componentSchema,
   implementationSchema,
+  patternSchema,
   type Component,
   type Implementation,
+  type Pattern,
 } from './schema.js';
 
 export function loadComponentsFromBundle(
@@ -39,4 +41,20 @@ export function loadImplementationsFromBundle(
     byLibrary.set(libraryId, components);
   }
   return byLibrary;
+}
+
+export function loadPatternsFromBundle(
+  bundle: Record<string, unknown>,
+): Map<string, Pattern> {
+  const map = new Map<string, Pattern>();
+  for (const [id, raw] of Object.entries(bundle)) {
+    const result = patternSchema.safeParse(raw);
+    if (!result.success) {
+      throw new Error(
+        `Bundle pattern "${id}" failed validation: ${JSON.stringify(result.error.format())}`,
+      );
+    }
+    map.set(id, result.data);
+  }
+  return map;
 }

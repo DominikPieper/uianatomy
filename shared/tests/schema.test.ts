@@ -9,13 +9,16 @@ import {
   componentSchema,
   deprecationSchema,
   implementationSchema,
+  patternSchema,
   propertySchema,
 } from '../src/schema.js';
+import { loadPatterns } from '../src/loader.js';
 import { renderAnatomySVG, validateOverride } from '../src/svg.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
 const implementationsDir = join(here, '..', '..', 'implementations');
+const patternsDir = join(here, '..', '..', 'content', 'patterns');
 
 describe('component schema', () => {
   it('parses card.yaml', async () => {
@@ -1253,5 +1256,103 @@ describe('versioning', () => {
     };
     const result = componentSchema.safeParse(augmented);
     expect(result.success).toBe(true);
+  });
+});
+
+describe('pattern schema', () => {
+  it('parses confirmation-flow.yaml', async () => {
+    const map = await loadPatterns({ patternsDir });
+    const conf = map.get('confirmation-flow');
+    expect(conf).toBeTruthy();
+    expect(conf?.composition.length).toBeGreaterThanOrEqual(2);
+    expect(conf?.composition.map((c) => c.componentId)).toEqual(
+      expect.arrayContaining(['modal', 'button']),
+    );
+    expect(conf?.frameworkSkeletons.react).toContain('Modal');
+    expect(conf?.mistakes.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('rejects pattern with single-entry composition', () => {
+    const result = patternSchema.safeParse({
+      id: 'tiny',
+      name: 'Tiny',
+      description: 'A pattern.',
+      composition: [{ componentId: 'modal', role: 'container' }],
+      whenToUse: { use: 'a', avoid: 'b' },
+      decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
+      mistakes: [
+        { id: 'a', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', title: 't', description: 'd', fix: 'f' },
+      ],
+      frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
+      lastReviewed: '2026-05-01',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects pattern with fewer than 3 mistakes', () => {
+    const result = patternSchema.safeParse({
+      id: 'tiny',
+      name: 'Tiny',
+      description: 'A pattern.',
+      composition: [
+        { componentId: 'modal', role: 'a' },
+        { componentId: 'button', role: 'b' },
+      ],
+      whenToUse: { use: 'a', avoid: 'b' },
+      decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
+      mistakes: [
+        { id: 'a', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', title: 't', description: 'd', fix: 'f' },
+      ],
+      frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
+      lastReviewed: '2026-05-01',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects pattern missing one framework skeleton', () => {
+    const result = patternSchema.safeParse({
+      id: 'tiny',
+      name: 'Tiny',
+      description: 'A pattern.',
+      composition: [
+        { componentId: 'modal', role: 'a' },
+        { componentId: 'button', role: 'b' },
+      ],
+      whenToUse: { use: 'a', avoid: 'b' },
+      decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
+      mistakes: [
+        { id: 'a', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', title: 't', description: 'd', fix: 'f' },
+      ],
+      frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x' },
+      lastReviewed: '2026-05-01',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects pattern with non-slug componentId in composition', () => {
+    const result = patternSchema.safeParse({
+      id: 'tiny',
+      name: 'Tiny',
+      description: 'A pattern.',
+      composition: [
+        { componentId: 'NotSlug', role: 'a' },
+        { componentId: 'button', role: 'b' },
+      ],
+      whenToUse: { use: 'a', avoid: 'b' },
+      decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
+      mistakes: [
+        { id: 'a', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', title: 't', description: 'd', fix: 'f' },
+      ],
+      frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
+      lastReviewed: '2026-05-01',
+    });
+    expect(result.success).toBe(false);
   });
 });
