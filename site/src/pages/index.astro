@@ -10,7 +10,7 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
 <Base
   title="Components"
   description="Canonical reference for UI component anatomy — the same truth, in three views (designer, developer, bridge), queryable via MCP and a JSON API."
-  jsonLd={siteJsonLd()}
+  jsonLd={siteJsonLd({ components: components.map((e) => e.data) })}
 >
   <article class="shell">
     <section class="component-hero">

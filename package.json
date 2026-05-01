@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "pnpm -r build",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy && node scripts/indexnow-ping.mjs",
     "dev": "pnpm --filter site dev",
     "dev:worker": "wrangler dev",
     "typecheck": "pnpm -r typecheck",

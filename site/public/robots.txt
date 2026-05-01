@@ -8,11 +8,15 @@
 #   search=yes    — indexable by search engines
 #   ai-input=yes  — agents may consume content per request
 #
-# Disallow rules below keep crawlers focused on the canonical HTML pages
-# in search indexes. The disallowed paths remain reachable for AI agents
-# (Content-Signal: ai-input=yes); robots.txt only gates indexing, not
-# fetching. The .md sidecars and JSON APIs are duplicates of the HTML
-# content from a search-engine perspective and would dilute ranking signal.
+# The default (User-agent: *) keeps general search crawlers focused on
+# canonical HTML pages so duplicates (.md sidecars, /api/*.json, OG
+# images) do not dilute ranking signal. Per-AI-bot blocks below override
+# that to grant Perplexity, ChatGPT, Claude, Gemini, and Common Crawl
+# explicit access to the JSON catalogue and Markdown corpus, since
+# those endpoints are designed for AI ingestion. The disallowed paths
+# remain reachable for AI agents at request time
+# (Content-Signal: ai-input=yes); robots.txt only gates crawler
+# indexing, not on-demand fetching.
 
 User-agent: *
 Content-Signal: ai-train=no, search=yes, ai-input=yes
@@ -23,5 +27,88 @@ Disallow: /pagefind/
 Disallow: /llms.txt
 Disallow: /llms-full.txt
 Disallow: /*.md$
+
+# AI search + answer engines — explicit allow for the citation-friendly
+# JSON + Markdown surfaces. Same Content-Signal applies.
+
+User-agent: PerplexityBot
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: GPTBot
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: OAI-SearchBot
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: ChatGPT-User
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: ClaudeBot
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: Claude-Web
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: Google-Extended
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
+
+User-agent: CCBot
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+Allow: /api/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /*.md$
+Disallow: /og/
+Disallow: /pagefind/
 
 Sitemap: https://uianatomy.dev/sitemap-index.xml
