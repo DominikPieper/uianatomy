@@ -1,0 +1,46 @@
+---
+import type { Deprecation } from '@uianatomy/shared/schema';
+interface Props {
+  since?: string;
+  deprecated?: Deprecation;
+}
+const { since, deprecated } = Astro.props;
+---
+{since && !deprecated && (
+  <span class="version-badge version-badge--since" title={`Added in v${since}`}>
+    since v{since}
+  </span>
+)}
+{deprecated && (
+  <span
+    class="version-badge version-badge--deprecated"
+    title={`Deprecated in v${deprecated.since}: ${deprecated.reason}${deprecated.replacement ? ` Use ${deprecated.replacement}.` : ''}`}
+  >
+    deprecated v{deprecated.since}
+  </span>
+)}
+
+<style>
+  .version-badge {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    line-height: 1.4;
+    border: 1px solid;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .version-badge--since {
+    color: color-mix(in oklab, var(--accent-cool, #4070c0) 70%, var(--fg));
+    background: color-mix(in oklab, var(--accent-cool, #4070c0) 12%, transparent);
+    border-color: color-mix(in oklab, var(--accent-cool, #4070c0) 35%, transparent);
+  }
+  .version-badge--deprecated {
+    color: color-mix(in oklab, var(--accent-warm, #b04020) 80%, var(--fg));
+    background: color-mix(in oklab, var(--accent-warm, #b04020) 12%, transparent);
+    border-color: color-mix(in oklab, var(--accent-warm, #b04020) 40%, transparent);
+  }
+</style>

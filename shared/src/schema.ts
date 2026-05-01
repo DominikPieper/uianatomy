@@ -78,6 +78,18 @@ export const slotKindSchema = z.enum([
   'decorative',
 ]);
 
+const semver = z
+  .string()
+  .regex(/^\d+\.\d+\.\d+$/, 'must be SemVer MAJOR.MINOR.PATCH (e.g. 1.2.0)');
+
+export const deprecationSchema = z
+  .object({
+    since: semver,
+    reason: z.string().min(1),
+    replacement: z.string().min(1).optional(),
+  })
+  .strict();
+
 export const anatomySlotSchema = z.object({
   id: slug,
   required: z.boolean(),
@@ -88,6 +100,8 @@ export const anatomySlotSchema = z.object({
   code: codeHintSchema,
   a11y: a11yHintSchema,
   tokens: slotTokensSchema.optional(),
+  since: semver.optional(),
+  deprecated: deprecationSchema.optional(),
 });
 
 const propertyPrimitiveSchema = z
@@ -95,6 +109,8 @@ const propertyPrimitiveSchema = z
     name: z.string().min(1),
     kind: z.literal('primitive'),
     of: z.enum(['boolean']),
+    since: semver.optional(),
+    deprecated: deprecationSchema.optional(),
   })
   .strict();
 
@@ -106,6 +122,8 @@ const propertyEnumSchema = z
       .array(z.string().min(1))
       .min(2, 'enum must declare at least two values')
       .refine((v) => new Set(v).size === v.length, 'enum values must be unique'),
+    since: semver.optional(),
+    deprecated: deprecationSchema.optional(),
   })
   .strict();
 
@@ -149,11 +167,44 @@ export const statesSchema = z
     });
   });
 
-export const axesSchema = z.object({
-  variants: z.array(z.string().min(1)),
-  properties: z.array(propertySchema),
-  states: statesSchema,
-});
+export const variantDeprecationSchema = z
+  .object({
+    name: z.string().min(1),
+    since: semver,
+    reason: z.string().min(1),
+    replacement: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const axesSchema = z
+  .object({
+    variants: z.array(z.string().min(1)),
+    properties: z.array(propertySchema),
+    states: statesSchema,
+    variantDeprecations: z.array(variantDeprecationSchema).min(1).optional(),
+  })
+  .superRefine((axes, ctx) => {
+    if (!axes.variantDeprecations) return;
+    const known = new Set(axes.variants);
+    const seen = new Set<string>();
+    axes.variantDeprecations.forEach((d, i) => {
+      if (!known.has(d.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['variantDeprecations', i, 'name'],
+          message: `variantDeprecations[${i}].name "${d.name}" must reference a declared variant`,
+        });
+      }
+      if (seen.has(d.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['variantDeprecations', i, 'name'],
+          message: `variantDeprecations[${i}].name "${d.name}" is declared twice`,
+        });
+      }
+      seen.add(d.name);
+    });
+  });
 
 export const mismatchSchema = z.object({
   figma: z.string().min(1),
@@ -432,6 +483,24 @@ export const implementationSchema = z
   })
   .strict();
 
+export const changelogEntrySchema = z
+  .object({
+    version: semver,
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'changelog date must be ISO YYYY-MM-DD'),
+    summary: z.string().min(1),
+  })
+  .strict();
+
+export const changelogSchema = z
+  .array(changelogEntrySchema)
+  .min(1)
+  .refine(
+    (entries) => new Set(entries.map((e) => e.version)).size === entries.length,
+    { message: 'changelog versions must be unique' },
+  );
+
 export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
@@ -443,6 +512,8 @@ export const componentSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD')
     .optional(),
   sources: z.array(z.string().min(1)).optional(),
+  since: semver.optional(),
+  changelog: changelogSchema.optional(),
   anatomy: z.array(anatomySlotSchema).min(1),
   axes: axesSchema,
   mismatches: z.array(mismatchSchema).min(1),
@@ -491,4 +562,8 @@ export type PerformanceThreshold = z.infer<typeof performanceThresholdSchema>;
 export type Performance = z.infer<typeof performanceSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
+export type Deprecation = z.infer<typeof deprecationSchema>;
+export type VariantDeprecation = z.infer<typeof variantDeprecationSchema>;
+export type ChangelogEntry = z.infer<typeof changelogEntrySchema>;
+export type Changelog = z.infer<typeof changelogSchema>;
 export type Component = z.infer<typeof componentSchema>;

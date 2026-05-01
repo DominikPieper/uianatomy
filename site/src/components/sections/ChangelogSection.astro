@@ -1,0 +1,70 @@
+---
+import type { Component } from '@uianatomy/shared/schema';
+interface Props { component: Component }
+const { component } = Astro.props;
+const entries = component.changelog ?? [];
+const sorted = [...entries].sort((a, b) =>
+  b.version.localeCompare(a.version, undefined, { numeric: true }),
+);
+---
+{(sorted.length > 0 || component.since) && (
+  <section class="changelog" aria-labelledby="changelog-heading">
+    <h2 id="changelog-heading" class="section-header">Changelog</h2>
+    {component.since && (
+      <p class="changelog__since">First documented in v{component.since}.</p>
+    )}
+    {sorted.length > 0 && (
+      <ol class="changelog__list">
+        {sorted.map((e) => (
+          <li class="changelog__item">
+            <header class="changelog__head">
+              <code class="changelog__version">v{e.version}</code>
+              <time class="changelog__date" datetime={e.date}>{e.date}</time>
+            </header>
+            <p class="changelog__summary">{e.summary}</p>
+          </li>
+        ))}
+      </ol>
+    )}
+  </section>
+)}
+
+<style>
+  .changelog {
+    margin-block: 32px;
+  }
+  .changelog__since {
+    color: var(--fg-muted);
+    margin: 0 0 16px;
+  }
+  .changelog__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .changelog__item {
+    border: 1px solid var(--border-subtle);
+    padding: 12px 16px;
+    background: var(--surface-sunken);
+  }
+  .changelog__head {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .changelog__version {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: color-mix(in oklab, var(--accent-cool, #4070c0) 70%, var(--fg));
+  }
+  .changelog__date {
+    font-size: 12px;
+    color: var(--fg-muted);
+  }
+  .changelog__summary {
+    margin: 0;
+  }
+</style>

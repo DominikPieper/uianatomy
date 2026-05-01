@@ -45,6 +45,7 @@ describe('mcp server', () => {
       [
         'get_anatomy',
         'get_axes',
+        'get_changelog',
         'get_common_mistakes',
         'get_component',
         'get_component_view',
@@ -194,6 +195,19 @@ describe('mcp server', () => {
     expect(parsed.use.length).toBeGreaterThan(0);
     expect(parsed.avoid.length).toBeGreaterThan(0);
     expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item']);
+  });
+
+  it('get_changelog returns null for components without versioning metadata', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_changelog', arguments: { id: 'card' } });
+    const parsed = parseJson(result as any);
+    expect(parsed).toBeNull();
+  });
+
+  it('get_changelog errors on unknown component id', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_changelog', arguments: { id: 'nope' } });
+    expect((result as any).isError).toBe(true);
   });
 
   it('returns an error result for unknown component id', async () => {

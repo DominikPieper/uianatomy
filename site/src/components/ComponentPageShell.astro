@@ -6,6 +6,7 @@ import AnatomyFilterBar from './AnatomyFilterBar.astro';
 import SiteSidebar from './SiteSidebar.astro';
 import WhenToUseSection from './sections/WhenToUseSection.astro';
 import ImplementationsSection from './sections/ImplementationsSection.astro';
+import ChangelogSection from './sections/ChangelogSection.astro';
 import Icon from './Icon.astro';
 import { componentJsonLd } from '../lib/jsonLd';
 
@@ -69,7 +70,12 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
     >
       <section class="component-hero">
         <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
-        <h1 class="component-name">{component.name}</h1>
+        <h1 class="component-name">
+          {component.name}
+          {component.since && (
+            <span class="hero-since" title={`First documented in v${component.since}`}>v{component.since}</span>
+          )}
+        </h1>
         <p class="component-description">{component.description}</p>
       </section>
 
@@ -86,6 +92,8 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
       <ImplementationsSection implementations={implementations} />
 
       <slot />
+
+      <ChangelogSection component={component} />
 
       {component.lastReviewed && (
         <footer class="component-footer">

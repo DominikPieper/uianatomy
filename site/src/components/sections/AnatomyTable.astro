@@ -1,5 +1,6 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
+import VersionBadges from './VersionBadges.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
 ---
@@ -14,8 +15,11 @@ const { component } = Astro.props;
     </thead>
     <tbody>
       {component.anatomy.map((slot) => (
-        <tr data-slot={slot.id}>
-          <td><code>{slot.id}</code></td>
+        <tr data-slot={slot.id} class:list={[{ 'is-deprecated': !!slot.deprecated }]}>
+          <td>
+            <code>{slot.id}</code>
+            <VersionBadges since={slot.since} deprecated={slot.deprecated} />
+          </td>
           <td>{slot.required ? 'required' : 'optional'}</td>
           <td>{slot.purpose}</td>
         </tr>

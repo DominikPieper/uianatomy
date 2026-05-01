@@ -218,6 +218,19 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    'get_changelog',
+    'Return the versioning block (since + changelog entries) for a component. Returns null when the component declares no version metadata. Each changelog entry is { version (semver), date (ISO YYYY-MM-DD), summary }.',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getComponents();
+      const c = map.get(id);
+      if (!c) return notFound(id);
+      if (!c.since && !c.changelog) return jsonResult(null);
+      return jsonResult({ since: c.since ?? null, changelog: c.changelog ?? [] });
+    },
+  );
+
+  server.tool(
     'get_when_to_use',
     'Return the whenToUse block (use/avoid prose plus per-related differentiators) for a component. Returns null when the component declares no whenToUse.',
     { id: z.string() },

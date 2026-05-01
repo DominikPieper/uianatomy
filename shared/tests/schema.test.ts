@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { loadComponent, loadComponents, loadImplementation, loadImplementations } from '../src/loader.js';
-import { componentSchema, implementationSchema, propertySchema } from '../src/schema.js';
+import {
+  anatomySlotSchema,
+  axesSchema,
+  changelogSchema,
+  componentSchema,
+  deprecationSchema,
+  implementationSchema,
+  propertySchema,
+} from '../src/schema.js';
 import { renderAnatomySVG, validateOverride } from '../src/svg.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -1112,5 +1120,138 @@ describe('slotKind schema', () => {
       a11y: { hint: 'h' },
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('versioning', () => {
+  const slotBase = {
+    id: 'body',
+    required: true,
+    purpose: 'Main content area',
+    layout: { row: 1 },
+    figma: { type: 'frame', hint: 'h' },
+    code: { slot: 'body', semantic: 'div' },
+    a11y: { hint: 'h' },
+  };
+
+  it('parses a slot with since + deprecated', () => {
+    const result = anatomySlotSchema.safeParse({
+      ...slotBase,
+      since: '1.0.0',
+      deprecated: {
+        since: '2.0.0',
+        reason: 'Use header instead',
+        replacement: 'header',
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects non-semver since on slot', () => {
+    const result = anatomySlotSchema.safeParse({ ...slotBase, since: 'v1' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects deprecation missing reason', () => {
+    const result = deprecationSchema.safeParse({ since: '1.0.0' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects deprecation with unknown extra field', () => {
+    const result = deprecationSchema.safeParse({
+      since: '1.0.0',
+      reason: 'old',
+      extra: 'no',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses a property with deprecated', () => {
+    const result = propertySchema.safeParse({
+      name: 'colour',
+      kind: 'enum',
+      values: ['red', 'green'],
+      since: '1.1.0',
+      deprecated: { since: '2.0.0', reason: 'Use tone' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('parses axes with variantDeprecations referencing existing variant', () => {
+    const result = axesSchema.safeParse({
+      variants: ['primary', 'secondary', 'tertiary'],
+      properties: [],
+      states: { interactive: [], data: [] },
+      variantDeprecations: [
+        {
+          name: 'tertiary',
+          since: '2.0.0',
+          reason: 'Folded into secondary',
+          replacement: 'secondary',
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects variantDeprecations referencing unknown variant', () => {
+    const result = axesSchema.safeParse({
+      variants: ['primary'],
+      properties: [],
+      states: { interactive: [], data: [] },
+      variantDeprecations: [
+        { name: 'ghost', since: '2.0.0', reason: 'gone' },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects duplicate variantDeprecations entries', () => {
+    const result = axesSchema.safeParse({
+      variants: ['primary'],
+      properties: [],
+      states: { interactive: [], data: [] },
+      variantDeprecations: [
+        { name: 'primary', since: '2.0.0', reason: 'a' },
+        { name: 'primary', since: '3.0.0', reason: 'b' },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses changelog with unique versions', () => {
+    const result = changelogSchema.safeParse([
+      { version: '2.0.0', date: '2026-05-01', summary: 'Drop tertiary' },
+      { version: '1.0.0', date: '2026-01-01', summary: 'Initial release' },
+    ]);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects changelog with duplicate versions', () => {
+    const result = changelogSchema.safeParse([
+      { version: '1.0.0', date: '2026-01-01', summary: 'a' },
+      { version: '1.0.0', date: '2026-02-01', summary: 'b' },
+    ]);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects changelog entry with non-ISO date', () => {
+    const result = changelogSchema.safeParse([
+      { version: '1.0.0', date: '01-01-2026', summary: 'a' },
+    ]);
+    expect(result.success).toBe(false);
+  });
+
+  it('parses a component-level since + changelog', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const augmented = {
+      ...card,
+      since: '1.0.0',
+      changelog: [
+        { version: '1.0.0', date: '2026-01-01', summary: 'Initial release' },
+      ],
+    };
+    const result = componentSchema.safeParse(augmented);
+    expect(result.success).toBe(true);
   });
 });

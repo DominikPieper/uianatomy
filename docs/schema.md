@@ -639,6 +639,69 @@ The checks cover:
 
 The canonical vocabularies are mirrored into the test file as constants. Extending a vocabulary (a new token name lands in an ADR) is a same-PR update of both `docs/schema.md` and `shared/tests/consistency.test.ts`. Drift between the two is itself a review signal.
 
+## Versioning (optional)
+
+Components may declare lightweight versioning metadata to record when slots / variants / properties entered the canon and when they were retired. Full rationale in [ADR-023](./adr/023-versioning.md).
+
+**Component-level:**
+
+```yaml
+since: 1.0.0                       # SemVer MAJOR.MINOR.PATCH
+changelog:                         # optional, non-empty when present
+  - version: 2.0.0
+    date: 2026-05-01
+    summary: Drop `tertiary` variant; standardise on `primary` / `secondary`.
+  - version: 1.0.0
+    date: 2026-01-01
+    summary: Initial canonical entry.
+```
+
+**Per-slot (`anatomy[].since` / `anatomy[].deprecated`):**
+
+```yaml
+- id: legacy-header
+  required: false
+  purpose: ...
+  since: 1.0.0
+  deprecated:
+    since: 2.0.0
+    reason: Folded into `header` slot.
+    replacement: header
+```
+
+**Per-property:**
+
+```yaml
+- name: variant
+  kind: enum
+  values: [primary, secondary]
+  deprecated:
+    since: 2.0.0
+    reason: Replaced by `tone`.
+    replacement: tone
+```
+
+**Per-variant** (sparse list — only deprecated entries are recorded):
+
+```yaml
+axes:
+  variants: [primary, secondary, tertiary]
+  variantDeprecations:
+    - name: tertiary
+      since: 2.0.0
+      reason: Folded into `secondary`.
+      replacement: secondary
+```
+
+**Shape rules:**
+
+- `since` and `deprecated.since` use `MAJOR.MINOR.PATCH` (regex `^\d+\.\d+\.\d+$`). No `v` prefix, no pre-release tags.
+- `deprecated` is `{ since, reason, replacement? }`, all `.strict()`. Reason is required prose.
+- `variantDeprecations[].name` is cross-validated against `axes.variants` — unknown names raise a Zod issue with path `axes.variantDeprecations[i].name`.
+- `changelog[]` versions must be unique (refine).
+- All versioning fields are optional. Components without an active deprecation history can omit the lot.
+- **Convention (not enforced):** `since` values on slots/properties/variantDeprecations should appear in `changelog[].version` for the same component. Drift is reviewer-caught, not Zod-caught — keeping it loose lets components add deprecation metadata before a full changelog exists.
+
 ## Schema evolution
 
 The schema will evolve. When it does:
