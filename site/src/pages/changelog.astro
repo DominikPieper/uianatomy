@@ -1,0 +1,180 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const SITE_ORIGIN = 'https://uianatomy.dev';
+const url = `${SITE_ORIGIN}/changelog`;
+
+const entries = await getCollection('changelog');
+entries.sort((a, b) => b.data.date.localeCompare(a.data.date));
+
+const rendered = await Promise.all(
+  entries.map(async (entry) => {
+    const { Content } = await render(entry);
+    return { entry, Content };
+  }),
+);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  '@id': `${url}#blog`,
+  url,
+  name: 'UI Anatomy changelog',
+  description:
+    'Dated record of substantive changes to the UI Anatomy canon, schema, MCP server, and site. Source of truth for "what shipped when".',
+  inLanguage: 'en-US',
+  publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+  isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+  blogPost: entries.map((e) => ({
+    '@type': 'BlogPosting',
+    '@id': `${url}#${e.id}`,
+    headline: e.data.title,
+    datePublished: e.data.date,
+    dateModified: e.data.date,
+    description: e.data.summary,
+    keywords: e.data.tags?.join(', '),
+    author: {
+      '@type': 'Person',
+      name: 'Dominik Pieper',
+      url: 'https://github.com/DominikPieper',
+    },
+  })),
+};
+---
+<Base
+  title="Changelog"
+  description="Dated record of substantive changes to the UI Anatomy canon, schema, MCP server, and site. RSS feed at /changelog.xml."
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: 'Changelog' }]}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="shell changelog" data-pagefind-body>
+    <header class="changelog__hero">
+      <p class="hero-eyebrow">Project log</p>
+      <h1 class="changelog__title">Changelog</h1>
+      <p class="changelog__lede">
+        What shipped on UI Anatomy and when. Subscribe via the
+        <a href="/changelog.xml" rel="alternate" type="application/rss+xml">RSS feed</a>.
+      </p>
+    </header>
+
+    <ol class="changelog__list">
+      {rendered.map(({ entry, Content }) => (
+        <li class="changelog__entry" id={entry.id}>
+          <header class="changelog__entry-head">
+            <time class="changelog__date" datetime={entry.data.date}>{entry.data.date}</time>
+            <h2 class="changelog__entry-title">
+              <a href={`#${entry.id}`}>{entry.data.title}</a>
+            </h2>
+            {entry.data.tags && entry.data.tags.length > 0 && (
+              <ul class="changelog__tags" aria-label="Tags">
+                {entry.data.tags.map((t) => <li><code>{t}</code></li>)}
+              </ul>
+            )}
+          </header>
+          <p class="changelog__summary">{entry.data.summary}</p>
+          <div class="changelog__body">
+            <Content />
+          </div>
+        </li>
+      ))}
+    </ol>
+  </article>
+</Base>
+
+<style>
+  .changelog {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+  .changelog__hero {
+    margin-bottom: 48px;
+  }
+  .changelog__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 16px;
+  }
+  .changelog__lede {
+    color: var(--fg-muted);
+    margin: 0;
+  }
+  .changelog__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 56px;
+  }
+  .changelog__entry {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 32px;
+  }
+  .changelog__entry-head {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .changelog__date {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--fg-muted);
+  }
+  .changelog__entry-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .changelog__entry-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .changelog__entry-title a:hover {
+    text-decoration: underline;
+  }
+  .changelog__tags {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .changelog__tags li code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+    color: var(--fg-muted);
+  }
+  .changelog__summary {
+    font-size: 1.05em;
+    color: var(--fg);
+    margin: 0 0 16px;
+  }
+  .changelog__body :global(p),
+  .changelog__body :global(li) {
+    line-height: 1.65;
+  }
+  .changelog__body :global(strong) {
+    font-weight: 600;
+  }
+  .changelog__body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+  }
+  .changelog__body :global(ul),
+  .changelog__body :global(ol) {
+    padding-inline-start: 1.25em;
+  }
+</style>

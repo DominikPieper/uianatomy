@@ -66,6 +66,7 @@ const canonicalUrl = Astro.site
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title="UI Anatomy changelog" href="/changelog.xml" />
     <title>{pageTitle}</title>
     {description && <meta name="description" content={description} />}
     <meta property="og:site_name" content="UI Anatomy" />
@@ -132,6 +133,7 @@ const canonicalUrl = Astro.site
         <p class="site-footer__brand">UI Anatomy — canonical reference for UI component anatomy.</p>
         <nav class="site-footer__nav" aria-label="Footer">
           <a href="/methodology">Methodology</a>
+          <a href="/changelog">Changelog</a>
           <a href="/compare">Compare</a>
           <a href="/search">Search</a>
           <a href="https://github.com/DominikPieper/uianatomy" rel="external">Source</a>

@@ -28,6 +28,19 @@ for (const file of readdirSync(contentDir)) {
   }
 }
 
+// Latest changelog entry date — fed to the /changelog sitemap entry's <lastmod>
+// so crawlers see freshness whenever a new entry lands.
+const changelogDir = resolve(here, 'src', 'content', 'changelog');
+let latestChangelogDate = '';
+try {
+  for (const file of readdirSync(changelogDir)) {
+    if (!file.endsWith('.md')) continue;
+    const raw = readFileSync(resolve(changelogDir, file), 'utf-8');
+    const m = raw.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})"?/m);
+    if (m && m[1] > latestChangelogDate) latestChangelogDate = m[1];
+  }
+} catch {}
+
 export default defineConfig({
   site: 'https://uianatomy.dev',
   output: 'static',
@@ -52,6 +65,9 @@ export default defineConfig({
         if (match) {
           const lastReviewed = lastReviewedById.get(match[1]);
           if (lastReviewed) item.lastmod = lastReviewed;
+        }
+        if (/\/changelog\/?$/.test(item.url) && latestChangelogDate) {
+          item.lastmod = latestChangelogDate;
         }
         return item;
       },
