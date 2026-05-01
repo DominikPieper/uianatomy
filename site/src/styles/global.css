@@ -382,6 +382,38 @@ main {
   padding-inline: clamp(16px, 4vw, 32px);
 }
 
+.site-footer {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 96px;
+  padding-block: 32px;
+  color: var(--fg-muted);
+}
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.site-footer__brand {
+  margin: 0;
+  font-size: 14px;
+}
+.site-footer__nav {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.site-footer__nav a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.site-footer__nav a:hover {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
 /* Component-page shell — sidebar + article. Lives in global.css (not the */
 /* ComponentPageShell.astro <style> block) because the hide-rule must */
 /* select <nav class="sidebar"> rendered by SiteSidebar.astro, which has */

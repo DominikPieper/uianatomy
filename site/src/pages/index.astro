@@ -20,6 +20,9 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
         Component anatomy documented as <em>canon</em> — slots, axes, and translation. Switch
         between Designer, Dev, and Bridge views to read the same truth from your perspective.
       </p>
+      <p class="hero-meta">
+        <a href="/methodology">How is the canon researched?</a>
+      </p>
     </section>
 
     <nav aria-labelledby="components-heading">
@@ -42,5 +45,13 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
   }
   .component-grid > li {
     display: contents;
+  }
+  .hero-meta {
+    margin: 16px 0 0;
+    color: var(--fg-muted);
+    font-size: 14px;
+  }
+  .hero-meta a {
+    color: inherit;
   }
 </style>

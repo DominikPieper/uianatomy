@@ -127,6 +127,18 @@ const canonicalUrl = Astro.site
     <main id="main">
       <slot />
     </main>
+    <footer class="site-footer">
+      <div class="shell site-footer__inner">
+        <p class="site-footer__brand">UI Anatomy — canonical reference for UI component anatomy.</p>
+        <nav class="site-footer__nav" aria-label="Footer">
+          <a href="/methodology">Methodology</a>
+          <a href="/compare">Compare</a>
+          <a href="/search">Search</a>
+          <a href="https://github.com/DominikPieper/uianatomy" rel="external">Source</a>
+          <a href="/mcp" rel="external">MCP</a>
+        </nav>
+      </div>
+    </footer>
 
     <script>
       function syncOverflow() {
