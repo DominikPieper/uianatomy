@@ -638,6 +638,7 @@ a11yAcceptance:
         combinations announce only on focus change, not on
         Space press; the visual state change is the
         complement.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

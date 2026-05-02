@@ -370,6 +370,7 @@ a11yAcceptance:
         "visited" by default. For revisit-aware lists, the
         accessible name may include a "visited" suffix via
         `aria-describedby`.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - link-name
     - link-in-text-block

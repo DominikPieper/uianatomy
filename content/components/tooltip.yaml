@@ -407,6 +407,7 @@ a11yAcceptance:
         Tooltip disappears visually; SR users hear no
         announcement (the description simply unwires from
         aria-describedby for the duration of the focus session).
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-tooltip-name
     - aria-required-attr

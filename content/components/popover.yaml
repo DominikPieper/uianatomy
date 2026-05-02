@@ -548,6 +548,7 @@ a11yAcceptance:
       expected: >-
         No SR announcement — the auto-flip is purely visual. Focus
         is unaffected; the popover content remains the same.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-dialog-name
     - aria-required-attr

@@ -23,6 +23,12 @@ whenToUse:
     For side-pane content that does not require completion before
     returning to the page — that is `Drawer`. For inline disclosure
     of secondary detail — that is `Disclosure` or `Accordion`.
+    Stacking modals is non-canonical: the maximum is one open dialog
+    at a time. Stacked modals fight for focus traps, leak `inert`
+    handling between layers, and confuse assistive tech that walks the
+    modality tree. Patterns that feel like they need "modal-on-modal"
+    should be redesigned as a step flow within a single modal, or as a
+    sequence of modal → dismiss → modal.
   vsRelated:
     - id: drawer
       difference: >-
@@ -503,19 +509,6 @@ events:
         `@close` for both paths; use a wrapper to carry the reason
         explicitly.
 
-performance:
-  - name: stackDepth
-    metric: open-modal-count
-    threshold: 1
-    unit: modals
-    rationale: >-
-      Avoid stacking modals; the canonical maximum is one open dialog
-      at a time. Stacked modals fight for focus traps, leak `inert`
-      handling between layers, and confuse assistive tech that walks
-      the modality tree. Patterns that feel like they need
-      "modal-on-modal" should be redesigned as a step flow within a
-      single modal, or as a sequence of modal → dismiss → modal.
-
 i18n:
   rtl:
     mirroring: >-
@@ -648,6 +641,7 @@ a11yAcceptance:
         Same as dialog but with role `alertdialog`. SR announces
         "<title>, alert dialog"; the body content (referenced via
         `aria-describedby`) is read after the title.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-dialog-name
     - aria-required-attr

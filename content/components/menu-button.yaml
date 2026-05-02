@@ -543,6 +543,7 @@ a11yAcceptance:
         SR announces the new checked state ("Bold, checked, menu
         item" or "Bold, not checked, menu item"). Driven by
         `aria-checked` on the item.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

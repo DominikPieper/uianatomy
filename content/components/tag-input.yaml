@@ -545,6 +545,7 @@ a11yAcceptance:
         polite live region; `aria-invalid="true"` set
         on the input briefly. The rejection is audibly
         explicit, not silent.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-required-attr
     - aria-valid-attr-value

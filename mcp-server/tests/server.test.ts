@@ -48,6 +48,7 @@ describe('mcp server', () => {
       [
         'get_anatomy',
         'get_axes',
+        'get_canonical_vocabularies',
         'get_changelog',
         'get_common_mistakes',
         'get_component',
@@ -336,6 +337,44 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     expect(parsed).toEqual([]);
+  });
+
+  it('get_canonical_vocabularies returns the master vocabulary set', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_canonical_vocabularies',
+      arguments: {},
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.spacing).toContain('spacing.cozy');
+    expect(parsed.radius).toContain('radius.md');
+    expect(parsed.color).toContain('color.text.danger');
+    expect(parsed.elevation).toContain('elevation.overlay');
+    expect(parsed.typography).toContain('text.md');
+    expect(parsed.motion.durations).toContain('motion.duration.base');
+    expect(parsed.motion.easing).toContain('motion.easing.standard');
+    expect(parsed.breakpoint).toContain('breakpoint.sm');
+    expect(parsed.propertyVocab.density).toEqual(['comfortable', 'compact']);
+    expect(parsed.propertyBounded.size).toContain('full');
+    expect(parsed.interactiveStates).toContain('focus-visible');
+  });
+
+  it('get_canonical_vocabularies vocab matches what consistency-test accepts', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_canonical_vocabularies',
+      arguments: {},
+    });
+    const parsed = parseJson(result as any);
+    const motionResult = await client.callTool({
+      name: 'get_motion',
+      arguments: { id: 'modal' },
+    });
+    const motion = parseJson(motionResult as any);
+    expect(parsed.motion.easing).toContain(motion.easing);
+    for (const v of Object.values(motion.durations as Record<string, string>)) {
+      expect(parsed.motion.durations).toContain(v);
+    }
   });
 
   it('validate_implementation reports zero matches on garbage code', async () => {

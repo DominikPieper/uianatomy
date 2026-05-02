@@ -424,6 +424,7 @@ a11yAcceptance:
         Native `disabled` removes the button from focus order silently.
         `aria-disabled="true"` keeps it focusable; SR announces "<label>,
         dimmed, button" or equivalent (varies by SR vendor).
+  axeCoreVersion: '4.10.2'
   axeRules:
     - button-name
     - aria-allowed-role

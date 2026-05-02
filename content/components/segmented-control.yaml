@@ -465,6 +465,7 @@ a11yAcceptance:
     - trigger: Indicator animates
       expected: >-
         No SR announcement — the indicator is decorative.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

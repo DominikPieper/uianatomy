@@ -506,6 +506,7 @@ a11yAcceptance:
         and removal of the region confirm the banner is gone.
         Subsequent landmark navigation skips the dismissed
         region.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

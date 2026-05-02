@@ -592,6 +592,7 @@ a11yAcceptance:
         "Process complete." Focus moves to the next page or
         confirmation surface; the stepper itself remains
         as a record of the completed sequence.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

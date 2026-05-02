@@ -7,7 +7,7 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 22 tools.
+The MCP server exposes this knowledge as 23 tools.
 
 ## Endpoint
 
@@ -96,12 +96,13 @@ const result = await client.callTool({
 | `get_events` | `id: string` | Events array (name, payload, per-framework notes). `null` if absent. |
 | `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
 | `get_changelog` | `id: string` | Versioning metadata: `since` (semver) plus `changelog` array of `{ version, date, summary }`. `null` when neither is declared. |
+| `get_canonical_vocabularies` | — | Master canonical vocabularies (`spacing`, `radius`, `color`, `elevation`, `typography`, `motion: { durations, easing }`, `breakpoint`, `propertyVocab`, `propertyBounded`, `interactiveStates`) that YAML values must draw from. Same source the consistency-test enforces. Use to resolve a value like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or to surface allowed enum values to a downstream UI. |
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
 | `get_pattern` | `id: string` | Full canonical pattern record (composition, whenToUse, decisions, mistakes, frameworkSkeletons, lastReviewed). |
 | `get_patterns_for_component` | `componentId: string` | Every pattern that composes the given canonical component, sorted by pattern name, with the role this component plays. Empty array when no pattern uses it. |
 | `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. **Takes no arguments — returns the full roster.** Use `get_implementations({ componentId })` to filter. Today only Modal × {radix, headlessui, cdk} are audited; other components return no rows. |
 | `get_implementations` | `componentId: string` | Every library audit for one canonical component as an array of `Implementation` records (`componentId`, `libraryId`, `componentName`, `exampleCode`, `divergence` list, `rationale`, `lastReviewed`). Empty array when no library has audited the component yet. |
-| `validate_implementation` | `componentId: string`, `code: string`, `framework: "react" \| "vue" \| "angular" \| "webComponents"` | Heuristic structural conformance check. Reports which canonical required slots, variants, properties, and events appear (or are missing) in the supplied code. Framework-aware event-name detection (`on<PascalCase>` for React, `@event` / `v-on:` / `emit('event')` for Vue, `(event)` for Angular, bare names for web components). Substring search only — false negatives possible. NOT a substitute for behavioural assertions (pair with the per-component a11y-fixture endpoint and a real Playwright + axe-core run). |
+| `validate_implementation` | `componentId: string`, `code: string`, `framework: "react" \| "vue" \| "angular" \| "webComponents"` | Heuristic structural conformance check. **Scores supplied code against the canonical anatomy / axes / events of `componentId` — it does *not* require the canonical component to have a Phase-2 library audit, and it does not consult `implementations/<lib>/<id>.yaml`.** Use it on any framework code claiming to implement a canonical component (your own, generated, or a vendor library), regardless of whether that vendor has been audited. Reports which canonical required slots, variants, properties, and events appear (or are missing) in the supplied code. Framework-aware event-name detection (`on<PascalCase>` for React, `@event` / `v-on:` / `emit('event')` for Vue, `(event)` for Angular, bare names for web components). Substring search only — false negatives possible. NOT a substitute for behavioural assertions (pair with the per-component a11y-fixture endpoint and a real Playwright + axe-core run). |
 
 ## Typical agent flows
 
@@ -142,9 +143,25 @@ Useful when reviewing a vendor library API description, a design-system RFC, or 
 
 This complements `validate_implementation`, which scores generated code; spec-parity scores prose intent.
 
+## When to use which tool
+
+`get_component({ id })` returns the full canonical record. Many of the per-axis tools (`get_anatomy`, `get_axes`, `get_motion`, `get_events`, `get_when_to_use`, `get_tokens`, `get_responsive`, `get_transitions`, `get_framework_map`, `get_mismatches`, `get_common_mistakes`, `get_changelog`) are subsets of that same record. They are **not redundant** — they exist for two reasons:
+
+1. **Bandwidth.** Heavy components (Modal, Combobox) emit ~30 KB of JSON when fully serialized. An agent that only needs `axes` to decide a variant pays ~3 KB instead of the whole record. Multiply by N round-trips and the difference matters for context-window budgets.
+2. **Discovery.** A focused tool name (`get_motion`) signals intent in tool-call traces; `get_component` followed by an unscoped slice is harder to read in transcripts and harder for the agent to plan around.
+
+Picking between them:
+
+- **Building a new instance from scratch / migrating a library wrapper** → `get_component` once, use the full record as a checklist.
+- **Answering one targeted question** ("does Modal have transitions?", "what tokens does Button use?") → the matching per-axis tool. One round-trip, one slice.
+- **Comparing 3+ components** → loop `get_component` per id; the per-axis tools repeat metadata you already have.
+- **Surfacing role-specific context to a downstream agent** → `get_component_view({ id, view })`. Designer / dev / bridge projections drop everything outside that role.
+
+`get_pattern` is **not** a subset of any component — patterns are independent records (compositions on top of canonical components). Always use `get_pattern` / `list_patterns` / `get_patterns_for_component` for pattern queries.
+
 ## Tool loading
 
-The server returns all 22 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+The server returns all 23 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 

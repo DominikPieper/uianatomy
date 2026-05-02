@@ -249,11 +249,15 @@ describe('performance field', () => {
     expect(names).toEqual(['virtualisedListbox', 'asyncFilterDebounce']);
   });
 
-  it('parses tabs and modal performance', async () => {
+  it('parses tabs performance', async () => {
     const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
-    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
     expect(tabs.performance?.find((p) => p.name === 'tablistOverflow')?.threshold).toBe(7);
-    expect(modal.performance?.find((p) => p.name === 'stackDepth')?.threshold).toBe(1);
+  });
+
+  it('modal performance is omitted (stackDepth lives in whenToUse.avoid as a hard rule, not a perf threshold)', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    expect(modal.performance).toBeUndefined();
+    expect(modal.whenToUse?.avoid).toMatch(/Stacking modals is non-canonical/);
   });
 
   it('omits performance on Card and Button', async () => {

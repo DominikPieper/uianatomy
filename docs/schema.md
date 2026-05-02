@@ -46,6 +46,8 @@ The list of slots/regions the component is composed of. Each entry:
 
 **Why `required` matters:** drives how the slot is rendered in the diagram (solid vs. dashed outline) and informs the implementation (slot-conditional vs. always-rendered container).
 
+**`repeats` (optional, per slot, integer 2–5):** visual sample count for the anatomy diagram only. It controls how many sibling instances the SVG generator draws (e.g. three tab triggers, four steps, three combobox options) — it is **not** a runtime constraint on actual instance count. Convention: pick `3` for typical lists where the pattern is obvious after three repetitions; pick `4–5` only when a longer sample makes the composition clearer (e.g. a stepper where 3 hides the "current vs. completed vs. pending" state spread). Slots that always render exactly once omit the field.
+
 ### `slotKind` (optional, per slot)
 
 A four-value enum capturing the slot's *function* — orthogonal to `figma.type` (authoring surface) and `code.semantic` (rendered element). The full rationale is in [ADR-020](./adr/020-slot-kind.md).
@@ -178,6 +180,13 @@ The duration scale mirrors Polaris (`motion-duration-{75,100,150,200,300}`) and 
 - Tab-like indicators → `indicator`
 - Panel-swap surfaces → `panelEnter`, `panelExit`
 - Tag/chip surfaces → `chipEnter`, `chipExit`
+
+**Naming convention for duration keys:**
+
+- **camelCase**, no separators. `panelEnter`, not `panel_enter` or `panel-enter`.
+- **Transition-shape, not numeric**. Pick a name that describes *what is moving* (e.g. `open`, `close`, `dragSnap`, `chevronRotate`). Avoid duration values in the key (`open200ms`, `fastOpen`); the *value* is the canonical token, the *key* is the transition identity.
+- **No `Duration` / `Time` / `Ms` suffix.** The block is already `motion.durations`; suffixes restate what the surrounding shape says. `open: motion.duration.base`, not `openDuration: motion.duration.base`.
+- **Direction lives in the key when symmetric pairs exist.** Pair `open` / `close`, `panelEnter` / `panelExit`, `chipEnter` / `chipExit`. Solo transitions (no inverse) do not need a direction suffix (`indicator`, `filter`).
 
 ## `responsive` (optional, top-level)
 

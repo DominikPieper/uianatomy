@@ -510,6 +510,7 @@ a11yAcceptance:
         announcement; the silence (and removal of the live region
         content) confirms removal. Avoid synthesising a "dismissed"
         announcement — it adds noise without value.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

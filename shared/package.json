@@ -38,6 +38,10 @@
     "./validate": {
       "types": "./dist/validate.d.ts",
       "import": "./dist/validate.js"
+    },
+    "./vocabulary": {
+      "types": "./dist/vocabulary.d.ts",
+      "import": "./dist/vocabulary.js"
     }
   },
   "scripts": {

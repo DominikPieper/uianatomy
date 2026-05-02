@@ -563,6 +563,7 @@ a11yAcceptance:
         Input value clears silently (no SR announcement for
         the empty state). Subsequent re-focus on the input
         announces it as "<accessible name>, search".
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-input-field-name
     - aria-required-attr

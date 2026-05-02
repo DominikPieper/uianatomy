@@ -529,6 +529,7 @@ a11yAcceptance:
         confirmation of the action (for action tiles).
         Implementation detail: focus management may move
         focus to a detail panel or to a route-target heading.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

@@ -483,6 +483,7 @@ a11yAcceptance:
         Selection is announced via `aria-selected="true"` on the card's
         primary actionable element. SR reads "selected" before the
         accessible name (varies slightly by SR).
+  axeCoreVersion: '4.10.2'
   axeRules:
     - link-name
     - color-contrast

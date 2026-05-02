@@ -3,110 +3,39 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { loadComponents, loadPatterns } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
+import {
+  CANON_SPACING,
+  CANON_RADIUS,
+  CANON_COLOR,
+  CANON_ELEVATION,
+  CANON_TYPOGRAPHY,
+  CANON_MOTION_DURATION,
+  CANON_MOTION_EASING,
+  CANON_BREAKPOINTS,
+  CANON_PROPERTY_VOCAB,
+  CANON_PROPERTY_BOUNDED,
+  CANON_INTERACTIVE_STATES,
+} from '../src/vocabulary.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
 const patternsDir = join(here, '..', '..', 'content', 'patterns');
 
-// Canonical vocabularies (mirrored from docs/schema.md).
-const CANON_SPACING = new Set([
-  'spacing.tight',
-  'spacing.compact',
-  'spacing.cozy',
-  'spacing.comfortable',
-  'spacing.loose',
-]);
-const CANON_RADIUS = new Set([
-  'radius.none',
-  'radius.sm',
-  'radius.md',
-  'radius.lg',
-  'radius.pill',
-  'radius.full',
-]);
-const CANON_COLOR = new Set([
-  'color.surface.bg',
-  'color.surface.raised',
-  'color.surface.sunken',
-  'color.surface.scrim',
-  'color.text.primary',
-  'color.text.muted',
-  'color.text.inverse',
-  'color.text.accent',
-  'color.text.danger',
-  'color.border.subtle',
-  'color.border.strong',
-  'color.border.focus',
-  'color.accent.bg',
-  'color.accent.fg',
-]);
-const CANON_ELEVATION = new Set([
-  'elevation.none',
-  'elevation.sm',
-  'elevation.md',
-  'elevation.lg',
-  'elevation.overlay',
-]);
-const CANON_TYPOGRAPHY = new Set([
-  'text.xs',
-  'text.sm',
-  'text.md',
-  'text.lg',
-  'text.xl',
-  'weight.regular',
-  'weight.medium',
-  'weight.semibold',
-  'weight.bold',
-  'leading.tight',
-  'leading.snug',
-  'leading.normal',
-  'leading.relaxed',
-  'tracking.normal',
-  'tracking.wide',
-]);
-const CANON_MOTION_DURATION = new Set([
-  'motion.duration.instant',
-  'motion.duration.fast',
-  'motion.duration.base',
-  'motion.duration.slow',
-  'motion.duration.slower',
-]);
-const CANON_MOTION_EASING = new Set([
-  'motion.easing.standard',
-  'motion.easing.decelerate',
-  'motion.easing.accelerate',
-  'motion.easing.sharp',
-]);
-const CANON_BREAKPOINTS = new Set([
-  'breakpoint.xs',
-  'breakpoint.sm',
-  'breakpoint.md',
-  'breakpoint.lg',
-  'breakpoint.xl',
-]);
-
-// Property-name → expected enum values (when the component uses that property).
-const PROPERTY_VOCAB: Record<string, ReadonlySet<string>> = {
-  density: new Set(['comfortable', 'compact']),
-};
-
-// Property-name → values that may appear (subset allowed).
-// `size: full` is a canonical extension for full-viewport variants
-// (e.g. Drawer with mobile-fullscreen fallback). Documented in
-// docs/schema.md alongside the standard sm/md/lg/xl scale.
-const PROPERTY_BOUNDED: Record<string, ReadonlySet<string>> = {
-  size: new Set(['sm', 'md', 'lg', 'xl', 'full']),
-};
-
-// Interactive state vocabulary — every interactive state must be in this set.
-const CANON_INTERACTIVE_STATES = new Set([
-  'hover',
-  'focus-visible',
-  'active',
-  'disabled',
-  'visited',
-  'current',
-]);
+const SPACING = new Set(CANON_SPACING);
+const RADIUS = new Set(CANON_RADIUS);
+const COLOR = new Set(CANON_COLOR);
+const ELEVATION = new Set(CANON_ELEVATION);
+const TYPOGRAPHY = new Set(CANON_TYPOGRAPHY);
+const MOTION_DURATION = new Set(CANON_MOTION_DURATION);
+const MOTION_EASING = new Set(CANON_MOTION_EASING);
+const BREAKPOINTS = new Set(CANON_BREAKPOINTS);
+const INTERACTIVE_STATES = new Set(CANON_INTERACTIVE_STATES);
+const PROPERTY_VOCAB: Record<string, ReadonlySet<string>> = Object.fromEntries(
+  Object.entries(CANON_PROPERTY_VOCAB).map(([k, v]) => [k, new Set(v)]),
+);
+const PROPERTY_BOUNDED: Record<string, ReadonlySet<string>> = Object.fromEntries(
+  Object.entries(CANON_PROPERTY_BOUNDED).map(([k, v]) => [k, new Set(v)]),
+);
 
 function checkSlotTokens(
   slotId: string,
@@ -128,11 +57,11 @@ function checkSlotTokens(
       }
     }
   };
-  checkCategory('spacing', tokens.spacing, CANON_SPACING);
-  checkCategory('radius', tokens.radius, CANON_RADIUS);
-  checkCategory('color', tokens.color, CANON_COLOR);
-  checkCategory('elevation', tokens.elevation, CANON_ELEVATION);
-  checkCategory('typography', tokens.typography, CANON_TYPOGRAPHY);
+  checkCategory('spacing', tokens.spacing, SPACING);
+  checkCategory('radius', tokens.radius, RADIUS);
+  checkCategory('color', tokens.color, COLOR);
+  checkCategory('elevation', tokens.elevation, ELEVATION);
+  checkCategory('typography', tokens.typography, TYPOGRAPHY);
 }
 
 describe('cross-component consistency', () => {
@@ -155,13 +84,13 @@ describe('cross-component consistency', () => {
     for (const c of map.values()) {
       if (!c.motion) continue;
       for (const [key, value] of Object.entries(c.motion.durations)) {
-        if (!CANON_MOTION_DURATION.has(value)) {
+        if (!MOTION_DURATION.has(value)) {
           failures.push(
             `${c.id}: motion.durations.${key} = "${value}" not in canonical motion-duration vocabulary`,
           );
         }
       }
-      if (!CANON_MOTION_EASING.has(c.motion.easing)) {
+      if (!MOTION_EASING.has(c.motion.easing)) {
         failures.push(
           `${c.id}: motion.easing = "${c.motion.easing}" not in canonical motion-easing vocabulary`,
         );
@@ -176,7 +105,7 @@ describe('cross-component consistency', () => {
     for (const c of map.values()) {
       if (!c.responsive) continue;
       c.responsive.breakpoints.forEach((bp, i) => {
-        if (!CANON_BREAKPOINTS.has(bp.at)) {
+        if (!BREAKPOINTS.has(bp.at)) {
           failures.push(
             `${c.id}: responsive.breakpoints[${i}].at = "${bp.at}" not in canonical breakpoint vocabulary`,
           );
@@ -226,9 +155,9 @@ describe('cross-component consistency', () => {
     const failures: string[] = [];
     for (const c of map.values()) {
       for (const s of c.axes.states.interactive) {
-        if (!CANON_INTERACTIVE_STATES.has(s)) {
+        if (!INTERACTIVE_STATES.has(s)) {
           failures.push(
-            `${c.id}: interactive state "${s}" not in canonical interactive-state vocabulary [${[...CANON_INTERACTIVE_STATES].join(', ')}]`,
+            `${c.id}: interactive state "${s}" not in canonical interactive-state vocabulary [${[...INTERACTIVE_STATES].join(', ')}]`,
           );
         }
       }
@@ -293,6 +222,56 @@ describe('cross-component consistency', () => {
         if (!ids.has(ref.id)) {
           failures.push(`${c.id}: vsRelated.id "${ref.id}" does not resolve to a canonical component`);
         }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  // Bidirectional vsRelated lint: every `whenToUse.vsRelated[].id` reference
+  // expects the target component to also reference back. Asymmetric pairs may
+  // exist deliberately (e.g. one side covers the comparison exhaustively in
+  // prose and the other side does not need to repeat it). New asymmetric pairs
+  // require an explicit allowlist entry below with rationale; existing pairs
+  // are tracked as a backfill list in P6-86.
+  it('whenToUse.vsRelated is bidirectional or explicitly allowlisted', async () => {
+    const map = await loadComponents({ contentDir });
+    const refs = new Map<string, Set<string>>();
+    for (const c of map.values()) {
+      refs.set(c.id, new Set((c.whenToUse?.vsRelated ?? []).map((r) => r.id)));
+    }
+    // Pairs deliberately one-directional today. Each entry is `${src}->${target}`.
+    // P6-86 tracks incremental backfill; remove entries here as reverse-refs land.
+    const ALLOWED_ASYMMETRIC = new Set([
+      'banner->modal',
+      'button->menu-button',
+      'disclosure->tabs',
+      'disclosure->modal',
+      'drawer->alert',
+      'link->menu-button',
+      'menu-button->select',
+      'menu-button->tooltip',
+      'search-input->tag-input',
+      'sidebar-nav->drawer',
+      'stepper->tabs',
+      'stepper->accordion',
+      'stepper->sidebar-nav',
+      'text-input->search-input',
+      'text-input->combobox',
+      'text-input->tag-input',
+      'toast->modal',
+      'toast->tooltip',
+      'tooltip->modal',
+    ]);
+    const failures: string[] = [];
+    for (const [src, targets] of refs) {
+      for (const t of targets) {
+        const targetRefs = refs.get(t);
+        if (!targetRefs) continue; // resolution failure already caught upstream
+        if (targetRefs.has(src)) continue;
+        if (ALLOWED_ASYMMETRIC.has(`${src}->${t}`)) continue;
+        failures.push(
+          `${src}: vsRelated → "${t}" has no reverse ref. Add reverse-ref to ${t}.yaml or allowlist the pair in consistency.test.ts.`,
+        );
       }
     }
     expect(failures, failures.join('\n')).toEqual([]);

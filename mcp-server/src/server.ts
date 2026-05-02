@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getComponents, getImplementations, getPatterns } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
+import { getCanonicalVocabularies } from '@uianatomy/shared/vocabulary';
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
 type View = (typeof VIEW_VALUES)[number];
@@ -369,6 +370,13 @@ export function createServer(): McpServer {
       rows.sort((a, b) => a.patternName.localeCompare(b.patternName));
       return jsonResult(rows);
     },
+  );
+
+  server.tool(
+    'get_canonical_vocabularies',
+    'Return the canonical token / motion / breakpoint / property / interactive-state vocabularies that YAML values must draw from. Same source the consistency-test enforces. Useful for resolving values like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or for surfacing the allowed enum to a downstream UI. Returns `{ spacing, radius, color, elevation, typography, motion: { durations, easing }, breakpoint, propertyVocab, propertyBounded, interactiveStates }`.',
+    {},
+    async () => jsonResult(getCanonicalVocabularies()),
   );
 
   server.tool(

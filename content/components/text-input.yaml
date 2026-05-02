@@ -653,6 +653,7 @@ a11yAcceptance:
         on blur). On invalid → valid transition, SR re-focus
         announces normally without the invalid suffix; the
         error node clears.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-input-field-name
     - aria-required-attr

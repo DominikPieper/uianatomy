@@ -568,6 +568,7 @@ a11yAcceptance:
         Trigger gets `aria-invalid="true"`; the inline error
         referenced via `aria-describedby` is announced
         ("Please make a selection").
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-required-attr
     - aria-valid-attr-value

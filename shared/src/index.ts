@@ -5,3 +5,4 @@ export * from './svg.js';
 export * from './format.js';
 export * from './compare.js';
 export * from './validate.js';
+export * from './vocabulary.js';

@@ -683,6 +683,7 @@ a11yAcceptance:
         Input gets `aria-invalid="true"`; the inline error referenced
         via `aria-describedby` is announced ("Pick a value from the
         list").
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-required-attr
     - aria-valid-attr-value

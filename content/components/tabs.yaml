@@ -553,6 +553,7 @@ a11yAcceptance:
         Old panel is removed from the AT tree (or marked
         `aria-hidden="true"` if kept in DOM); new panel is announced via
         its `aria-labelledby` relationship to the newly selected tab.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-required-children
     - aria-required-parent

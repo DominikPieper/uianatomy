@@ -602,6 +602,7 @@ a11yAcceptance:
         hidden text composed into the link's accessible
         name, not by `aria-label` (which would lose the link
         text).
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

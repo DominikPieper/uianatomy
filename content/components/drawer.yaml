@@ -607,6 +607,7 @@ a11yAcceptance:
         feedback only). The drawer's `dragging` state is not
         announced; the resulting close event triggers the standard
         close announcement.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-dialog-name
     - aria-required-attr

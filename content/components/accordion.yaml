@@ -534,6 +534,7 @@ a11yAcceptance:
         target inside the panel (or to the panel's heading if
         no specific target). The user is not surprised by
         invisible expansion.
+  axeCoreVersion: '4.10.2'
   axeRules:
     - aria-allowed-role
     - aria-required-attr

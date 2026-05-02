@@ -402,11 +402,18 @@ export const propertyMapEntrySchema = z
 
 export const propertyMapSchema = z.array(propertyMapEntrySchema).min(1);
 
+const axeCoreVersion = z
+  .string()
+  .regex(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$/, {
+    message: 'axeCoreVersion must be a semver string (e.g. "4.10.2")',
+  });
+
 export const a11yAcceptanceSchema = z
   .object({
     keyboardWalk: z.array(keyboardWalkEntrySchema).min(1).optional(),
     announcements: z.array(announcementEntrySchema).min(1).optional(),
     axeRules: z.array(axeRuleId).min(1).optional(),
+    axeCoreVersion: axeCoreVersion.optional(),
   })
   .strict()
   .refine(
@@ -417,6 +424,12 @@ export const a11yAcceptanceSchema = z
     {
       message:
         'a11yAcceptance must declare at least one of keyboardWalk, announcements, axeRules',
+    },
+  )
+  .refine(
+    (v) => v.axeCoreVersion === undefined || v.axeRules !== undefined,
+    {
+      message: 'axeCoreVersion is only meaningful when axeRules is declared',
     },
   );
 
