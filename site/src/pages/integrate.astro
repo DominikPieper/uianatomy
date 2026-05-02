@@ -1,0 +1,361 @@
+---
+import { Code } from 'astro-expressive-code/components';
+import Base from '../layouts/Base.astro';
+
+const SITE_ORIGIN = 'https://uianatomy.dev';
+const url = `${SITE_ORIGIN}/integrate`;
+
+const installOneLiner = `mkdir -p .claude/skills/uianatomy-mcp \\
+  && curl -fsSL -o .claude/skills/uianatomy-mcp/SKILL.md \\
+       https://uianatomy.dev/.well-known/agent-skills/uianatomy-mcp/SKILL.md`;
+
+const claudeCodeConfig = `{
+  "mcpServers": {
+    "uianatomy": {
+      "type": "http",
+      "url": "https://uianatomy.dev/mcp"
+    }
+  }
+}`;
+
+const claudeDesktopConfig = `{
+  "mcpServers": {
+    "uianatomy": {
+      "type": "http",
+      "url": "https://uianatomy.dev/mcp"
+    }
+  }
+}`;
+
+const cursorConfig = `{
+  "mcpServers": {
+    "uianatomy": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://uianatomy.dev/mcp"]
+    }
+  }
+}`;
+
+const sdkSnippet = `import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://uianatomy.dev/mcp"),
+);
+const client = new Client({ name: "your-app", version: "1.0.0" });
+await client.connect(transport);
+
+const result = await client.callTool({
+  name: "get_anatomy",
+  arguments: { id: "modal" },
+});`;
+
+const TOOL_GROUPS = [
+  {
+    heading: 'Components',
+    intro: 'Read the canonical anatomy, axes, mismatches, mistakes, and cross-framework mapping.',
+    tools: [
+      ['list_components', '—', 'Every canonical component (id, name, description).'],
+      ['search_components', 'query', 'Substring search across id / name / description / slots / variants.'],
+      ['get_component', 'id', 'Full canonical schema for one component.'],
+      ['get_component_view', 'id, view', 'Designer / dev / bridge projection.'],
+      ['get_anatomy', 'id', 'Slot and region definitions.'],
+      ['get_axes', 'id', 'Variants, properties, states.'],
+      ['get_mismatches', 'id', 'Documented Figma ↔ code misalignments.'],
+      ['get_common_mistakes', 'id', 'Documented implementation errors and the fix.'],
+      ['get_framework_map', 'id', 'Cross-framework expression (web / React / Angular / Vue).'],
+      ['get_tokens', 'id', 'Per-slot token bindings (spacing / radius / color / elevation / typography).'],
+      ['get_motion', 'id', 'Motion block (durations, easing, reduced-motion fallback). Null when absent.'],
+      ['get_responsive', 'id', 'Responsive breakpoints. Null when absent.'],
+      ['get_transitions', 'id', 'State-machine transitions (from / to / trigger). Null when absent.'],
+      ['get_events', 'id', 'Events array (name, payload, per-framework notes). Null when absent.'],
+      ['get_when_to_use', 'id', 'Use / avoid prose plus related-component differentiators.'],
+      ['get_changelog', 'id', 'Versioning metadata (since + changelog entries). Null when absent.'],
+    ],
+  },
+  {
+    heading: 'Patterns (compositions)',
+    intro: 'Canonical compositions of components into recurring UI flows.',
+    tools: [
+      ['list_patterns', '—', 'Every canonical pattern with composed component ids.'],
+      ['get_pattern', 'id', 'Full pattern record (composition, decisions, mistakes, framework skeletons).'],
+      ['get_patterns_for_component', 'componentId', 'Every pattern that composes a given component, with its role.'],
+    ],
+  },
+  {
+    heading: 'Implementations (library audits)',
+    intro: 'Phase-2 library audits showing how each library diverges from the canon.',
+    tools: [
+      ['list_implementations', '—', 'Every library/component pair with divergence count.'],
+      ['get_implementations', 'componentId', 'Full audit records for one canonical component, sorted by library.'],
+      [
+        'validate_implementation',
+        'componentId, code, framework',
+        'Heuristic structural conformance check. Reports missing required slots / variants / properties / events.',
+      ],
+    ],
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'TechArticle',
+      '@id': `${url}#article`,
+      headline: 'Integrate UI Anatomy in your agent or codebase',
+      description:
+        'How to wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK — plus what the 22 tools can do.',
+      url,
+      inLanguage: 'en-US',
+      author: {
+        '@type': 'Person',
+        name: 'Dominik Pieper',
+        url: 'https://github.com/DominikPieper',
+        sameAs: ['https://github.com/DominikPieper'],
+      },
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Components', item: `${SITE_ORIGIN}/` },
+          { '@type': 'ListItem', position: 2, name: 'Integrate', item: url },
+        ],
+      },
+    },
+  ],
+};
+---
+<Base
+  title="Integrate"
+  description="Wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK. 22 tools, public, no auth."
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: 'Integrate' }]}
+  jsonLd={jsonLd}
+>
+  <article class="shell integrate" data-pagefind-body>
+    <header class="integrate__hero">
+      <p class="hero-eyebrow">Integrate</p>
+      <h1 class="integrate__title">Use UI Anatomy from your agent</h1>
+      <p class="integrate__lede">
+        The canon ships as an MCP server (<code>https://uianatomy.dev/mcp</code>) and as an
+        agent-skill. Public, no auth, 22 tools. Drop the skill into any project and wire the
+        MCP server with one JSON snippet.
+      </p>
+      <p class="integrate__cta">
+        <a href="#quick-start">Quick start ↓</a>
+        <span aria-hidden="true">·</span>
+        <a href="#tools">What you get ↓</a>
+      </p>
+    </header>
+
+    <section class="integrate__section" id="quick-start" aria-labelledby="quick-start-h">
+      <h2 id="quick-start-h" class="integrate__h2">Quick start</h2>
+      <p>One-liner that creates the skill in your project and wires the MCP server for Claude Code.</p>
+      <ol class="integrate__steps">
+        <li>
+          <strong>Install the skill.</strong> Run from your project root:
+          <Code code={installOneLiner} lang="bash" wrap={true} />
+          The skill is the canonical reference — Claude Code loads it at session start.
+        </li>
+        <li>
+          <strong>Wire the MCP server.</strong> Add to <code>.mcp.json</code> at the project root
+          (or to your global Claude Code config):
+          <Code code={claudeCodeConfig} lang="json" wrap={true} />
+          Restart your client. <code>list_components</code> should now show up in the tool list.
+        </li>
+      </ol>
+    </section>
+
+    <section class="integrate__section" aria-labelledby="clients-h">
+      <h2 id="clients-h" class="integrate__h2">Other clients</h2>
+
+      <h3 class="integrate__h3">Claude Desktop</h3>
+      <p>Add to <code>claude_desktop_config.json</code> (Settings → Developer → Edit Config):</p>
+      <Code code={claudeDesktopConfig} lang="json" wrap={true} />
+
+      <h3 class="integrate__h3">Cursor / Windsurf / older Claude Desktop</h3>
+      <p>
+        For clients without native streamable-HTTP support, proxy via
+        <code>mcp-remote</code>:
+      </p>
+      <Code code={cursorConfig} lang="json" wrap={true} />
+
+      <h3 class="integrate__h3">Direct SDK (TypeScript)</h3>
+      <p>
+        Skip MCP-client config and call the server directly from Node ≥ 20:
+      </p>
+      <Code code={sdkSnippet} lang="ts" wrap={true} />
+    </section>
+
+    <section class="integrate__section" id="tools" aria-labelledby="tools-h">
+      <h2 id="tools-h" class="integrate__h2">What you get</h2>
+      <p>22 tools across three groups. Every tool returns JSON; null is the canonical "not declared" answer.</p>
+
+      {TOOL_GROUPS.map((group) => (
+        <div class="integrate__group">
+          <h3 class="integrate__h3">{group.heading}</h3>
+          <p>{group.intro}</p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Tool</th><th>Args</th><th>Returns</th></tr></thead>
+              <tbody>
+                {group.tools.map(([name, args, returns]) => (
+                  <tr>
+                    <td><code>{name}</code></td>
+                    <td><code>{args}</code></td>
+                    <td>{returns}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <section class="integrate__section" aria-labelledby="flows-h">
+      <h2 id="flows-h" class="integrate__h2">Typical flows</h2>
+
+      <h3 class="integrate__h3">"How is a Modal structured?"</h3>
+      <ol>
+        <li><code>get_anatomy({"{ id: 'modal' }"})</code> — slots with required/optional, purpose, layout hints.</li>
+        <li><code>get_axes({"{ id: 'modal' }"})</code> — variants and states.</li>
+        <li><code>get_transitions({"{ id: 'modal' }"})</code> — closed → opening → open → closing → closed.</li>
+      </ol>
+
+      <h3 class="integrate__h3">"How does Radix Dialog diverge from canonical Modal?"</h3>
+      <ol>
+        <li><code>get_implementations({"{ componentId: 'modal' }"})</code> — array of audits, one per library.</li>
+        <li>Inspect the <code>radix</code> entry's <code>divergence</code> list (omitted / renamed / extended / reshaped) and <code>exampleCode</code>.</li>
+      </ol>
+
+      <h3 class="integrate__h3">"I just generated a Modal in React. Did I miss anything?"</h3>
+      <ol>
+        <li><code>validate_implementation({"{ componentId: 'modal', code, framework: 'react' }"})</code> — structural report listing missing required slots / variants / properties / events.</li>
+        <li>Treat <code>missing</code> entries as a checklist, not as defects — substring search has false negatives. Pair with <code>/api/components/modal/a11y-fixture.json</code> for behavioural tests.</li>
+      </ol>
+
+      <h3 class="integrate__h3">"What patterns use this component?"</h3>
+      <ol>
+        <li><code>get_patterns_for_component({"{ componentId: 'modal' }"})</code> — every canonical pattern that composes the component, with the role it plays.</li>
+      </ol>
+    </section>
+
+    <section class="integrate__section" aria-labelledby="fallback-h">
+      <h2 id="fallback-h" class="integrate__h2">No-MCP fallback</h2>
+      <p>If your client can't speak MCP, the same data is on a plain JSON API:</p>
+      <ul>
+        <li><code><a href="/api/components.json">/api/components.json</a></code> — full index.</li>
+        <li><code>/api/components/&lt;id&gt;.json</code> — full canonical schema for one component.</li>
+        <li><code>/api/components/&lt;id&gt;/a11y-fixture.json</code> — keyboardWalk + announcements + axeRules, ready for Playwright + axe-core.</li>
+      </ul>
+      <p>
+        Pages also serve markdown on <code>Accept: text/markdown</code> with
+        <code>x-markdown-tokens</code> headers — useful for agents that prefer prose context over JSON.
+      </p>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .integrate {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+  .integrate__hero {
+    margin-bottom: 56px;
+  }
+  .integrate__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 16px;
+  }
+  .integrate__lede {
+    color: var(--fg);
+    margin: 0 0 16px;
+    line-height: 1.55;
+  }
+  .integrate__cta {
+    color: var(--fg-muted);
+    font-size: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+  }
+  .integrate__cta a {
+    color: inherit;
+  }
+  .integrate__section {
+    margin-block: 56px;
+  }
+  .integrate__h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+  .integrate__h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 32px 0 8px;
+  }
+  .integrate__steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 24px;
+  }
+  .integrate__steps > li {
+    border-left: 2px solid var(--accent-active);
+    padding: 4px 0 4px 16px;
+    line-height: 1.65;
+  }
+  .integrate__steps > li > strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .integrate__group {
+    margin-block: 32px;
+  }
+  .integrate p,
+  .integrate ol,
+  .integrate ul {
+    line-height: 1.65;
+  }
+  .integrate ol,
+  .integrate ul {
+    padding-inline-start: 1.25em;
+    margin: 8px 0 16px;
+  }
+  .integrate code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+  }
+  .integrate table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .integrate th,
+  .integrate td {
+    border: 1px solid var(--border-subtle);
+    padding: 8px 12px;
+    text-align: start;
+    vertical-align: top;
+  }
+  .integrate th {
+    background: var(--surface-sunken);
+    font-weight: 500;
+  }
+</style>
