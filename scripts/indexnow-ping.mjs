@@ -45,7 +45,7 @@ async function main() {
     urls = await urlsFromSitemap();
   } catch (err) {
     console.warn(`[indexnow] sitemap not found at ${sitemapPath} — skipping ping (run \`pnpm -C site build\` first).`);
-    process.exit(0);
+    return;
   }
   if (urls.length === 0) {
     console.warn('[indexnow] sitemap had no URLs — nothing to ping.');
@@ -56,17 +56,24 @@ async function main() {
     console.log(`[indexnow] first 5: ${urls.slice(0, 5).join(', ')}`);
     return;
   }
-  const res = await ping(urls);
+  let res;
+  try {
+    res = await ping(urls);
+  } catch (err) {
+    console.warn(`[indexnow] network error pinging ${ENDPOINT} — skipping (deploy not affected):`, err?.message ?? err);
+    return;
+  }
   if (res.status === 200 || res.status === 202) {
     console.log(`[indexnow] pinged ${urls.length} URLs — HTTP ${res.status}`);
     return;
   }
-  const text = await res.text();
-  console.error(`[indexnow] HTTP ${res.status}: ${text}`);
-  process.exitCode = 1;
+  // Non-2xx is logged as a warning but never fails the surrounding deploy
+  // step. IndexNow is a discovery hint, not a deploy-critical signal.
+  const text = await res.text().catch(() => '');
+  console.warn(`[indexnow] HTTP ${res.status} (non-fatal): ${text}`);
 }
 
 main().catch((err) => {
-  console.error('[indexnow] unexpected error:', err);
-  process.exitCode = 1;
+  // Programmer-error path — log but never fail the deploy.
+  console.warn('[indexnow] unexpected error (non-fatal):', err);
 });
