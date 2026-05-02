@@ -1,0 +1,76 @@
+---
+import { getCollection } from 'astro:content';
+import SectionHeader from '../SectionHeader.astro';
+
+interface Props {
+  componentId: string;
+}
+const { componentId } = Astro.props;
+
+interface Row {
+  patternId: string;
+  patternName: string;
+  role: string;
+  notes?: string;
+}
+
+const patterns = await getCollection('patterns');
+const rows: Row[] = [];
+for (const entry of patterns) {
+  for (const c of entry.data.composition) {
+    if (c.componentId === componentId) {
+      rows.push({
+        patternId: entry.data.id,
+        patternName: entry.data.name,
+        role: c.role,
+        notes: c.notes,
+      });
+    }
+  }
+}
+rows.sort((a, b) => a.patternName.localeCompare(b.patternName));
+---
+{rows.length > 0 && (
+  <>
+    <SectionHeader role="both" title="Used in patterns" id="used-in-patterns" />
+    <ul class="used-in-patterns" role="list">
+      {rows.map((r) => (
+        <li class="used-in-patterns__row">
+          <a class="used-in-patterns__name" href={`/patterns/${r.patternId}`}>{r.patternName}</a>
+          <span class="used-in-patterns__role">{r.role}</span>
+        </li>
+      ))}
+    </ul>
+  </>
+)}
+
+<style>
+  .used-in-patterns {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .used-in-patterns__row {
+    border-left: 2px solid var(--accent-active);
+    padding: 4px 0 4px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .used-in-patterns__name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: inherit;
+  }
+  .used-in-patterns__role {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+</style>

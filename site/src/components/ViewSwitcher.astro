@@ -6,16 +6,17 @@ type View = 'designer' | 'dev' | 'bridge';
 interface Props {
   componentId: string;
   activeView: View;
+  basePath?: string;
 }
 
-const { componentId, activeView } = Astro.props;
+const { componentId, activeView, basePath = '/components' } = Astro.props;
 
 type IconName = 'palette' | 'code' | 'git-compare';
 
 const VIEWS: Array<{ value: View; label: string; icon: IconName; href: string }> = [
-  { value: 'designer', label: 'Designer', icon: 'palette', href: `/components/${componentId}` },
-  { value: 'dev', label: 'Dev', icon: 'code', href: `/components/${componentId}/dev` },
-  { value: 'bridge', label: 'Bridge', icon: 'git-compare', href: `/components/${componentId}/bridge` },
+  { value: 'designer', label: 'Designer', icon: 'palette', href: `${basePath}/${componentId}` },
+  { value: 'dev', label: 'Dev', icon: 'code', href: `${basePath}/${componentId}/dev` },
+  { value: 'bridge', label: 'Bridge', icon: 'git-compare', href: `${basePath}/${componentId}/bridge` },
 ];
 ---
 <nav class="view-tabs" aria-label="View" data-component-id={componentId}>

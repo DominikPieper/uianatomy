@@ -1,0 +1,165 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ViewSwitcher from './ViewSwitcher.astro';
+import Icon from './Icon.astro';
+
+type View = 'designer' | 'dev' | 'bridge';
+
+interface Props {
+  entry: CollectionEntry<'patterns'>;
+  view: View;
+}
+
+const { entry, view } = Astro.props;
+const pattern = entry.data;
+
+const SITE_ORIGIN = 'https://uianatomy.dev';
+const VIEW_PATH: Record<View, string> = {
+  designer: '',
+  dev: '/dev',
+  bridge: '/bridge',
+};
+const url = `${SITE_ORIGIN}/patterns/${pattern.id}${VIEW_PATH[view]}`;
+
+const components = await getCollection('components');
+const componentById = new Map(components.map((c) => [c.data.id, c.data]));
+
+const VIEW_LABEL: Record<View, string> = {
+  designer: 'Designer view',
+  dev: 'Dev view',
+  bridge: 'Bridge view',
+};
+const VIEW_TITLE: Record<View, string> = {
+  designer: pattern.name,
+  dev: `${pattern.name} · Dev view`,
+  bridge: `${pattern.name} · Bridge view`,
+};
+const VIEW_DESCRIPTION: Record<View, string> = {
+  designer: pattern.description,
+  dev: `Framework skeletons and implementation wiring for the ${pattern.name} pattern. ${pattern.description}`,
+  bridge: `Common mistakes and canonical decisions when implementing the ${pattern.name} pattern. ${pattern.description}`,
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'TechArticle',
+      '@id': `${url}#article`,
+      headline: `${pattern.name} — ${VIEW_LABEL[view]}`,
+      description: VIEW_DESCRIPTION[view],
+      url,
+      inLanguage: 'en-US',
+      datePublished: pattern.lastReviewed,
+      dateModified: pattern.lastReviewed,
+      author: {
+        '@type': 'Person',
+        name: 'Dominik Pieper',
+        url: 'https://github.com/DominikPieper',
+        sameAs: ['https://github.com/DominikPieper'],
+      },
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Components', item: `${SITE_ORIGIN}/` },
+          { '@type': 'ListItem', position: 2, name: 'Patterns', item: `${SITE_ORIGIN}/patterns` },
+          { '@type': 'ListItem', position: 3, name: pattern.name, item: `${SITE_ORIGIN}/patterns/${pattern.id}` },
+        ],
+      },
+    },
+    {
+      '@type': 'HowTo',
+      '@id': `${url}#howto`,
+      name: pattern.name,
+      description: pattern.description,
+      url,
+      step: pattern.composition.map((c, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: c.role,
+        text: `Use the ${componentById.get(c.componentId)?.name ?? c.componentId} component as the ${c.role}.${c.notes ? ' ' + c.notes : ''}`,
+        url: `${SITE_ORIGIN}/components/${c.componentId}`,
+      })),
+    },
+  ],
+};
+---
+<Base
+  title={VIEW_TITLE[view]}
+  description={VIEW_DESCRIPTION[view]}
+  breadcrumb={[
+    { name: 'Components', href: '/' },
+    { name: 'Patterns', href: '/patterns' },
+    { name: pattern.name },
+  ]}
+  view={view}
+  ogType="article"
+  articleModifiedTime={pattern.lastReviewed}
+  jsonLd={jsonLd}
+>
+  <article class="shell pattern" data-pagefind-body={view === 'designer' ? '' : undefined} data-pagefind-ignore={view === 'designer' ? undefined : ''}>
+    <header class="pattern__hero">
+      <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
+      <h1 class="pattern__name">{pattern.name}</h1>
+      <p class="pattern__description">{pattern.description}</p>
+      <div class="pattern__view-switch">
+        <ViewSwitcher componentId={pattern.id} activeView={view} basePath="/patterns" />
+      </div>
+    </header>
+
+    <slot />
+
+    {pattern.notes && (
+      <section class="pattern__section pattern__notes" aria-labelledby="notes">
+        <h2 id="notes" class="pattern__h2">Notes</h2>
+        <p>{pattern.notes}</p>
+      </section>
+    )}
+
+    <footer class="pattern__footer">
+      <span>
+        <Icon name="clock" size={12} /> Last reviewed <time datetime={pattern.lastReviewed}>{pattern.lastReviewed}</time>
+      </span>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .pattern {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+  .pattern__hero {
+    margin-bottom: 32px;
+  }
+  .pattern__name {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 16px;
+  }
+  .pattern__description {
+    color: var(--fg-muted);
+    margin: 0 0 24px;
+    font-size: 1.05em;
+    line-height: 1.6;
+  }
+  .pattern__view-switch {
+    margin: 16px 0 0;
+  }
+  .pattern__footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 13px;
+    color: var(--fg-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>

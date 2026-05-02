@@ -1,0 +1,54 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'patterns'>;
+}
+const { entry } = Astro.props;
+const pattern = entry.data;
+---
+<section class="pattern__section" aria-labelledby="mistakes">
+  <h2 id="mistakes" class="pattern__h2">Common mistakes</h2>
+  <ol class="pattern__mistakes">
+    {pattern.mistakes.map((m) => (
+      <li>
+        <h3 class="pattern__mistake-title">{m.title}</h3>
+        <p>{m.description}</p>
+        <p class="pattern__mistake-fix"><strong>Fix.</strong> {m.fix}</p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .pattern__section {
+    margin-block: 48px;
+  }
+  .pattern__h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+  .pattern__mistakes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .pattern__mistakes li {
+    border-left: 2px solid var(--accent-active);
+    padding: 4px 0 4px 16px;
+  }
+  .pattern__mistake-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin: 0 0 6px;
+  }
+  .pattern__mistake-fix {
+    margin: 8px 0 0;
+    line-height: 1.6;
+  }
+</style>

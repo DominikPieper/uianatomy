@@ -1,0 +1,64 @@
+---
+import { Code } from 'astro-expressive-code/components';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'patterns'>;
+}
+const { entry } = Astro.props;
+const pattern = entry.data;
+
+const SKELETON_LANG: Record<keyof typeof pattern.frameworkSkeletons, string> = {
+  webComponents: 'html',
+  react: 'tsx',
+  vue: 'vue',
+  angularSignals: 'html',
+};
+const SKELETON_LABEL: Record<keyof typeof pattern.frameworkSkeletons, string> = {
+  webComponents: 'Web Components',
+  react: 'React',
+  vue: 'Vue',
+  angularSignals: 'Angular (signals)',
+};
+---
+<section class="pattern__section" aria-labelledby="skeletons">
+  <h2 id="skeletons" class="pattern__h2">Framework skeletons</h2>
+  <p class="pattern__skeletons-lede">
+    Composition shape only. Each library will diverge in API surface
+    (see the linked component pages for divergence audits).
+  </p>
+  {(['webComponents', 'react', 'vue', 'angularSignals'] as const).map((key) => (
+    <div class="pattern__skeleton">
+      <h3 class="pattern__skeleton-label">{SKELETON_LABEL[key]}</h3>
+      <Code code={pattern.frameworkSkeletons[key]} lang={SKELETON_LANG[key]} wrap={true} />
+    </div>
+  ))}
+</section>
+
+<style>
+  .pattern__section {
+    margin-block: 48px;
+  }
+  .pattern__h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+  .pattern__skeletons-lede {
+    color: var(--fg-muted);
+    margin: 0 0 16px;
+  }
+  .pattern__skeleton {
+    margin-block: 24px;
+  }
+  .pattern__skeleton-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+    margin: 0 0 8px;
+  }
+</style>

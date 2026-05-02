@@ -15,6 +15,7 @@ import I18nSection from '../sections/I18nSection.astro';
 import MismatchesTable from '../sections/MismatchesTable.astro';
 import MistakesList from '../sections/MistakesList.astro';
 import A11yTable from '../sections/A11yTable.astro';
+import UsedInPatternsSection from '../sections/UsedInPatternsSection.astro';
 
 interface Props { component: Component }
 const { component } = Astro.props;
@@ -90,6 +91,8 @@ const { component } = Astro.props;
 
   <SectionHeader role="both" title="Common mistakes" id="mistakes" />
   <MistakesList component={component} />
+
+  <UsedInPatternsSection componentId={component.id} />
 </section>
 
 <style>

@@ -163,6 +163,12 @@ export function siteJsonLd({ components }: SiteJsonLdInput = {}) {
           },
           {
             '@type': 'DataDownload',
+            encodingFormat: 'application/json',
+            contentUrl: `${SITE_ORIGIN}/api/patterns.json`,
+            name: 'Patterns index (JSON)',
+          },
+          {
+            '@type': 'DataDownload',
             encodingFormat: 'text/markdown',
             contentUrl: `${SITE_ORIGIN}/llms-full.txt`,
             name: 'Full canon as Markdown (llms-full.txt)',

@@ -32,6 +32,7 @@ interface PageData {
 }
 
 const components = await getCollection('components');
+const patterns = await getCollection('patterns');
 
 const pages: Record<string, PageData> = {
   index: {
@@ -42,7 +43,38 @@ const pages: Record<string, PageData> = {
     title: 'Search',
     description: 'Find canonical UI Anatomy components by name, slot, or variant.',
   },
+  patterns: {
+    title: 'Patterns',
+    description: 'Canonical compositions of UI Anatomy components.',
+  },
+  integrate: {
+    title: 'Integrate',
+    description: 'Wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, or a direct SDK.',
+  },
+  methodology: {
+    title: 'Methodology',
+    description: 'How UI Anatomy researches, writes, and validates each canonical component.',
+  },
+  changelog: {
+    title: 'Changelog',
+    description: 'Dated record of substantive changes to the UI Anatomy canon.',
+  },
 };
+
+for (const entry of patterns) {
+  pages[`patterns/${entry.data.id}`] = {
+    title: entry.data.name,
+    description: entry.data.description,
+    view: 'designer',
+  };
+  for (const view of ['dev', 'bridge'] as const) {
+    pages[`patterns/${entry.data.id}/${view}`] = {
+      title: entry.data.name,
+      description: entry.data.description,
+      view,
+    };
+  }
+}
 
 for (const entry of components) {
   const id = entry.id;
