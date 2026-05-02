@@ -1,0 +1,438 @@
+id: login-form
+name: Login Form
+description: >-
+  The canonical credentials surface — a `<form>` with an identifier
+  field (email or username), a password field with a visibility
+  toggle, a primary submit button, and secondary affordances
+  (forgot-password link, sign-up link). Composes TextInput twice,
+  Button, and Link. Single-page variant is canonical; split-page
+  ("email first, password on next screen") is documented as a
+  decision rather than a separate pattern.
+composition:
+  - componentId: text-input
+    role: identifier field (email or username)
+    notes: >-
+      Use `type="email"` with `autocomplete="email"` for the
+      contemporary canonical login. For dual identifier flows
+      (email or username accepted), use `type="text"` with
+      `autocomplete="username"` and accept any string. Initial
+      focus lands here unless the page is loaded with the field
+      pre-filled by autofill.
+  - componentId: text-input
+    role: password field
+    notes: >-
+      Use `type="password"` with `autocomplete="current-password"`
+      for the login flow specifically (signup uses
+      `new-password`). The trailing-icon slot hosts the
+      visibility toggle as a real `<button type="button">` —
+      never the password input itself with `type` flipping. The
+      `required` attribute pairs with a visible required
+      indicator.
+  - componentId: button
+    role: primary action (submit)
+    notes: >-
+      Use `variant="primary"` and `type="submit"`. The button
+      label names the action ("Sign in", "Log in") — never
+      generic "Submit" or "OK". The button must be inside the
+      `<form>` so Enter on either field submits.
+  - componentId: link
+    role: forgot-password recovery
+    notes: >-
+      Use `variant="inline"` placed near the password field (above
+      it or to the right). Routes to the password-recovery flow.
+      Distinguished from the sign-up link by position and by the
+      verb of its text ("Forgot your password?").
+  - componentId: link
+    role: alternate-flow link (sign up / register)
+    notes: >-
+      Use `variant="inline"` placed near the submit button
+      (typically below it). Routes to the registration flow when
+      the user has no account. Optional — omit if the product
+      has no public sign-up (B2B SaaS with admin-provisioned
+      accounts).
+whenToUse:
+  use: >-
+    For account-based products where the user authenticates with a
+    credential the system can verify. The canonical entry point
+    when the auth model is "the user has previously created an
+    account and is now returning". Single-page variant for the
+    common case; split-page for products with passwordless or
+    federated-identity flows where the email determines the next
+    step.
+  avoid: >-
+    For unauthenticated browsing — gate only what genuinely
+    requires identity. For machine-to-machine auth — that is API
+    keys, not a login form. For one-off email-magic-link flows —
+    that pattern (single email field plus Send button) is a
+    distinct passwordless-login pattern. For role-elevated
+    re-authentication ("confirm your password to delete account")
+    use a `Confirmation Flow` with a password TextInput inside,
+    not a full Login Form.
+decisions:
+  - question: >-
+      Single-page (email + password together) or split-page (email
+      first, password on next screen)?
+    answer: >-
+      Single-page is the canonical default; split-page is a
+      product decision tied to passwordless / federated flows.
+    rationale: >-
+      Single-page is faster for users with stored credentials in
+      a password manager (one form, one autofill, one submit).
+      Split-page only pays off when the email determines the
+      flow (federated-SSO redirect, passwordless magic-link,
+      MFA-only-account). Google, Microsoft, Apple use split-page
+      because email selects the auth provider; most other
+      products do not have that fork. Default to single-page;
+      split when the email-routes-to-different-flow constraint
+      is real.
+  - question: >-
+      Show "wrong email" and "wrong password" as separate errors,
+      or as a single combined error?
+    answer: >-
+      Single combined error — "Wrong email or password" — for
+      production; never disclose which one was wrong.
+    rationale: >-
+      Specific errors leak account-existence information. An
+      attacker enumerating addresses can probe the form: a
+      "wrong password" response confirms the email is
+      registered; a "wrong email" response confirms it is not.
+      The combined message removes the enumeration oracle.
+      Pair with rate-limiting and CAPTCHA-on-failure for the
+      complete defence; the message text alone is necessary
+      not sufficient. OWASP ASVS 2.1, NIST SP 800-63B, and the
+      Auth0 / Okta security guides all converge on this rule.
+  - question: >-
+      Should the password field have a visibility toggle?
+    answer: >-
+      Yes — recommended for all login forms.
+    rationale: >-
+      The visibility toggle reduces typo-driven failed-login
+      attempts (especially on mobile, where touch keyboards
+      hide the typed character after a brief reveal). The
+      security objection — "shoulder-surfing in public spaces"
+      — is mitigated by the toggle defaulting to hidden and
+      requiring an explicit press. The accessibility benefit
+      to users with motor or vision differences is large. NIST
+      SP 800-63B explicitly recommends allowing password
+      reveal. The toggle button is a real `<button>` with an
+      accessible label that updates ("Show password" / "Hide
+      password").
+  - question: >-
+      Where does initial focus land?
+    answer: >-
+      The first empty field — usually the email input, unless
+      browser autofill has populated it, in which case focus the
+      password.
+    rationale: >-
+      Auto-focusing the page on load forces a scroll on mobile
+      (the on-screen keyboard pops up immediately and shifts
+      the layout). The trade is between "fast for keyboard
+      users" and "jarring for mobile users". Canonical resolution:
+      do focus the email field on `DOMContentLoaded` for desktop
+      (`@media (hover: hover) and (pointer: fine)`) and skip the
+      autofocus on touch devices. Or simpler: do not auto-focus
+      at all and rely on the user's tap or Tab. The "no
+      autofocus" rule is the more conservative canon; document
+      both choices.
+  - question: >-
+      What `autocomplete` tokens go on each field?
+    answer: >-
+      Email field: `autocomplete="email"` (or `username` if the
+      identifier is not strictly an email). Password field:
+      `autocomplete="current-password"`. Sign-up flows use
+      `new-password` instead.
+    rationale: >-
+      The autocomplete tokens are how browsers and password
+      managers recognise the form. `current-password` tells the
+      manager "this is the field where the existing stored
+      password should fill in"; `new-password` tells it "this
+      is a registration form, suggest a strong new password".
+      Mixing them — using `new-password` on a login form —
+      breaks autofill and forces the user to type the password
+      manually every time. The HTML spec lists the full token
+      set; getting these right is the difference between a form
+      that works with 1Password and one that does not.
+  - question: >-
+      Is the email field required?
+    answer: >-
+      Yes — both fields are required. Pair the visible required
+      indicator with the `required` HTML attribute on each input.
+    rationale: >-
+      Browser-native validation surfaces the empty-required
+      message at the right moment (form submit). Server-side
+      validation must still run; client-side `required` is for
+      UX, not security. The visible indicator (asterisk or
+      "(required)") tells users before they try to submit; the
+      attribute tells the browser and assistive tech.
+mistakes:
+  - id: missing-autocomplete-tokens
+    title: Missing or wrong autocomplete tokens
+    description: >-
+      The email field has no `autocomplete` (or `autocomplete="off"`),
+      and the password field has either nothing or
+      `autocomplete="off"`. Password managers can still detect
+      the form via heuristics, but the experience degrades —
+      autofill misses the right fields, the user retypes
+      credentials every visit, and on mobile the platform
+      keyboard does not show the right shortcuts.
+    fix: >-
+      Set `autocomplete="email"` on the identifier field and
+      `autocomplete="current-password"` on the password. For
+      the rare case where autofill is genuinely wrong (a
+      one-time code field disguised as a password), use
+      `autocomplete="off"` plus `inputmode` to clarify the
+      intent. The default for a real login form is always to
+      enable autofill.
+  - id: enumeration-leak
+    title: Specific error messages reveal whether the account exists
+    description: >-
+      The form returns "Email not found" for unknown addresses
+      and "Wrong password" for known addresses with bad
+      passwords. An attacker scripting against the form can
+      enumerate which emails are registered — a privacy and
+      security failure. Email harvesting + targeted phishing
+      both feed off this signal.
+    fix: >-
+      Return a single generic message — "Wrong email or
+      password" — regardless of which credential was wrong.
+      Match the response time (use a constant-time comparison
+      and a fixed-delay branch for "user not found" so timing
+      does not leak). Pair with rate-limiting on the endpoint
+      and a CAPTCHA challenge after N failed attempts. The
+      generic message is necessary; the rest is the complete
+      defence.
+  - id: password-reveal-via-type-flip
+    title: Show-password toggle implemented by flipping `type` on the input
+    description: >-
+      The visibility toggle changes `type="password"` to
+      `type="text"` on the input itself. Some password
+      managers re-detect the form when the type changes and
+      re-prompt or de-fill. Some keyboards behave differently
+      (autocorrect activates on type=text). The state change
+      is also not announced to assistive tech because it is
+      not a focusable button.
+    fix: >-
+      Wrap the visibility toggle in a real `<button type="button">`
+      with `aria-pressed` reflecting the current state and an
+      accessible label that updates ("Show password" /
+      "Hide password"). Internally, flipping `type` is fine —
+      but the affordance must be a button, not a click handler
+      on the input padding.
+  - id: generic-button-label
+    title: Submit button labelled "Submit", "OK", or "Sign in →"
+    description: >-
+      The button label is generic. Skim-readers and SR users
+      get no signal about what action the button takes. Decorative
+      arrows ("Sign in →") read aloud as "right-pointing
+      arrow" in some screen readers, adding noise.
+    fix: >-
+      Name the action concretely: "Sign in", "Log in to
+      <product>". Avoid arrows in the accessible name (use a
+      separate decorative icon with `aria-hidden="true"` if
+      visual emphasis is needed). The button is the primary
+      action; its name is the most-read string in the form.
+  - id: caps-lock-not-warned
+    title: Caps Lock active during password entry without warning
+    description: >-
+      The user types a password with Caps Lock on and it fails.
+      They retry, fail again, retry, lock the account. The
+      keyboard hardware state is not communicated. Most users
+      blame the password manager or the system before
+      checking Caps Lock.
+    fix: >-
+      Detect Caps Lock state on the password field
+      (`event.getModifierState('CapsLock')` on key events) and
+      surface a warning in the description slot or as an
+      adjacent helper-text node. Announce via `aria-live="polite"`
+      so SR users hear it without losing focus. The warning
+      is canonical UX hygiene, not a substitute for clear
+      error handling.
+  - id: autofocus-on-mobile
+    title: '`autofocus` on the email field shifts the page on mobile'
+    description: >-
+      The page loads, the email field gets `autofocus`, the
+      on-screen keyboard pops up, the layout reflows, and the
+      user's tap lands on a different element than they
+      intended. Compounds with split-page flows where the
+      keyboard pop also masks the "What's your email" prompt.
+    fix: >-
+      Skip autofocus on touch devices. Use a media query or
+      pointer-type detection to apply `autofocus` only at
+      `(hover: hover) and (pointer: fine)`. Or skip autofocus
+      entirely and rely on the user's tap. The conservative
+      canon is to never autofocus on a top-level form load.
+frameworkSkeletons:
+  webComponents: |
+    <form name="login" method="post" action="/login">
+      <ui-text-input
+        type="email"
+        name="email"
+        label="Email"
+        autocomplete="email"
+        required
+      ></ui-text-input>
+
+      <ui-text-input
+        type="password"
+        name="password"
+        label="Password"
+        autocomplete="current-password"
+        required
+        has-trailing-icon
+      >
+        <button slot="trailing-icon" type="button" aria-pressed="false"
+                aria-label="Show password" data-password-toggle>
+          <!-- eye icon -->
+        </button>
+      </ui-text-input>
+
+      <ui-link href="/forgot-password" variant="inline">
+        Forgot your password?
+      </ui-link>
+
+      <ui-button variant="primary" type="submit">Sign in</ui-button>
+
+      <p>
+        New here?
+        <ui-link href="/sign-up" variant="inline">Create an account</ui-link>
+      </p>
+    </form>
+  react: |
+    <form name="login" method="post" action="/login" onSubmit={handleSubmit}>
+      <TextInput
+        type="email"
+        name="email"
+        label="Email"
+        autoComplete="email"
+        required
+        value={email}
+        onChange={setEmail}
+        errorMessage={errors.email}
+      />
+
+      <TextInput
+        type="password"
+        name="password"
+        label="Password"
+        autoComplete="current-password"
+        required
+        value={password}
+        onChange={setPassword}
+        errorMessage={errors.password}
+        trailingIcon={
+          <Button variant="tertiary" type="button"
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(p => !p)}>
+            {showPassword ? <EyeOff /> : <Eye />}
+          </Button>
+        }
+      />
+
+      <Link href="/forgot-password" variant="inline">
+        Forgot your password?
+      </Link>
+
+      <Button variant="primary" type="submit">Sign in</Button>
+
+      <p>
+        New here?
+        <Link href="/sign-up" variant="inline">Create an account</Link>
+      </p>
+    </form>
+  vue: |
+    <form name="login" method="post" action="/login" @submit.prevent="onSubmit">
+      <TextInput
+        type="email"
+        name="email"
+        label="Email"
+        autocomplete="email"
+        required
+        v-model="email"
+        :error-message="errors.email"
+      />
+
+      <TextInput
+        type="password"
+        name="password"
+        label="Password"
+        autocomplete="current-password"
+        required
+        v-model="password"
+        :error-message="errors.password"
+        has-trailing-icon
+      >
+        <template #trailing-icon>
+          <button type="button"
+                  :aria-pressed="showPassword"
+                  :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                  @click="showPassword = !showPassword">
+            <component :is="showPassword ? EyeOff : Eye" />
+          </button>
+        </template>
+      </TextInput>
+
+      <Link href="/forgot-password" variant="inline">
+        Forgot your password?
+      </Link>
+
+      <Button variant="primary" type="submit">Sign in</Button>
+
+      <p>
+        New here?
+        <Link href="/sign-up" variant="inline">Create an account</Link>
+      </p>
+    </form>
+  angularSignals: |
+    <form name="login" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <ui-text-input
+        type="email"
+        formControlName="email"
+        label="Email"
+        autocomplete="email"
+        required
+        [errorMessage]="form.controls.email.errors?.['message']"
+      />
+
+      <ui-text-input
+        type="password"
+        formControlName="password"
+        label="Password"
+        autocomplete="current-password"
+        required
+        [errorMessage]="form.controls.password.errors?.['message']"
+        hasTrailingIcon
+      >
+        <button ng-content trailing-icon
+                type="button"
+                [attr.aria-pressed]="showPassword()"
+                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                (click)="showPassword.set(!showPassword())">
+          <ui-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
+        </button>
+      </ui-text-input>
+
+      <ui-link href="/forgot-password" variant="inline">
+        Forgot your password?
+      </ui-link>
+
+      <ui-button variant="primary" type="submit">Sign in</ui-button>
+
+      <p>
+        New here?
+        <ui-link href="/sign-up" variant="inline">Create an account</ui-link>
+      </p>
+    </form>
+notes: >-
+  This is the second canonical pattern after Confirmation Flow.
+  Triangulated against APG (textbox + button patterns), HTML spec
+  on `autocomplete`, NIST SP 800-63B (password guidance + reveal-
+  is-allowed), OWASP ASVS 2.1 (authentication), Polaris Account
+  pattern, Material 3 Sign-in Form, and the auth0 / Okta /
+  WorkOS engineering blogs on enumeration-resistant login forms.
+  Library APIs and security guidance evolve; re-validate against
+  current docs and threat-modelling discipline before citing in
+  production reviews. Sign-up Form, Password Recovery Flow, and
+  Magic-Link Login are sibling patterns deferred to follow-up
+  work.
+lastReviewed: "2026-05-02"
