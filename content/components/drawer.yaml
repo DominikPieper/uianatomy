@@ -780,6 +780,16 @@ whenToUse:
         `aria-live`. Drawer is a navigable surface; Alert is a
         static message. The `Drawer[variant=navigation]` is similar
         to a SidebarNav, not to Alert.
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` is a persistent layout region that lives in
+        the page chrome and hosts global navigation. `Drawer` is
+        a transient overlay invoked on demand and dismissed.
+        Mobile-collapsed SidebarNav often *renders* as a Drawer
+        below `breakpoint.sm`, but the canonical reference treats
+        them as separate components — the persistent vs.
+        transient distinction is canonical even when the visual
+        rendering converges on small viewports.
 
 notes: >-
   Drawer is one of the most fragmented patterns in the field —

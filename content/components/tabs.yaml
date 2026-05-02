@@ -39,6 +39,22 @@ whenToUse:
         own URLs; `Tabs` swap inline content within one page.
         Vertical Tabs and SidebarNav can look similar — the
         distinguisher is whether selecting changes the URL.
+    - id: disclosure
+      difference: >-
+        `Disclosure` toggles a single panel open or closed in
+        place. `Tabs` switches between several mutually exclusive
+        panels under one surface. A page with one collapsible
+        section is a Disclosure; a page that picks among 3–7 is
+        Tabs.
+    - id: stepper
+      difference: >-
+        `Stepper` is sequential — steps are completed in a defined
+        order with state carried between them (linear or
+        non-linear). `Tabs` is parallel — peer panels switchable
+        in any order, each independent of the others. Reach for
+        Stepper when "step 3 needs the answer from step 1" is
+        meaningful; reach for Tabs when the panels could be read
+        in any order.
 
 anatomy:
   - id: tablist

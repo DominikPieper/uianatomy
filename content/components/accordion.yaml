@@ -683,6 +683,14 @@ whenToUse:
         within a single page. A nav-style accordion (clicking
         an item navigates) is a SidebarNav with collapsible
         sections, not an Accordion.
+    - id: stepper
+      difference: >-
+        `Stepper` enforces a sequential flow with state carried
+        between steps; `Accordion` is a parallel list of
+        independent panels, each toggleable in any order. A
+        wizard-style "expand each step in turn" UI may *look*
+        like an accordion but is canonically a Stepper — the
+        ordering and validation contract differs.
 
 notes: >-
   Accordion is one of the most-implemented patterns and one of

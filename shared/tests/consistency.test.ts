@@ -228,40 +228,16 @@ describe('cross-component consistency', () => {
   });
 
   // Bidirectional vsRelated lint: every `whenToUse.vsRelated[].id` reference
-  // expects the target component to also reference back. Asymmetric pairs may
-  // exist deliberately (e.g. one side covers the comparison exhaustively in
-  // prose and the other side does not need to repeat it). New asymmetric pairs
-  // require an explicit allowlist entry below with rationale; existing pairs
-  // are tracked as a backfill list in P6-86.
-  it('whenToUse.vsRelated is bidirectional or explicitly allowlisted', async () => {
+  // requires the target component to reference back. New asymmetric pairs may
+  // be added to ALLOWED_ASYMMETRIC with explicit rationale; the canon today
+  // has zero asymmetric pairs (P6-86 backfilled the original 19).
+  it('whenToUse.vsRelated is bidirectional', async () => {
     const map = await loadComponents({ contentDir });
     const refs = new Map<string, Set<string>>();
     for (const c of map.values()) {
       refs.set(c.id, new Set((c.whenToUse?.vsRelated ?? []).map((r) => r.id)));
     }
-    // Pairs deliberately one-directional today. Each entry is `${src}->${target}`.
-    // P6-86 tracks incremental backfill; remove entries here as reverse-refs land.
-    const ALLOWED_ASYMMETRIC = new Set([
-      'banner->modal',
-      'button->menu-button',
-      'disclosure->tabs',
-      'disclosure->modal',
-      'drawer->alert',
-      'link->menu-button',
-      'menu-button->select',
-      'menu-button->tooltip',
-      'search-input->tag-input',
-      'sidebar-nav->drawer',
-      'stepper->tabs',
-      'stepper->accordion',
-      'stepper->sidebar-nav',
-      'text-input->search-input',
-      'text-input->combobox',
-      'text-input->tag-input',
-      'toast->modal',
-      'toast->tooltip',
-      'tooltip->modal',
-    ]);
+    const ALLOWED_ASYMMETRIC = new Set<string>();
     const failures: string[] = [];
     for (const [src, targets] of refs) {
       for (const t of targets) {

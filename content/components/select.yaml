@@ -740,6 +740,16 @@ whenToUse:
         preferred for visible-on-page selection state where
         the user benefits from seeing tokens; Select is
         preferred for compact triggers in dense forms.
+    - id: menu-button
+      difference: >-
+        `Select` commits a value; `MenuButton` invokes an action.
+        `aria-haspopup` differs (`listbox` vs `menu`) and the
+        keyboard contracts diverge — Select keeps DOM focus on
+        the trigger and uses `aria-activedescendant` for option
+        highlight; MenuButton moves focus into the menu. A
+        common confusion is rendering an "actions" menu as a
+        Select-shaped trigger with action items inside; reach
+        for MenuButton there.
 
 notes: >-
   Select is one of the most-implemented patterns and one of the

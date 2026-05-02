@@ -746,6 +746,14 @@ whenToUse:
         groups for nested navigation, but the leaf items are
         still anchor links — the accordion is structural
         within the sidebar, not the sidebar itself.
+    - id: stepper
+      difference: >-
+        `Stepper` is a sequential flow indicator within one
+        page; `SidebarNav` is global navigation between
+        pages. A vertical stepper and a vertical sidebar can
+        look similar — the distinguisher is whether the
+        items are *steps in a process* (Stepper) or *peer
+        destinations* (SidebarNav).
 
 notes: >-
   SidebarNav vocabulary varies: Material 3 calls this

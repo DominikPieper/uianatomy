@@ -678,6 +678,22 @@ whenToUse:
         on hover/focus; `MenuButton` opens a list of
         interactive commands invoked on click/keyboard. They
         do not share visual or behavioural surface area.
+    - id: button
+      difference: >-
+        `Button` invokes one action on activation;
+        `MenuButton` reveals a popup list of related actions
+        and lets the user pick. Reach for MenuButton when
+        more than ~3 commands share a single trigger surface
+        (overflow menus, contextual actions, settings groups);
+        a plain Button is correct when there is exactly one
+        canonical action.
+    - id: link
+      difference: >-
+        `Link` navigates to a URL; `MenuButton` opens an
+        in-page menu of commands that do not change the URL.
+        A common confusion is a "user menu" that mixes both —
+        canon: render the trigger as a `MenuButton`, render
+        the navigation entries inside as `Link` children.
 
 notes: >-
   MenuButton is the cleanest case of role-driven contract: the

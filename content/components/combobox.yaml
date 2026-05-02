@@ -46,6 +46,14 @@ whenToUse:
         `variant: multi-select` is the constrained-set version;
         `TagInput` is the open-set version where users can create
         new tags.
+    - id: text-input
+      difference: >-
+        `TextInput` accepts free-form text with no constrained set
+        of values; `Combobox` filters and commits a value from a
+        canonical list (or, in `creatable` variants, opts in to
+        free text explicitly). Migrate TextInput to Combobox when
+        a finite set of acceptable values exists and typeahead
+        narrows the field meaningfully.
 
 anatomy:
   - id: input

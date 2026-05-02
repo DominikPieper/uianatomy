@@ -49,6 +49,30 @@ whenToUse:
         `Modal` with `variant: alertdialog` is a blocking variant
         for confirmations that demand user response; do not confuse
         the two.
+    - id: banner
+      difference: >-
+        `Banner` is a page-level non-blocking announcement strip
+        anchored to the layout (top or bottom). `Modal` interrupts
+        the flow and demands a decision; banners persist alongside
+        the content and never trap focus.
+    - id: disclosure
+      difference: >-
+        `Disclosure` reveals secondary detail inline and never
+        blocks the page. `Modal` blocks the page and demands an
+        explicit dismiss; reach for it only when the user must
+        complete the task before returning to the rest of the flow.
+    - id: toast
+      difference: >-
+        `Toast` is a transient, dismissable notification that
+        floats above content without focus or modality. `Modal`
+        steals focus, traps it, and waits for the user to commit
+        or dismiss. Toasts inform; modals interrupt.
+    - id: tooltip
+      difference: >-
+        `Tooltip` is hover- or focus-revealed descriptive text on
+        a single trigger; carries no actions and dismisses on
+        blur. `Modal` is a focus-trapping decision surface.
+        Tooltips supplement; modals block.
 
 anatomy:
   - id: backdrop

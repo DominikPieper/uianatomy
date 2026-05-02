@@ -682,10 +682,10 @@ describe('whenToUse field', () => {
     expect(ids).toEqual(['tile', 'list-item']);
   });
 
-  it('parses combobox whenToUse with three vsRelated entries', async () => {
+  it('parses combobox whenToUse vsRelated entries (post P6-86 backfill)', async () => {
     const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
     const ids = combobox.whenToUse?.vsRelated?.map((v) => v.id) ?? [];
-    expect(ids).toEqual(['select', 'search-input', 'tag-input']);
+    expect(ids).toEqual(['select', 'search-input', 'tag-input', 'text-input']);
     for (const v of combobox.whenToUse?.vsRelated ?? []) {
       expect(v.difference.length).toBeGreaterThan(0);
     }

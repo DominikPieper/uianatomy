@@ -714,6 +714,22 @@ whenToUse:
         variant) and renders selected values as inline tokens.
         Select is for bounded fixed lists; TagInput is for
         open-ended or visible-accumulation use cases.
+    - id: search-input
+      difference: >-
+        `SearchInput` accepts a single free-text query
+        submitted to a search engine; `TagInput` accumulates
+        multiple discrete values rendered as removable tokens.
+        SearchInput commits one string per submit; TagInput
+        commits a list, often growing as the user types.
+    - id: text-input
+      difference: >-
+        `TextInput` accepts a single free-form string;
+        `TagInput` accumulates multiple discrete values
+        rendered as inline tokens. The two share the input-
+        shape but differ in commit semantics — TextInput's
+        value is the input string, TagInput's value is the
+        accumulated token list and the input is a transient
+        staging area.
 notes: >-
   TagInput vocabulary varies: Material 3 calls this "Chip
   input"; Atlassian uses "Tag picker"; Polaris uses "Tag" but

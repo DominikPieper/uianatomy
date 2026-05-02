@@ -720,6 +720,15 @@ whenToUse:
         search is SearchInput-shaped. The two may compose —
         a search bar with both a TagInput for filters AND a
         SearchInput for query is a legitimate composite.
+    - id: text-input
+      difference: >-
+        `TextInput` is general-purpose free-text capture;
+        `SearchInput` is purpose-built for search query entry
+        with native browser affordances (autocomplete history,
+        Enter-to-submit semantics tied to the surrounding
+        form, optional clear button). The visual surface is
+        nearly identical; reach for SearchInput specifically
+        when the input drives a search results region.
 
 notes: >-
   SearchInput sits in a pattern-vs-component grey area: HTML's

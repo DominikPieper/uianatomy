@@ -526,6 +526,20 @@ whenToUse:
         changes; `Tooltip` is on-demand description revealed by
         hover or focus. Alert pushes content at the user; Tooltip
         is pulled by the user's interaction.
+    - id: menu-button
+      difference: >-
+        `Tooltip` is descriptive text on a single trigger and
+        carries no actions; `MenuButton` opens a list of
+        interactive commands invoked on click or keyboard. They
+        differ in role, dismiss-contract, and content rules — a
+        tooltip with a list of links inside is a MenuButton in
+        disguise.
+    - id: toast
+      difference: >-
+        `Toast` is system-pushed transient notification floating
+        above content; `Tooltip` is user-pulled description
+        anchored to a trigger. Toast appears without a hover or
+        focus event; tooltip never appears unsolicited.
 
 notes: >-
   Tooltip is the canonical reference's most contract-rigid

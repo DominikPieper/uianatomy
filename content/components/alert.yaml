@@ -644,6 +644,14 @@ whenToUse:
         situation (a form error, a recent action confirmation).
         Banner often spans the viewport width; Alert sits within
         a region.
+    - id: drawer
+      difference: >-
+        `Drawer` is an edge-anchored panel that may be modal or
+        non-modal and hosts arbitrary content (filters, settings,
+        a navigation tree). `Alert` is an inline `aria-live`
+        message announcing system state. The two surfaces only
+        overlap if a non-modal drawer is misused as a permanent
+        notice strip — reach for Banner or Alert there instead.
 
 notes: >-
   Alert occupies a confusing terminology space. The W3C ARIA APG
