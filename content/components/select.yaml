@@ -581,23 +581,23 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps default / inline.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg.
   - figma: Multi
     code: multi
-    type: Boolean
+    kind: boolean
     notes: Toggles single-vs-multi-select. Multi-select trigger displays a count by canon; comma-separated list is anti-pattern.
   - figma: Required
     code: required
-    type: Boolean
+    kind: boolean
     notes: Drives HTML5 validation on submit; canonical inline-error pattern via `aria-invalid` plus `aria-describedby`.
   - figma: Native
     code: native
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles native `<select>` rendering vs custom listbox.
       Canonical default is custom; native is an opt-in for
@@ -606,19 +606,19 @@ propertyMap:
       regardless of authored value.
   - figma: Has Groups
     code: groups
-    type: Boolean
+    kind: boolean
     notes: Toggles the option-group slot. Use for long lists categorised by domain (countries by continent, files by folder).
   - figma: Disabled
     code: disabled
-    type: Boolean
+    kind: boolean
     notes: Disables the entire select. Disabled options are a separate concern (per-option Boolean).
   - figma: Placeholder
     code: placeholder
-    type: Text
+    kind: text
     notes: Shown in value-display when nothing is selected. SR users hear it as the trigger's accessible name fallback.
   - figma: Caret
     code: caret
-    type: Instance Swap
+    kind: slot
     notes: Swap the chevron glyph; defaults vary per design system (down-arrow, triangle, double-arrow).
 
 formIntegration:

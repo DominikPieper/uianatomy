@@ -556,42 +556,42 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / icon-only.
   - figma: Side
     code: side
-    type: Variant
+    kind: enum
     notes: top / right / bottom / left. Authored placement preference; auto-flips on viewport collision.
   - figma: Align
     code: align
-    type: Variant
+    kind: enum
     notes: start / center / end along the perpendicular axis.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg. Affects trigger and menu typography.
   - figma: Has Caret
     code: hasCaret
-    type: Boolean
+    kind: boolean
     notes: Toggles the caret slot. Default true for standard variant; default false for icon-only.
   - figma: Has Separators
     code: separators
-    type: Boolean
+    kind: boolean
     notes: Toggles whether menu groups are visually separated. Decorative — does not change keyboard behaviour.
   - figma: Item Count
     code: 'items.length'
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes 2/3/4/5/6+ item counts as a Variant for
       preview-time layout review. Code accepts an array of menu
       item definitions.
   - figma: Trigger Label
     code: triggerLabel
-    type: Text
+    kind: text
     notes: For standard variant. Icon-only variant uses aria-label instead.
   - figma: Trigger Icon
     code: triggerIcon
-    type: Instance Swap
+    kind: slot
     notes: 'For icon-only variant. Common: kebab (⋮), meatball (⋯), avatar.'
 
 i18n:

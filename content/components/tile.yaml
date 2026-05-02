@@ -544,38 +544,38 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / interactive / selectable. Drives root semantic (container vs button vs option).
   - figma: Aspect
     code: aspect
-    type: Variant
+    kind: enum
     notes: square / portrait / landscape / free. Drives CSS `aspect-ratio` on the media slot.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact.
   - figma: Has Overlay
     code: hasOverlay
-    type: Boolean
+    kind: boolean
     notes: Toggles the contrast-scrim overlay. Required when label is text-on-image; optional for separated-caption layouts.
   - figma: Has Label
     code: hasLabel
-    type: Boolean
+    kind: boolean
     notes: Toggles the label slot. Tiles in image-only galleries (artwork grids) may omit labels entirely.
   - figma: Has Badge
     code: hasBadge
-    type: Boolean
+    kind: boolean
   - figma: Selected
     code: selected
-    type: Boolean
+    kind: boolean
     notes: For selectable variant. Drives `aria-selected` plus the visible checkbox state.
   - figma: Media
     code: media
-    type: Instance Swap
+    kind: slot
     notes: Swap the media component instance — image, video, or rendered preview.
   - figma: Badge
     code: badge
-    type: Instance Swap
+    kind: slot
     notes: Swap the badge component instance — status pill, count, "new" pulse.
 
 formIntegration:

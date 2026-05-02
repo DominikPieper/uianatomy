@@ -384,18 +384,19 @@ export const formIntegrationSchema = z
     },
   );
 
-export const figmaPropertyTypeSchema = z.enum([
-  'Boolean',
-  'Variant',
-  'Text',
-  'Instance Swap',
+export const propertyKindSchema = z.enum([
+  'enum',
+  'boolean',
+  'text',
+  'slot',
+  'number',
 ]);
 
 export const propertyMapEntrySchema = z
   .object({
     figma: z.string().min(1),
     code: z.string().min(1),
-    type: figmaPropertyTypeSchema,
+    kind: propertyKindSchema,
     notes: z.string().min(1).optional(),
   })
   .strict();
@@ -613,7 +614,7 @@ export type WhenToUse = z.infer<typeof whenToUseSchema>;
 export type KeyboardWalkEntry = z.infer<typeof keyboardWalkEntrySchema>;
 export type AnnouncementEntry = z.infer<typeof announcementEntrySchema>;
 export type A11yAcceptance = z.infer<typeof a11yAcceptanceSchema>;
-export type FigmaPropertyType = z.infer<typeof figmaPropertyTypeSchema>;
+export type PropertyKind = z.infer<typeof propertyKindSchema>;
 export type PropertyMapEntry = z.infer<typeof propertyMapEntrySchema>;
 export type PropertyMap = z.infer<typeof propertyMapSchema>;
 export type FormIntegration = z.infer<typeof formIntegrationSchema>;

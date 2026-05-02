@@ -560,50 +560,49 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / tip. Tip variant always renders the arrow.
   - figma: Side
     code: side
-    type: Variant
+    kind: enum
     notes: top / right / bottom / left. Authored placement preference; auto-flips when flip=true and viewport collides.
   - figma: Align
     code: align
-    type: Variant
+    kind: enum
     notes: start / center / end. Aligns the popover along the perpendicular axis to side.
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles light-dismiss handlers (outside-click + focus-outside).
       Escape always dismisses regardless of this property.
   - figma: Flip
     code: flip
-    type: Boolean
+    kind: boolean
     notes: >-
       Auto-flips to opposite side when authored placement collides
       with viewport. Generally true; disable for popovers whose
       visual context requires a fixed side.
   - figma: Has Arrow
     code: arrow
-    type: Boolean
+    kind: boolean
     notes: >-
       Auto-true when variant=tip. May be true on standard variant for
       design systems that ship arrow-on-everything; canonical default
       is false on standard.
   - figma: Has Header
     code: header
-    type: Boolean
+    kind: boolean
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Instance Swap
+    kind: slot
     notes: Swap the body content slot (form, prose, list, custom layout).
   - figma: Has Close Button
     code: close
-    type: Boolean
-
+    kind: boolean
 formIntegration:
   name: >-
     Popover is a container, not a form control — it has no `name`

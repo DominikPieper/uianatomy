@@ -420,13 +420,13 @@ describe('formIntegration field', () => {
 });
 
 describe('propertyMap field', () => {
-  it('parses button propertyMap with mixed Figma types', async () => {
+  it('parses button propertyMap with mixed kinds', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));
-    const types = new Set(button.propertyMap?.map((p) => p.type));
-    expect(types.has('Variant')).toBe(true);
-    expect(types.has('Boolean')).toBe(true);
-    expect(types.has('Text')).toBe(true);
-    expect(types.has('Instance Swap')).toBe(true);
+    const kinds = new Set(button.propertyMap?.map((p) => p.kind));
+    expect(kinds.has('enum')).toBe(true);
+    expect(kinds.has('boolean')).toBe(true);
+    expect(kinds.has('text')).toBe(true);
+    expect(kinds.has('slot')).toBe(true);
   });
 
   it('all five components declare propertyMap', async () => {
@@ -437,12 +437,24 @@ describe('propertyMap field', () => {
     }
   });
 
-  it('rejects entry with unknown Figma type', async () => {
+  it('rejects entry with unknown kind', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const bad = {
       ...card,
       propertyMap: [
-        { figma: 'Variant', code: 'variant', type: 'Number' },
+        { figma: 'Variant', code: 'variant', kind: 'instance-swap' },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects entry with legacy Figma vocabulary', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      propertyMap: [
+        { figma: 'Variant', code: 'variant', kind: 'Variant' },
       ],
     };
     const result = componentSchema.safeParse(bad);
@@ -454,7 +466,7 @@ describe('propertyMap field', () => {
     const bad = {
       ...card,
       propertyMap: [
-        { figma: '', code: 'variant', type: 'Variant' },
+        { figma: '', code: 'variant', kind: 'enum' },
       ],
     };
     const result = componentSchema.safeParse(bad);
@@ -466,7 +478,7 @@ describe('propertyMap field', () => {
     const bad = {
       ...card,
       propertyMap: [
-        { figma: 'Variant', code: '', type: 'Variant' },
+        { figma: 'Variant', code: '', kind: 'enum' },
       ],
     };
     const result = componentSchema.safeParse(bad);
@@ -485,11 +497,23 @@ describe('propertyMap field', () => {
     const bad = {
       ...card,
       propertyMap: [
-        { figma: 'Variant', code: 'variant', type: 'Variant', somethingElse: 'x' },
+        { figma: 'Variant', code: 'variant', kind: 'enum', somethingElse: 'x' },
       ],
     };
     const result = componentSchema.safeParse(bad);
     expect(result.success).toBe(false);
+  });
+
+  it('accepts the new "number" kind (forward-coverage from ADR-025)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      propertyMap: [
+        { figma: 'Step Count', code: 'count', kind: 'number' },
+      ],
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
   });
 });
 

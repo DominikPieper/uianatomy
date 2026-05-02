@@ -1110,7 +1110,7 @@ th {
   color: var(--fg-muted);
   border-color: var(--border-subtle);
 }
-.property-map__type--variant {
+.property-map__type--enum {
   background: color-mix(in oklab, var(--accent-cool, #5b8def) 18%, var(--surface-bg));
   color: var(--accent-cool, #2f5fcf);
   border-color: color-mix(in oklab, var(--accent-cool, #5b8def) 35%, transparent);
@@ -1120,13 +1120,18 @@ th {
   color: color-mix(in oklab, var(--accent-warm, #d97757) 75%, var(--fg));
   border-color: color-mix(in oklab, var(--accent-warm, #d97757) 35%, transparent);
 }
-.property-map__type--instance-swap {
+.property-map__type--slot {
   background: color-mix(in oklab, #5da981 18%, var(--surface-bg));
   color: #2f7755;
   border-color: color-mix(in oklab, #5da981 35%, transparent);
 }
+.property-map__type--number {
+  background: color-mix(in oklab, #a07ad6 18%, var(--surface-bg));
+  color: #6244a0;
+  border-color: color-mix(in oklab, #a07ad6 35%, transparent);
+}
 
-:root[data-theme='dark'] .property-map__type--variant {
+:root[data-theme='dark'] .property-map__type--enum {
   background: color-mix(in oklab, var(--accent-cool, #8aaef7) 22%, transparent);
   color: var(--accent-cool, #c5d6f8);
 }
@@ -1134,9 +1139,13 @@ th {
   background: color-mix(in oklab, var(--accent-warm, #f0a989) 22%, transparent);
   color: var(--accent-warm, #f6cbb6);
 }
-:root[data-theme='dark'] .property-map__type--instance-swap {
+:root[data-theme='dark'] .property-map__type--slot {
   background: color-mix(in oklab, #6cba90 22%, transparent);
   color: #b8e4ca;
+}
+:root[data-theme='dark'] .property-map__type--number {
+  background: color-mix(in oklab, #b89be4 22%, transparent);
+  color: #d9c8f0;
 }
 
 /* Divergence type badges (ImplementationCard / DivergenceTable) */

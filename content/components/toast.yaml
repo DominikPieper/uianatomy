@@ -590,38 +590,38 @@ a11yAcceptance:
 propertyMap:
   - figma: Severity
     code: severity
-    type: Variant
+    kind: enum
     notes: Maps info / success / warning / error. Drives role (status vs alert) plus visual treatment plus icon glyph.
   - figma: Position
     code: position
-    type: Variant
+    kind: enum
     notes: Six options covering corners and centres. Set on the viewport, not per-toast.
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: Toggles the dismiss-button slot visibility plus Escape handling.
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
   - figma: Has Title
     code: hasTitle
-    type: Boolean
+    kind: boolean
   - figma: Has Action
     code: hasAction
-    type: Boolean
+    kind: boolean
     notes: Toggles the action slot. Single action per toast by canon.
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Text
+    kind: text
   - figma: Action Label
     code: actionLabel
-    type: Text
+    kind: text
   - figma: Icon
     code: icon
-    type: Instance Swap
+    kind: slot
     notes: Severity icon glyph; designers may swap for domain-specific icons.
 
 i18n:

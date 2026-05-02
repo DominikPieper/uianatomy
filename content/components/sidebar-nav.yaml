@@ -615,34 +615,34 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps expanded / collapsed.
   - figma: Collapsible
     code: collapsible
-    type: Boolean
+    kind: boolean
     notes: Toggles the user-facing collapse affordance (typically a chevron-button at the sidebar's inline-end edge).
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact.
   - figma: Has Footer
     code: footer
-    type: Boolean
+    kind: boolean
   - figma: Has Header
     code: header
-    type: Boolean
+    kind: boolean
     notes: Optional top region for logo / app name. Separate from anatomy because it is not always present and is not a single canonical slot.
   - figma: Item Count
     code: 'items.length'
-    type: Variant
+    kind: enum
     notes: Figma exposes 4/8/12/16+ item counts for preview; code accepts arbitrary item arrays.
   - figma: Has Groups
     code: groups
-    type: Boolean
+    kind: boolean
     notes: Toggles whether items render as flat list or are categorised into labelled groups.
   - figma: Active Item
     code: activeItemId
-    type: Variant
+    kind: enum
     notes: Figma exposes "first / second / third item active" as Variant for preview; in code this is route-derived (current URL) or controlled prop.
 
 i18n:

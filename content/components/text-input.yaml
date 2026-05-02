@@ -665,60 +665,60 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: outlined / filled / underlined.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg.
   - figma: Type
     code: type
-    type: Variant
+    kind: enum
     notes: text / email / tel / url / password / number. Drives both visual treatment (password masking, number-keyboard hint on mobile) and HTML attribute.
   - figma: Label
     code: children of `<label>`
-    type: Text
+    kind: text
     notes: The visible label text. Required slot — never omit, hide visually if needed.
   - figma: Placeholder
     code: placeholder
-    type: Text
+    kind: text
     notes: Optional example value. Reserve for "what does a value look like" hints, not for "what is this field" labelling.
   - figma: Description
     code: description
-    type: Text
+    kind: text
     notes: Optional supporting text below the input.
   - figma: Error Message
     code: errorMessage
-    type: Text
+    kind: text
     notes: Visibility bound to invalid state.
   - figma: Has Leading Icon
     code: hasLeadingIcon
-    type: Boolean
+    kind: boolean
   - figma: Has Trailing Icon
     code: hasTrailingIcon
-    type: Boolean
+    kind: boolean
   - figma: Required
     code: required
-    type: Boolean
+    kind: boolean
     notes: Pairs visual asterisk with the `required` attribute. Both must ship together.
   - figma: Disabled
     code: disabled
-    type: Boolean
+    kind: boolean
   - figma: Readonly
     code: readonly
-    type: Boolean
+    kind: boolean
     notes: Prefer over `disabled` when the value is locked but should remain readable / tabbable.
   - figma: Invalid
     code: invalid
-    type: Boolean
+    kind: boolean
     notes: Pairs `aria-invalid="true"` with the visual error treatment. Wired to error message visibility.
   - figma: Leading Icon
     code: leadingIcon
-    type: Instance Swap
+    kind: slot
     notes: Decorative — domain hint glyph (envelope, lock, currency).
   - figma: Trailing Icon
     code: trailingIcon
-    type: Instance Swap
+    kind: slot
     notes: Decorative or interactive depending on variant — document explicitly.
 
 formIntegration:

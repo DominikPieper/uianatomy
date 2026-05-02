@@ -383,37 +383,37 @@ formIntegration:                              # optional
 
 ## `propertyMap` (optional, top-level)
 
-The vocabulary bridge between Figma component properties and code-side prop names. Designers reading the Figma file can locate the corresponding code prop; developers can reverse-look-up the Figma property name. The full rationale is in [ADR-015](./adr/015-property-map.md).
+The vocabulary bridge between a design tool's component-property panel and code-side prop names. Designers reading their design file can locate the corresponding code prop; developers can reverse-look-up the design-tool name. The structural rationale is in [ADR-015](./adr/015-property-map.md); the tool-neutral `kind` vocabulary supersedes ADR-015's Figma-specific `type` enum and is documented in [ADR-025](./adr/025-property-map-kind.md).
 
 ```yaml
 propertyMap:                          # optional, non-empty when present
   - figma: Variant
     code: variant
-    type: Variant                     # Boolean | Variant | Text | Instance Swap
+    kind: enum                        # enum | boolean | text | slot | number
     notes: Maps the visual variant set.   # optional
   - figma: Has Leading Icon
     code: iconLeading
-    type: Boolean
+    kind: boolean
     notes: >-
-      Toggles slot visibility in Figma. Code does not have a matching
-      boolean — the icon-leading slot is conditionally rendered based
-      on whether a child is provided.
+      Toggles slot visibility in the design tool. Code does not have a
+      matching boolean — the icon-leading slot is conditionally rendered
+      based on whether a child is provided.
   - figma: Leading Icon
     code: iconLeading
-    type: Instance Swap
+    kind: slot
   - figma: Label
     code: children
-    type: Text
+    kind: text
 ```
 
 **Shape rules:**
 
-- `propertyMap` itself is optional. Components without a Figma representation worth documenting omit the field.
-- When present, the array is non-empty. Each entry is `{ figma, code, type, notes? }`.
-- `type` is a closed enum mirroring Figma's component-property types: `Boolean`, `Variant`, `Text`, `Instance Swap`. Free strings are rejected.
-- `figma` is the Figma property name as designers see it in the Properties panel (often capitalized with spaces — "Has Leading Icon").
+- `propertyMap` itself is optional. Components without a design-tool representation worth documenting omit the field.
+- When present, the array is non-empty. Each entry is `{ figma, code, kind, notes? }`.
+- `kind` is a closed tool-neutral enum: `enum` (string-union, "pick one from a fixed list"), `boolean` (on/off toggle), `text` (free-form string), `slot` (child or instance swap — designer-side composition surface), `number` (numeric count, threshold, step). Free strings are rejected. Migration mapping from ADR-015's vocabulary: `Variant→enum`, `Boolean→boolean`, `Text→text`, `Instance Swap→slot`.
+- `figma` is the design-tool property name as designers see it in the Properties panel (often capitalized with spaces — "Has Leading Icon"). The column name remains `figma` because that is the dominant authoring tool; if a Penpot-side or Sketch-side bridge becomes a real consumer, a separate column lands per its own ADR.
 - `code` is the corresponding code-side handle. May be a prop name (`iconLeading`), a slot identifier (`children`, `body`), or a DOM attribute name (`data-state`). Not validated against `axes.properties[].name` — propertyMap is a bridge view, not a contract.
-- `notes` is optional prose for asymmetric mappings (slot-visibility toggles, instance-swap-to-children translations, layout-time-only Variants). Trivial entries (Variant ↔ variant) omit it.
+- `notes` is optional prose for asymmetric mappings (slot-visibility toggles, instance-swap-to-children translations, layout-time-only enums). Trivial entries (Variant ↔ variant) omit it.
 
 **Render:** `PropertyMapTable.astro` renders in Designer view (between TokensTable and MotionTable) and Bridge view (after AxesTable). Dev view does not render the table — code-side prop signatures live in `axes.properties` plus `frameworkMap`.
 

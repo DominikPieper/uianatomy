@@ -595,44 +595,43 @@ formIntegration:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps single-select / multi-select / creatable.
   - figma: Filter Mode
     code: filterMode
-    type: Variant
+    kind: enum
     notes: startsWith / contains / fuzzy / none. Figma encodes for documentation; code drives the filter function selection.
   - figma: State
     code: 'data-state'
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes closed / open / busy / invalid as a Variant for
       preview. In code these are data states toggled by application
       logic, mirrored on the host as a `data-state` attribute.
   - figma: Has Clear Button
     code: clear
-    type: Boolean
+    kind: boolean
     notes: Slot-visibility toggle; code conditionally renders the clear-button slot when the input has a value.
   - figma: Has Trigger Button
     code: trigger
-    type: Boolean
+    kind: boolean
     notes: Optional disclosure affordance; code conditionally renders the chevron trigger.
   - figma: Strict
     code: strict
-    type: Boolean
+    kind: boolean
   - figma: Async
     code: async
-    type: Boolean
+    kind: boolean
     notes: >-
       In Figma toggles the busy-state preview. In code marks the
       filter as async (results arrive via a Promise / observable).
   - figma: Virtualised
     code: virtualised
-    type: Boolean
+    kind: boolean
     notes: Documentation-only in Figma; in code drives the listbox-rendering strategy above ~200 options.
   - figma: Placeholder
     code: placeholder
-    type: Text
-
+    kind: text
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab

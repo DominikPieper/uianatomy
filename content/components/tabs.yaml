@@ -482,32 +482,32 @@ i18n:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps line / contained / pill.
   - figma: Orientation
     code: orientation
-    type: Variant
+    kind: enum
     notes: horizontal / vertical. Vertical is forced to horizontal at and below `breakpoint.sm` per the responsive block.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
   - figma: Activation
     code: activation
-    type: Variant
+    kind: enum
     notes: >-
       automatic / manual. In Figma a Variant property since the visual
       treatment of focus differs slightly between modes; in code it
       drives whether arrow-key navigation activates on focus.
   - figma: Tab Count
     code: 'tabs.length'
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes a Variant for 2 / 3 / 4 / 5 / 6+ tab counts to allow
       preview-time layout review. Code accepts an array of tab
       definitions; the count is `.length`, not a separate prop.
   - figma: Selected
     code: selectedId
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes the selected tab as a Variant for preview; in code
       this is controlled state on the parent, not a Figma-style prop.

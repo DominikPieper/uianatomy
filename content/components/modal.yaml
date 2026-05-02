@@ -560,45 +560,45 @@ formIntegration:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps dialog / alertdialog / fullscreen.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg / xl. Ignored in fullscreen variant.
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Has Description
     code: description
-    type: Boolean
+    kind: boolean
     notes: Slot-visibility toggle; controls whether the body's first paragraph wires `aria-describedby`.
   - figma: Description
     code: description
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Instance Swap
+    kind: slot
     notes: >-
       Swaps the body content slot (form, prose, custom layout). Code
       receives this as children of the dialog content.
   - figma: Has Footer
     code: footer
-    type: Boolean
+    kind: boolean
   - figma: Footer
     code: footer
-    type: Instance Swap
+    kind: slot
     notes: Action group instance — typically Button-Group.
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: >-
       In Figma controls visibility of the close button and the backdrop's
       pointer-event affordance. In code drives Escape, backdrop-click,
       and close-button behavior.
   - figma: Scroll Behavior
     code: scrollBehavior
-    type: Variant
+    kind: enum
     notes: inside / outside. Figma encodes the visual difference; code conditionally pins header/footer.
 
 a11yAcceptance:

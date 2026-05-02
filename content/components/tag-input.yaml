@@ -557,44 +557,44 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps free-text / constrained / creatable.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg.
   - figma: Removable
     code: removable
-    type: Boolean
+    kind: boolean
     notes: Toggles the per-tag remove button slot. Read-only inputs (display historical tags) set false.
   - figma: Duplicates
     code: duplicates
-    type: Boolean
+    kind: boolean
     notes: >-
       Default false (reject duplicates). True for use cases
       where the same value may legitimately appear multiple
       times (rare; typically false).
   - figma: Max Tags
     code: maxTags
-    type: Variant
+    kind: enum
     notes: >-
       none / low / medium / high. Drives the "+N more"
       affordance threshold and surfaces an inline error when
       the user attempts to exceed.
   - figma: Has Suggestions
     code: suggestions
-    type: Boolean
+    kind: boolean
     notes: For constrained / creatable variants. Toggles the suggestion listbox below the input.
   - figma: Placeholder
     code: placeholder
-    type: Text
+    kind: text
   - figma: Tag Label
     code: tagLabel
-    type: Text
+    kind: text
     notes: Per-tag content; typically the same as the underlying value but may differ (e.g. value=user-id, label=display-name).
   - figma: Tag Icon
     code: tagIcon
-    type: Instance Swap
+    kind: slot
     notes: Optional leading icon per tag (avatar for user-tags, color swatch for label-tags).
 
 formIntegration:

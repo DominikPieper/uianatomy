@@ -605,31 +605,31 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / dot / vertical. Dot variant hides labels visually (kept in DOM for SR).
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg. Drives indicator size and typography.
   - figma: Non Linear
     code: nonLinear
-    type: Boolean
+    kind: boolean
     notes: Toggles whether future steps are reachable. Default false (linear sequence).
   - figma: Has Descriptions
     code: hasDescriptions
-    type: Boolean
+    kind: boolean
     notes: Toggles per-step description slot. Useful for verbose steppers; omit for concise dot or icon-only patterns.
   - figma: Step Count
     code: 'steps.length'
-    type: Variant
+    kind: enum
     notes: Figma exposes 3/4/5/6+ step counts as Variant for preview; code accepts an array of step definitions.
   - figma: Active Step
     code: activeStep
-    type: Variant
+    kind: enum
     notes: Figma exposes "step 1 active / step 2 active / etc." as Variant for state preview; in code it is a controlled prop (active step index or id).
   - figma: Completed Steps
     code: completedSteps
-    type: Variant
+    kind: enum
     notes: Figma exposes "0 / 1 / 2 completed" as Variant for state preview; in code it is derived from per-step state.
 
 i18n:

@@ -620,53 +620,52 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps modal / non-modal / navigation. Drives ARIA role.
   - figma: Side
     code: side
-    type: Variant
+    kind: enum
     notes: start / end / top / bottom. Encoded as Variant for preview-time positioning review.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg / full. Drives container inline-size (left/right) or block-size (top/bottom).
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles close-button visibility plus Escape and backdrop-click
       handling. Some host libraries combine the three; canonical
       treats them as one switch.
   - figma: Swipeable
     code: swipeable
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles handle visibility plus swipe-gesture wiring. Generally
       true on mobile breakpoints, false on desktop.
   - figma: Has Backdrop
     code: backdrop
-    type: Boolean
+    kind: boolean
     notes: >-
       Derived in canon from `variant: modal` (true) vs `non-modal`
       (false); Figma may expose it as a separate Boolean for design
       preview.
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Has Header
     code: header
-    type: Boolean
+    kind: boolean
   - figma: Body
     code: body
-    type: Instance Swap
+    kind: slot
     notes: Swaps the body content slot (form, prose, list, custom layout).
   - figma: Has Footer
     code: footer
-    type: Boolean
+    kind: boolean
   - figma: Footer
     code: footer
-    type: Instance Swap
-
+    kind: slot
 formIntegration:
   name: >-
     Drawer is a container, not a form control — it has no `name`

@@ -1,15 +1,16 @@
 ---
-import type { Component, FigmaPropertyType } from '@uianatomy/shared/schema';
+import type { Component, PropertyKind } from '@uianatomy/shared/schema';
 interface Props { component: Component }
 const { component } = Astro.props;
 
 const propertyMap = component.propertyMap;
 
-const TYPE_SLUG: Record<FigmaPropertyType, string> = {
-  Boolean: 'boolean',
-  Variant: 'variant',
-  Text: 'text',
-  'Instance Swap': 'instance-swap',
+const KIND_LABEL: Record<PropertyKind, string> = {
+  enum: 'Enum',
+  boolean: 'Boolean',
+  text: 'Text',
+  slot: 'Slot',
+  number: 'Number',
 };
 ---
 {propertyMap && propertyMap.length > 0 && (
@@ -18,7 +19,7 @@ const TYPE_SLUG: Record<FigmaPropertyType, string> = {
       <thead>
         <tr>
           <th>Figma</th>
-          <th>Type</th>
+          <th>Kind</th>
           <th>Code</th>
           <th>Notes</th>
         </tr>
@@ -28,8 +29,8 @@ const TYPE_SLUG: Record<FigmaPropertyType, string> = {
           <tr>
             <td><code class="property-map__figma">{p.figma}</code></td>
             <td>
-              <span class={`property-map__type property-map__type--${TYPE_SLUG[p.type]}`}>
-                {p.type}
+              <span class={`property-map__type property-map__type--${p.kind}`}>
+                {KIND_LABEL[p.kind]}
               </span>
             </td>
             <td><code class="property-map__code">{p.code}</code></td>

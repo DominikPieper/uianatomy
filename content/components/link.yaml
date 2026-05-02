@@ -381,39 +381,39 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps inline / standalone / button-styled.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg. Mostly relevant for standalone variant; inline links inherit surrounding text size.
   - figma: Emphasis
     code: emphasis
-    type: Variant
+    kind: enum
     notes: subtle / default / strong. Drives colour intensity and underline thickness.
   - figma: External
     code: external
-    type: Boolean
+    kind: boolean
     notes: Toggles trailing-icon visibility and adds `target="_blank" rel="noopener noreferrer"` plus a "(opens in new tab)" SR announcement.
   - figma: Download
     code: download
-    type: Boolean
+    kind: boolean
     notes: Toggles trailing-icon visibility and sets the `download` attribute. Cross-origin caveat documented in mistakes.
   - figma: Has Trailing Icon
     code: iconTrailing
-    type: Boolean
+    kind: boolean
     notes: Slot-visibility toggle; auto-true when external or download is true.
   - figma: Trailing Icon
     code: iconTrailing
-    type: Instance Swap
+    kind: slot
     notes: Swap the trailing-icon component (chevron, arrow, download-arrow, external-square).
   - figma: Label
     code: children
-    type: Text
+    kind: text
     notes: Default slot — the link text.
   - figma: Visited
     code: 'data-visited'
-    type: Boolean
+    kind: boolean
     notes: >-
       Figma-only state for design preview; in production the
       `:visited` pseudo-class drives the visual without a code prop.

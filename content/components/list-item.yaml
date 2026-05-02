@@ -653,50 +653,49 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / two-line / three-line. Drives layout — single-line is height-collapsed, two-line and three-line stack secondary text below primary.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact.
   - figma: Leading Type
     code: leadingType
-    type: Variant
+    kind: enum
     notes: none / icon / avatar. Mutually exclusive — leading-icon and avatar share the same slot position.
   - figma: Interactive
     code: interactive
-    type: Boolean
+    kind: boolean
     notes: Whole row is clickable. Wraps row content in `<button>` or `<a>` activator.
   - figma: Selectable
     code: selectable
-    type: Boolean
+    kind: boolean
     notes: Whole row is selectable; visible leading checkbox appears. Drives `aria-selected` and `aria-checked`.
   - figma: Swipeable
     code: swipeable
-    type: Boolean
+    kind: boolean
     notes: Mobile swipe-to-reveal-actions enabled. Pairs with action slot for parity on desktop.
   - figma: Has Trailing Icon
     code: trailingIcon
-    type: Boolean
+    kind: boolean
   - figma: Has Badge
     code: badge
-    type: Boolean
+    kind: boolean
   - figma: Has Action
     code: action
-    type: Boolean
+    kind: boolean
   - figma: Primary
     code: primary
-    type: Text
+    kind: text
   - figma: Secondary
     code: secondary
-    type: Text
+    kind: text
   - figma: Avatar
     code: avatar
-    type: Instance Swap
+    kind: slot
   - figma: Leading Icon
     code: leadingIcon
-    type: Instance Swap
-
+    kind: slot
 formIntegration:
   name: >-
     For selectable list-item usage in forms, the leading

@@ -410,34 +410,34 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps inline / standalone. Drives heading-wrapping (standalone wraps trigger in heading; inline does not).
   - figma: Default Expanded
     code: defaultExpanded
-    type: Boolean
+    kind: boolean
     notes: >-
       Initial open state. False for "show more" patterns;
       true for content that should be visible by default but
       collapsible for users who want to reduce noise.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact. At and below `breakpoint.sm` density compact is the canonical default for inline variant.
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
     notes: Toggles the chevron / plus-minus icon. Default true; rare to disable.
   - figma: Trigger Label
     code: triggerLabel
-    type: Text
+    kind: text
     notes: The button's accessible name. "Show more" / "Read details" / heading text per use case.
   - figma: Panel Content
     code: children
-    type: Instance Swap
+    kind: slot
     notes: Swap the panel content slot — prose, form, list, custom layout.
   - figma: Icon
     code: icon
-    type: Instance Swap
+    kind: slot
     notes: Swap the chevron glyph; defaults vary per design system.
 
 i18n:

@@ -477,37 +477,37 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / icon-only.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg.
   - figma: Orientation
     code: orientation
-    type: Variant
+    kind: enum
     notes: horizontal / vertical. Affects keyboard model (ArrowLeft/Right vs ArrowUp/Down).
   - figma: Has Indicator
     code: hasIndicator
-    type: Boolean
+    kind: boolean
     notes: Toggles the sliding-indicator slot. Default true; some variants use only foreground-color contrast for selection without a separate indicator.
   - figma: Segment Count
     code: 'segments.length'
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes 2/3/4/5 segment counts as a Variant for
       preview-time layout review. Code accepts an array of
       segment definitions.
   - figma: Selected Segment
     code: value
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes "first / second / third selected" as
       Variant for preview; in code this is a controlled value
       (the selected segment id).
   - figma: Has Icons
     code: hasIcons
-    type: Boolean
+    kind: boolean
     notes: Toggles per-segment icons. Required for icon-only variant; optional for standard variant.
 
 i18n:

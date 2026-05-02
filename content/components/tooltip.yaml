@@ -418,27 +418,27 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / inline-help.
   - figma: Side
     code: side
-    type: Variant
+    kind: enum
     notes: top / right / bottom / left. Authored placement preference; auto-flips when colliding with viewport.
   - figma: Align
     code: align
-    type: Variant
+    kind: enum
     notes: start / center / end along the perpendicular axis.
   - figma: Delay
     code: delay
-    type: Variant
+    kind: enum
     notes: instant / short / base / long. Maps to library-specific milliseconds (Radix uses 0/200/700/1500 by default).
   - figma: Has Arrow
     code: arrow
-    type: Boolean
+    kind: boolean
     notes: Toggles the arrow slot. True by default for standard variant; false for inline-help.
   - figma: Content
     code: children
-    type: Text
+    kind: text
     notes: The tooltip text. Capped at one to two short sentences by canon.
 
 i18n:

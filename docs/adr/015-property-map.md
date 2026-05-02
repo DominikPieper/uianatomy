@@ -1,7 +1,10 @@
 # ADR 015: Figma ↔ Code Property Map
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-025](./025-property-map-kind.md)
 **Date:** 2026-04
+**Superseded:** 2026-05
+
+> The structural decision (top-level `propertyMap` array of `{ figma, code, type/kind, notes? }` records, rendered in Designer + Bridge views) is unchanged. ADR-025 narrowly replaces the closed enum on the type/kind column with a tool-neutral vocabulary (`enum | boolean | text | slot | number`) and renames the field from `type` to `kind`. Read ADR-015 for the structural rationale; read ADR-025 for the vocabulary update.
 
 ## Context
 

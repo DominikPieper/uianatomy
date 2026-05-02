@@ -546,17 +546,17 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps bordered / contained / flush.
   - figma: Multi
     code: multi
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles single-vs-multi-open behaviour. Default false
       (single-open) for FAQ patterns; true for settings groups.
   - figma: Collapsible
     code: collapsible
-    type: Boolean
+    kind: boolean
     notes: >-
       In single-open mode, allows the currently-open item to
       collapse (state with no items expanded). Multi-mode
@@ -564,22 +564,22 @@ propertyMap:
       for single-mode.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact. At and below `breakpoint.sm` density compact is the canonical default.
   - figma: Item Count
     code: 'items.length'
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes 2/3/4/5/6+ item counts as a Variant for
       preview-time layout review. Code accepts an array of item
       definitions.
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
     notes: Toggles the trigger-icon (chevron / plus-minus) visibility per item.
   - figma: Default Open Items
     code: defaultOpen
-    type: Variant
+    kind: enum
     notes: >-
       Figma exposes "first item open", "all items open", "no
       items open" as Variant for preview; in code it's a

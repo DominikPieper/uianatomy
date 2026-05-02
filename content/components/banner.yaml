@@ -518,19 +518,19 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps info / promotional / warning / error. Drives visual treatment plus icon glyph plus (where applicable) accessible role.
   - figma: Layout
     code: layout
-    type: Variant
+    kind: enum
     notes: horizontal / stacked. At and below `breakpoint.sm` the layout is forced to stacked regardless of authored value.
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: Toggles the dismiss-button slot visibility plus the dismiss event wiring.
   - figma: Persistent
     code: persistent
-    type: Boolean
+    kind: boolean
     notes: >-
       Controls whether the dismissed state survives page reload.
       True for one-time announcements (cookie consent, beta
@@ -538,23 +538,23 @@ propertyMap:
       that resolves at session end).
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
   - figma: Has Title
     code: hasTitle
-    type: Boolean
+    kind: boolean
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Text
+    kind: text
   - figma: Actions
     code: actions
-    type: Instance Swap
+    kind: slot
     notes: Swap the actions slot — typically 1–3 Button or Link instances.
   - figma: Icon
     code: icon
-    type: Instance Swap
+    kind: slot
     notes: Variant-default icon glyph; designers may swap for domain-specific icons (e.g. a beta-tag icon for beta-feature banners).
 
 i18n:

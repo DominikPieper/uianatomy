@@ -522,40 +522,40 @@ a11yAcceptance:
 propertyMap:
   - figma: Severity
     code: severity
-    type: Variant
+    kind: enum
     notes: Maps info / success / warning / error. Drives role (alert vs status) plus visual treatment plus icon glyph.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
     notes: comfortable / compact.
   - figma: Dismissible
     code: dismissible
-    type: Boolean
+    kind: boolean
     notes: Toggles the dismiss-button slot visibility plus the dismiss event wiring.
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
     notes: Toggles the icon slot. Canonical default is true for severity reinforcement.
   - figma: Has Title
     code: hasTitle
-    type: Boolean
+    kind: boolean
     notes: Toggles the title slot. Single-sentence alerts often skip the title.
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Text
+    kind: text
   - figma: Has Actions
     code: actions
-    type: Boolean
+    kind: boolean
   - figma: Actions
     code: actions
-    type: Instance Swap
+    kind: slot
     notes: Swap the actions slot — typically a Button or two.
   - figma: Icon
     code: icon
-    type: Instance Swap
+    kind: slot
     notes: >-
       The severity icon. Designers may swap the auto-derived glyph
       for a custom icon (e.g. a domain-specific warning); code

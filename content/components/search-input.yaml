@@ -574,34 +574,34 @@ a11yAcceptance:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps standard / compact / with-suggestions.
   - figma: Size
     code: size
-    type: Variant
+    kind: enum
     notes: sm / md / lg.
   - figma: Has Icon
     code: hasIcon
-    type: Boolean
+    kind: boolean
     notes: Toggles the leading magnifier icon. Default true; false for compact variant where the magnifier is the submit button instead.
   - figma: Has Clear
     code: hasClear
-    type: Boolean
+    kind: boolean
     notes: Toggles the clear button. Default true; visible only when input has a value.
   - figma: Has Submit
     code: hasSubmit
-    type: Boolean
+    kind: boolean
     notes: Toggles the submit button. Default false (Enter submits); true for compact variant or for forms where explicit pointer-submit is preferred.
   - figma: Placeholder
     code: placeholder
-    type: Text
+    kind: text
     notes: 'Examples — "Search products…", "Search documents…". Avoid placeholder-only labelling.'
   - figma: Disabled
     code: disabled
-    type: Boolean
+    kind: boolean
   - figma: Icon
     code: icon
-    type: Instance Swap
+    kind: slot
     notes: Swap the magnifier glyph; rare to deviate from the canonical magnifier.
 
 formIntegration:

@@ -407,56 +407,55 @@ i18n:
 propertyMap:
   - figma: Variant
     code: variant
-    type: Variant
+    kind: enum
     notes: Maps elevated / outlined / flat.
   - figma: Orientation
     code: orientation
-    type: Variant
+    kind: enum
     notes: vertical / horizontal — Figma encodes as a separate Variant property, not bundled with the visual variant.
   - figma: Density
     code: density
-    type: Variant
+    kind: enum
   - figma: Interactive
     code: interactive
-    type: Boolean
+    kind: boolean
     notes: >-
       Toggles the card-as-link overlay pattern. In Figma it controls
       hover state visibility; in code it conditionally wraps the card
       surface with the interactive activator.
   - figma: Has Media
     code: media
-    type: Boolean
+    kind: boolean
     notes: Slot-visibility toggle; code conditionally renders the media slot.
   - figma: Media
     code: media
-    type: Instance Swap
+    kind: slot
     notes: Swaps the media component instance (image, video, iframe).
   - figma: Has Eyebrow
     code: eyebrow
-    type: Boolean
+    kind: boolean
   - figma: Eyebrow
     code: eyebrow
-    type: Text
+    kind: text
   - figma: Title
     code: title
-    type: Text
+    kind: text
   - figma: Has Subtitle
     code: subtitle
-    type: Boolean
+    kind: boolean
   - figma: Subtitle
     code: subtitle
-    type: Text
+    kind: text
   - figma: Body
     code: body
-    type: Text
+    kind: text
     notes: For non-prose bodies, Figma uses an Instance Swap on a 'Body Slot' instead.
   - figma: Has Actions
     code: actions
-    type: Boolean
+    kind: boolean
   - figma: Has Footer
     code: footer
-    type: Boolean
-
+    kind: boolean
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab
