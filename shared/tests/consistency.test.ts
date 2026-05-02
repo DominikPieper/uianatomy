@@ -33,6 +33,7 @@ const CANON_COLOR = new Set([
   'color.text.muted',
   'color.text.inverse',
   'color.text.accent',
+  'color.text.danger',
   'color.border.subtle',
   'color.border.strong',
   'color.border.focus',

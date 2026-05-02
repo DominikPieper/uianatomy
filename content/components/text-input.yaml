@@ -1,0 +1,875 @@
+id: text-input
+name: Text Input
+description: >-
+  A bounded surface for free-text user entry that resolves to a
+  single string value — the canonical primitive for forms. Composes
+  a visible label, an `<input>` element, optional description and
+  error message, and optional leading/trailing decorations. Distinct
+  from SearchInput (which emits a query) and from Combobox (which
+  commits from a constrained list) — TextInput accepts and exposes
+  arbitrary user-typed strings.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The bounded container that groups label, input, description,
+      and error message into a single labelled field. Carries the
+      focus ring around the input control and the invalid styling
+      when the field is in an error state.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; label on top, input + decorations in the middle, supporting text below
+    code:
+      slot: root
+      semantic: form-field
+    a11y:
+      hint: >-
+        No landmark role. The grouping is implicit — accessibility
+        comes from the explicit label-input association
+        (`<label for>` or `aria-labelledby`) and from
+        `aria-describedby` linking the input to the description
+        and error nodes.
+    tokens:
+      spacing:
+        gap: spacing.tight
+      color:
+        ring: color.border.focus
+
+  - id: label
+    required: true
+    purpose: >-
+      The visible text label naming the input. Always rendered;
+      hide visually only via accessible-hidden styling (never
+      `display: none`). The required-state indicator (asterisk
+      or "(required)") attaches here, never to the placeholder.
+    slotKind: content
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Text node above the input; required indicator as a separate text or boolean property
+    code:
+      slot: label
+      semantic: label
+    a11y:
+      hint: >-
+        Real `<label for="<input-id>">`. Programmatic association
+        is non-negotiable — clicking the label focuses the input
+        and screen readers announce the label when focus enters.
+        For visually hidden labels, use a visually-hidden utility
+        (`clip-path` / `position: absolute; width: 1px`) — never
+        `display: none` or `visibility: hidden`, which remove the
+        label from the accessibility tree.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.primary
+
+  - id: input
+    required: true
+    purpose: >-
+      The `<input>` control. Receives the user's text. Carries
+      the form `name`, the current `value`, the `type` attribute
+      (text / email / tel / url / password / number / search —
+      with search routing to the SearchInput primitive), the
+      validation attributes (`required`, `pattern`, `minlength`,
+      `maxlength`), and the `autocomplete` token.
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Input field component instance; size and variant drive padding and border treatment
+    code:
+      slot: input
+      semantic: textbox
+    a11y:
+      hint: >-
+        Native `<input type="text">` (or the type matching the
+        input domain) is canonical. Set `aria-invalid="true"` when
+        the field is in error and `aria-describedby` listing the
+        ids of the description and error message nodes.
+        `autocomplete` should match the field's semantic intent
+        (`email`, `current-password`, `street-address`, etc.) so
+        password managers and platform autofill work; bare
+        `autocomplete="off"` is reserved for fields where autofill
+        is genuinely wrong (one-time codes, captcha-adjacent).
+    tokens:
+      spacing:
+        padding: spacing.compact
+      radius:
+        corner: radius.md
+      typography:
+        size: text.md
+      color:
+        background: color.surface.bg
+        foreground: color.text.primary
+        border: color.border.strong
+        ring: color.border.focus
+
+  - id: description
+    required: false
+    purpose: >-
+      Optional supporting text below the input — format hints
+      ("MM/DD/YYYY"), allowed-character notes ("Letters and
+      numbers only"), or rationale ("We use this to send order
+      updates"). Persistent across all states; visible whether
+      or not the field is in error.
+    slotKind: content
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Text node below the input; visibility bound to "has description" property
+    code:
+      slot: description
+      semantic: paragraph
+    a11y:
+      hint: >-
+        Reference the description node from the input via
+        `aria-describedby="<description-id>"`. Screen readers
+        announce the description after the label and the input's
+        type — the hint is part of the field's spoken contract.
+        For long descriptions consider truncation rules carefully;
+        SR pronounces the full text regardless of visual clipping.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+  - id: error-message
+    required: false
+    purpose: >-
+      Optional validation message — appears when the field is
+      invalid. Sits in the same vertical slot as the description;
+      either replaces it or stacks above it (canon: stack, with
+      error first; description as persistent format guidance).
+      Tied to `aria-invalid` on the input; SR announces on focus.
+    slotKind: content
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Text node below the input; visibility bound to invalid state; warm-accent foreground
+    code:
+      slot: error
+      semantic: status-message
+    a11y:
+      hint: >-
+        Reference the error node from the input via
+        `aria-describedby` (in addition to the description, when
+        both are present — multiple ids space-separated). The
+        node should also be `role="alert"` or live-region
+        (`aria-live="polite"`) so dynamic validation surfaces are
+        announced when the message appears asynchronously, not
+        only on focus. Pair with `aria-invalid="true"` on the
+        input — visual styling alone is not the announcement.
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.medium
+      color:
+        foreground: color.text.danger
+
+  - id: leading-icon
+    required: false
+    purpose: >-
+      Optional icon at the inline-start of the input — typically
+      decorative and indicating the input's domain (envelope for
+      email, lock for password, currency glyph for amount). For
+      interactive leading affordances (a clickable hint button)
+      use trailing-icon and document the role explicitly.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; aligned to inline-start; visibility bound to "has leading icon" property
+    code:
+      slot: leading-icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. The icon is a visual
+        affordance; the field's accessible name still comes from
+        the `<label>`. Never substitute the icon for the label.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: trailing-icon
+    required: false
+    purpose: >-
+      Optional icon at the inline-end of the input — may be
+      decorative (status glyph), or interactive (password
+      visibility toggle, clear button, unit selector). The
+      decorative-vs-interactive distinction is variant-driven
+      and must be encoded explicitly in the implementation.
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; aligned to inline-end; visibility bound to "has trailing icon" property
+    code:
+      slot: trailing-icon
+      semantic: button-or-presentational
+    a11y:
+      hint: >-
+        For interactive trailing icons (password reveal, clear),
+        wrap in a real `<button type="button">` with explicit
+        accessible name ("Show password", "Clear value"). For
+        decorative trailing icons (status checkmark on valid
+        input), `aria-hidden="true"`. Document the variant choice
+        — a single visual treatment must not silently switch
+        between interactive and decorative modes.
+
+axes:
+  variants:
+    - outlined
+    - filled
+    - underlined
+  properties:
+    - name: type
+      kind: enum
+      values: [text, email, tel, url, password, number]
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - { name: invalid, kind: primitive, of: boolean }
+    - { name: disabled, kind: primitive, of: boolean }
+    - { name: readonly, kind: primitive, of: boolean }
+    - { name: required, kind: primitive, of: boolean }
+    - { name: hasLeadingIcon, kind: primitive, of: boolean }
+    - { name: hasTrailingIcon, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - empty
+      - filled
+      - invalid
+    transitions:
+      - from: empty
+        to: filled
+        trigger: >-
+          User types into the input. Required-state error (when
+          `required: true`) clears once the field is non-empty,
+          assuming no other validation rules fail.
+      - from: filled
+        to: empty
+        trigger: >-
+          User deletes all characters or programmatic clear.
+          For `required: true` fields, transitions back to
+          invalid on blur if validation runs on blur.
+      - from: filled
+        to: invalid
+        trigger: >-
+          Validation fires (typically on blur or on form-submit
+          attempt) and the value violates a constraint —
+          `pattern` mismatch, `type="email"` malformed,
+          `minlength` / `maxlength` boundary, or custom
+          `setCustomValidity()` rule. Error message renders;
+          `aria-invalid="true"` set on the input.
+      - from: invalid
+        to: filled
+        trigger: >-
+          User edits the value to satisfy the violated rule.
+          Validation re-runs (immediately if validating
+          on-input, on next blur if validating on-blur);
+          `aria-invalid` clears; error message hides.
+
+mismatches:
+  - figma: TextInput drawn with placeholder text used as the label
+    code: A field with a real `<label for>` separate from the placeholder
+    consequence: >-
+      Designers sometimes treat the placeholder as the label for
+      visual minimalism. The implementation either follows the
+      design (no real label, accessibility breaks; SR users get
+      no field name once the user starts typing) or diverges
+      from the design (adds a label that the design doesn't
+      show). Either way the canonical contract is broken.
+    correct: >-
+      Always render a real `<label>` and associate it with the
+      input. If the visual design wants no visible label, hide
+      the label with a visually-hidden utility (clip-path /
+      sr-only) — the label remains in the accessibility tree.
+      The placeholder is a hint about the *value* (an example),
+      not the field's identity. Document the canonical: label
+      always present in the markup; `placeholder` reserved for
+      example values, never for "what is this field".
+
+  - figma: Required indicator drawn as a decorative asterisk next to the label
+    code: A field with the `required` attribute on the input
+    consequence: >-
+      Designers add a red asterisk in the label as a visual
+      cue. Implementations either copy the asterisk and forget
+      the `required` attribute (form submits with empty values;
+      browser-native validation never fires) or set `required`
+      and forget the asterisk (the constraint exists but the
+      user has no visual signal until validation fires). The
+      visual signal and the constraint diverge.
+    correct: >-
+      Both must be present together. The asterisk (or
+      "(required)" text) is decorative and visible; the
+      `required` attribute on the input is the actual constraint
+      and surfaces in browser validation, in `aria-required`,
+      and in form-submission semantics. Document the canonical
+      contract: visual indicator + attribute always paired.
+
+  - figma: Error message drawn as red text below the input
+    code: An error message rendered via `aria-describedby` plus `aria-invalid`
+    consequence: >-
+      Designers draw red error text. Implementations following
+      the design at the visual layer ship error text that has
+      no programmatic relationship to the input — SR users hear
+      the input's label and type, but never hear the error
+      reason. Visual users see "Email address — Invalid format";
+      SR users hear "Email address, edit text" with no clue why
+      the field is rejected.
+    correct: >-
+      The error message node has an `id`; the input's
+      `aria-describedby` lists that id (alongside any persistent
+      description); the input's `aria-invalid="true"` flags the
+      error state. The error node should be `role="alert"` or
+      `aria-live="polite"` so dynamic validation announces.
+      Document: visual error + ARIA wiring + invalid attribute,
+      always together.
+
+  - figma: Input variants drawn with different layouts (outlined vs filled vs underlined)
+    code: A single `<input>` primitive with variant-driven styling
+    consequence: >-
+      Designers compose the three variants as separate Figma
+      components with subtly different anatomies (filled has no
+      border but has a tinted background; underlined has only a
+      bottom border; outlined has all four borders). Developers
+      implement them as a single component with a `variant` prop,
+      and the slot positions diverge — the leading icon sits
+      slightly differently across the three.
+    correct: >-
+      The canonical anatomy is identical across variants — same
+      slots, same positions, same z-order. Variant differences
+      live in the styling (border, background, padding within
+      the input field) only. Document the variant axis as
+      "visual treatment" not "structural restructuring";
+      anatomy is stable.
+
+  - figma: Disabled state drawn with low-contrast text and no other affordance
+    code: An input with the `disabled` attribute
+    consequence: >-
+      Designers grey out the disabled state to ~40% opacity for
+      visual clarity. Without further care, the contrast ratio
+      drops below WCAG 1.4.3 (4.5:1) and SR users hear "edit
+      text, dimmed" but the canonical wording for "this field
+      is currently not editable, here's why" is missing.
+    correct: >-
+      Disabled state must still meet 3:1 minimum contrast
+      (WCAG 1.4.11 non-text contrast for the input border).
+      Where possible, prefer `readonly` over `disabled` — readonly
+      keeps the value tabbable and copyable, communicates "value
+      is locked" rather than "field is unavailable", and SR
+      announces "edit text, read only" which is more informative
+      than "disabled". Use `disabled` only when the field is
+      genuinely inactive in the current context.
+
+mistakes:
+  - id: placeholder-as-label
+    title: Placeholder used as the only label
+    description: >-
+      The input has no `<label>`; the field's identity lives
+      in the placeholder, which disappears once the user starts
+      typing. Users who tab away and back lose track of what
+      the field was for; SR users never hear the label at all
+      because placeholder is not part of the accessible name in
+      most assistive-tech behaviour.
+    fix: >-
+      Always render a `<label for="<input-id>">`. Hide it
+      visually with a sr-only utility if the design wants no
+      visible label, but never remove it from the DOM.
+      Reserve `placeholder` for example values
+      ("name@example.com"), and consider omitting placeholder
+      entirely — research consistently shows placeholder text
+      reduces successful form completion.
+
+  - id: missing-aria-invalid
+    title: Error styling without `aria-invalid`
+    description: >-
+      The field shows a red border and an error message
+      visually, but the input lacks `aria-invalid="true"`. SR
+      users hear the input as a normal field; the error message
+      may or may not be announced depending on whether
+      `aria-describedby` is wired. The visual signal is not
+      cross-modal.
+    fix: >-
+      Set `aria-invalid="true"` on the input whenever the field
+      is in error. Wire `aria-describedby` to the error message
+      node. Make the error node `role="alert"` or
+      `aria-live="polite"` for asynchronous announcements.
+      Visual-error + ARIA-error + invalid-attribute ship
+      together.
+
+  - id: required-without-attribute
+    title: Visible required indicator without the `required` attribute
+    description: >-
+      The label shows a red asterisk; the input lacks the
+      `required` attribute. The user submits the form with the
+      field empty; browser-native validation never fires;
+      server-side validation has to catch what should have been
+      a client-side rejection. Worse: SR users hear the label
+      with the asterisk pronounced as "asterisk" but the field
+      is not announced as required.
+    fix: >-
+      Pair the visual asterisk with the `required` attribute on
+      the input. Browser validation surfaces the empty-required
+      message; `aria-required="true"` (or the `required`
+      attribute itself, which implies aria-required) tells SR
+      the field is mandatory. The visual and the constraint
+      always together.
+
+  - id: wrong-autocomplete
+    title: '`autocomplete="off"` on every input by default'
+    description: >-
+      The implementation disables autocomplete sitewide as a
+      perceived security or UX measure. Password managers stop
+      working; platform autofill cannot pre-fill addresses,
+      emails, names. User experience degrades for the 80%+ of
+      users who rely on autofill for forms.
+    fix: >-
+      Set `autocomplete` to the field's semantic intent —
+      `email`, `username`, `current-password`, `new-password`,
+      `street-address`, `tel`, `cc-number`, etc. The full token
+      list is in the HTML spec. Reserve `autocomplete="off"`
+      for fields where autofill is genuinely wrong: one-time
+      codes, captcha responses, security-question answers.
+
+  - id: error-only-on-submit
+    title: Errors only surface on form submission attempt
+    description: >-
+      The implementation validates only on form submit. Users
+      type a malformed email, tab away, fill out the rest of
+      the form, hit Submit, and get bounced back to the email
+      field with the error. The friction compounds with each
+      field; long forms become exhausting.
+    fix: >-
+      Validate progressively — show errors on blur (when the
+      user finishes the field) for canonical types, and clear
+      errors on input (as the user corrects). For
+      `type="email"` and similar, browser-native constraint
+      validation handles the format check at the right
+      moment. Document the cadence: validate-on-blur, clear-
+      on-input, surface-on-submit-as-fallback.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-text-input>` host wrapping `<label>` + `<input>` + slotted `description` and `error` nodes; `<slot name="leading-icon">` and `<slot name="trailing-icon">` for decorations
+    variantMechanism: attributes (`variant="outlined|filled|underlined"`, `size="md"`, `invalid`, `disabled`, `readonly`, `required`); `data-state="empty|filled|invalid"` for CSS
+  react:
+    structureMechanism: React Aria `useTextField` (which provides label, input, description, errorMessage props with full ARIA wiring); or a custom `<TextInput>` wrapping the label/input/description/error stack
+    variantMechanism: props with class-variance-authority for variant / size; `value` + `onChange(value)` controlled-pattern; `errorMessage` prop drives the error slot and `aria-invalid`
+  angularSignals:
+    structureMechanism: Angular form-control directive on `<input>` plus a `<ui-form-field>` wrapper for label / description / error projection; reactive forms or template-driven forms for state
+    variantMechanism: input<'outlined' | 'filled' | 'underlined'>(); `[size]`, `[required]`, `[disabled]` host bindings; FormControl validators drive invalid state
+  vue:
+    structureMechanism: A `<TextInput>` SFC wrapping `<label>` + `<input>` + named slots for description, error, leading-icon, trailing-icon; `v-model` for value
+    variantMechanism: defineProps with literal-union types; `:variant`, `:size`, `:invalid`, `:required` props
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    focusRing: motion.duration.fast
+    errorAppear: motion.duration.fast
+    labelFloat: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        At and below, inputs typically expand to the full
+        inline-size of their form column — single-column form
+        layouts on mobile are canonical. Multi-column form
+        rows collapse to single-column. Label remains above
+        the input (never shifts to inline-start, which only
+        works at desktop widths).
+    - at: breakpoint.md
+      change: >-
+        Above this width, inputs may render at their authored
+        inline-size (typical: medium fields constrain to
+        ~280-360px to discourage long inputs in a fixed-width
+        column). Form layouts may shift to inline labels (label
+        at inline-start, input at inline-end) where horizontal
+        space allows.
+
+events:
+  - name: valueChange
+    payload: >-
+      `{ value: string }`. Fires on every input change. Source
+      of truth for controlled-pattern consumers; fires
+      synchronously with the user's typing, not after blur.
+    frameworkNotes:
+      webComponents: >-
+        `valueChange` CustomEvent on the host with
+        `event.detail = { value }`. Native `input` event also
+        bubbles from the inner `<input>`.
+      react: >-
+        `onChange(value: string)` controlled-pattern callback;
+        React Aria's `onChange` passes the value directly
+        rather than the synthetic event.
+      angularSignals: >-
+        `output<string>('valueChange')`; in reactive forms,
+        the FormControl's `valueChanges` observable.
+      vue: >-
+        `@update:modelValue` for `v-model`; payload is the
+        new string value.
+
+  - name: blur
+    payload: >-
+      `{ value: string }`. Fires when focus leaves the input.
+      Canonical trigger for blur-validation patterns (validate
+      on blur, clear on input). Distinct from valueChange
+      because the consumer often wants to debounce
+      side-effects until the user "finishes" the field.
+    frameworkNotes:
+      webComponents: >-
+        Native `blur` event on the inner `<input>` bubbles to
+        the host. Composed-true so it crosses the shadow
+        boundary.
+      react: >-
+        `onBlur(event)` callback; React Aria's `onBlur` passes
+        the input value directly.
+      angularSignals: >-
+        Native `(blur)` event binding; for reactive forms the
+        FormControl `statusChanges` observable surfaces the
+        validation transition.
+      vue: >-
+        `@blur` event with the native FocusEvent payload.
+
+  - name: invalidChange
+    payload: >-
+      `{ invalid: boolean, message?: string }`. Fires when the
+      input transitions in or out of the invalid state — either
+      via browser-native constraint validation
+      (`input.checkValidity()` flips) or via custom
+      `setCustomValidity()`. Optional message carries the
+      current validity message for consumers wanting to render
+      it custom.
+    frameworkNotes:
+      webComponents: >-
+        `invalidChange` CustomEvent on the host with
+        `event.detail = { invalid, message }`. The native
+        `invalid` event on the inner `<input>` fires only on
+        form-submit-blocked, which is a different cadence.
+      react: >-
+        Surfaced via the `errorMessage` prop in React Aria's
+        `useTextField`; controlled-pattern consumers
+        recompute it from their own validation logic.
+      angularSignals: >-
+        `output<{invalid: boolean, message?: string}>('invalidChange')`;
+        for reactive forms, `statusChanges` + `errors` on the
+        FormControl is the canonical source.
+      vue: >-
+        `@invalid-change` event with payload
+        `{ invalid, message }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the input. Subsequent Tab moves to the
+        trailing-icon button (if interactive and visible),
+        then out of the field. Disabled inputs skip from focus
+        order; readonly inputs receive focus normally.
+    - keys: Shift+Tab
+      expected: >-
+        Reverse focus traversal — out of the field via the
+        label / leading icon (which are not focusable), or back
+        into the previous field.
+    - keys: Type any character
+      expected: >-
+        Character appends to the input's value. `valueChange`
+        fires synchronously. For type-specific filtering
+        (`type="number"` rejects letters at the platform
+        level), browser handles the rejection; ARIA-invalid
+        does not flip.
+    - keys: Backspace / Delete
+      expected: >-
+        Removes the character at the caret. With a selection
+        active, deletes the selection. `valueChange` fires.
+        For empty-input-with-required, transition to invalid
+        runs on blur not on backspace.
+    - keys: 'Enter (in a form)'
+      expected: >-
+        Submits the parent `<form>` (browser default). The
+        input itself does not handle Enter — the form's
+        submit handler runs; form validation triggers if not
+        already in invalid state.
+  announcements:
+    - trigger: Focus enters the input
+      expected: >-
+        SR announces the label, the input role ("edit text"
+        for `type="text"`, "email" for `type="email"`), the
+        current value if non-empty, and any
+        `aria-describedby` content (description and / or error
+        message). Required state announces if `required` or
+        `aria-required="true"`.
+    - trigger: Validation transitions to invalid
+      expected: >-
+        Polite live region (`aria-live="polite"` or
+        `role="alert"` on the error node) announces the error
+        message. `aria-invalid="true"` on the input means
+        subsequent re-focus announces "invalid" alongside the
+        label and role.
+    - trigger: User types into a previously-invalid field
+      expected: >-
+        Validation re-runs at the validation cadence (typically
+        on blur). On invalid → valid transition, SR re-focus
+        announces normally without the invalid suffix; the
+        error node clears.
+  axeRules:
+    - aria-input-field-name
+    - aria-required-attr
+    - aria-valid-attr-value
+    - color-contrast
+    - label
+    - label-content-name-mismatch
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    type: Variant
+    notes: outlined / filled / underlined.
+  - figma: Size
+    code: size
+    type: Variant
+    notes: sm / md / lg.
+  - figma: Type
+    code: type
+    type: Variant
+    notes: text / email / tel / url / password / number. Drives both visual treatment (password masking, number-keyboard hint on mobile) and HTML attribute.
+  - figma: Label
+    code: children of `<label>`
+    type: Text
+    notes: The visible label text. Required slot — never omit, hide visually if needed.
+  - figma: Placeholder
+    code: placeholder
+    type: Text
+    notes: Optional example value. Reserve for "what does a value look like" hints, not for "what is this field" labelling.
+  - figma: Description
+    code: description
+    type: Text
+    notes: Optional supporting text below the input.
+  - figma: Error Message
+    code: errorMessage
+    type: Text
+    notes: Visibility bound to invalid state.
+  - figma: Has Leading Icon
+    code: hasLeadingIcon
+    type: Boolean
+  - figma: Has Trailing Icon
+    code: hasTrailingIcon
+    type: Boolean
+  - figma: Required
+    code: required
+    type: Boolean
+    notes: Pairs visual asterisk with the `required` attribute. Both must ship together.
+  - figma: Disabled
+    code: disabled
+    type: Boolean
+  - figma: Readonly
+    code: readonly
+    type: Boolean
+    notes: Prefer over `disabled` when the value is locked but should remain readable / tabbable.
+  - figma: Invalid
+    code: invalid
+    type: Boolean
+    notes: Pairs `aria-invalid="true"` with the visual error treatment. Wired to error message visibility.
+  - figma: Leading Icon
+    code: leadingIcon
+    type: Instance Swap
+    notes: Decorative — domain hint glyph (envelope, lock, currency).
+  - figma: Trailing Icon
+    code: trailingIcon
+    type: Instance Swap
+    notes: Decorative or interactive depending on variant — document explicitly.
+
+formIntegration:
+  name: >-
+    The internal `<input>` carries the form `name` attribute.
+    Native browser-native form-data participation: the input's
+    current value submits as a string entry under the configured
+    name when the parent `<form>` submits.
+  formData: >-
+    Single FormData entry per TextInput — `formData.get('email')`
+    returns the current input string. `type="number"` still
+    submits as a string; consumers must coerce. `disabled`
+    excludes the field from FormData; `readonly` includes it.
+    For `type="password"`, the value submits in cleartext —
+    HTTPS at the transport layer is the canonical secrecy
+    boundary, not the input type.
+  reset: >-
+    `form.reset()` restores the input to its `defaultValue`
+    (the `value` attribute as authored in HTML, or the initial
+    DOM value). Custom-managed state in framework controlled-
+    patterns must mirror this semantic — resetting a controlled
+    input means dispatching the value back to its initial.
+    Consumers using uncontrolled inputs get this for free.
+  validation: >-
+    Canonical: HTML5 Constraint Validation API. `required`,
+    `pattern`, `minlength`, `maxlength`, `min`, `max`, `step`
+    are declarative and browser-evaluated. Custom validation
+    via `setCustomValidity('message')`; the field is invalid
+    while the message is non-empty. The `:invalid` and
+    `:user-invalid` CSS pseudo-classes (the latter reflects
+    user-interaction-driven invalidity, not initial-empty-
+    required) drive visual treatment without JS. For server-
+    side errors arriving after submission, mirror them with
+    `setCustomValidity()` so the same UI surfaces both client-
+    and server-validated errors.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Label remains above the input (block-level position is
+      direction-neutral). Leading icon position moves from
+      inline-start to inline-start — visually right in RTL,
+      logically still "before the input". Trailing icon
+      mirror-flips to inline-end. Caret follows document
+      direction; mixed-direction values (typing Hebrew into a
+      Latin-default field) honour the input's own `dir`
+      attribute, which can be set per-input. Number-type
+      inputs render numerals in document direction; the input
+      itself accepts both arabic and latin numerals where
+      supported.
+  textExpansion: >-
+    Label text expands ~30-50% in long-text languages —
+    "Email" → "E-Mail-Adresse", "Correo electrónico", "البريد
+    الإلكتروني". Allow label inline-size to grow; never
+    truncate label text. Description and error message similarly
+    expand; allow them to wrap to multiple lines. Placeholder
+    text faces the most aggressive expansion ("Enter your
+    email" → 1.5-2x in some languages); inline-size of the
+    input itself often constrains placeholder visibility — if
+    placeholder is critical, ensure the input width
+    accommodates the longest translation.
+
+performance:
+  - name: validationDebounce
+    metric: keystroke-interval
+    threshold: 200
+    unit: ms
+    rationale: >-
+      For on-input validation (rare; on-blur is canonical), debounce
+      keystrokes by ~200ms so validation does not run on every
+      character. Below the perceptual threshold of feeling
+      laggy; suppresses 80%+ of in-flight stale validations on
+      a 60-80 wpm typer. For canonical on-blur validation, no
+      debounce needed — blur is the natural debounce.
+  - name: maxLength
+    metric: characters
+    threshold: 10000
+    unit: characters
+    rationale: >-
+      Hard upper bound on input length even when no `maxlength`
+      is set — beyond ~10000 characters, browser-native re-
+      layout on every keystroke causes perceptible jank.
+      Canonical `maxlength` for typical fields is much lower
+      (60-255 for most text fields, 320 for emails per RFC 5321
+      practical limit). Document the threshold as a defence-in-
+      depth ceiling, not as a UX target.
+
+whenToUse:
+  use: >-
+    For free-text user input where the resulting value is a
+    single string — names, email addresses, URLs, phone
+    numbers, descriptions under a paragraph in length, prices,
+    quantities. The canonical form primitive — most form fields
+    in most products are TextInput.
+  avoid: >-
+    For free-text search queries that route to a results region
+    — that is `SearchInput`. For multi-value input where each
+    value renders as a tag — that is `TagInput`. For selecting
+    a value from a constrained list — that is `Combobox` or
+    `Select`. For long-form prose (multi-paragraph) — that is
+    `Textarea` (separate component, deferred). For dates — a
+    dedicated DatePicker (deferred). For yes/no choices — that
+    is `Checkbox` or `Switch`.
+  vsRelated:
+    - id: search-input
+      difference: >-
+        `SearchInput` emits a free-text query that routes to a
+        separate results region; it has structured submit
+        semantics (Enter, magnifier button, debounced
+        suggestions). `TextInput` accepts and exposes a
+        free-text value; submit behaviour is governed by the
+        parent form. Visually similar; behaviourally distinct
+        — search produces queries, text-input produces values.
+    - id: combobox
+      difference: >-
+        `Combobox` commits a value from a constrained list
+        (the input value is set to the selected option, not
+        the typed text). `TextInput` accepts arbitrary typed
+        text as the value. Use Combobox when the value must
+        come from a finite known set; use TextInput when any
+        string is acceptable.
+    - id: tag-input
+      difference: >-
+        `TagInput` accepts multiple discrete values rendered
+        as inline tokens; `TextInput` accepts a single string.
+        Multi-value input (recipients list, tag set, keyword
+        list) is TagInput-shaped; single-value input is
+        TextInput-shaped.
+
+notes: >-
+  TextInput is the canonical form primitive — many composite
+  components (SearchInput, Combobox, TagInput, NumberInput,
+  PasswordInput as conventional sub-types) layer on top of it.
+  The canonical anatomy here documents the universal field
+  contract; specialised inputs document their additions in
+  their own canonical YAMLs. Implementation audits should note
+  whether a library provides a single TextInput primitive
+  (Radix Themes TextField, React Aria TextField, Polaris
+  TextField) or composes from a more primitive Input plus
+  surrounding form-field shell (Headless UI's pattern). The
+  three visual variants (outlined / filled / underlined)
+  represent industry convergence — Material 3, Carbon, and
+  Polaris each pick a default; the canon documents all three
+  because every variant ships in production somewhere.
+
+sources:
+  - https://www.w3.org/TR/wai-aria-practices-1.2/#textbox
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Constraint_validation
+  - https://www.w3.org/TR/WCAG22/#labels-or-instructions
+  - https://react-spectrum.adobe.com/react-aria/TextField.html
+  - https://www.radix-ui.com/themes/docs/components/text-field
+  - https://polaris.shopify.com/components/selection-and-input/text-field
+  - https://carbondesignsystem.com/components/text-input/usage/
+  - https://atlassian.design/components/textfield/examples
+  - https://m3.material.io/components/text-fields/overview
+  - https://www.gov.uk/service-manual/design/text-input
+
+lastReviewed: '2026-05-02'
