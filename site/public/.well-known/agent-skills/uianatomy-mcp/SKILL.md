@@ -1,6 +1,6 @@
 ---
 name: uianatomy-mcp
-description: Query the UI Anatomy MCP server for canonical UI component anatomy, axes, slots, transitions, motion, tokens, events, and cross-framework mapping.
+description: Query the UI Anatomy MCP server for canonical UI component anatomy, axes, slots, transitions, motion, tokens, events, cross-framework mapping, library divergences, and compositional patterns.
 ---
 
 # UI Anatomy — MCP skill
@@ -15,6 +15,66 @@ The MCP server exposes this knowledge as 22 tools.
 - Transport: Streamable HTTP (`@modelcontextprotocol/sdk` ≥ 1.29)
 - Auth: none (public read-only)
 - Server card: `https://uianatomy.dev/.well-known/mcp/server-card.json`
+
+## Install in another project
+
+This skill file is canonical and stable. Drop it into any repo that uses Claude Code and the agent will pick it up automatically.
+
+**One-liner:**
+
+```bash
+mkdir -p .claude/skills/uianatomy-mcp \
+  && curl -fsSL -o .claude/skills/uianatomy-mcp/SKILL.md \
+       https://uianatomy.dev/.well-known/agent-skills/uianatomy-mcp/SKILL.md
+```
+
+Then wire the MCP server in the same project's MCP configuration (path varies by client, see below):
+
+**Claude Code / Claude Desktop** (`.mcp.json` at project root, or `~/.config/claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "uianatomy": {
+      "type": "http",
+      "url": "https://uianatomy.dev/mcp"
+    }
+  }
+}
+```
+
+**Older clients without native streamable-HTTP** (Cursor, Windsurf, older Claude Desktop) — proxy via `mcp-remote`:
+
+```json
+{
+  "mcpServers": {
+    "uianatomy": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://uianatomy.dev/mcp"]
+    }
+  }
+}
+```
+
+**Direct SDK** (TypeScript / Node ≥ 20):
+
+```ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://uianatomy.dev/mcp"),
+);
+const client = new Client({ name: "your-app", version: "1.0.0" });
+await client.connect(transport);
+
+const result = await client.callTool({
+  name: "get_anatomy",
+  arguments: { id: "modal" },
+});
+```
+
+**Discovery (no install needed)** — every page on `uianatomy.dev` advertises the MCP endpoint via RFC 9727 `Link: rel="api-catalog"`. The agent-skills RFC v0.2.0 index lists this skill at `https://uianatomy.dev/.well-known/agent-skills/index.json`; clients that auto-discover skills will find it.
 
 ## Tools
 
