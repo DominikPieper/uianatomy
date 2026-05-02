@@ -53,12 +53,14 @@ describe('mcp server', () => {
         'get_common_mistakes',
         'get_component',
         'get_component_view',
+        'get_components',
         'get_events',
         'get_framework_map',
         'get_implementations',
         'get_mismatches',
         'get_motion',
         'get_pattern',
+        'get_pattern_a11y_aggregate',
         'get_patterns_for_component',
         'get_responsive',
         'get_tokens',
@@ -375,6 +377,69 @@ describe('mcp server', () => {
     for (const v of Object.values(motion.durations as Record<string, string>)) {
       expect(parsed.motion.durations).toContain(v);
     }
+  });
+
+  it('get_components returns full records for a multi-id request', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_components',
+      arguments: { ids: ['card', 'button', 'modal'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.components.map((c: any) => c.id)).toEqual(['card', 'button', 'modal']);
+    expect(parsed.missing).toEqual([]);
+    expect(parsed.components[0].anatomy.length).toBeGreaterThan(0);
+    expect(parsed.components[2].axes).toBeDefined();
+  });
+
+  it('get_components reports unknown ids in `missing` and de-duplicates', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_components',
+      arguments: { ids: ['card', 'definitely-not-a-component', 'card', 'also-fake'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.components.map((c: any) => c.id)).toEqual(['card']);
+    expect(parsed.missing).toEqual(['also-fake', 'definitely-not-a-component']);
+  });
+
+  it('get_pattern_a11y_aggregate returns union of axeRules from composed components', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_pattern_a11y_aggregate',
+      arguments: { patternId: 'confirmation-flow' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.patternId).toBe('confirmation-flow');
+    expect(parsed.componentIds).toEqual(expect.arrayContaining(['modal', 'button']));
+    expect(parsed.axeRules).toEqual([...parsed.axeRules].sort());
+    expect(new Set(parsed.axeRules).size).toBe(parsed.axeRules.length);
+    expect(parsed.axeRules).toContain('aria-dialog-name');
+    for (const k of parsed.keyboardWalk) {
+      expect(parsed.componentIds).toContain(k.sourceComponentId);
+    }
+    for (const a of parsed.announcements) {
+      expect(parsed.componentIds).toContain(a.sourceComponentId);
+    }
+  });
+
+  it('get_pattern_a11y_aggregate returns single axeCoreVersion when all components agree', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_pattern_a11y_aggregate',
+      arguments: { patternId: 'confirmation-flow' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.axeCoreVersion).toBe('4.10.2');
+  });
+
+  it('get_pattern_a11y_aggregate errors on unknown patternId', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_pattern_a11y_aggregate',
+      arguments: { patternId: 'nope-not-a-pattern' },
+    });
+    expect((result as any).isError).toBe(true);
   });
 
   it('validate_implementation reports zero matches on garbage code', async () => {

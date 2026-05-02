@@ -7,7 +7,7 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 23 tools.
+The MCP server exposes this knowledge as 25 tools.
 
 ## Endpoint
 
@@ -83,6 +83,7 @@ const result = await client.callTool({
 | `list_components` | — | All canonical components (id, name, description). |
 | `search_components` | `query: string` | Substring match across id/name/description/slots/variants. |
 | `get_component` | `id: string` | Full canonical schema for one component. |
+| `get_components` | `ids: string[]` | Bulk-fetch full canonical records. Returns `{ components, missing }` — `components` is the resolved set in request order (deduplicated), `missing` is the sorted list of unresolved ids. Use when the agent already knows the id set (comparing 3 components, hydrating a pattern's composition list); avoids N round-trips. |
 | `get_component_view` | `id: string`, `view: "designer" \| "dev" \| "bridge"` | Role-specific projection of the component. `designer` keeps Figma-side hints + tokens + motion + responsive + property-map + i18n. `dev` keeps code-side hints + framework-map + events + form-integration + a11y-acceptance + performance. `bridge` keeps mismatches + common-mistakes + everything cross-cutting. |
 | `get_anatomy` | `id: string` | Slot/region definitions only. |
 | `get_axes` | `id: string` | Variants, properties, and states only. |
@@ -100,6 +101,7 @@ const result = await client.callTool({
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
 | `get_pattern` | `id: string` | Full canonical pattern record (composition, whenToUse, decisions, mistakes, frameworkSkeletons, lastReviewed). |
 | `get_patterns_for_component` | `componentId: string` | Every pattern that composes the given canonical component, sorted by pattern name, with the role this component plays. Empty array when no pattern uses it. |
+| `get_pattern_a11y_aggregate` | `patternId: string` | Aggregate the a11yAcceptance contract for a pattern by unioning every composed component's a11yAcceptance. Returns `{ patternId, componentIds, axeRules (sorted union), keyboardWalk + announcements (concat, each tagged with `sourceComponentId`), axeCoreVersion (single semver if components agree, else null) }`. Useful for "test this whole pattern with axe-core + Playwright" flows. Errors on unknown patternId. |
 | `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. **Takes no arguments — returns the full roster.** Use `get_implementations({ componentId })` to filter. Today only Modal × {radix, headlessui, cdk} are audited; other components return no rows. |
 | `get_implementations` | `componentId: string` | Every library audit for one canonical component as an array of `Implementation` records (`componentId`, `libraryId`, `componentName`, `exampleCode`, `divergence` list, `rationale`, `lastReviewed`). Empty array when no library has audited the component yet. |
 | `validate_implementation` | `componentId: string`, `code: string`, `framework: "react" \| "vue" \| "angular" \| "webComponents"` | Heuristic structural conformance check. **Scores supplied code against the canonical anatomy / axes / events of `componentId` — it does *not* require the canonical component to have a Phase-2 library audit, and it does not consult `implementations/<lib>/<id>.yaml`.** Use it on any framework code claiming to implement a canonical component (your own, generated, or a vendor library), regardless of whether that vendor has been audited. Reports which canonical required slots, variants, properties, and events appear (or are missing) in the supplied code. Framework-aware event-name detection (`on<PascalCase>` for React, `@event` / `v-on:` / `emit('event')` for Vue, `(event)` for Angular, bare names for web components). Substring search only — false negatives possible. NOT a substitute for behavioural assertions (pair with the per-component a11y-fixture endpoint and a real Playwright + axe-core run). |
@@ -161,7 +163,7 @@ Picking between them:
 
 ## Tool loading
 
-The server returns all 23 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+The server returns all 25 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 

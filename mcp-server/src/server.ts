@@ -84,6 +84,27 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    'get_components',
+    'Bulk-fetch the full canonical definitions for a list of component ids. Returns `{ components, missing }` — `components` is the array of resolved records (in the order requested, deduplicated), `missing` is the array of ids that did not resolve to a canonical component (sorted). Use this when the agent already knows which components it needs (e.g. comparing 3 components, or hydrating a pattern\'s composition[].componentId list); avoids N round-trips of `get_component`.',
+    { ids: z.array(z.string()).min(1) },
+    async ({ ids }) => {
+      const map = await getComponents();
+      const seen = new Set<string>();
+      const components: Component[] = [];
+      const missing: string[] = [];
+      for (const id of ids) {
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const c = map.get(id);
+        if (c) components.push(c);
+        else missing.push(id);
+      }
+      missing.sort();
+      return jsonResult({ components, missing });
+    },
+  );
+
+  server.tool(
     'get_component_view',
     'Return a role-specific projection of a component (designer/dev/bridge).',
     { id: z.string(), view: z.enum(VIEW_VALUES) },
@@ -377,6 +398,47 @@ export function createServer(): McpServer {
     'Return the canonical token / motion / breakpoint / property / interactive-state vocabularies that YAML values must draw from. Same source the consistency-test enforces. Useful for resolving values like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or for surfacing the allowed enum to a downstream UI. Returns `{ spacing, radius, color, elevation, typography, motion: { durations, easing }, breakpoint, propertyVocab, propertyBounded, interactiveStates }`.',
     {},
     async () => jsonResult(getCanonicalVocabularies()),
+  );
+
+  server.tool(
+    'get_pattern_a11y_aggregate',
+    'Aggregate the a11yAcceptance contract for a pattern by unioning the a11yAcceptance of every canonical component it composes. Returns `{ patternId, componentIds, axeRules (sorted union, deduplicated), keyboardWalk (concat, each entry tagged with sourceComponentId), announcements (concat, each entry tagged with sourceComponentId), axeCoreVersion (single semver if all contributors agree, null if components disagree or none declare a version) }`. Useful for "test this whole pattern with axe-core + Playwright" flows where the agent needs the union of every a11y contract the pattern inherits from its composed components. Pattern-level overrides are not yet a schema feature; this tool is a pure aggregation. Errors if patternId is unknown.',
+    { patternId: z.string() },
+    async ({ patternId }) => {
+      const patterns = await getPatterns();
+      const pattern = patterns.get(patternId);
+      if (!pattern) {
+        return {
+          isError: true,
+          content: [{ type: 'text' as const, text: `No pattern found with id "${patternId}".` }],
+        };
+      }
+      const components = await getComponents();
+      const componentIds = [...new Set(pattern.composition.map((c) => c.componentId))];
+      const axeRulesSet = new Set<string>();
+      const keyboardWalk: Array<Record<string, unknown>> = [];
+      const announcements: Array<Record<string, unknown>> = [];
+      const axeCoreVersions = new Set<string>();
+      for (const id of componentIds) {
+        const c = components.get(id);
+        if (!c?.a11yAcceptance) continue;
+        const a = c.a11yAcceptance;
+        for (const r of a.axeRules ?? []) axeRulesSet.add(r);
+        for (const k of a.keyboardWalk ?? []) keyboardWalk.push({ sourceComponentId: id, ...k });
+        for (const an of a.announcements ?? []) announcements.push({ sourceComponentId: id, ...an });
+        if (a.axeCoreVersion) axeCoreVersions.add(a.axeCoreVersion);
+      }
+      const axeRules = [...axeRulesSet].sort();
+      const axeCoreVersion = axeCoreVersions.size === 1 ? [...axeCoreVersions][0] : null;
+      return jsonResult({
+        patternId,
+        componentIds,
+        axeRules,
+        keyboardWalk,
+        announcements,
+        axeCoreVersion,
+      });
+    },
   );
 
   server.tool(
