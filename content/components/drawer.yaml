@@ -541,20 +541,24 @@ events:
         the reason wrap any `@close` from an underlying library.
 
   - name: sideChange
+    optional: true
     payload: >-
       `'start' | 'end' | 'top' | 'bottom'`. Fires when the responsive
       auto-flip kicks in (e.g. authored `side: end` becomes `bottom`
       below `breakpoint.sm`). Lets consumers re-anchor satellite UI
       (toast positioning, tooltip arrows) when the drawer reflows.
+      Only canonical when the implementation actually performs the
+      auto-flip — static-side implementations simply never emit and
+      the consumer treats absence as the no-flip baseline.
     frameworkNotes:
       webComponents: >-
-        `sideChange` CustomEvent with `event.detail = { side }`.
-        Optional event — many hosts do not implement responsive
-        auto-flip and never fire this.
+        `sideChange` CustomEvent with `event.detail = { side }`. Fires
+        only when the responsive auto-flip changes the resolved side
+        from the authored value.
       react: >-
-        `onSideChange(side)` callback; not standard across libraries.
-        Canonical reference documents the contract; consumers wire it
-        up where the underlying library does not.
+        `onSideChange(side)` callback. Wire it up only where the
+        underlying library performs an auto-flip; static-side
+        implementations do not need a stub.
       angularSignals: >-
         `output<DrawerSide>('sideChange')`.
       vue: >-

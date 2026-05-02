@@ -196,6 +196,48 @@ axes:
       - busy
       - lazy
       - error
+    transitions:
+      - from: lazy
+        to: busy
+        trigger: >-
+          User activates a tab whose panel was registered as `lazy`
+          (deferred load). The panel begins fetching; the tab stays
+          selected, the panel announces `aria-busy="true"`. Subsequent
+          activations of the same tab go selected → selected (already
+          loaded) and skip this edge.
+      - from: selected
+        to: busy
+        trigger: >-
+          Panel content reloads in place (e.g. consumer-triggered
+          refresh, route-driven re-fetch on an already-rendered
+          panel). The tab stays selected; `aria-busy="true"` on the
+          panel signals the in-flight state to assistive tech.
+      - from: busy
+        to: selected
+        trigger: >-
+          Panel content has loaded successfully; `aria-busy` clears
+          and the panel renders the resolved content.
+      - from: busy
+        to: error
+        trigger: >-
+          Panel content load failed (network error, validation
+          failure, thrown render error). Tab stays selected; `tab` and
+          `tabpanel` carry `data-state="error"` so the consumer can
+          render an error UI in place without forcing a
+          selection-change.
+      - from: error
+        to: busy
+        trigger: >-
+          Consumer-driven retry from the error UI re-issues the
+          fetch.
+      - from: error
+        to: selected
+        trigger: >-
+          User selects a different tab and returns; the error is
+          treated as transient and the panel re-fetches as if `lazy`.
+          Implementations that prefer sticky errors stay in `error`
+          until an explicit retry — both are canonical, the choice is
+          documented per implementation.
 
 mismatches:
   - figma: Each tab state (default / hover / selected / disabled) modeled as a separate Figma variant on the tab component
@@ -411,11 +453,17 @@ events:
         that prefer index-based selection.
 
   - name: tabActivate
+    optional: true
     payload: >-
-      The id of the tab whose panel was requested. Distinct from
-      `selectedChange` only in `activation: manual` mode — the user has
-      moved focus across tabs and pressed Enter or Space to commit. In
-      `automatic` mode this event is a no-op alias of `selectedChange`.
+      The id of the tab whose panel was requested. Canonical only in
+      `activation: manual` mode — the user has moved focus across tabs
+      and pressed Enter or Space to commit. Implementations running in
+      `activation: automatic` mode do not emit this event; consumers
+      should listen on `selectedChange` and ignore `tabActivate` for
+      those instances. The two events are deliberately separated so
+      manual-activation consumers can distinguish navigation
+      (focus-only) from activation (panel commit) without inferring it
+      from selection-change semantics.
     frameworkNotes:
       webComponents: >-
         Same `change` mechanism, but only emitted on activation. The

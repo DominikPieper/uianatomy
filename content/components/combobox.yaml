@@ -444,8 +444,12 @@ responsive:
         on Android). The trigger button opens the OS-level surface; the
         in-page listbox markup is suppressed and `aria-controls` no
         longer applies. Filtering becomes synchronous (no async results)
-        and the chip-input multi-select degrades to comma-separated
-        tokens in the input.
+        and the chip-input multi-select degrades to a count-display
+        ("3 selected") in the input — comma-separated value lists in
+        the input are explicitly anti-canon (the same rule the
+        `Select` multi-select mismatch entry locks down) because the
+        input would grow unboundedly and break the small-viewport
+        layout it is supposed to rescue.
     - at: breakpoint.md
       change: >-
         Above this width, the floating listbox renders as authored —

@@ -302,9 +302,10 @@ mismatches:
       Multi-select trigger displays a count ("3 selected" or
       "3 of 5") rather than a comma-separated list. The visible
       value is intrinsically bounded; long selections do not
-      break layout. Document the count-display pattern and
-      reserve comma-separated for very-short maximum
-      selections.
+      break layout. The same convention applies to `Combobox`
+      on small viewports (see Combobox responsive at
+      breakpoint.sm) — count-display is canon at every width,
+      comma-separated lists are not a fallback.
 
   - figma: Select drawn at native `<select>` styling with no custom variant
     code: A custom listbox replicating native `<select>` to within a few pixels

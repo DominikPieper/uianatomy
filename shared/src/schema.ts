@@ -293,6 +293,7 @@ export const eventSchema = z
     name: eventName,
     payload: z.string().min(1),
     frameworkNotes: eventFrameworkNotesSchema,
+    optional: z.boolean().optional(),
   })
   .strict();
 

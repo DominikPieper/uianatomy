@@ -862,13 +862,22 @@ describe('state transitions', () => {
     expect(edges).toContain('open→invalid');
   });
 
-  it('omits transitions on Card/Tabs/Button (trivial graphs)', async () => {
+  it('omits transitions on Card/Button/Link (trivial graphs)', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
-    const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
     const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const link = await loadComponent(join(contentDir, 'link.yaml'));
     expect(card.axes.states.transitions).toBeUndefined();
-    expect(tabs.axes.states.transitions).toBeUndefined();
     expect(button.axes.states.transitions).toBeUndefined();
+    expect(link.axes.states.transitions).toBeUndefined();
+  });
+
+  it('parses tabs transitions for the panel-load lifecycle', async () => {
+    const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
+    const transitions = tabs.axes.states.transitions ?? [];
+    const edges = transitions.map((t) => `${t.from}→${t.to}`);
+    expect(edges).toContain('lazy→busy');
+    expect(edges).toContain('busy→selected');
+    expect(edges).toContain('busy→error');
   });
 
   it('rejects transitions whose from references an unknown state', async () => {

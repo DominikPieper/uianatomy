@@ -523,6 +523,18 @@ axes:
 
 - `transitions` is optional. Components with trivial graphs (Card's independent `selected`/`loading`, Button's lone `loading`) omit the field.
 - Each entry has exactly three required fields: `from`, `to`, `trigger`.
+
+**When to declare transitions vs. omit them:**
+
+A state graph is **non-trivial** — and `transitions` is canonical — when at least one of the following holds:
+
+1. The component goes through ordered phases (`closed → opening → open → closing → closed` for Modal/Drawer/Popover/Combobox/Tooltip; `idle → focused → selected → busy` for Tabs).
+2. The transition depends on a property mode that the consumer can configure (Tabs `activation: manual` separates focus-move from selection-commit; Stepper `linear` vs. non-linear gates step-to-step transitions).
+3. Async lifecycles produce intermediate states the consumer must render (`busy`, `error`, `loading`) and the path back to the steady state is meaningful.
+
+A state graph is **trivial** — and `transitions` is omitted — when the data states are mutually independent flags whose order the user controls directly (`Card.selected`, `Card.loading` — toggled independently by the parent; `Button.loading` — set on submit, cleared on response; `Link` has no data states beyond visited). In those cases the interactive-states list (`hover`, `focus-visible`, `active`, `disabled`) plus the data-states list together capture every observable state, and a transitions block would either restate the trivial fact "any state can become any state" or invent ordering the canon does not enforce.
+
+Today the canon omits `transitions` on Button, Card, Link only. Every other component declares a graph.
 - `from` and `to` must be a name declared in `axes.states.interactive` or `axes.states.data`. The schema validates this with a cross-field refine; a typo or stale reference is a parse error with the path `axes.states.transitions[i].from`.
 - `trigger` is free-text prose describing what causes the transition. Compound triggers (multiple alternative causes for the same edge) are written as disjunctive prose ("Escape, close button, or backdrop click") rather than split into multiple entries.
 - Order of entries is meaningful: write the dominant happy path first, exceptional paths after. Renderers preserve declaration order.

@@ -24,6 +24,7 @@ const FRAMEWORK_ORDER: Array<'webComponents' | 'react' | 'angularSignals' | 'vue
       <li class="events-item">
         <header class="events-header">
           <code class="events-name">{e.name}</code>
+          {e.optional && <span class="events-optional" title="Implementations may omit this event when their feature surface does not produce it">optional</span>}
         </header>
         <dl class="events-meta">
           <div>
@@ -58,10 +59,26 @@ const FRAMEWORK_ORDER: Array<'webComponents' | 'react' | 'angularSignals' | 'vue
   }
   .events-header {
     margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .events-name {
     font-size: var(--text-step-0);
     font-weight: 600;
+  }
+  .events-optional {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    background: var(--surface-sunken);
+    color: var(--fg-muted);
+    border: 1px solid var(--border-subtle);
   }
   .events-meta {
     display: grid;
