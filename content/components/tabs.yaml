@@ -305,6 +305,7 @@ mismatches:
 
 mistakes:
   - id: tabs-no-arrow-keys
+    severity: blocker
     title: Tab key cycles through every tab instead of arrow keys
     description: >-
       Implementation uses native focusable buttons with no roving
@@ -318,6 +319,7 @@ mistakes:
       focus between tabs and update the roving tabindex.
 
   - id: tabs-panel-not-labelled
+    severity: blocker
     title: Tabpanels missing `aria-labelledby` to their tab
     description: >-
       The panel announces only its content with no relationship to
@@ -329,6 +331,7 @@ mistakes:
       Each tab sets `aria-controls` to the id of its panel.
 
   - id: tabs-state-as-data-attribute-only
+    severity: blocker
     title: Selection driven only by a `data-selected` attribute, no `aria-selected`
     description: >-
       Visual selection works (CSS targets the data attribute) but
@@ -339,6 +342,7 @@ mistakes:
       `data-selected` attribute that has to stay in sync.
 
   - id: tabs-disabled-but-not-skipped
+    severity: major
     title: Disabled tabs cannot receive keyboard focus
     description: >-
       Setting `disabled` on a disabled tab removes it from the focus
@@ -351,6 +355,7 @@ mistakes:
       no-op.
 
   - id: tabs-lazy-panel-no-aria-busy
+    severity: major
     title: Lazy-loaded tabpanel renders empty without an `aria-busy` announcement
     description: >-
       Selecting a tab fetches its panel content asynchronously. The
@@ -364,6 +369,7 @@ mistakes:
       inside the panel). Clear `aria-busy` when content is ready.
 
   - id: tabs-overflow-no-scroll-into-view
+    severity: minor
     title: Overflowing tablist does not scroll the focused tab into view
     description: >-
       The tablist scrolls horizontally on overflow, but pressing
@@ -378,6 +384,7 @@ mistakes:
       small inline padding.
 
   - id: tabs-indicator-not-rtl-aware
+    severity: major
     title: Indicator animation hard-codes left-to-right movement
     description: >-
       The selected-tab indicator animates by interpolating `left` /

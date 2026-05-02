@@ -393,6 +393,7 @@ mismatches:
 
 mistakes:
   - id: drawer-no-focus-trap-on-modal
+    severity: blocker
     title: Modal drawer with no focus trap
     description: >-
       The drawer is styled to feel modal (backdrop, scrim) but
@@ -405,6 +406,7 @@ mistakes:
       roll your own without `inert` on the rest of the document.
 
   - id: drawer-no-focus-restore
+    severity: blocker
     title: Focus is lost after the drawer closes
     description: >-
       After dismissal, focus lands on `<body>`. Keyboard and
@@ -415,6 +417,7 @@ mistakes:
       focus a stable landmark (page heading, parent toolbar).
 
   - id: drawer-swipe-without-keyboard-equivalent
+    severity: blocker
     title: Swipe-to-dismiss with no keyboard equivalent
     description: >-
       Mobile drawers are dismissable via swipe but keyboard users on
@@ -428,6 +431,7 @@ mistakes:
       not a replacement.
 
   - id: drawer-side-not-rtl-aware
+    severity: major
     title: Side `start` hard-coded to `left`
     description: >-
       The drawer slides from the left in LTR — and also in RTL,
@@ -442,6 +446,7 @@ mistakes:
       slides from inline-start in any direction.
 
   - id: drawer-stacking-with-modal
+    severity: major
     title: Drawer opened on top of an existing Modal
     description: >-
       Both surfaces install their own focus traps and `inert`

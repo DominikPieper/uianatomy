@@ -328,6 +328,7 @@ mismatches:
 
 mistakes:
   - id: accordion-no-heading-wrap
+    severity: major
     title: Trigger button not wrapped in a heading element
     description: >-
       The trigger is a `<button>` directly inside a `<div>` or
@@ -342,6 +343,7 @@ mistakes:
       the toggle behaviour.
 
   - id: accordion-no-aria-expanded
+    severity: blocker
     title: Trigger missing `aria-expanded` toggle
     description: >-
       The button has no `aria-expanded` attribute. Visually the
@@ -356,6 +358,7 @@ mistakes:
       parallel `data-expanded` attribute.
 
   - id: accordion-icon-only-state-cue
+    severity: blocker
     title: Expansion state communicated only by chevron rotation
     description: >-
       The chevron rotates on expand, but `aria-expanded` is
@@ -370,6 +373,7 @@ mistakes:
       `[aria-expanded="true"]`.
 
   - id: accordion-anchor-link-no-expand
+    severity: minor
     title: Page anchor link to accordion content does not expand the panel
     description: >-
       A link elsewhere in the document points at content inside
@@ -386,6 +390,7 @@ mistakes:
       for this.
 
   - id: accordion-multi-vs-single-confusion
+    severity: major
     title: Single-open mode silently switches to multi when user expects mutual exclusion
     description: >-
       The accordion's `multi` mode is set by config but not

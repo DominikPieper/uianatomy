@@ -238,6 +238,7 @@ mismatches:
 
 mistakes:
   - id: button-icon-only-no-label
+    severity: blocker
     title: Icon-only button with no `aria-label`
     description: >-
       The visual is a single icon and the button carries no
@@ -250,6 +251,7 @@ mistakes:
       `aria-labelledby`.
 
   - id: button-disabled-tooltip
+    severity: major
     title: Disabled button has a tooltip explaining why
     description: >-
       The `disabled` attribute removes the button from the focus
@@ -262,6 +264,7 @@ mistakes:
       tooltip appears on focus and hover.
 
   - id: button-loading-removes-label
+    severity: major
     title: Loading state replaces the label with a spinner only
     description: >-
       The visible label is replaced by a spinner, but the button's
@@ -274,6 +277,7 @@ mistakes:
       than mutating the button's accessible name.
 
   - id: button-submit-default-in-toolbar
+    severity: major
     title: A button inside a `<form>` defaults to `type="submit"`
     description: >-
       A button placed inside a form without an explicit `type`
@@ -285,6 +289,7 @@ mistakes:
       and require an explicit `type="submit"` opt-in.
 
   - id: button-text-in-anchor
+    severity: major
     title: A `<button>` wrapped in an `<a>` for navigation
     description: >-
       The DOM has a button inside an anchor (`<a><button>Go</button></a>`),

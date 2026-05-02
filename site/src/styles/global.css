@@ -1464,11 +1464,50 @@ li.is-cross-pinned {
   background: var(--surface-raised);
   padding: 20px;
 }
+.mistake-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
 .mistake-id {
   font-family: var(--font-mono);
   color: var(--fg-faint);
   font-size: var(--text-step--1);
   letter-spacing: 0.02em;
+  margin: 0;
+}
+.mistake-severity {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 4px;
+  font-size: var(--text-step--1);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.mistake-severity--blocker {
+  background: color-mix(in oklab, var(--accent-warm, #d97757) 22%, var(--surface-bg));
+  color: color-mix(in oklab, var(--accent-warm, #d97757) 85%, var(--fg));
+  border-color: color-mix(in oklab, var(--accent-warm, #d97757) 45%, transparent);
+}
+.mistake-severity--major {
+  background: var(--surface-sunken);
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+.mistake-severity--minor {
+  background: var(--surface-sunken);
+  color: var(--fg-muted);
+  border-color: var(--border-subtle);
+}
+.mistake--blocker {
+  border-color: color-mix(in oklab, var(--accent-warm, #d97757) 35%, var(--border-subtle));
+}
+:root[data-theme='dark'] .mistake-severity--blocker {
+  background: color-mix(in oklab, var(--accent-warm, #f0a989) 25%, transparent);
+  color: var(--accent-warm, #f6cbb6);
 }
 .mistake-title {
   font-family: var(--font-display);

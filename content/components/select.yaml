@@ -340,6 +340,7 @@ mismatches:
 
 mistakes:
   - id: select-not-button-or-listbox
+    severity: blocker
     title: Select implemented as a styled `<div>` with click handlers
     description: >-
       The trigger is a `<div>` with `onclick` opening a popup
@@ -354,6 +355,7 @@ mistakes:
       `useListBox`+`useSelect`) provide the entire contract.
 
   - id: select-no-typeahead
+    severity: minor
     title: Typeahead by first-letter not implemented
     description: >-
       User types a letter expecting to jump to the next option
@@ -370,6 +372,7 @@ mistakes:
       to "Ferrari" before "Fiat".
 
   - id: select-listbox-clipped
+    severity: major
     title: 'Listbox clipped by parent `overflow: hidden`'
     description: >-
       The listbox is rendered as a child of the trigger's DOM
@@ -383,6 +386,7 @@ mistakes:
       implementations use a Portal / Teleport primitive.
 
   - id: select-required-silent-failure
+    severity: blocker
     title: Required select submits without selection silently
     description: >-
       `required: true` on a select; user submits the form
@@ -398,6 +402,7 @@ mistakes:
       inline error referenced via `aria-describedby`.
 
   - id: select-too-many-options-no-search
+    severity: minor
     title: Select with hundreds of options and no search
     description: >-
       The listbox renders 200+ options without filtering or

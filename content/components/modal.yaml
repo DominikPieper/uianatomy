@@ -358,6 +358,7 @@ mismatches:
 
 mistakes:
   - id: modal-no-focus-trap
+    severity: blocker
     title: Tab key escapes the dialog into the page beneath
     description: >-
       Without an explicit focus trap, pressing Tab from the last
@@ -372,6 +373,7 @@ mistakes:
       without `inert` on the rest of the document.
 
   - id: modal-no-focus-restore
+    severity: blocker
     title: Focus is lost after the dialog closes
     description: >-
       After dismissal, focus lands on `<body>` instead of the trigger
@@ -384,6 +386,7 @@ mistakes:
       landmark such as the page heading or a confirmation toast.
 
   - id: modal-aria-hidden-leak
+    severity: blocker
     title: Setting `aria-hidden` on the body without scoping out the dialog
     description: >-
       Applying `aria-hidden="true"` to `<body>` to keep the
@@ -397,6 +400,7 @@ mistakes:
       stacks should prefer `inert` on siblings of the portal.
 
   - id: modal-escape-not-bound
+    severity: blocker
     title: Escape key does not dismiss a dismissible dialog
     description: >-
       `dismissible` is true (the close button works, the backdrop
@@ -410,6 +414,7 @@ mistakes:
       identical across input modalities.
 
   - id: modal-backdrop-pointer-leak
+    severity: major
     title: Pointer events pass through the backdrop to the page beneath
     description: >-
       The backdrop is rendered with `pointer-events: none` (or no

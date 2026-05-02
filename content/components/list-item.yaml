@@ -396,6 +396,7 @@ mismatches:
 
 mistakes:
   - id: listitem-not-in-list
+    severity: major
     title: ListItem used standalone outside a list
     description: >-
       The component is rendered without a `<ul>` / `<ol>`
@@ -411,6 +412,7 @@ mistakes:
       grouped as part of a fieldset).
 
   - id: listitem-action-no-stop-propagation
+    severity: major
     title: Action button click activates parent row
     description: >-
       The whole row is clickable; the action button is
@@ -424,6 +426,7 @@ mistakes:
       reference.
 
   - id: listitem-no-aria-selected
+    severity: blocker
     title: Selectable rows missing `aria-selected`
     description: >-
       Visual selected state is shown but `aria-selected` is
@@ -439,6 +442,7 @@ mistakes:
       treatment.
 
   - id: listitem-swipe-no-keyboard
+    severity: blocker
     title: Mobile swipe-to-delete with no keyboard equivalent
     description: >-
       Swipeable rows expose actions on mobile via swipe
@@ -452,6 +456,7 @@ mistakes:
       on mobile. Both input modalities have access.
 
   - id: listitem-no-roving-tabindex
+    severity: blocker
     title: Selectable list with every row tabindex="0"
     description: >-
       Tab cycles through every row in a selectable list
@@ -466,6 +471,7 @@ mistakes:
       focusable.
 
   - id: listitem-secondary-text-as-link
+    severity: minor
     title: Inline links embedded in secondary text
     description: >-
       Secondary text contains "View · Edit · Delete" as

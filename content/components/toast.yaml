@@ -366,6 +366,7 @@ mismatches:
 
 mistakes:
   - id: toast-no-pause-on-hover
+    severity: blocker
     title: Auto-dismiss continues while the user reads
     description: >-
       The toast slides in, the user starts reading, the timer
@@ -381,6 +382,7 @@ mistakes:
       hover so users can move between adjacent toasts.
 
   - id: toast-stack-overflow
+    severity: major
     title: Toast stack grows unbounded
     description: >-
       Multiple toasts fire in rapid succession; the stack grows
@@ -395,6 +397,7 @@ mistakes:
       many toasts are pending.
 
   - id: toast-essential-info
+    severity: blocker
     title: Critical errors delivered as toast
     description: >-
       A network failure or data-loss warning is shown as an
@@ -410,6 +413,7 @@ mistakes:
       warning → alert; error requiring action → alert or modal.
 
   - id: toast-aria-live-assertive-for-info
+    severity: major
     title: Info-severity toast uses assertive live region
     description: >-
       Toasts carry `role="alert"` (assertive) regardless of
@@ -424,6 +428,7 @@ mistakes:
       content that genuinely interrupts.
 
   - id: toast-no-keyboard-dismiss
+    severity: blocker
     title: Escape does not dismiss the focused toast
     description: >-
       Keyboard users tabbing into the toast region cannot exit

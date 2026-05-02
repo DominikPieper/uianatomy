@@ -323,6 +323,7 @@ mismatches:
 
 mistakes:
   - id: tile-as-card
+    severity: minor
     title: Tile used for content-led layout
     description: >-
       The component is used to render a hierarchical
@@ -339,6 +340,7 @@ mistakes:
       canonical guide.
 
   - id: tile-no-aspect-ratio
+    severity: minor
     title: Tile sized intrinsically by image dimensions
     description: >-
       Implementation does not enforce aspect ratio; tiles
@@ -353,6 +355,7 @@ mistakes:
       regular regardless of source image dimensions.
 
   - id: tile-selected-color-only
+    severity: blocker
     title: Selection differentiated by colour alone
     description: >-
       Selected tiles have a coloured border or background
@@ -366,6 +369,7 @@ mistakes:
       users may not realise tiles are selectable.
 
   - id: tile-text-overlay-no-contrast
+    severity: blocker
     title: Text label on image without contrast scrim
     description: >-
       Label rendered directly on the image with no
@@ -382,6 +386,7 @@ mistakes:
       separated-caption variants.
 
   - id: tile-keyboard-no-roving-tabindex
+    severity: blocker
     title: Selectable tile grid with no roving tabindex
     description: >-
       Implementation puts `tabindex="0"` on every tile in a

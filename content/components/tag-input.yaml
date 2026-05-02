@@ -325,6 +325,7 @@ mismatches:
 
 mistakes:
   - id: taginput-no-keyboard-token-removal
+    severity: blocker
     title: Tags cannot be removed by keyboard
     description: >-
       Each tag has a × button reachable only via Tab through
@@ -342,6 +343,7 @@ mistakes:
       tag.
 
   - id: taginput-paste-no-split
+    severity: minor
     title: Pasting comma-separated text creates a single tag
     description: >-
       User pastes "alice@x, bob@y, carol@z" expecting three
@@ -356,6 +358,7 @@ mistakes:
       the entire paste.
 
   - id: taginput-duplicates-silent
+    severity: minor
     title: Duplicate tags accepted silently
     description: >-
       `duplicates: false` is set but committing an already-
@@ -370,6 +373,7 @@ mistakes:
       document the user-feedback contract canonically.
 
   - id: taginput-no-aria-on-tags
+    severity: blocker
     title: Tags rendered as styled `<span>`s with no SR label structure
     description: >-
       Tag list is a `<div>` of styled spans. SR users hear
@@ -384,6 +388,7 @@ mistakes:
       structure and hears each tag plus the remove option.
 
   - id: taginput-tokens-clipped
+    severity: minor
     title: Tag overflow silently clipped at input edge
     description: >-
       Input has fixed inline-size; tags accumulate horizontally

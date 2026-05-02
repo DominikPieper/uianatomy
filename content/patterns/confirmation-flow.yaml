@@ -95,6 +95,7 @@ decisions:
       undo cost ("This cannot be undone") if it applies.
 mistakes:
   - id: dialog-instead-of-alertdialog
+    severity: blocker
     title: Confirmations rendered as `dialog` instead of `alertdialog`
     description: >-
       The Modal renders with `role="dialog"` even though the entire
@@ -109,6 +110,7 @@ mistakes:
       `dialog` is correct — the auto-announcement of alertdialog
       becomes noise once there is more content than the question.
   - id: confirm-as-default-focus
+    severity: major
     title: Initial focus on Confirm for destructive actions
     description: >-
       The destructive button receives initial focus, so a reflexive
@@ -122,6 +124,7 @@ mistakes:
       slot prop; in CDK, `autoFocus: 'cancelButton'`. Reserve
       Confirm-as-default for non-destructive confirmations only.
   - id: vague-title
+    severity: major
     title: Title that asks a question without naming the consequence
     description: >-
       The dialog title reads "Are you sure?" or "Confirm action."
@@ -132,6 +135,7 @@ mistakes:
       draft?", "Cancel your subscription?". Use the body for
       explanation and the undo-cost statement.
   - id: missing-undo-cost
+    severity: major
     title: No statement of the undo cost
     description: >-
       The dialog asks for confirmation but does not state whether
@@ -144,6 +148,7 @@ mistakes:
       everyone in this thread." Brief, factual, no marketing-soft
       hedging.
   - id: confirm-button-is-ok
+    severity: major
     title: Destructive button labelled "OK" or "Yes"
     description: >-
       The destructive button reads "OK", "Yes", "Confirm", or any

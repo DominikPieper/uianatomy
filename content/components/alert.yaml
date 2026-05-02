@@ -312,6 +312,7 @@ mismatches:
 
 mistakes:
   - id: alert-no-aria-live
+    severity: blocker
     title: Alert with no live-region announcement
     description: >-
       The alert renders visually but the role is missing or the
@@ -326,6 +327,7 @@ mistakes:
       shipping.
 
   - id: alert-color-only-severity
+    severity: blocker
     title: Severity differentiated by colour alone
     description: >-
       The alert's severity is communicated only through background
@@ -339,6 +341,7 @@ mistakes:
       layer redundantly communicates severity.
 
   - id: alert-stacked-without-summary
+    severity: minor
     title: More than three alerts stacked without summary
     description: >-
       A page accumulates alerts (form validation errors, system
@@ -352,6 +355,7 @@ mistakes:
       Document the threshold in the performance block.
 
   - id: alert-actions-inside-prose
+    severity: major
     title: Alert actions embedded inline in body text
     description: >-
       Body prose contains "Click here to retry" or similar
@@ -364,6 +368,7 @@ mistakes:
       separately reachable.
 
   - id: alert-dismiss-loses-issue
+    severity: major
     title: Dismiss removes the issue, not just the alert
     description: >-
       The user dismisses an important warning by accident; the

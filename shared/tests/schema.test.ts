@@ -1296,6 +1296,49 @@ describe('versioning', () => {
   });
 });
 
+describe('mistake severity', () => {
+  it('parses severity on every mistake of every component', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const allowed = new Set(['blocker', 'major', 'minor']);
+    for (const m of card.mistakes) expect(allowed.has(m.severity)).toBe(true);
+    for (const m of modal.mistakes) expect(allowed.has(m.severity)).toBe(true);
+  });
+
+  it('rejects mistake with missing severity', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      mistakes: card.mistakes.map(({ severity, ...rest }) => rest),
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects mistake with unknown severity value', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      mistakes: card.mistakes.map((m, i) => (i === 0 ? { ...m, severity: 'critical' } : m)),
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('modal critical mistakes are blockers (focus-trap, focus-restore, escape, aria-hidden-leak)', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const blockers = modal.mistakes.filter((m) => m.severity === 'blocker').map((m) => m.id);
+    expect(blockers).toEqual(
+      expect.arrayContaining([
+        'modal-no-focus-trap',
+        'modal-no-focus-restore',
+        'modal-aria-hidden-leak',
+        'modal-escape-not-bound',
+      ]),
+    );
+  });
+});
+
 describe('pattern schema', () => {
   it('parses confirmation-flow.yaml', async () => {
     const map = await loadPatterns({ patternsDir });
@@ -1318,9 +1361,9 @@ describe('pattern schema', () => {
       whenToUse: { use: 'a', avoid: 'b' },
       decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
       mistakes: [
-        { id: 'a', title: 't', description: 'd', fix: 'f' },
-        { id: 'b', title: 't', description: 'd', fix: 'f' },
-        { id: 'c', title: 't', description: 'd', fix: 'f' },
+        { id: 'a', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', severity: 'major', title: 't', description: 'd', fix: 'f' },
       ],
       frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
       lastReviewed: '2026-05-01',
@@ -1340,8 +1383,8 @@ describe('pattern schema', () => {
       whenToUse: { use: 'a', avoid: 'b' },
       decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
       mistakes: [
-        { id: 'a', title: 't', description: 'd', fix: 'f' },
-        { id: 'b', title: 't', description: 'd', fix: 'f' },
+        { id: 'a', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', severity: 'major', title: 't', description: 'd', fix: 'f' },
       ],
       frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
       lastReviewed: '2026-05-01',
@@ -1361,9 +1404,9 @@ describe('pattern schema', () => {
       whenToUse: { use: 'a', avoid: 'b' },
       decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
       mistakes: [
-        { id: 'a', title: 't', description: 'd', fix: 'f' },
-        { id: 'b', title: 't', description: 'd', fix: 'f' },
-        { id: 'c', title: 't', description: 'd', fix: 'f' },
+        { id: 'a', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', severity: 'major', title: 't', description: 'd', fix: 'f' },
       ],
       frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x' },
       lastReviewed: '2026-05-01',
@@ -1383,9 +1426,9 @@ describe('pattern schema', () => {
       whenToUse: { use: 'a', avoid: 'b' },
       decisions: [{ question: 'q', answer: 'a', rationale: 'r' }],
       mistakes: [
-        { id: 'a', title: 't', description: 'd', fix: 'f' },
-        { id: 'b', title: 't', description: 'd', fix: 'f' },
-        { id: 'c', title: 't', description: 'd', fix: 'f' },
+        { id: 'a', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'b', severity: 'major', title: 't', description: 'd', fix: 'f' },
+        { id: 'c', severity: 'major', title: 't', description: 'd', fix: 'f' },
       ],
       frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x', angularSignals: 'x' },
       lastReviewed: '2026-05-01',

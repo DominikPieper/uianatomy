@@ -357,6 +357,7 @@ mismatches:
 
 mistakes:
   - id: combobox-focus-into-listbox
+    severity: blocker
     title: Arrow Down moves DOM focus into the listbox
     description: >-
       The implementation uses real `tabindex` on each option and
@@ -368,6 +369,7 @@ mistakes:
       Arrow keys mutate the highlighted index; Enter selects.
 
   - id: combobox-no-aria-expanded
+    severity: blocker
     title: '`aria-expanded` not toggled on open / close'
     description: >-
       The input misses `aria-expanded`, so screen readers cannot
@@ -379,6 +381,7 @@ mistakes:
       transition state of the popup.
 
   - id: combobox-strict-without-feedback
+    severity: major
     title: Strict mode silently rejects invalid input on blur
     description: >-
       The combobox is strict (must select from the list) but on
@@ -391,6 +394,7 @@ mistakes:
       `aria-describedby`. Never silently revert.
 
   - id: combobox-non-virtualised-large-list
+    severity: major
     title: A list of 5,000 options renders all DOM nodes
     description: >-
       Every option is in the DOM whether visible or not. Open
@@ -402,6 +406,7 @@ mistakes:
       without scrolling.
 
   - id: combobox-clear-button-tab-stop
+    severity: minor
     title: Clear button appears in the keyboard tab order
     description: >-
       Tabbing from the input lands on the × button instead of

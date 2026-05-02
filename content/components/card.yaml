@@ -305,6 +305,7 @@ mismatches:
 
 mistakes:
   - id: card-as-link-nested-buttons
+    severity: blocker
     title: Card-as-link with nested action buttons
     description: >-
       Wrapping the whole card in an <a> turns the entire surface into a
@@ -320,6 +321,7 @@ mistakes:
       title.
 
   - id: clickable-card-no-keyboard
+    severity: blocker
     title: Click handler on the card without a focusable activator
     description: >-
       Attaching a click handler to a <div> card with no <a> or <button>
@@ -332,6 +334,7 @@ mistakes:
       the overlay pattern — never role="button" on the card div.
 
   - id: variant-explosion-from-states
+    severity: minor
     title: Modelling interactive states as Figma variants
     description: >-
       Adding hover / focus / active / disabled as variants in Figma
@@ -344,6 +347,7 @@ mistakes:
       separation in the canonical reference and the production library.
 
   - id: media-alt-duplicates-title
+    severity: minor
     title: Image alt text repeats the card title
     description: >-
       Setting `alt` to the title text causes screen readers to announce

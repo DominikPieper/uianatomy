@@ -236,6 +236,7 @@ mismatches:
 
 mistakes:
   - id: tooltip-with-interactive-content
+    severity: blocker
     title: Tooltip containing buttons or links
     description: >-
       The tooltip body has interactive elements (a "Learn more"
@@ -249,6 +250,7 @@ mistakes:
       No "tooltip with a button" middle ground.
 
   - id: tooltip-no-focus-trigger
+    severity: blocker
     title: Tooltip only reveals on pointer hover
     description: >-
       The tooltip fires on `mouseenter` but not on `focus` events.
@@ -263,6 +265,7 @@ mistakes:
       pointer or focus remains).
 
   - id: tooltip-essential-info
+    severity: blocker
     title: Essential information in tooltip
     description: >-
       The tooltip text is the only descriptor for an icon-only
@@ -277,6 +280,7 @@ mistakes:
       essential info that belongs in the label.
 
   - id: tooltip-paragraph-length
+    severity: minor
     title: Tooltip with multi-paragraph content
     description: >-
       The tooltip body grows beyond a brief sentence — multiple
@@ -290,6 +294,7 @@ mistakes:
       enforce it in design review.
 
   - id: tooltip-pointer-events-block
+    severity: major
     title: Tooltip captures pointer events from underlying content
     description: >-
       The tooltip's container has `pointer-events: auto` — the

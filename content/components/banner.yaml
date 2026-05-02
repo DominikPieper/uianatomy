@@ -307,6 +307,7 @@ mismatches:
 
 mistakes:
   - id: banner-as-modal
+    severity: major
     title: Banner sized to block the entire viewport
     description: >-
       The banner is rendered at `100vh` or `position: fixed` with
@@ -322,6 +323,7 @@ mistakes:
       Banner past one-to-three content rows.
 
   - id: banner-cookie-accept-only
+    severity: blocker
     title: Cookie consent banner without Decline option
     description: >-
       The banner offers only "Accept all" or similar single-
@@ -338,6 +340,7 @@ mistakes:
       shipping.
 
   - id: banner-multiple-stacked
+    severity: minor
     title: Multiple banners stacked at the page top
     description: >-
       Page renders cookie banner, beta-feature banner,
@@ -353,6 +356,7 @@ mistakes:
       priority ones are acknowledged or dismissed.
 
   - id: banner-dismissed-state-not-persisted
+    severity: minor
     title: Dismissed banner reappears on every page load
     description: >-
       User dismisses the banner; on the next navigation it
@@ -367,6 +371,7 @@ mistakes:
       only), document the in-memory persistence contract.
 
   - id: banner-color-only-variant
+    severity: blocker
     title: Variant differentiated by colour alone
     description: >-
       The banner's variant is communicated only through

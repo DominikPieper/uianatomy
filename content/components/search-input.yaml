@@ -340,6 +340,7 @@ mismatches:
 
 mistakes:
   - id: searchinput-as-combobox
+    severity: minor
     title: SearchInput implemented as a Combobox with constrained values
     description: >-
       The implementation uses Combobox semantics — committing
@@ -356,6 +357,7 @@ mistakes:
       that fill-and-submit, not commit-and-set.
 
   - id: searchinput-no-debounce
+    severity: major
     title: Suggestion request fires on every keystroke without debouncing
     description: >-
       The with-suggestions variant fires a request on every
@@ -368,6 +370,7 @@ mistakes:
       Cancel in-flight requests when a newer one fires.
 
   - id: searchinput-no-submit-on-enter
+    severity: major
     title: Enter key does not submit the query
     description: >-
       The implementation captures Enter for some other purpose
@@ -381,6 +384,7 @@ mistakes:
       activation is equivalent.
 
   - id: searchinput-clear-doesnt-restore-results
+    severity: major
     title: Clear button removes the query but leaves stale results
     description: >-
       User clears the search; the results page or panel still
@@ -394,6 +398,7 @@ mistakes:
       other.
 
   - id: searchinput-results-popup-no-aria
+    severity: blocker
     title: With-suggestions popup has no `aria-live` or listbox structure
     description: >-
       The popup renders suggestions but SR users hear nothing

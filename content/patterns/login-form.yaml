@@ -166,6 +166,7 @@ decisions:
       attribute tells the browser and assistive tech.
 mistakes:
   - id: missing-autocomplete-tokens
+    severity: major
     title: Missing or wrong autocomplete tokens
     description: >-
       The email field has no `autocomplete` (or `autocomplete="off"`),
@@ -184,6 +185,7 @@ mistakes:
       intent. The default for a real login form is always to
       enable autofill.
   - id: enumeration-leak
+    severity: blocker
     title: Specific error messages reveal whether the account exists
     description: >-
       The form returns "Email not found" for unknown addresses
@@ -202,6 +204,7 @@ mistakes:
       generic message is necessary; the rest is the complete
       defence.
   - id: password-reveal-via-type-flip
+    severity: major
     title: Show-password toggle implemented by flipping `type` on the input
     description: >-
       The visibility toggle changes `type="password"` to
@@ -219,6 +222,7 @@ mistakes:
       but the affordance must be a button, not a click handler
       on the input padding.
   - id: generic-button-label
+    severity: minor
     title: Submit button labelled "Submit", "OK", or "Sign in →"
     description: >-
       The button label is generic. Skim-readers and SR users
@@ -232,6 +236,7 @@ mistakes:
       visual emphasis is needed). The button is the primary
       action; its name is the most-read string in the form.
   - id: caps-lock-not-warned
+    severity: minor
     title: Caps Lock active during password entry without warning
     description: >-
       The user types a password with Caps Lock on and it fails.
@@ -248,6 +253,7 @@ mistakes:
       is canonical UX hygiene, not a substitute for clear
       error handling.
   - id: autofocus-on-mobile
+    severity: minor
     title: '`autofocus` on the email field shifts the page on mobile'
     description: >-
       The page loads, the email field gets `autofocus`, the

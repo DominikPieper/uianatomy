@@ -402,6 +402,7 @@ mismatches:
 
 mistakes:
   - id: placeholder-as-label
+    severity: blocker
     title: Placeholder used as the only label
     description: >-
       The input has no `<label>`; the field's identity lives
@@ -420,6 +421,7 @@ mistakes:
       reduces successful form completion.
 
   - id: missing-aria-invalid
+    severity: blocker
     title: Error styling without `aria-invalid`
     description: >-
       The field shows a red border and an error message
@@ -437,6 +439,7 @@ mistakes:
       together.
 
   - id: required-without-attribute
+    severity: blocker
     title: Visible required indicator without the `required` attribute
     description: >-
       The label shows a red asterisk; the input lacks the
@@ -455,6 +458,7 @@ mistakes:
       always together.
 
   - id: wrong-autocomplete
+    severity: major
     title: '`autocomplete="off"` on every input by default'
     description: >-
       The implementation disables autocomplete sitewide as a
@@ -471,6 +475,7 @@ mistakes:
       codes, captcha responses, security-question answers.
 
   - id: error-only-on-submit
+    severity: major
     title: Errors only surface on form submission attempt
     description: >-
       The implementation validates only on form submit. Users

@@ -232,6 +232,7 @@ mismatches:
 
 mistakes:
   - id: link-clickable-div
+    severity: blocker
     title: Clickable `<div>` styled as a link
     description: >-
       A `<div onclick="...">` styled with link colour and underline.
@@ -246,6 +247,7 @@ mistakes:
       affordances (middle-click, copy-link, status-bar URL preview).
 
   - id: link-as-button
+    severity: major
     title: '`<a>` used for an in-page action'
     description: >-
       A link wired with `onclick` performing an in-page action
@@ -260,6 +262,7 @@ mistakes:
       with the `tertiary` or `ghost` variant — not an `<a>`.
 
   - id: link-uninformative-text
+    severity: major
     title: 'Link text is "click here" or "read more"'
     description: >-
       SR users navigating by link list (a common SR navigation
@@ -273,6 +276,7 @@ mistakes:
       accessible name from both the prose and the link text.
 
   - id: link-external-no-rel-or-indication
+    severity: major
     title: External link without `rel` or visual indicator
     description: >-
       `target="_blank"` without `rel="noopener noreferrer"` exposes
@@ -288,6 +292,7 @@ mistakes:
       a hidden `<span>`.
 
   - id: link-download-no-fallback
+    severity: minor
     title: Download link without metadata or fallback for failed downloads
     description: >-
       `<a href="report.pdf" download>` does not announce file format
@@ -302,6 +307,7 @@ mistakes:
       attachment` to enforce download.
 
   - id: link-visited-color-only
+    severity: minor
     title: Visited state distinguished by color alone
     description: >-
       The link's `:visited` colour is the only differentiator from

@@ -213,8 +213,11 @@ export const mismatchSchema = z.object({
   correct: z.string().min(1),
 });
 
+export const mistakeSeveritySchema = z.enum(['blocker', 'major', 'minor']);
+
 export const mistakeSchema = z.object({
   id: slug,
+  severity: mistakeSeveritySchema,
   title: z.string().min(1),
   description: z.string().min(1),
   fix: z.string().min(1),
@@ -603,6 +606,7 @@ export type States = z.infer<typeof statesSchema>;
 export type Axes = z.infer<typeof axesSchema>;
 export type Mismatch = z.infer<typeof mismatchSchema>;
 export type Mistake = z.infer<typeof mistakeSchema>;
+export type MistakeSeverity = z.infer<typeof mistakeSeveritySchema>;
 export type FrameworkMap = z.infer<typeof frameworkMapSchema>;
 export type Motion = z.infer<typeof motionSchema>;
 export type ReducedMotionFallback = z.infer<typeof reducedMotionFallbackSchema>;

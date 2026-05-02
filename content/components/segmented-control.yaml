@@ -285,6 +285,7 @@ mismatches:
 
 mistakes:
   - id: segmented-as-tabs
+    severity: major
     title: Used as content-switching tabs
     description: >-
       The control is used to switch between different content
@@ -302,6 +303,7 @@ mistakes:
       → Tabs; "how" → SegmentedControl.
 
   - id: segmented-no-roving-tabindex
+    severity: blocker
     title: Every segment has tabindex="0"
     description: >-
       Tab cycles through every segment one by one. APG
@@ -317,6 +319,7 @@ mistakes:
       segment.
 
   - id: segmented-arrow-no-activate
+    severity: major
     title: ArrowKeys move focus but do not activate
     description: >-
       Implementation copies the manual-activation pattern from
@@ -333,6 +336,7 @@ mistakes:
       rare focus-without-check edge case exists).
 
   - id: segmented-color-only-selected
+    severity: blocker
     title: Selection differentiated by colour alone
     description: >-
       Selected segment has a filled background; unselected
@@ -349,6 +353,7 @@ mistakes:
       sole signal.
 
   - id: segmented-overflow-silent
+    severity: minor
     title: Overflowing segments clipped at the inline-end
     description: >-
       Five-segment control rendered in a narrow container;

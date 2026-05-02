@@ -359,6 +359,7 @@ mismatches:
 
 mistakes:
   - id: stepper-no-aria-current
+    severity: blocker
     title: Active step missing `aria-current`
     description: >-
       Visual active step is shown via background colour or
@@ -372,6 +373,7 @@ mistakes:
       Update on every step transition.
 
   - id: stepper-skip-validation
+    severity: major
     title: Linear stepper allows skipping required steps
     description: >-
       User clicks step 4 in linear mode while step 2 is
@@ -388,6 +390,7 @@ mistakes:
       steps.
 
   - id: stepper-step-not-button
+    severity: blocker
     title: Interactive step not a button
     description: >-
       Implementation makes step indicators clickable via
@@ -403,6 +406,7 @@ mistakes:
       content.
 
   - id: stepper-no-keyboard-nav
+    severity: blocker
     title: Steps reachable only via mouse
     description: >-
       Implementation lacks keyboard support — Tab cycles
@@ -418,6 +422,7 @@ mistakes:
       navigation since future steps are disabled.
 
   - id: stepper-progress-cues-decorative-only
+    severity: blocker
     title: Progress communicated only by visual indicators
     description: >-
       Visual indicators (numbered circles, checkmarks,

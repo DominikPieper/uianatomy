@@ -317,6 +317,7 @@ mismatches:
 
 mistakes:
   - id: menubutton-no-aria-haspopup
+    severity: blocker
     title: Trigger missing `aria-haspopup`
     description: >-
       The trigger is a styled button with no `aria-haspopup`. SR
@@ -330,6 +331,7 @@ mistakes:
       `aria-controls` references the menu's id.
 
   - id: menubutton-arrowdown-doesnt-open
+    severity: major
     title: ArrowDown on trigger does not open the menu
     description: >-
       The trigger opens the menu only on click / Enter / Space.
@@ -346,6 +348,7 @@ mistakes:
       canonical is to focus first).
 
   - id: menubutton-no-typeahead
+    severity: minor
     title: Typeahead by first-letter not implemented
     description: >-
       User types a letter expecting to jump to the next
@@ -360,6 +363,7 @@ mistakes:
       accumulates the buffer.
 
   - id: menubutton-tab-traps-in-menu
+    severity: blocker
     title: Tab cycles within the menu instead of closing
     description: >-
       Implementation copies the focus-trap pattern from Modal
@@ -374,6 +378,7 @@ mistakes:
       Tab is the explicit "I'm done with this menu" key.
 
   - id: menubutton-no-roving-tabindex
+    severity: blocker
     title: Every menuitem has tabindex="0"
     description: >-
       Implementation gives every menuitem a `tabindex="0"`. Tab

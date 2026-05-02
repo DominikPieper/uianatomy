@@ -387,6 +387,7 @@ mismatches:
 
 mistakes:
   - id: sidebar-no-aria-current
+    severity: blocker
     title: Active page not marked with `aria-current`
     description: >-
       The visual current-page state is shown (highlight,
@@ -401,6 +402,7 @@ mistakes:
       navigation.
 
   - id: sidebar-collapsed-display-none-label
+    severity: major
     title: 'Collapsed variant uses `display: none` to hide labels'
     description: >-
       Implementation hides labels in collapsed variant via
@@ -416,6 +418,7 @@ mistakes:
       pointer users see only the icon.
 
   - id: sidebar-as-menubutton
+    severity: major
     title: Sidebar implemented as a Menu (role="menu")
     description: >-
       Implementation uses `role="menu"` and `role="menuitem"`
@@ -433,6 +436,7 @@ mistakes:
       but it is optional, not required by APG).
 
   - id: sidebar-no-skip-link
+    severity: major
     title: Sidebar precedes main content without skip-to-main
     description: >-
       Sidebar appears first in the DOM. Keyboard users tabbing
@@ -448,6 +452,7 @@ mistakes:
       sidebar's, but the sidebar amplifies the need.
 
   - id: sidebar-mobile-no-collapse
+    severity: minor
     title: Sidebar always rendered on mobile
     description: >-
       Sidebar takes 240px of viewport width on a 360px-wide

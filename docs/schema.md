@@ -568,12 +568,21 @@ Common implementation errors with corrections.
 ```yaml
 mistakes:
   - id: card-as-link-nested-buttons
+    severity: blocker                # blocker | major | minor
     title: Card-as-link with nested buttons
     description: Wrapping the entire card in <a> breaks keyboard access...
     fix: Use pseudo-element overlay pattern...
 ```
 
 Each mistake has a stable `id` so it can be referenced from other components or external links.
+
+**`severity` (required, closed enum):** Three tiers reflect the cost of shipping the mistake.
+
+- **`blocker`** — violates a WCAG success criterion, breaks keyboard access, breaks screen-reader semantics, fails an axe-core rule, traps focus incorrectly, or causes data loss / security exposure. The component is not shippable until fixed.
+- **`major`** — pattern drift that misleads users in production but does not strictly violate WCAG: wrong default that fires unexpected behavior (auto-submit toolbar buttons), perf cliff that scales the wrong way (5,000 unvirtualized DOM nodes), API confusion that leaks UX bugs, anti-pattern that ships layout breakage. Ship-blocking under any reasonable code review; not ship-blocking under technical-conformance audits.
+- **`minor`** — taxonomy / authoring / cosmetic. Stale alt text, slight visual drift, edge cases that do not affect the canonical happy path. Worth documenting because the next reader will hit them, but not worth blocking a release on.
+
+Renderers sort by severity descending (blockers first); within a tier, declaration order is preserved. The `MistakesList` component shows the severity tag inline next to the mistake id.
 
 ## `frameworkMap`
 

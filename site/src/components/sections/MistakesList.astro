@@ -1,13 +1,33 @@
 ---
-import type { Component } from '@uianatomy/shared/schema';
+import type { Component, MistakeSeverity } from '@uianatomy/shared/schema';
 import Icon from '../Icon.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
+
+const SEVERITY_ORDER: Record<MistakeSeverity, number> = {
+  blocker: 0,
+  major: 1,
+  minor: 2,
+};
+const SEVERITY_LABEL: Record<MistakeSeverity, string> = {
+  blocker: 'Blocker',
+  major: 'Major',
+  minor: 'Minor',
+};
+
+const sorted = [...component.mistakes].sort((a, b) => {
+  const s = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+  if (s !== 0) return s;
+  return component.mistakes.indexOf(a) - component.mistakes.indexOf(b);
+});
 ---
 <div class="mistakes">
-  {component.mistakes.map((m) => (
-    <article class="mistake" id={`mistake-${m.id}`}>
-      <p class="mistake-id">#{m.id}</p>
+  {sorted.map((m) => (
+    <article class={`mistake mistake--${m.severity}`} id={`mistake-${m.id}`}>
+      <header class="mistake-header">
+        <span class={`mistake-severity mistake-severity--${m.severity}`}>{SEVERITY_LABEL[m.severity]}</span>
+        <p class="mistake-id">#{m.id}</p>
+      </header>
       <h3 class="mistake-title">{m.title}</h3>
       <div class="mistake-row mistake-row--problem">
         <span class="mistake-row__label"><Icon name="alert-triangle" size={12} /> Problem</span>

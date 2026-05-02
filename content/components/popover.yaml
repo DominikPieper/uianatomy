@@ -324,6 +324,7 @@ mismatches:
 
 mistakes:
   - id: popover-as-modal
+    severity: major
     title: Popover with focus trap installed
     description: >-
       The popover is non-modal by canon, but the implementation
@@ -339,6 +340,7 @@ mistakes:
       modality, redesign as a Modal or modal Drawer.
 
   - id: popover-no-light-dismiss
+    severity: major
     title: Popover does not close on outside click or Escape
     description: >-
       The popover only closes when the trigger is re-activated.
@@ -354,6 +356,7 @@ mistakes:
       accidental dismissal would lose data.
 
   - id: popover-positioning-broken-on-scroll
+    severity: major
     title: Popover does not reposition when the page scrolls
     description: >-
       The popover is positioned once on open with absolute
@@ -368,6 +371,7 @@ mistakes:
       production, the library is the right answer.
 
   - id: popover-z-index-clipping
+    severity: major
     title: 'Popover clipped by parent `overflow: hidden`'
     description: >-
       The popover is rendered as a child of its trigger's DOM
@@ -383,6 +387,7 @@ mistakes:
       `Portal` / `Teleport` primitive.
 
   - id: popover-no-aria-expanded
+    severity: blocker
     title: Trigger missing `aria-expanded` toggle
     description: >-
       The trigger is a styled button with no `aria-expanded`. SR
