@@ -11,6 +11,10 @@ description: >-
   regions) by the strict sequence and the visible
   progress-through-N-steps state.
 
+alternateNames:
+  - 'Wizard'
+  - 'Progress steps'
+
 anatomy:
   - id: root
     required: true

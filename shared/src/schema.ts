@@ -552,6 +552,7 @@ export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
   description: z.string().min(1),
+  alternateNames: z.array(z.string().min(1)).min(1).optional(),
   whenToUse: whenToUseSchema.optional(),
   notes: z.string().optional(),
   lastReviewed: z

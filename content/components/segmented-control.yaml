@@ -10,6 +10,9 @@ description: >-
   for content-presentation toggles where the underlying data is
   the same and the segments select the visual shape.
 
+alternateNames:
+  - 'Toggle group'
+
 anatomy:
   - id: root
     required: true

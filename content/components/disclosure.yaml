@@ -10,6 +10,10 @@ description: >-
   inline help expansion, and any single named region whose content
   is disclosable on demand.
 
+alternateNames:
+  - 'Collapse'
+  - 'Details'
+
 anatomy:
   - id: trigger
     required: true

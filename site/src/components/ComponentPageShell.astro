@@ -77,6 +77,17 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
           )}
         </h1>
         <p class="component-description">{component.description}</p>
+        {component.alternateNames && component.alternateNames.length > 0 && (
+          <p class="component-alt-names">
+            <span class="component-alt-names__label">Also called</span>
+            {component.alternateNames.map((a, i) => (
+              <Fragment>
+                {i > 0 && <span aria-hidden="true">·</span>}
+                <span class="component-alt-names__alias">{a}</span>
+              </Fragment>
+            ))}
+          </p>
+        )}
       </section>
 
       <WhenToUseSection component={component} />

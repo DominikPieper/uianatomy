@@ -70,6 +70,9 @@ export function siteJsonLd({ components }: SiteJsonLdInput = {}) {
             '@id': `${SITE_ORIGIN}/components/${c.id}#term`,
             identifier: c.id,
             name: c.name,
+            ...(c.alternateNames && c.alternateNames.length > 0
+              ? { alternateName: c.alternateNames }
+              : {}),
             description: c.description,
             url: `${SITE_ORIGIN}/components/${c.id}`,
             inDefinedTermSet: { '@id': `${SITE_ORIGIN}/#term-set` },
@@ -262,6 +265,9 @@ export function componentJsonLd({ component, view, pathname }: ComponentJsonLdIn
       '@type': 'DefinedTerm',
       '@id': `${url}#term`,
       name: component.name,
+      ...(component.alternateNames && component.alternateNames.length > 0
+        ? { alternateName: component.alternateNames }
+        : {}),
       identifier: component.id,
       description: component.description,
       inDefinedTermSet: { '@id': `${SITE_ORIGIN}/#term-set` },

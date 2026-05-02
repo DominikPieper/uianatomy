@@ -6,6 +6,10 @@ description: >-
   Synonymous with "dialog" in the ARIA Authoring Practices Guide; "modal"
   emphasises the *modality* (the page is blocked) over the dialog box
   itself.
+alternateNames:
+  - 'Dialog'
+  - 'Alert dialog'
+
 whenToUse:
   use: >-
     When the user must focus on a single decision or input that

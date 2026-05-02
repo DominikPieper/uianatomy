@@ -12,6 +12,10 @@ description: >-
   callouts, system-degradation warnings, and full-bleed promotional
   CTAs.
 
+alternateNames:
+  - 'Inline alert'
+  - 'Notification bar'
+
 anatomy:
   - id: container
     required: true

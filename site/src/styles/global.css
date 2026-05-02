@@ -1028,6 +1028,24 @@ th {
   line-height: 1.05;
   margin: 0 0 16px;
 }
+.component-alt-names {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--fg-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.component-alt-names__label {
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.component-alt-names__alias {
+  font-style: italic;
+}
 .hero-since {
   display: inline-block;
   margin-inline-start: 12px;

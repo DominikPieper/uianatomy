@@ -9,6 +9,10 @@ description: >-
   actions, transient status messages, undoable operations, and
   short notifications that do not require explicit acknowledgement.
 
+alternateNames:
+  - 'Snackbar'
+  - 'Flag'
+
 anatomy:
   - id: viewport
     required: true

@@ -576,9 +576,12 @@ frameworkMap:
 
 This is descriptive, not prescriptive. We document what's idiomatic, not what's "best."
 
+**Selector-prefix convention.** Web-component examples in `frameworkMap.webComponents` and elsewhere in the canon use the `ui-` prefix (`<ui-button>`, `<ui-modal>`, `<ui-text-input>`). This is a placeholder convention — the canon does not mandate any particular library's prefix; consumers are expected to substitute their own (`md-`, `pf-`, `sl-`, etc.). The prefix is included only because custom-element names require a hyphen per the HTML spec, and `ui-` is the most-neutral filler.
+
 ## Optional fields
 
 - `description` — one-paragraph summary
+- `alternateNames` — array of industry synonyms or library-specific names users might search by. Modal: `[Dialog, Alert dialog]`; Toast: `[Snackbar, Flag]`; Combobox: `[Autocomplete, Typeahead]`. Schema requires `min(1)` when present. Surfaced in the component hero as "Also called …", in JSON-LD `mainEntity.DefinedTerm.alternateName`, and indexed by Pagefind.
 - `notes` — author's editorial notes that don't fit elsewhere
 - `lastReviewed` — ISO date of last full review
 - `sources` — list of URLs consulted during research (not displayed to users; useful for re-review)

@@ -9,6 +9,10 @@ description: >-
   commits from a constrained list) — TextInput accepts and exposes
   arbitrary user-typed strings.
 
+alternateNames:
+  - 'Text field'
+  - 'Input'
+
 anatomy:
   - id: root
     required: true

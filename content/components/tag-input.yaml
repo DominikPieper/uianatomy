@@ -10,6 +10,10 @@ description: >-
   semantics. Used for email-recipient pickers, label/topic editors,
   filter-tag composers, multi-attribute search inputs.
 
+alternateNames:
+  - 'Chip input'
+  - 'Token input'
+
 anatomy:
   - id: root
     required: true

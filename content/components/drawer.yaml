@@ -8,6 +8,10 @@ description: >-
   rather than the defining trait. Common uses: filter panels,
   detail-view side-sheets, mobile navigation, settings flyouts.
 
+alternateNames:
+  - 'Side panel'
+  - 'Sheet'
+
 anatomy:
   - id: backdrop
     required: false

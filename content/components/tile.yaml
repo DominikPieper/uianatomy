@@ -10,6 +10,9 @@ description: >-
   grid with consistent aspect ratios and may be interactive
   (whole-tile activates) or selectable (whole-tile multi-selects).
 
+alternateNames:
+  - 'Card link'
+
 anatomy:
   - id: root
     required: true

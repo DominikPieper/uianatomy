@@ -11,6 +11,9 @@ description: >-
   Distinct from plain Input by structuring the search-and-submit
   contract.
 
+alternateNames:
+  - 'Search box'
+
 anatomy:
   - id: root
     required: true

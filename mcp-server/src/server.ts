@@ -262,7 +262,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'list_implementations',
-    'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId.',
+    'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId. **Takes no arguments — returns the full audit roster.** To see audits for a single canonical component, call `get_implementations({ componentId })` instead. Today the roster covers Modal × {radix, headlessui, cdk}; other components have no audits yet.',
     {},
     async () => {
       const byLibrary = await getImplementations();

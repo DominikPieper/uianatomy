@@ -10,6 +10,9 @@ description: >-
   from Tile (image-led, 2D grid) by being one-dimensional and
   text/metadata-led.
 
+alternateNames:
+  - 'Cell'
+
 anatomy:
   - id: root
     required: true

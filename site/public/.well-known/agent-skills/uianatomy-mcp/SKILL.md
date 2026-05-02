@@ -99,7 +99,7 @@ const result = await client.callTool({
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
 | `get_pattern` | `id: string` | Full canonical pattern record (composition, whenToUse, decisions, mistakes, frameworkSkeletons, lastReviewed). |
 | `get_patterns_for_component` | `componentId: string` | Every pattern that composes the given canonical component, sorted by pattern name, with the role this component plays. Empty array when no pattern uses it. |
-| `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. |
+| `list_implementations` | — | Every Phase-2 library audit (one row per library/component pair) — `libraryId`, `componentId`, `componentName`, `divergenceCount`, `lastReviewed`. Sorted by `libraryId` then `componentId`. **Takes no arguments — returns the full roster.** Use `get_implementations({ componentId })` to filter. Today only Modal × {radix, headlessui, cdk} are audited; other components return no rows. |
 | `get_implementations` | `componentId: string` | Every library audit for one canonical component as an array of `Implementation` records (`componentId`, `libraryId`, `componentName`, `exampleCode`, `divergence` list, `rationale`, `lastReviewed`). Empty array when no library has audited the component yet. |
 | `validate_implementation` | `componentId: string`, `code: string`, `framework: "react" \| "vue" \| "angular" \| "webComponents"` | Heuristic structural conformance check. Reports which canonical required slots, variants, properties, and events appear (or are missing) in the supplied code. Framework-aware event-name detection (`on<PascalCase>` for React, `@event` / `v-on:` / `emit('event')` for Vue, `(event)` for Angular, bare names for web components). Substring search only — false negatives possible. NOT a substitute for behavioural assertions (pair with the per-component a11y-fixture endpoint and a real Playwright + axe-core run). |
 
@@ -130,6 +130,21 @@ const result = await client.callTool({
 
 1. `validate_implementation({ componentId: "modal", code: "<your code>", framework: "react" })` → structural report listing missing required slots, variants, properties, and events.
 2. Treat `missing` entries as a checklist, not as defects — substring search has false negatives. Run the matching `/api/components/modal/a11y-fixture.json` against your code in a Playwright + `@axe-core/playwright` test for behavioural conformance.
+
+**"Audit a library spec or design doc against the canon"**
+
+Useful when reviewing a vendor library API description, a design-system RFC, or any prose specification you want to score against canonical anatomy.
+
+1. `list_components` → identify the canonical component(s) the spec covers (search by name, alias, or `search_components({ query })`).
+2. For each match: `get_anatomy({ id })`, `get_axes({ id })`, `get_events({ id })`, `get_a11y_acceptance` (via `get_component_view({ view: "dev" })`). The canon is your audit checklist.
+3. Walk the spec section by section — for each canonical slot / variant / event, confirm or flag the spec's coverage. Capture gaps as a divergence list (`omitted` / `renamed` / `extended` / `reshaped`); the same vocabulary the Phase-2 implementation audits use.
+4. Pair with `get_mismatches({ id })` and `get_common_mistakes({ id })` to surface canonical pitfalls the spec should also account for.
+
+This complements `validate_implementation`, which scores generated code; spec-parity scores prose intent.
+
+## Tool loading
+
+The server returns all 22 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 

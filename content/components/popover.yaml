@@ -8,6 +8,9 @@ description: >-
   (non-interactive, hover-driven, descriptive only). Popover content is
   interactive — buttons, forms, lists — and the user may tab into it.
 
+alternateNames:
+  - 'Floating panel'
+
 anatomy:
   - id: trigger
     required: true

@@ -10,6 +10,10 @@ description: >-
   of this pattern). SidebarNav is the canonical pattern for
   multi-section apps with persistent global navigation.
 
+alternateNames:
+  - 'Side nav'
+  - 'Rail nav'
+
 anatomy:
   - id: root
     required: true

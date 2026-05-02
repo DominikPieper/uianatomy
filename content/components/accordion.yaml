@@ -10,6 +10,9 @@ description: >-
   any list of named regions where content is browsable but not all
   needed simultaneously.
 
+alternateNames:
+  - 'Expandable list'
+
 anatomy:
   - id: root
     required: true

@@ -10,6 +10,10 @@ description: >-
   navigation menus by being a transient action surface, not a
   persistent navigation region.
 
+alternateNames:
+  - 'Split button'
+  - 'Dropdown button'
+
 anatomy:
   - id: trigger
     required: true

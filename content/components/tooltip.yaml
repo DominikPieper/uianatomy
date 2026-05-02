@@ -9,6 +9,9 @@ description: >-
   the tooltip body. Used for icon labels, abbreviation expansions,
   short helper text — never for essential information.
 
+alternateNames:
+  - 'Tip'
+
 anatomy:
   - id: trigger
     required: true

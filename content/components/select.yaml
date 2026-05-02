@@ -11,6 +11,9 @@ description: >-
   mounted popup, `aria-activedescendant` highlighting, and
   typeahead by first-letter.
 
+alternateNames:
+  - 'Dropdown'
+
 anatomy:
   - id: trigger
     required: true
