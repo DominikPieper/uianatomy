@@ -10,6 +10,18 @@ description: >-
   grid with consistent aspect ratios and may be interactive
   (whole-tile activates) or selectable (whole-tile multi-selects).
 
+intro: >-
+  Tile is an image-led grid item — visual content is the primary
+  surface, text is supplementary or absent. Three variants
+  (standard, interactive, selectable) cover the affordance
+  ladder; the aspect property locks the canonical aspect ratio;
+  density gates the padding budget. The pattern shows up in
+  photo galleries, asset pickers, album grids, profile-picture
+  pickers, and document-thumbnail layouts. The reference
+  documents the canonical-grid column-counts at each breakpoint,
+  the lazy-load offscreen threshold, the divergence from Card
+  (content-led), and the focus-trap-not-needed rule that
+  distinguishes Tile from Modal patterns.
 alternateNames:
   - 'Card link'
 

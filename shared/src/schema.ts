@@ -658,6 +658,11 @@ export const componentSchema = z.object({
   id: slug,
   name: z.string().min(1),
   description: z.string().min(1),
+  intro: z
+    .string()
+    .min(200, 'intro must be at least 200 chars when present')
+    .max(800, 'intro must be at most 800 chars')
+    .optional(),
   alternateNames: z.array(z.string().min(1)).min(1).optional(),
   whenToUse: whenToUseSchema.optional(),
   notes: z.string().optional(),

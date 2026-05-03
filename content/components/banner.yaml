@@ -12,6 +12,16 @@ description: >-
   callouts, system-degradation warnings, and full-bleed promotional
   CTAs.
 
+intro: >-
+  Banner is a page-level announcement strip anchored to the
+  layout — typically at the top or bottom of the viewport,
+  rarely both. It persists until user dismissal or programmatic
+  close and never traps focus, distinguishing it from Modal
+  interruptions and inline Alerts. Banners carry status
+  messages, system-wide notices, consent prompts, and
+  maintenance windows. The reference documents the canonical
+  anatomy, the dismissal contract, the severity vocabulary, and
+  the GDPR-region consent pattern that lives at the canon edge.
 alternateNames:
   - 'Inline alert'
   - 'Notification bar'

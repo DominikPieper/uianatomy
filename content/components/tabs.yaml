@@ -5,6 +5,18 @@ description: >-
   panels through a row (or column) of tab triggers. Used to chunk
   related content under a single surface so only one chunk is visible
   at a time.
+intro: >-
+  Tabs partition a region of content into named panels with a
+  tablist trigger row — the canonical APG tab pattern. Three
+  variants (line, contained, pill) cover the visual emphasis
+  spectrum; orientation toggles between horizontal and vertical;
+  activation switches between automatic (focus selects) and
+  manual (focus then activate). The reference documents the
+  roving-tabindex contract that makes the tablist a single
+  keyboard stop, the aria-selected source-of-truth rule, the
+  lazy-panel state graph for async content loading, and the
+  overflow patterns that survive narrow viewports.
+
 whenToUse:
   use: >-
     When chunking related content into 3–7 mutually exclusive panels

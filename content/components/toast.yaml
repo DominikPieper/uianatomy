@@ -9,6 +9,17 @@ description: >-
   actions, transient status messages, undoable operations, and
   short notifications that do not require explicit acknowledgement.
 
+intro: >-
+  Toast is a transient floating notification — confirmations,
+  status updates, and short messages that the user can miss
+  without consequence. The viewport queues toasts and pauses
+  their timers on pointer-hover and focus-into. Severity drives
+  live-region politeness: info and success use role=status
+  (polite), error uses role=alert (assertive). The reference
+  documents the WCAG 2.2.1 timing-adjustable contract, the
+  canonical max-stack policy, the action-slot pattern for
+  in-toast undo affordances, and the divergence from Alert
+  (inline persistent) and Modal (focus-trapping).
 alternateNames:
   - 'Snackbar'
   - 'Flag'

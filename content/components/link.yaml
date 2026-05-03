@@ -9,6 +9,18 @@ description: >-
   middle-click opens in a new tab, right-click exposes the URL, copy-
   as-link works, the URL is visible in the status bar.
 
+intro: >-
+  Link is the canonical primitive for navigation — anchored on
+  HTML's anchor element, never a clickable div. The reference
+  documents the variant ladder (inline, standalone,
+  button-styled), the external and download properties that gate
+  native attributes plus visual indicators, and the rich
+  accessibility story around accessible names and new-tab
+  announcements. Most production divergence between
+  implementations lives in how external and download wire up
+  announcements and metadata, not in the underlying element. The
+  reference also names the WCAG 2.4.4 link-purpose contract that
+  link text must satisfy.
 anatomy:
   - id: root
     required: true

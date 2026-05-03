@@ -92,6 +92,12 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
 
       <WhenToUseSection component={component} />
 
+      {component.intro && (
+        <section class="component-intro" aria-label={`About ${component.name}`}>
+          <p>{component.intro}</p>
+        </section>
+      )}
+
       <section aria-label="Anatomy">
         <figure class="figure anatomy-frame">
           <AnatomyFilterBar componentName={component.name} />

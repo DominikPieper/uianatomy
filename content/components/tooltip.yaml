@@ -9,6 +9,17 @@ description: >-
   the tooltip body. Used for icon labels, abbreviation expansions,
   short helper text — never for essential information.
 
+intro: >-
+  Tooltip is a hover- or focus-revealed descriptive label —
+  supplementary information that helps the user understand a
+  control without changing the surface. It is non-interactive:
+  Tab does not move focus into it, Escape dismisses it
+  persistently, and pointer-leave or focus-leave hides it. The
+  reference documents the canonical reveal-and-hide delays, the
+  aria-describedby contract that wires the trigger to the
+  tooltip text, the divergence from Popover (interactive), and
+  the platform-default delay values that production
+  implementations diverge on.
 alternateNames:
   - 'Tip'
 

@@ -1648,6 +1648,37 @@ describe('pattern schema', () => {
   });
 });
 
+describe('intro field (P6-42)', () => {
+  it('every canonical component declares an intro 200–800 chars', async () => {
+    const components = await loadComponents({ contentDir });
+    const failures: string[] = [];
+    for (const c of components.values()) {
+      if (!c.intro) {
+        failures.push(`${c.id}: intro is missing.`);
+        continue;
+      }
+      if (c.intro.length < 200 || c.intro.length > 800) {
+        failures.push(`${c.id}: intro length ${c.intro.length} outside 200–800.`);
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('rejects intro shorter than 200 chars', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, intro: 'too short' };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects intro longer than 800 chars', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, intro: 'x'.repeat(801) };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('composition SVG renderer (P6-49 stage-4)', () => {
   it('renders confirmation-flow with one frame per composition entry', async () => {
     const patterns = await loadPatterns({ patternsDir });

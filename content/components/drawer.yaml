@@ -8,6 +8,17 @@ description: >-
   rather than the defining trait. Common uses: filter panels,
   detail-view side-sheets, mobile navigation, settings flyouts.
 
+intro: >-
+  Drawer slides from a viewport edge to host secondary
+  navigation, filters, contextual content, or task flows that
+  accompany the main page rather than blocking it. It may be
+  modal (blocks interaction with the page beneath) or non-modal
+  (the page remains operable around it). Side, top, and bottom
+  anchors are all canonical; mobile layouts often auto-flip to
+  bottom for thumb-reach. The reference covers the
+  dismiss-reason vocabulary, the modal-vs-non-modal switch, the
+  responsive auto-flip event, and the focus-trap rules that
+  diverge from Modal's hard contract.
 alternateNames:
   - 'Side panel'
   - 'Sheet'

@@ -11,6 +11,17 @@ description: >-
   regions) by the strict sequence and the visible
   progress-through-N-steps state.
 
+intro: >-
+  Stepper visualises a sequential progression through a
+  multi-step task — wizard flows, multi-page forms, onboarding
+  sequences, checkout funnels. Three variants (standard, dot,
+  vertical) cover orientation and density. Each step carries a
+  status (pending, current, completed, error) and
+  aria-current=step on the active node. The reference documents
+  the gating contract between linear and non-linear progression,
+  the keyboard navigation pattern that diverges from Tabs, and
+  the aria-current=step requirement for the active node's
+  accessibility announcement.
 alternateNames:
   - 'Wizard'
   - 'Progress steps'

@@ -11,6 +11,17 @@ description: >-
   Distinct from plain Input by structuring the search-and-submit
   contract.
 
+intro: >-
+  Search Input is the styled composite layered on top of HTML's
+  input type=search — a leading icon, a clear affordance, an
+  optional submit button, and an optional suggestions popup. It
+  emits free-text queries (distinguishing it from Combobox,
+  which commits constrained values) and pairs query state with
+  results-region state so clearing the input clears the results.
+  The reference documents the standard versus with-suggestions
+  variants, the Enter-submits contract, the debounce threshold
+  for typeahead requests, and the listbox-or-region split for
+  the popup.
 alternateNames:
   - 'Search box'
 

@@ -11,6 +11,17 @@ description: >-
   mounted popup, `aria-activedescendant` highlighting, and
   typeahead by first-letter.
 
+intro: >-
+  Select is the form-bound dropdown for choosing a single value
+  from a fixed list. It composes a button trigger with a popup
+  listbox; the trigger displays the selected option, the listbox
+  enumerates the choices, and the value participates in form
+  submission via the underlying HTML select element. The
+  reference covers the open-on-Space-or-Enter contract, the
+  typeahead jump-to-option keyboard pattern, the divergence from
+  Combobox (which accepts free-text input) and Menu Button
+  (which fires actions rather than commits a value), and the
+  platform-picker substitution that mobile user-agents apply.
 alternateNames:
   - 'Dropdown'
 

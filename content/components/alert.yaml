@@ -10,6 +10,17 @@ description: >-
   flow, persists until dismissed or the underlying state changes,
   and may carry optional inline actions.
 
+intro: >-
+  Alert is a non-modal in-page announcement that requests user
+  attention through assistive-tech politeness rather than focus.
+  It sits between Banner (page-level persistent strip) and Toast
+  (transient floating queue) — alerts live inline next to the
+  content that triggered them, dismiss only by user or
+  programmatic action, and announce via aria-live so
+  screen-reader users hear them without focus shift. The
+  reference covers the four severity variants, the live-region
+  politeness contract, and the boundary between Alert and the
+  modal alertdialog.
 anatomy:
   - id: container
     required: true

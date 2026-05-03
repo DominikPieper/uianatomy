@@ -8,6 +8,17 @@ description: >-
   (non-interactive, hover-driven, descriptive only). Popover content is
   interactive — buttons, forms, lists — and the user may tab into it.
 
+intro: >-
+  Popover is a non-modal floating surface anchored to a trigger
+  — for menu-like option lists, form-fragments, info-cards, and
+  rich tooltips that need interaction. Tab moves through the
+  popover content and out into the page; light-dismiss (Escape,
+  outside-click, focus-outside) handles closure. The reference
+  covers the auto-flip behaviour on viewport collision, the
+  dismiss-reason vocabulary, the trigger ARIA contract with
+  aria-haspopup and aria-expanded, and the portal-and-stacking
+  primitive that the native HTML popover attribute now provides
+  under the hood.
 alternateNames:
   - 'Floating panel'
 

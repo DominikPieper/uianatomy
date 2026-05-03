@@ -4,6 +4,18 @@ description: >-
   A bounded container that groups a coherent unit of content — typically a
   title, supporting body, optional media, and optional actions — and lifts
   it as a single perceivable object on the page.
+intro: >-
+  Card is a content-led container with hierarchical title, body,
+  optional media, and action affordances — the workhorse of
+  dashboards, content feeds, and grid layouts. Three structural
+  variants (elevated, outlined, flat) cover the emphasis ladder;
+  orientation toggles between vertical and horizontal layouts;
+  the interactive property turns the whole surface into a single
+  activator via the overlay pattern. The reference documents the
+  slot anatomy, the click-handler contract, the variant-vs-state
+  distinction that recurs in Figma drift, and the
+  cross-framework expression of card-as-link.
+
 whenToUse:
   use: >-
     When grouping a coherent unit of content — title plus body plus

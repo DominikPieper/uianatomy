@@ -10,6 +10,17 @@ description: >-
   inline help expansion, and any single named region whose content
   is disclosable on demand.
 
+intro: >-
+  Disclosure is the smallest collapsible-region pattern in the
+  canon — a single trigger that expands or collapses one
+  associated panel. Standalone Disclosure has no peers and no
+  group semantics; Accordion is conceptually a list of
+  Disclosures with shared keyboard navigation. The pattern lives
+  in show-more sections, expandable detail rows, optional
+  advanced settings, and inline help. The reference documents
+  the three-slot anatomy, the aria-expanded contract that drives
+  both visual and assistive-tech state, and the
+  anchor-link-into-collapsed-content edge case.
 alternateNames:
   - 'Collapse'
   - 'Details'

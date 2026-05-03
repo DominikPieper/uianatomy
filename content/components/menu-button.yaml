@@ -10,6 +10,16 @@ description: >-
   navigation menus by being a transient action surface, not a
   persistent navigation region.
 
+intro: >-
+  Menu Button pairs a trigger with a popup menu of items — the
+  canonical pattern for action menus, overflow menus, and
+  context-sensitive command lists. It implements the APG
+  menu-button role with aria-haspopup and aria-expanded on the
+  trigger, role=menu on the popup, and roving tabindex over menu
+  items. The reference covers the keyboard contract that
+  distinguishes activation from navigation, the divergence from
+  Combobox (filtered text input) and Select (form-bound value),
+  and the dismiss-reason vocabulary shared with Popover.
 alternateNames:
   - 'Split button'
   - 'Dropdown button'

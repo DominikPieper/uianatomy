@@ -10,6 +10,17 @@ description: >-
   any list of named regions where content is browsable but not all
   needed simultaneously.
 
+intro: >-
+  Accordion groups multiple disclosure regions under shared
+  keyboard navigation. Each row pairs a heading-wrapped trigger
+  with a labeled panel; the canonical single-expansion mode
+  keeps at most one panel open at a time, while multi-mode
+  allows parallel expansion. Most production drift centres on
+  the heading wrapper and on aria-expanded as the source of
+  truth — both routinely shipped wrong. The reference below
+  documents the slot anatomy, the decision graph between
+  expansion modes, the keyboard contract, and the
+  cross-framework expression.
 alternateNames:
   - 'Expandable list'
 

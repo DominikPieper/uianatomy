@@ -10,6 +10,16 @@ description: >-
   of this pattern). SidebarNav is the canonical pattern for
   multi-section apps with persistent global navigation.
 
+intro: >-
+  Sidebar Nav is the persistent navigation surface anchored to a
+  viewport edge — typically left, sometimes right. Two variants
+  (expanded, collapsed) cover the wide and narrow modes; an
+  optional collapsible affordance lets users toggle between
+  them. Items group by section, carry icons and labels, support
+  badges and current-page indicators, and may host expandable
+  sub-groups. The reference documents the keyboard contract, the
+  F6 landmark-cycle behaviour, the current-page announcement via
+  aria-current, and the responsive collapse-to-drawer pattern.
 alternateNames:
   - 'Side nav'
   - 'Rail nav'

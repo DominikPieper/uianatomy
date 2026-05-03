@@ -6,6 +6,19 @@ description: >-
   to commit a value. Distinct from a Select (which has no text input)
   and from Autocomplete (which is a behavior, not a component name in
   most design systems).
+intro: >-
+  Combobox composes a text input with a popup listbox of
+  suggestions — the canonical pattern for filtered selection
+  from a long list. It implements the APG combobox role with
+  autocomplete-list semantics: the input drives the list, the
+  list reflects matches, and aria-activedescendant follows
+  keyboard navigation while DOM focus stays on the input. The
+  reference covers the six-edge state graph between closed,
+  open, busy, and invalid; the four event payloads; the keyboard
+  contract that distinguishes Tab from Enter from Escape; and
+  the mobile-platform divergence where a native picker
+  substitutes for the popup.
+
 alternateNames:
   - 'Autocomplete'
   - 'Typeahead'

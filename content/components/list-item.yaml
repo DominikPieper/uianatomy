@@ -10,6 +10,17 @@ description: >-
   from Tile (image-led, 2D grid) by being one-dimensional and
   text/metadata-led.
 
+intro: >-
+  List Item is a horizontal row in a list with leading icon or
+  avatar, primary text, optional secondary text, and trailing
+  affordances — action buttons, navigation chevrons, badges,
+  swipe actions. Three variants (single-line, two-line,
+  three-line) capture density; properties cover interactivity,
+  selection, and swipeable behaviour. The pattern shows up in
+  inbox lists, settings rows, contact lists, and selectable
+  collections. The reference documents the roving-tabindex
+  semantics for selectable lists, the cross-mode keyboard
+  contract, and where List Item stops and Card or Tile begins.
 alternateNames:
   - 'Cell'
 

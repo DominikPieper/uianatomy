@@ -9,6 +9,18 @@ description: >-
   commits from a constrained list) — TextInput accepts and exposes
   arbitrary user-typed strings.
 
+intro: >-
+  Text Input is the canonical form primitive — a labeled
+  string-typed entry surface. Many composite components (Search
+  Input, Combobox, Tag Input, conventional Number Input and
+  Password Input sub-types) layer on top of it; the canonical
+  anatomy here documents the universal field contract. The three
+  visual variants (outlined, filled, underlined) represent
+  industry convergence — Material 3, Carbon, and Polaris each
+  pick a default. The reference covers the label-not-placeholder
+  rule, the aria-invalid cross-modal contract, the
+  required-attribute pairing, the autocomplete semantic intent,
+  and the progressive-validation cadence.
 alternateNames:
   - 'Text field'
   - 'Input'

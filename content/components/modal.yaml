@@ -6,6 +6,18 @@ description: >-
   Synonymous with "dialog" in the ARIA Authoring Practices Guide; "modal"
   emphasises the *modality* (the page is blocked) over the dialog box
   itself.
+intro: >-
+  Modal interrupts the main flow with a focus-trapped surface
+  that demands user resolution before the page becomes operable
+  again. It is the strongest interruption surface in the canon —
+  distinguished from Drawer (may be modal or non-modal), Popover
+  (always non-modal), and Banner (never modal) by the focus trap
+  and the inert background. The dialog and alertdialog variants
+  split by SR-announcement priority. The reference documents the
+  stacking contract (max one open dialog), the focus-trap and
+  focus-restore obligations, the inert-not-aria-hidden rule, and
+  the Escape-dismiss pattern.
+
 alternateNames:
   - 'Dialog'
   - 'Alert dialog'

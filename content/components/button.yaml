@@ -5,6 +5,18 @@ description: >-
   Anchors most user-initiated state changes — submitting forms,
   opening dialogs, advancing flows. Distinct from a Link (which
   navigates) in semantic and visual treatment.
+intro: >-
+  Button is the canonical primitive for in-page actions — a
+  focusable, activatable element backed by HTML button
+  semantics. The five variants (primary, secondary, tertiary,
+  ghost, destructive) capture the emphasis ladder; properties
+  cover size, icon-only, full-width, and the html type
+  attribute. Loading and pressed states extend the data axis.
+  The reference catalogues the keyboard contract, the
+  loading-guard for in-flight async actions, the accessible-name
+  rules for icon-only buttons, and where Button stops and Link
+  begins.
+
 whenToUse:
   use: >-
     When the user needs to perform an action that triggers a state

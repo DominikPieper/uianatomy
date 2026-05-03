@@ -10,6 +10,17 @@ description: >-
   for content-presentation toggles where the underlying data is
   the same and the segments select the visual shape.
 
+intro: >-
+  Segmented Control is a horizontal row of mutually-exclusive
+  options — a denser alternative to a radio group when space is
+  constrained or when the option labels are short. Two variants
+  (standard, icon-only) cover the label spectrum. The pattern
+  shows up in toolbars for view switching, density toggles,
+  time-range pickers, and filter modes. The reference catalogues
+  the segment slot anatomy, the indicator animation contract
+  that survives RTL, the divergence from Tabs (which navigate
+  between panels rather than toggle a value), and the canonical
+  mapping to APG's radio-group pattern.
 alternateNames:
   - 'Toggle group'
 

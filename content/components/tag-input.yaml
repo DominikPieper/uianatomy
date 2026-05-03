@@ -10,6 +10,17 @@ description: >-
   semantics. Used for email-recipient pickers, label/topic editors,
   filter-tag composers, multi-attribute search inputs.
 
+intro: >-
+  Tag Input accepts a list of discrete chip-style values from
+  free-form user typing — for keyword tagging, recipient
+  pickers, and constraint lists. Three variants (free-text,
+  constrained, creatable) cover the entry vocabulary; the
+  duplicates property gates whether the same tag may appear
+  twice. The reference documents the keyboard contract that
+  lifts Combobox patterns into chip-input semantics, the
+  per-chip remove affordance, the maxTags performance threshold,
+  and the divergence from Search Input (which emits a query
+  rather than maintaining a value list).
 alternateNames:
   - 'Chip input'
   - 'Token input'
