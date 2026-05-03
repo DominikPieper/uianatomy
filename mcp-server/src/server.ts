@@ -37,6 +37,19 @@ function notFound(id: string) {
   };
 }
 
+// P6-125 — compute days since lastReviewed for staleness surfacing.
+// Returns null when lastReviewed is undefined (component never had a
+// review timestamp written). Floor to integer days. Negative values
+// (lastReviewed in the future, e.g. authoring-day fixtures dated
+// tomorrow) clamp to 0 — never negative.
+function computeStalenessDays(lastReviewed: string | undefined): number | null {
+  if (!lastReviewed) return null;
+  const reviewed = Date.parse(lastReviewed);
+  if (Number.isNaN(reviewed)) return null;
+  const days = Math.floor((Date.now() - reviewed) / (1000 * 60 * 60 * 24));
+  return Math.max(0, days);
+}
+
 function viewProjection(component: Component, view: View) {
   const base = {
     id: component.id,
@@ -71,12 +84,18 @@ export function createServer(): McpServer {
 
   server.tool(
     'list_components',
-    'List all canonical components by id and name.',
+    'List all canonical components by id, name, description, lastReviewed date, and derived stalenessDays (days since lastReviewed; null when lastReviewed is omitted). Agents should treat stalenessDays > component.staleAfter (default 90 days) as a signal to verify the canonical claims against current upstream sources before relying on them.',
     {},
     async () => {
       const map = await getComponents();
       const list = [...map.values()]
-        .map((c) => ({ id: c.id, name: c.name, description: c.description }))
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description,
+          lastReviewed: c.lastReviewed ?? null,
+          stalenessDays: computeStalenessDays(c.lastReviewed),
+        }))
         .sort((a, b) => a.name.localeCompare(b.name));
       return jsonResult(list);
     },
@@ -84,13 +103,17 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_component',
-    'Return the full canonical definition for a component.',
+    'Return the full canonical definition for a component, augmented with derived `stalenessDays` (days since lastReviewed; null when lastReviewed is omitted) and `staleAfter` (canonical staleness threshold in days; default 90 when omitted). Agents compare stalenessDays vs staleAfter to decide whether to verify claims against upstream sources before relying on them.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
       const c = map.get(id);
       if (!c) return notFound(id);
-      return jsonResult(c);
+      return jsonResult({
+        ...c,
+        stalenessDays: computeStalenessDays(c.lastReviewed),
+        staleAfter: c.staleAfter ?? 90,
+      });
     },
   );
 

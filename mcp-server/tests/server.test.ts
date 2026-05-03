@@ -150,6 +150,29 @@ describe('mcp server', () => {
     expect(ids).toContain('badge');
   });
 
+  it('list_components surfaces lastReviewed and stalenessDays (P6-125)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_components', arguments: {} });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    const card = parsed.find((c: any) => c.id === 'card');
+    expect(card).toBeDefined();
+    expect(card.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(typeof card.stalenessDays === 'number' || card.stalenessDays === null).toBe(true);
+    if (typeof card.stalenessDays === 'number') {
+      expect(card.stalenessDays).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('get_component augments with stalenessDays and staleAfter default 90 (P6-125)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_component', arguments: { id: 'card' } });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('card');
+    expect(typeof parsed.stalenessDays === 'number' || parsed.stalenessDays === null).toBe(true);
+    expect(parsed.staleAfter).toBe(90);
+  });
+
   it('get_tokens returns slot-keyed token entries for Button', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'get_tokens', arguments: { id: 'button' } });

@@ -782,6 +782,36 @@ describe('whenToUse field', () => {
   });
 });
 
+describe('staleAfter field (P6-125)', () => {
+  it('accepts a positive integer staleAfter', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = { ...card, staleAfter: 180 };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects zero or negative staleAfter', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    for (const v of [0, -1, -90]) {
+      const bad = { ...card, staleAfter: v };
+      const result = componentSchema.safeParse(bad);
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it('rejects non-integer staleAfter', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, staleAfter: 90.5 };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('parses components without staleAfter (optional, default policy 90 applies at MCP layer)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    expect(card.staleAfter).toBeUndefined();
+  });
+});
+
 describe('events field', () => {
   it('parses modal.yaml events block', async () => {
     const modal = await loadComponent(join(contentDir, 'modal.yaml'));

@@ -555,6 +555,14 @@ propertyMap:
 
 **Do not flag `axes.properties[].kind: primitive` as a vocabulary issue** — that is the canonical type-discriminator from ADR-010, not a violation of the ADR-025 propertyMap-vocabulary. The `canon-auditor` subagent's pre-flight rules cover this explicitly. A future schema-rename (P6-132 backlog item) could split the field name (`axes.properties[].typeKind` vs `propertyMap[].propertyKind`) but the migration cost is heavy (27-component touch + ADR + cross-reference update); current consensus is doc-clarification only.
 
+### `lastReviewed` + `staleAfter` (P6-125)
+
+Components carry an optional `lastReviewed: <ISO YYYY-MM-DD>` timestamp and an optional `staleAfter: <integer days>` threshold. The MCP `list_components` and `get_component` tools surface a derived `stalenessDays` (now − lastReviewed; null when lastReviewed is omitted) and the threshold (default 90 days when `staleAfter` is omitted) so agents can flag stale claims before relying on them.
+
+**Bump-on-edit policy.** Whenever an editorial change touches the component's structural claims — anatomy, axes, mistakes, mismatches, contracts, frameworkMap — bump `lastReviewed` to the current date in the same commit. Pure typo / prose-rewording changes that do not change the canonical claims may leave `lastReviewed` untouched. The policy lives in authoring discipline, not the schema; the staleness signal is only useful when the dates reflect reality.
+
+**Picking `staleAfter`.** Default policy (when omitted) is 90 days. Surfaces with rapidly-shifting upstream APIs (Combobox, Modal, Tabs — where Radix / React Aria ship breaking changes regularly) may set `staleAfter: 60` for tighter cycles. Stable primitives (Card, Link, Icon) may set `staleAfter: 180` or longer. Setting the field is opt-in per-component; the default is conservative.
+
 ### Direction vocabulary convention
 
 Property values that encode a direction, side, or anchored position use **logical** vocabulary, not physical. The canon's logical primitives are `inline-start` / `inline-end` (the inline-axis edges) and `block-start` / `block-end` (the block-axis edges). Center alignment uses the literal `center`.

@@ -706,6 +706,13 @@ export const componentSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD')
     .optional(),
+  // P6-125 — optional staleness threshold in days. Default policy (when
+  // omitted) is 90 days; canonical surface that change rarely (Card,
+  // primitive components) may set higher. The MCP `get_component`
+  // and `list_components` tools surface a derived `stalenessDays` field
+  // (now − lastReviewed) so agents can flag stale claims without
+  // re-fetching the date themselves.
+  staleAfter: z.number().int().positive().max(3650).optional(),
   sources: z.array(sourceEntrySchema).optional(),
   since: semver.optional(),
   changelog: changelogSchema.optional(),
