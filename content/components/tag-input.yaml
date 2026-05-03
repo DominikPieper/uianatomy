@@ -741,6 +741,14 @@ whenToUse:
         value is the input string, TagInput's value is the
         accumulated token list and the input is a transient
         staging area.
+    - id: badge
+      difference: >-
+        `Badge` is a read-only metadata marker on a host element;
+        `TagInput` renders user-typed values as removable inline
+        tokens. Both look chip-like, but Badge is declarative
+        (the consumer drives the values) while TagInput is form-
+        bound (the user drives the values). Visual treatment may
+        converge; the activator semantics never do.
 contracts:
   nonNegotiable:
     - rule: >-

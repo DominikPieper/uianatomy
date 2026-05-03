@@ -708,6 +708,15 @@ whenToUse:
         position. List is one-dimensional; tile grid is
         two-dimensional. ListItem favours dense metadata
         layouts; Tile favours image-led visual layouts.
+    - id: badge
+      difference: >-
+        `Badge` is an inline marker on a host element (often a
+        Tile) announcing status, count, or category; `Tile` is
+        the host. A grid of tiles may carry per-tile badges
+        (selection-count, status); a wall of badges is not a
+        layout pattern. The decision test: are you scanning for
+        visual content (Tile) or marking metadata on visual
+        content (Badge)?
 contracts:
   nonNegotiable:
     - rule: >-

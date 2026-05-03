@@ -1,0 +1,492 @@
+id: badge
+name: Badge
+description: >-
+  A compact standalone marker that announces status, count, or
+  category alongside another element — a list-item count, a navigation
+  badge, a status dot on an avatar, an inline severity tag. Read-only
+  by canonical contract; the host element handles interactivity.
+
+intro: >-
+  Badge is the canonical compact status / count primitive — a small
+  surface that announces a piece of metadata about its host without
+  competing for the host's affordance. Five severity variants
+  (default, success, warning, danger, info) cover the canonical
+  announcement ladder; the dot property collapses the surface to a
+  glyph-only indicator. Common hosts: list items, nav items, avatars,
+  buttons (notification count), tabs (unread count). The reference
+  documents the slot anatomy, the live-region contract for changing
+  counts, the color-only-meaning anti-pattern, and the divergence
+  from Tag Input (entry-bound) and Tile (image-led container).
+
+alternateNames:
+  - 'Chip (when interactive variant)'
+  - 'Pill'
+  - 'Tag (when categorical)'
+
+whenToUse:
+  use: >-
+    For announcing status, count, or category alongside another
+    element. Anchored on the host (next to a label, on top of an
+    avatar, inside a nav item). Read-only — the host carries any
+    interactivity.
+  avoid: >-
+    For interactive selection — that is `Tag Input` (free-form
+    text-bound) or `Segmented Control` (mutex selection). For
+    removable chips driven by user input — that is `Tag Input`.
+    For full-text callouts that span a row — that is `Alert` or
+    `Banner`. For standalone urgent notifications that interrupt
+    the flow — that is `Toast` or `Modal`.
+  vsRelated:
+    - id: tag-input
+      difference: >-
+        `Tag Input` accepts user-typed values as discrete chips; the
+        consumer's value-set drives the chip list. `Badge` is
+        read-only, declarative, and announces metadata about a host
+        element rather than holding form state.
+    - id: tile
+      difference: >-
+        `Tile` is a 2D grid item with image-led content; `Badge` is
+        an inline marker on a host element. A grid of tiles may
+        carry per-tile badges (selection-count, status), but a wall
+        of badges is not a layout pattern.
+    - id: alert
+      difference: >-
+        `Alert` is a row-spanning inline message with a body, an
+        icon, and optional actions. `Badge` is a glyph-or-short-
+        label marker that does not own a row. The decision test:
+        does the message need its own block or inline next to a
+        host?
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The badge surface. Carries the variant treatment, the radius
+      (typically `radius.pill` for full or `radius.sm` for square),
+      the padding budget, and the optional aria-live wrapper for
+      counts.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal pill; padding from size token, radius from variant
+    code:
+      slot: root
+      semantic: span-or-mark
+    a11y:
+      hint: >-
+        Root carries the badge's accessible name when content alone
+        does not (icon-only or dot variants). For changing counts,
+        set `aria-live="polite"` on the root or on the content slot.
+        For decorative dot variants pair `role="presentation"` with
+        a sibling visually-hidden text label.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.pill
+      color:
+        background: color.surface.raised
+        foreground: color.text.primary
+        border: color.border.subtle
+      typography:
+        size: text.xs
+        weight: weight.semibold
+
+  - id: icon-leading
+    required: false
+    purpose: >-
+      Optional decorative icon before the content — a status dot, a
+      severity glyph (check, exclamation), an item-class icon. Hidden
+      from the accessibility tree when the content carries the
+      meaning.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; size bound to badge size token
+    code:
+      slot: icon-leading
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative when paired with a visible label —
+        `aria-hidden="true"` on the icon. If the icon is the entire
+        badge content (dot or icon-only variant), the badge root
+        carries an `aria-label` describing the meaning.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: content
+    required: true
+    purpose: >-
+      The visible label or count. Numbers, short status words
+      ("New", "Beta", "3"). For counts, render directly as text node
+      so the live-region announcement reads the value verbatim.
+    slotKind: content
+    layout:
+      row: 2
+      col: 2
+      span: 11
+    figma:
+      type: text
+      hint: Badge text style; bound to a "label" component property
+    code:
+      slot: content
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text node. For counts that update live, wrap in
+        `aria-live="polite"` (set on root or on this slot). Avoid
+        truncating counts visually without an accessible-name
+        equivalent; use the "99+" pattern when counts exceed 99 and
+        keep the full count in `aria-label`.
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+axes:
+  variants:
+    - default
+    - success
+    - warning
+    - danger
+    - info
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: dot, kind: primitive, of: boolean }
+    - { name: hasIcon, kind: primitive, of: boolean }
+  states:
+    interactive: []
+    data:
+      - idle
+      - updated
+      - max
+      - hidden
+
+mismatches:
+  - figma: Severity drawn as a single static colour swatch per variant
+    code: A `data-severity` attribute or a `variant` prop driving CSS modifiers
+    consequence: >-
+      Designers ship five separate frame-variants; developers map
+      severity to a single prop, then translate the prop to colour
+      tokens. The variant matrix doubles unnecessarily and severity
+      drift becomes invisible (`success` and `info` may share a hue
+      in some implementations without anyone noticing).
+    correct: >-
+      Model severity as a single `variant` prop with closed-enum
+      values (default, success, warning, danger, info). The CSS
+      contract picks tokens per severity; the Figma component
+      property mirrors the same closed enum.
+
+  - figma: Dot variant drawn as a separate component
+    code: A boolean `dot` property toggling the content slot off
+    consequence: >-
+      Designers create a "Dot Badge" alongside "Badge" and the two
+      drift independently — different sizes, different padding,
+      different border treatments. The single canonical anatomy
+      forks visually.
+    correct: >-
+      Model `dot` as a property of the same Badge component. When
+      `dot: true` the content slot collapses, the root rect renders
+      as a small circle (radius.full), and the accessible name moves
+      from content to an `aria-label` on root.
+
+  - figma: Count baked as a static text in the Figma component
+    code: A controlled prop receives the count and renders it inside
+      the content slot
+    consequence: >-
+      Designers update the Figma badge with one fixed number ("3"
+      or "12"). Developers shipping the live count have no design
+      reference for the "99+" overflow pattern, the zero-count-
+      hidden behaviour, or the live-region announcement.
+    correct: >-
+      Document `count: number | null` as the canonical input, the
+      "99+" overflow shape, and the `aria-live="polite"` live-region
+      contract. The Figma file documents these states as variants
+      of the canonical Badge, not as separate components.
+
+  - figma: Pill shape drawn as fixed-radius frame
+    code: Border-radius driven by `radius.pill` token
+    consequence: >-
+      Designers hard-code a px radius (8, 12, 999); developers map
+      to `radius.pill`. When the token-system rebalances to
+      `radius.full` (true circular), the Figma file lags and the
+      shipped badge looks different from the design.
+    correct: >-
+      Bind the radius to a token in both surfaces. Document
+      `radius.pill` as the canonical Badge radius; rect-style
+      badges (status flags) use `radius.sm` and live as a separate
+      variant rather than a per-instance override.
+
+mistakes:
+  - id: badge-color-only-meaning
+    severity: blocker
+    title: Severity conveyed by colour alone
+    description: >-
+      The badge variant is communicated only by colour (red for
+      danger, yellow for warning). Users with colour-vision
+      deficiencies cannot distinguish severity; SR users hear the
+      content but not the severity grade.
+    fix: >-
+      Pair colour with a non-colour cue — an icon-leading glyph
+      (check, exclamation, info), a textual prefix in the content
+      ("Error: …"), or a visually-hidden severity word in the
+      accessible name. Colour is reinforcement, not the contract.
+
+  - id: badge-count-no-aria-live
+    severity: major
+    title: Live counts update silently
+    description: >-
+      Notification counts increment as messages arrive, but the
+      badge has no `aria-live` wrapper. Sighted users see the
+      number tick; SR users hear nothing until they re-navigate to
+      the badge.
+    fix: >-
+      Set `aria-live="polite"` on the root or content slot of any
+      badge whose value updates without page navigation. Use
+      `aria-atomic="true"` so the full new value reads, not just
+      the delta. Throttle announcements (debounce) for fast-moving
+      counts to avoid SR flooding.
+
+  - id: badge-target-too-small
+    severity: blocker
+    title: Interactive badge with sub-24px target
+    description: >-
+      Some products promote Badge to interactive (badge-as-tag,
+      badge-as-filter). When the badge is the activator, the hit
+      target falls below WCAG 2.5.8 minimum 24×24 px (44×44 AAA),
+      excluding motor-impaired and touch users.
+    fix: >-
+      When the canonical Badge is interactive, the consumer should
+      reach for `Tag Input` or `Button` instead — both ship the
+      hit-target contract. If the design genuinely needs an
+      interactive badge, the host extends the badge with hit-area
+      padding (CSS `::after` overlay) so the visible badge stays
+      compact while the activation region meets the threshold.
+
+  - id: badge-icon-decorative-not-hidden
+    severity: major
+    title: Icon-leading slot announced as duplicate of label
+    description: >-
+      The leading icon (check, exclamation) carries no
+      `aria-hidden`; SR reads "checkmark, success" or
+      "exclamation-mark, warning" with the severity word echoing
+      the icon meaning. Verbose announcement, no added information.
+    fix: >-
+      Decorative icons paired with a visible label set
+      `aria-hidden="true"`. Only when the icon is the entire badge
+      content (dot or icon-only variant) does it carry the
+      accessible name — moved to the badge root via `aria-label`,
+      not onto the icon itself.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-badge>` host element with named slots (`<slot name="icon">`, default slot for content); attribute-driven variants and properties
+    variantMechanism: attributes (`variant="success"`, `size="md"`, `dot`); `data-state` for live-update animation states
+  react:
+    structureMechanism: Function component wrapping a `<span>` (or `<mark>` when semantically appropriate) with conditional icon and content slots; libraries include Radix Themes Badge, Polaris Badge, Atlassian Lozenge / Badge
+    variantMechanism: props with class-variance-authority for variant / size; controlled `count`-prop for live values; Material UI exposes a `<Badge>` wrapper that anchors its child
+  angularSignals:
+    structureMechanism: Angular component with `<ng-content>` for label, `<ng-content select="[badge-icon]">` for icon, signal-based input for count
+    variantMechanism: input<'default' | 'success' | 'warning' | 'danger' | 'info'>(); host-bindings drive `[attr.role]` and `[attr.aria-live]`
+  vue:
+    structureMechanism: Single-file component with `<slot name="icon">` and default slot; v-bind for severity prop; PrimeVue Badge / Naive UI Badge as third-party precedents
+    variantMechanism: defineProps with literal-union types for severity; v-model:count for controlled live updates
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    countTick: motion.duration.fast
+    severityChange: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: countChange
+    optional: true
+    payload: >-
+      `{ previous: number, current: number }`. Fires when a
+      controlled count value updates. Only canonical when the
+      consumer drives Badge as a live counter; static badges never
+      emit it.
+    frameworkNotes:
+      webComponents: >-
+        `countChange` CustomEvent on the host with
+        `event.detail = { previous, current }`.
+      react: >-
+        `onCountChange(current, previous)` callback; or derived
+        from controlled `count` prop transitions.
+      angularSignals: >-
+        `output<{ previous: number; current: number }>('countChange')`
+        emitted in an effect on the count signal.
+      vue: >-
+        `@update:count` for `v-model:count`; consumers compare
+        previous and current in their own watcher.
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, badges hosted inside list-rows or nav-
+        items collapse the content slot and render as a dot
+        variant. The full count moves to `aria-label` so SR users
+        retain the value while the visible footprint shrinks.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps default / success / warning / danger / info severity grade.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps sm / md visual size.
+  - figma: Dot
+    code: dot
+    kind: boolean
+    notes: When true, content slot collapses and root renders as a small circle.
+  - figma: Has Leading Icon
+    code: hasIcon
+    kind: boolean
+  - figma: Leading Icon
+    code: icon-leading
+    kind: slot
+    notes: Hosts an Icon instance; decorative by default with `aria-hidden`.
+  - figma: Label
+    code: content
+    kind: text
+    notes: Badge text content. For numeric counts use the controlled `count` prop instead.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Badge layout is direction-neutral when the content is digits
+      or short single words. Icon-leading slot anchors to the
+      logical-start edge (left in LTR, right in RTL) via
+      `inset-inline-start`. Counts ("12", "99+") read identically
+      in either direction; SR-announcement order stays
+      icon-then-content.
+  textExpansion: >-
+    Severity-word badges ("Beta", "New", "Pending") expand 30–50 %
+    in German and Romance languages. Reserve padding using
+    `min-width` rather than fixed `width`; allow the badge to grow
+    horizontally rather than truncate. Counts do not expand.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (badge inside a focusable host)
+      expected: >-
+        Focus enters the host element (button, link, list-item).
+        Badge is not in the tab order — it is presentational
+        metadata about the host. Subsequent Tab leaves the host;
+        the badge is not visited as a separate stop.
+    - keys: Tab (interactive badge, rare)
+      expected: >-
+        When the consumer promotes Badge to interactive (uncommon),
+        the badge participates in the tab order as a single stop
+        and Enter activates it. Hit target ≥ 24×24 px per WCAG
+        2.5.8.
+  announcements:
+    - trigger: SR enters a host with a badge child
+      expected: >-
+        SR reads the host's accessible name followed by the
+        badge's accessible name in DOM order. Decorative dot
+        badges with `role="presentation"` are skipped; iconic
+        badges with `aria-label` read their label.
+    - trigger: Live count updates
+      expected: >-
+        SR announces the new count value via the polite live
+        region. Throttled by the implementation to avoid flooding
+        SR output during rapid increments.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-valid-attr-value
+    - color-contrast
+    - role-img-alt
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Severity is paired with a non-colour cue — an icon, a
+        textual prefix in the content, or a visually-hidden
+        severity word in the accessible name. Colour alone is
+        reinforcement, not the contract.
+      source: wcag
+      sourceRef: 'WCAG 1.4.1 — Use of Color'
+      consequence: >-
+        Colour-only severity excludes users with colour-vision
+        deficiencies and SR users entirely. The variant axis is a
+        structural commitment; the visual treatment must mirror it
+        in at least two channels.
+    - rule: >-
+        Live counts wrap in `aria-live="polite"` on the root or
+        content slot, with `aria-atomic="true"` so the full new
+        value reads. Throttle SR-announcements at the
+        implementation layer to avoid flooding under rapid
+        increments.
+      source: apg
+      sourceRef: 'APG: Live Region patterns — polite vs assertive'
+      consequence: >-
+        Without the live region, count updates are sighted-only —
+        SR users hear the new value only on re-navigation to the
+        badge, after the underlying state-change has lost
+        relevance. Counts that change without announcement
+        misrepresent the surface to SR users.
+    - rule: >-
+        Decorative-only badges (dot variant or icon-only without
+        meaningful content) carry `role="presentation"` plus a
+        sibling visually-hidden text label in the host's
+        accessible name. The badge's meaning lives in the label,
+        not in the visual.
+      source: apg
+      sourceRef: 'APG: presentation role + visually-hidden text patterns'
+      consequence: >-
+        Without the host-level label, SR users encounter an
+        unannotated dot or icon and lose the metadata the badge
+        was supposed to carry. The decoration is sighted-only
+        and the dot becomes invisible to AT.
+  vocabularyDrift:
+    - system: Polaris
+      theirTerm: Badge
+    - system: Carbon
+      theirTerm: Tag
+      note: >-
+        Carbon labels its Badge-equivalent "Tag", which collides
+        with the Tag Input pattern in this canon. Implementation
+        audits document the per-library naming via `componentName`.
+    - system: Material 3
+      theirTerm: Badge
+    - system: Atlassian
+      theirTerm: Lozenge
+      note: >-
+        Atlassian's "Lozenge" is the closest Badge-equivalent;
+        their "Badge" term is reserved for notification-count
+        markers anchored to icons.
+    - system: Radix
+      theirTerm: Badge
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/
+  - https://www.w3.org/TR/WCAG22/#use-of-color
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/status_role
+  - https://polaris.shopify.com/components/feedback-indicators/badge
+  - https://carbondesignsystem.com/components/tag/usage/
+  - https://m3.material.io/components/badges/overview
+  - https://atlassian.design/components/lozenge/examples
+  - https://www.radix-ui.com/themes/docs/components/badge
+  - https://design-system.service.gov.uk/components/tag/
+
+lastReviewed: '2026-05-03'

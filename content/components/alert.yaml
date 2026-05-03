@@ -663,6 +663,15 @@ whenToUse:
         message announcing system state. The two surfaces only
         overlap if a non-modal drawer is misused as a permanent
         notice strip — reach for Banner or Alert there instead.
+    - id: badge
+      difference: >-
+        `Badge` is a compact inline marker (a glyph or short label)
+        announcing metadata about a host element; `Alert` is a row-
+        spanning inline message with body, icon, and optional
+        actions. The decision test: does the message need its own
+        block with prose-level content, or is it a single word /
+        number marker on another element? Badges live next to the
+        thing they describe; alerts own their row.
 
 contracts:
   vocabularyDrift:
