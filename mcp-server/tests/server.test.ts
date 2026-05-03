@@ -490,6 +490,41 @@ describe('mcp server', () => {
     expect((result as any).isError).toBe(true);
   });
 
+  it('get_pattern_a11y_aggregate axeRules = sorted union of composition components (roundtrip)', async () => {
+    const { client } = await connect();
+    const patternIds = ['confirmation-flow', 'login-form'];
+    for (const patternId of patternIds) {
+      const aggregateRes = await client.callTool({
+        name: 'get_pattern_a11y_aggregate',
+        arguments: { patternId },
+      });
+      const aggregate = parseJson(aggregateRes as any);
+
+      const patternRes = await client.callTool({
+        name: 'get_pattern',
+        arguments: { id: patternId },
+      });
+      const pattern = parseJson(patternRes as any);
+
+      const expected = new Set<string>();
+      const seen = new Set<string>();
+      for (const composition of pattern.composition) {
+        if (seen.has(composition.componentId)) continue;
+        seen.add(composition.componentId);
+        const compRes = await client.callTool({
+          name: 'get_component',
+          arguments: { id: composition.componentId },
+        });
+        const comp = parseJson(compRes as any);
+        for (const rule of comp.a11yAcceptance?.axeRules ?? []) {
+          expected.add(rule);
+        }
+      }
+      const expectedSorted = [...expected].sort();
+      expect(aggregate.axeRules, `pattern=${patternId}`).toEqual(expectedSorted);
+    }
+  });
+
   it('validate_implementation reports zero matches on garbage code', async () => {
     const { client } = await connect();
     const result = await client.callTool({
