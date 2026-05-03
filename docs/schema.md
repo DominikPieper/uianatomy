@@ -606,7 +606,9 @@ frameworkMap:
 
 This is descriptive, not prescriptive. We document what's idiomatic, not what's "best."
 
-**Selector-prefix convention.** Web-component examples in `frameworkMap.webComponents` and elsewhere in the canon use the `ui-` prefix (`<ui-button>`, `<ui-modal>`, `<ui-text-input>`). This is a placeholder convention — the canon does not mandate any particular library's prefix; consumers are expected to substitute their own (`md-`, `pf-`, `sl-`, etc.). The prefix is included only because custom-element names require a hyphen per the HTML spec, and `ui-` is the most-neutral filler.
+**Selector-prefix convention.** Web-component examples in `frameworkMap.webComponents` and elsewhere in the canon use the `ui-` prefix (`<ui-button>`, `<ui-modal>`, `<ui-text-input>`). This is a placeholder convention — the canon does not mandate any particular library's prefix; consumers are expected to substitute their own (`md-`, `pf-`, `sl-`, `mat-`, `nz-`, etc.). The prefix is included only because custom-element names require a hyphen per the HTML spec, and `ui-` is the most-neutral filler.
+
+**The wire-name (the part to the right of the prefix-dash) is canonical and should not change.** `ui-button` becomes `md-button` becomes `mat-button` becomes `pf-button`; `button` stays. The same rule applies to the named slots (`<slot name="icon">` is canonical regardless of host-element name) and to event names (`countChange` stays `countChange` whether the host is `<ui-badge>` or `<llm-badge>`). The substitution is the prefix only. Implementation audits document any wire-name divergence as a `divergence` row, not as a "their dialect" footnote.
 
 ## Optional fields
 
