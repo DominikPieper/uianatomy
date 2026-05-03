@@ -10,7 +10,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Disclosure',
-    components: ['tabs', 'disclosure', 'segmented-control', 'stepper', 'sidebar-nav'],
+    components: ['tabs', 'disclosure', 'segmented-control', 'stepper', 'sidebar-nav', 'breadcrumbs'],
   },
   {
     name: 'Inputs',

@@ -725,6 +725,15 @@ whenToUse:
         within a single multi-step flow. SidebarNav is
         persistent global navigation; Stepper is contextual
         to the current flow.
+    - id: breadcrumbs
+      difference: >-
+        `Breadcrumbs` represents site-structure parents
+        (Home → Settings → Account); `Stepper` represents a
+        linear sequence the user moves through (cart →
+        address → payment → review). Breadcrumbs has only
+        location semantics; Stepper has progress semantics
+        (steps before are completed, steps after are
+        pending). Never use breadcrumbs for a flow.
 
 contracts:
   nonNegotiable:

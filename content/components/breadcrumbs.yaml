@@ -1,0 +1,770 @@
+id: breadcrumbs
+name: Breadcrumbs
+description: >-
+  A horizontal trail of links representing the user's location within
+  a hierarchical site or app. Wrapped in a navigation landmark
+  (`<nav aria-label="Breadcrumb">`), rendered as an ordered list
+  with the last item marked `aria-current="page"` and rendered as
+  static text (not a link). Separators are decorative and hidden
+  from AT.
+
+intro: >-
+  Breadcrumbs communicate "you are here" plus "how you got here" in
+  one row. Two variants codify the canonical decision: a full trail
+  (`Home › Settings › Account › Email`) for multi-level hierarchies,
+  or a single back-link (`← Settings`) for app pages where only the
+  parent is meaningful. The reference documents the navigation-
+  landmark contract, the `aria-current="page"` rule on the last
+  item (which is canonical static text, not a link), the
+  decorative-separator pattern, and the truncation contract for
+  long trails — first item plus collapse menu plus current item.
+
+alternateNames:
+  - 'Breadcrumb trail'
+  - 'Page hierarchy'
+  - 'Path navigation'
+
+whenToUse:
+  use: >-
+    For multi-level hierarchical sites where users need orientation
+    plus quick access to parent pages — documentation, e-commerce
+    category trees, file managers, settings pages with nested
+    sections. Place at the top of the page, before main content,
+    so the "Skip to main content" link bypasses the trail. Trail
+    variant when the hierarchy has three or more meaningful levels;
+    back-link variant when only the parent matters.
+  avoid: >-
+    For flat-structure sites with only one or two levels — a single
+    back-link or page title is sufficient. For linear journeys or
+    transactions (multi-step forms, checkout flows) — that is
+    `Stepper`, not breadcrumbs. For in-page section navigation
+    — that is `Tabs`. For persistent global navigation — that is
+    `SidebarNav`. Never use breadcrumbs to suggest a flow the user
+    has not actually taken (breadcrumbs reflect site structure, not
+    user history).
+  vsRelated:
+    - id: sidebar-nav
+      difference: >-
+        `SidebarNav` is a persistent vertical navigation rail
+        listing the full top-level destination set; `Breadcrumbs`
+        is a horizontal trail showing the current location within
+        a hierarchy. SidebarNav answers "where can I go?";
+        Breadcrumbs answers "where am I?". Many sites pair both —
+        the sidebar lists destinations, the breadcrumbs locate the
+        current page within the chosen destination's hierarchy.
+    - id: tabs
+      difference: >-
+        `Tabs` switches between sibling sections of the same page
+        (overview / activity / files for a single project);
+        `Breadcrumbs` traverses parent pages of a hierarchy.
+        Tabs operate within a single context; breadcrumbs cross
+        contexts. The decision test: does activating the
+        affordance change the page (breadcrumbs) or change a
+        section of the current page (tabs)?
+    - id: stepper
+      difference: >-
+        `Stepper` represents a linear sequence the user moves
+        through (checkout: cart → address → payment → review);
+        `Breadcrumbs` represents site-structure parents
+        (Home → Settings → Account). Stepper has progress
+        semantics (steps before are completed, steps after are
+        pending); breadcrumbs has only location semantics. Never
+        use breadcrumbs for a flow.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The navigation landmark wrapping the trail. Carries
+      `<nav aria-label="Breadcrumb">` (or "Breadcrumbs", "Page
+      hierarchy" — translated for non-English locales) so AT users
+      can locate the trail via landmark navigation. Sits above
+      the main content but inside the document body; never in a
+      header that is announced as `<header>` landmark on every
+      page.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; navigation landmark variant property
+    code:
+      slot: root
+      semantic: nav-with-aria-label
+    a11y:
+      hint: >-
+        `<nav aria-label="Breadcrumb">`. The label must be specific
+        — "Breadcrumb" not "Navigation" — because a page may have
+        multiple `<nav>` landmarks (primary nav, breadcrumbs, in-
+        page TOC). AT users rely on the label to disambiguate.
+        Translate the label per locale ("Brotkrumen" for German,
+        "Fil d'Ariane" for French) so SR announces it in the
+        user's language.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      typography:
+        size: text.sm
+
+  - id: list
+    required: true
+    purpose: >-
+      The ordered list (`<ol>`) containing the trail items.
+      Required because the order is meaningful — Home is the
+      ancestor of Settings, Settings is the ancestor of Account.
+      An unordered `<ul>` would communicate "these are siblings",
+      which is wrong. The list resets default browser styles
+      (no marker, no indent) so the visual reads as a row of
+      links.
+    slotKind: structural
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Horizontal auto-layout; gap small; reset list-marker
+    code:
+      slot: list
+      semantic: ol
+    a11y:
+      hint: >-
+        `<ol>`. Some implementations omit the list and render
+        items as inline anchors — this works for sighted users
+        but loses the "list of N items" announcement that makes
+        the trail navigable by SR. Keep the list element.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: item
+    required: true
+    purpose: >-
+      A single position in the trail (`<li>`). Repeats per
+      hierarchy level; the canonical first item is the home /
+      root; the canonical last item is the current page. The
+      first-to-last DOM order matches the parent-to-child
+      hierarchy order. Each item contains either the link slot
+      (intermediate items) or the current-marker slot (last
+      item).
+    slotKind: structural
+    layout:
+      row: 2
+      col: 2
+      span: 6
+      repeats: 4
+    figma:
+      type: frame
+      hint: Inline frame holding link or current-marker plus separator
+    code:
+      slot: item
+      semantic: li
+    a11y:
+      hint: >-
+        `<li>` carries the position in the list. SR announces
+        "1 of 4, link, Home; 2 of 4, link, Settings; 3 of 4,
+        link, Account; 4 of 4, Email" — the position counter is
+        canonical and helps users orient.
+
+  - id: link
+    required: true
+    purpose: >-
+      The interactive anchor for intermediate items (every item
+      except the last). Points to the parent page's URL. The
+      visible label is the page title; full path is in the
+      `href`. Every intermediate item has a link; the last item
+      does not (rendered as current-marker).
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 2
+      span: 2
+    figma:
+      type: text
+      hint: Link variant of breadcrumb item; underline on hover
+    code:
+      slot: link
+      semantic: a
+    a11y:
+      hint: >-
+        `<a href="...">`. Standard link semantics — Tab focusable,
+        Enter activates. Visible focus ring per WCAG 2.4.7. Hover
+        and focus-visible underline (Polaris convention) so the
+        link affordance is clear; default state may be
+        underline-on-hover for visual cleanliness.
+    tokens:
+      color:
+        foreground: color.text.accent
+      typography:
+        size: text.sm
+
+  - id: current-marker
+    required: true
+    purpose: >-
+      The static-text representation of the current page. Renders
+      as a `<span>` (or `<a>` without `href` per APG variant) with
+      `aria-current="page"`. NOT a link — clicking the current
+      page is a no-op that wastes user effort. Visually
+      distinguished (typically muted color, removed underline,
+      possibly bolder) so sighted users see "I am here".
+    slotKind: content
+    layout:
+      row: 2
+      col: 8
+      span: 2
+    figma:
+      type: text
+      hint: Current variant of breadcrumb item; non-link styling
+    code:
+      slot: current-marker
+      semantic: span-with-aria-current
+    a11y:
+      hint: >-
+        `aria-current="page"` is canonical. The element MUST NOT
+        be `<a href="...">` — `aria-current` plus a self-link
+        creates a useless tab stop and the page-reload-on-click
+        is hostile. Render as `<span aria-current="page">` or as
+        `<a aria-current="page">` without `href`. SR announces
+        "current page, Email".
+    tokens:
+      color:
+        foreground: color.text.muted
+      typography:
+        size: text.sm
+        weight: weight.semibold
+
+  - id: separator
+    required: false
+    purpose: >-
+      The visual separator between items (typically `›`, `/`,
+      `>`, or a chevron icon). Decorative — does not carry
+      semantic meaning in the accessibility tree. Sits between
+      adjacent items; the last item has no trailing separator.
+      RTL: separator character flips direction (`›` becomes
+      `‹`) via logical CSS or distinct character per direction.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 4
+      span: 1
+    figma:
+      type: text
+      hint: Decorative separator; CSS pseudo-element preferred over inline character
+    code:
+      slot: separator
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"` is canonical, or render via CSS
+        pseudo-element (`::after`) which is automatically excluded
+        from the accessibility tree. Never expose the separator
+        character to AT — SR users hear "Home, Settings, Account,
+        Email" not "Home slash Settings slash Account slash
+        Email". RTL: use `content: '\\203A'` for `›` and let
+        `direction: rtl` flip via mirroring, or write a logical-
+        property rule that swaps to `‹` under RTL.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: overflow-collapse
+    required: false
+    purpose: >-
+      Optional menu-button rendered in place of collapsed middle
+      items when the trail exceeds `maxItems`. Activates the
+      `expandable` boolean property — when activated, reveals
+      the hidden middle items in a menu/popover. Pattern: `Home
+      … Account › Email` where `…` is a button that opens the
+      menu listing the collapsed `Settings`, `Profile`,
+      `Preferences`. Sits between the first item and the
+      penultimate-or-last items by canonical convention.
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 5
+      span: 2
+    figma:
+      type: instance
+      hint: Menu-button instance with ellipsis label; visibility per "is collapsed" property
+    code:
+      slot: overflow-collapse
+      semantic: button-with-aria-expanded
+    a11y:
+      hint: >-
+        `<button aria-label="Show collapsed breadcrumbs"
+        aria-expanded="false" aria-controls="...">…</button>`.
+        On activation, the menu opens and `aria-expanded` flips
+        to true; focus moves into the menu. Escape closes and
+        returns focus to the button. Never use a `<span>` with
+        onClick — keyboard users cannot activate it.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+axes:
+  variants:
+    - trail
+    - back-link
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - { name: expandable, kind: primitive, of: boolean }
+    - { name: showRoot, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - default
+      - current
+      - collapsed
+      - expanded
+    transitions:
+      - from: collapsed
+        to: expanded
+        trigger: User activates overflow-collapse menu-button (click, Enter, Space)
+      - from: expanded
+        to: collapsed
+        trigger: User dismisses menu (Escape, outside click, item selection)
+
+mismatches:
+  - figma: Breadcrumb separators drawn as inline text characters
+    code: Separators rendered via CSS `::after` pseudo-element with `aria-hidden`
+    consequence: >-
+      Designers ship literal "/" or "›" characters as inline text
+      between items; developers extract them to CSS pseudo-elements
+      so they never appear in the accessibility tree. The two
+      surfaces look the same but the design file does not
+      communicate the AT-exclusion contract — developers may copy
+      the inline text and accidentally expose the separator to
+      SR.
+    correct: >-
+      Document the separator as a decorative pseudo-element in the
+      anatomy. Figma uses a non-text decorative shape (chevron
+      icon, vector slash) so the design surface signals "this is
+      decorative". Code uses `::after { content: '\\203A' }` plus
+      a fallback `aria-hidden="true"` if rendered as a real
+      element.
+
+  - figma: Last breadcrumb item drawn as a styled link
+    code: Last item rendered as `<span>` with `aria-current="page"` (no `<a>`)
+    consequence: >-
+      Designers draw the current page with link styling
+      (underline, accent color); developers strip the anchor and
+      ship a span. The two surfaces visually disagree (designer
+      sees "underlined link to current page", code ships
+      "muted static text") and the rationale is invisible in the
+      Figma file — the next designer reverts the styling.
+    correct: >-
+      Document the current-marker as a non-link slot in the
+      anatomy. Figma carries a "current" variant of the item
+      component with non-link styling (muted color, no
+      underline, optional weight bump). Code renders
+      `<span aria-current="page">`.
+
+  - figma: Trail truncation drawn as static "..." text
+    code: Truncation rendered as `<button>` opening a menu of collapsed items
+    consequence: >-
+      Designers draw "…" as a label between items; developers
+      ship a button that opens a menu. The visual element looks
+      static but is interactive — designers do not draw the
+      hover, focus, or expanded states; developers ship them.
+    correct: >-
+      Document the overflow-collapse slot as `<button>` with
+      menu-button states (default / hover / focused / expanded).
+      Figma carries the button-state variants. Static
+      truncation (no expansion) is the rare case — for short
+      trails the canonical pattern is to show all items.
+
+  - figma: Separator character hard-coded as a chevron in LTR design files
+    code: 'Separator follows `direction: rtl` mirroring or distinct character per direction'
+    consequence: >-
+      Designers ship `>` separators in LTR files; the same file
+      under RTL shows `>` pointing the wrong way (against
+      reading direction). Sighted RTL users see "Home > Settings"
+      but read right-to-left, so the chevron points away from
+      the parent.
+    correct: >-
+      Document the separator as direction-aware in the anatomy.
+      Figma carries both LTR (`›`) and RTL (`‹`) frames, or
+      uses a chevron icon component that is mirrored via
+      direction. Code uses CSS that swaps content per
+      direction or relies on the bidi mirroring of the
+      character.
+
+mistakes:
+  - id: breadcrumbs-no-nav-landmark
+    severity: blocker
+    title: Trail is not wrapped in `<nav>` with `aria-label`
+    description: >-
+      The breadcrumb is rendered as a bare `<ol>` or a sequence of
+      inline links with no enclosing landmark. SR users navigating
+      by landmark cannot locate the trail; the "you are here"
+      signal is invisible to AT.
+    fix: >-
+      Wrap the trail in `<nav aria-label="Breadcrumb">` (or the
+      translated equivalent for non-English locales). The label
+      must be specific — "Navigation" is too generic when the page
+      has a primary nav landmark too. AT users rely on the label
+      to disambiguate.
+
+  - id: breadcrumbs-current-is-link
+    severity: blocker
+    title: Last item is `<a href>` instead of static text
+    description: >-
+      The current page is rendered as a link to itself
+      (`<a href="/settings/account/email" aria-current="page">`).
+      Activating it reloads the page — wasted effort, lost
+      scroll position, broken user expectation. AT announces
+      "link, current page, Email" — sighted-and-AT users both
+      learn the trail is asking them to navigate to where they
+      already are.
+    fix: >-
+      Render the current item as `<span aria-current="page">` or
+      as `<a aria-current="page">` without an `href`. Sighted
+      users see the current-page styling (muted, non-underlined,
+      possibly bolder); AT users hear "current page" without a
+      "link" announcement. The current page is not a navigation
+      target.
+
+  - id: breadcrumbs-separator-readable
+    severity: major
+    title: Separator characters are exposed to assistive technology
+    description: >-
+      Inline separators (`/`, `>`, `›`) are rendered as real text
+      nodes without `aria-hidden`. SR reads "Home slash Settings
+      slash Account slash Email" — the slash is noise that
+      lengthens the trail announcement and adds no semantic
+      value.
+    fix: >-
+      Render separators via CSS `::after { content: '...' }` (the
+      pseudo-element content is excluded from the accessibility
+      tree by canonical browser behavior) or wrap inline
+      separator characters in a `<span aria-hidden="true">`. SR
+      announces the trail as a clean list of items.
+
+  - id: breadcrumbs-rtl-separator-not-mirrored
+    severity: major
+    title: Separator character does not flip under RTL
+    description: >-
+      The trail uses `>` or `›` separators that do not visually
+      mirror under `direction: rtl`. Sighted RTL users see the
+      chevron pointing left-to-right, against the reading
+      direction — the visual hierarchy reads backward.
+    fix: >-
+      Use a CSS pseudo-element with logical content (`::after
+      { content: '\\203A' }` plus `direction: ltr` content
+      override under RTL), or use a chevron icon component
+      that mirrors via the `direction` cascade, or swap
+      characters via writing-direction-aware CSS rules.
+      Document the chosen mechanism in the canonical
+      anatomy.
+
+  - id: breadcrumbs-collapse-no-disclosure
+    severity: major
+    title: Truncated middle items are not reachable
+    description: >-
+      The trail truncates middle items to fit the viewport (`Home
+      … Email`) but the ellipsis is static text — there is no
+      way to reveal the collapsed items. Users with deep
+      hierarchies cannot navigate to mid-level parents without
+      visiting them via another path.
+    fix: >-
+      Render the ellipsis as `<button aria-expanded="false">`
+      that opens a menu listing the collapsed items. Activating
+      the button moves focus into the menu; selecting an item
+      navigates. Escape closes and returns focus to the button.
+      Static truncation is acceptable only when the collapsed
+      items are reachable via another path; otherwise the
+      disclosure is mandatory.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-breadcrumbs>` host with `variant`, `size`, `max-items`, `expandable` attributes; renders slotted `<ui-breadcrumb-item>` children with the last item auto-marked `aria-current="page"`
+    variantMechanism: attributes (`variant="trail"`, `variant="back-link"`, `size="md"`); CSS uses logical properties for separator direction and `::after` pseudo-elements for separator content
+  react:
+    structureMechanism: Compound component (React Aria Breadcrumbs + Item, Material UI Breadcrumbs, HeroUI Breadcrumbs.Item, Atlassian Breadcrumbs); items declared as children, last child auto-receives `aria-current="page"`
+    variantMechanism: props with class-variance-authority; `maxItems` + `itemsBeforeCollapse` + `itemsAfterCollapse` (Material UI + Atlassian convention) drive truncation; `separator` prop overrides the default character
+  angularSignals:
+    structureMechanism: Angular component with input<'trail' | 'back-link'>('variant'), content-projects child item components via ng-content with selector; signal-derived current item from index
+    variantMechanism: input<'sm' | 'md' | 'lg'>(); host-binding [attr.role]="'navigation'" plus [attr.aria-label]; signal-derived collapsed state from contentChildren count and maxItems
+  vue:
+    structureMechanism: Single-file component with default slot for breadcrumb items; PrimeVue Breadcrumb, Naive UI Breadcrumb as third-party precedents; computed property derives current-marker from last item
+    variantMechanism: defineProps with literal-union types; v-if for overflow-collapse rendering when items.length > maxItems
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    menuOpen: motion.duration.fast
+    hoverShift: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: itemActivate
+    optional: true
+    payload: >-
+      `{ item: { id: string, href: string }, index: number }`.
+      Fires when a user activates a breadcrumb link via click,
+      Enter, or Space. Only canonical when consumers manage
+      navigation programmatically (SPAs that intercept link
+      clicks for client-side routing); standard server-rendered
+      breadcrumbs let the browser handle navigation natively
+      without observing the event.
+    frameworkNotes:
+      webComponents: >-
+        `itemActivate` CustomEvent on the host with
+        `event.detail = { item, index }`.
+      react: >-
+        `onAction(key)` callback (React Aria idiom) — receives
+        the activated item key.
+      angularSignals: >-
+        `output<{ item: BreadcrumbItem; index: number }>('itemActivate')`.
+      vue: >-
+        `@item-activate` event with payload `{ item, index }`.
+
+  - name: expandedChange
+    optional: true
+    payload: >-
+      `{ expanded: boolean }`. Fires when the overflow-collapse
+      menu opens or closes. Only canonical when the consumer
+      controls the menu state externally; uncontrolled
+      breadcrumbs manage state internally. Static (non-
+      expandable) breadcrumbs never observe this event.
+    frameworkNotes:
+      webComponents: >-
+        `expandedChange` CustomEvent with
+        `event.detail = { expanded }`.
+      react: >-
+        `onExpandedChange(expanded)` callback.
+      angularSignals: >-
+        `output<boolean>('expandedChange')`.
+      vue: >-
+        `@expanded-change` event or `v-model:expanded` two-way
+        binding.
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, deep trails (more than 3-4 items)
+        collapse to first-item plus current-item with the
+        overflow-collapse menu in between (GOV.UK convention —
+        first plus last only on mobile). Or the trail truncates
+        from the start with `text-overflow: ellipsis` on the
+        oldest items so the current page remains visible. Pick
+        one and document it as the canonical mobile pattern.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the full trail renders or
+        truncates per the authored `maxItems`. Items wrap to
+        a second line when the available inline-size cannot
+        hold them — never overflow horizontally without a
+        collapse mechanism.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps trail / back-link variant.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps sm / md / lg sizes.
+  - figma: Expandable
+    code: expandable
+    kind: boolean
+    notes: When true, overflow-collapse menu allows revealing collapsed middle items.
+  - figma: Show Root
+    code: showRoot
+    kind: boolean
+    notes: When true, the root (Home) item is always visible even under collapse.
+  - figma: Max Items
+    code: maxItems
+    kind: number
+    notes: Bound on visible item count before overflow-collapse activates.
+  - figma: Items Before Collapse
+    code: itemsBeforeCollapse
+    kind: number
+    notes: Number of items shown at the start of the trail when collapsed.
+  - figma: Items After Collapse
+    code: itemsAfterCollapse
+    kind: number
+    notes: Number of items shown at the end of the trail when collapsed.
+  - figma: Separator
+    code: separator
+    kind: slot
+    notes: Optional override slot for the separator character or icon.
+  - figma: Items
+    code: item
+    kind: slot
+    notes: Repeatable slot for child breadcrumb items.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Trail order respects DOM order — first DOM item is the
+      root regardless of language, but visual order flips under
+      `direction: rtl` (root sits at the inline-start, which is
+      right-side under RTL). Separator character mirrors via
+      bidi (`›` / U+203A flips visually under `direction: rtl`)
+      or via writing-direction-aware CSS that swaps to `‹` /
+      U+2039. Document the chosen mechanism — either bidi
+      mirror or distinct character per direction. Nav-landmark
+      `aria-label` translates per locale ("Brotkrumen" for
+      German, "Fil d'Ariane" for French) so SR announces it
+      naturally.
+  textExpansion: >-
+    Trail labels expand 30-50% under translation (English
+    "Settings" → German "Einstellungen" 60% longer; French
+    "Paramètres" 30% longer). Long trails plus expanded labels
+    overflow the inline-size faster — the responsive breakpoint
+    rules collapse earlier. Reserve no fixed width on items;
+    let them flow and collapse naturally. Separator characters
+    are stable across languages.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves through each link slot in DOM order. The
+        current-marker (last item) is NOT in the tab order
+        because it is not a link. The overflow-collapse button
+        is in the tab order between the first item and the
+        post-collapse items.
+    - keys: Shift+Tab
+      expected: >-
+        Reverse focus through the same elements. Standard link
+        navigation — no breadcrumbs-specific behavior.
+    - keys: Enter, Space (overflow-collapse focused)
+      expected: >-
+        Activates the menu-button. Menu opens; focus moves to
+        the first item in the menu (or the menu container with
+        `tabindex="-1"`). `aria-expanded` flips to true.
+    - keys: Escape (menu open)
+      expected: >-
+        Closes the menu. Focus returns to the overflow-collapse
+        button. `aria-expanded` flips back to false.
+    - keys: Arrow keys (menu open)
+      expected: >-
+        Navigate between menu items (vertical: ArrowUp /
+        ArrowDown for a `role="menu"` listing of collapsed
+        breadcrumb items). Enter activates the focused item.
+  announcements:
+    - trigger: SR enters the breadcrumb landmark
+      expected: >-
+        SR announces "navigation, Breadcrumb" (the landmark
+        plus its label). For deep trails, the announcement
+        continues with "list, 4 items".
+    - trigger: SR encounters each item
+      expected: >-
+        Intermediate items announce as "link, Home" / "link,
+        Settings" / "link, Account". The current item announces
+        as "current page, Email" — the link role is absent
+        because the element is a span (or anchor without href).
+    - trigger: User activates overflow-collapse
+      expected: >-
+        SR announces the menu open ("menu, 3 items") and reads
+        the first menu item. The button's `aria-expanded` flip
+        is announced.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-valid-attr-value
+    - aria-required-attr
+    - landmark-unique
+    - link-name
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The trail is wrapped in `<nav>` with a specific
+        `aria-label` ("Breadcrumb" or the locale-translated
+        equivalent). The label must distinguish the breadcrumb
+        from other navigation landmarks on the page.
+        Implementations that ship a bare `<ol>` lose landmark
+        navigation entirely.
+      source: apg
+      sourceRef: 'APG: Breadcrumb pattern'
+      consequence: >-
+        Without the landmark, SR users cannot jump to the trail
+        via landmark navigation — the "you are here" signal
+        becomes invisible to AT. Sighted-only orientation breaks
+        the canonical accessibility contract.
+    - rule: >-
+        The last item carries `aria-current="page"` and is NOT
+        rendered as `<a href>`. Static text via `<span>` or
+        `<a>` without `href` is canonical. Implementations that
+        ship a self-link to the current page waste user effort
+        and break the "current location" semantic.
+      source: apg
+      sourceRef: 'APG: Breadcrumb pattern'
+      consequence: >-
+        Without the rule, activating the current item reloads
+        the page (lost scroll, lost form state, no progress).
+        AT users hear "link, current page" — a contradiction
+        that confuses the navigation model. The current page
+        is not a navigation target.
+    - rule: >-
+        Separators are decorative — `aria-hidden="true"` or
+        rendered via CSS pseudo-elements. Implementations that
+        expose separator characters to AT pollute the trail
+        announcement with non-semantic noise.
+      source: apg
+      sourceRef: 'APG: Breadcrumb pattern'
+      consequence: >-
+        Without the rule, SR reads "Home slash Settings slash
+        Account slash Email" — the slash adds no value but
+        lengthens every announcement. AT users learn to tune
+        out the noise, eroding trust in the trail's semantic
+        clarity.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: '—'
+      note: >-
+        Material 3 spec does not include Breadcrumbs as a
+        first-class component (web canon ships Material UI
+        Breadcrumbs as a library extension). The mobile-first
+        Material guidance favours top-app-bar back-buttons over
+        breadcrumbs for navigation orientation.
+    - system: Atlassian
+      theirTerm: Breadcrumbs
+      note: >-
+        Atlassian ships maxItems + itemsBeforeCollapse +
+        itemsAfterCollapse as canonical truncation API; aligns
+        with Material UI naming.
+    - system: Carbon
+      theirTerm: Breadcrumb
+      note: >-
+        Carbon uses singular "Breadcrumb" for both single item
+        and trail composition; minor naming-only divergence
+        from the canonical plural.
+    - system: Polaris
+      theirTerm: Breadcrumbs
+      note: >-
+        Polaris uses Breadcrumbs for a single back-link
+        convention (single parent) — the canonical back-link
+        variant captures this divergence as a first-class axis
+        rather than treating it as a different component.
+    - system: GOV.UK
+      theirTerm: Breadcrumbs
+      note: >-
+        GOV.UK collapses to first-and-last on mobile (skip the
+        middle entirely, no overflow-collapse menu) — the
+        responsive breakpoint rule documents this as a
+        canonical mobile pattern.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/examples/breadcrumb/
+  - https://react-aria.adobe.com/Breadcrumbs
+  - https://mui.com/material-ui/react-breadcrumbs/
+  - https://www.heroui.com/docs/components/breadcrumbs
+  - https://atlassian.design/components/breadcrumbs/usage
+  - https://design-system.service.gov.uk/components/breadcrumbs/
+  - https://primer.style/components/breadcrumbs/react
+  - https://polaris-react.shopify.com/components/breadcrumbs
+
+lastReviewed: '2026-05-03'

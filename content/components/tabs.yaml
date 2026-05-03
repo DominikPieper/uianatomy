@@ -67,6 +67,16 @@ whenToUse:
         Stepper when "step 3 needs the answer from step 1" is
         meaningful; reach for Tabs when the panels could be read
         in any order.
+    - id: breadcrumbs
+      difference: >-
+        `Breadcrumbs` traverses parent pages of a hierarchy
+        (Home → Settings → Account); `Tabs` switches between
+        sibling sections of the same page (overview / activity
+        / files for a single project). Breadcrumbs cross
+        contexts (URL changes); Tabs operate within a single
+        context (URL stays the same). The decision test: does
+        activating the affordance change the page (breadcrumbs)
+        or change a section of the current page (tabs)?
 
 anatomy:
   - id: tablist

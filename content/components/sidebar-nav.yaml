@@ -765,6 +765,16 @@ whenToUse:
         look similar — the distinguisher is whether the
         items are *steps in a process* (Stepper) or *peer
         destinations* (SidebarNav).
+    - id: breadcrumbs
+      difference: >-
+        `Breadcrumbs` is a horizontal trail showing the
+        current location within a hierarchy; `SidebarNav` is
+        a persistent vertical rail listing the full top-
+        level destination set. SidebarNav answers "where can
+        I go?"; Breadcrumbs answers "where am I?". They
+        compose — many sites pair both, with the sidebar
+        listing destinations and breadcrumbs locating the
+        current page within the chosen destination.
 
 contracts:
   nonNegotiable:
