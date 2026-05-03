@@ -642,6 +642,54 @@ propertyMap:
     kind: enum
     notes: inside / outside. Figma encodes the visual difference; code conditionally pins header/footer.
 
+performance:
+  - name: focusTrapAttachLatency
+    metric: open-to-focus-bound
+    threshold: 16
+    unit: ms
+    rationale: >-
+      On modal open, the focus trap scans the dialog subtree for
+      focusable descendants and binds the boundary tabbables. Above
+      one frame (16 ms on a 60 Hz display), the open-to-focus-ready
+      transition feels delayed — users perceive the modal as
+      sluggish even when the enter-animation is fast. Sources:
+      Radix Dialog and React Aria Modal both surface the focus-
+      trap-attach as the first-paint-after-open hot path. Keep the
+      tabbable scan O(focusable-descendants), not O(all-
+      descendants); large form modals with many fields land near
+      the threshold on commodity hardware.
+  - name: inertSubtreeSize
+    metric: descendant-node-count
+    threshold: 5000
+    unit: nodes
+    rationale: >-
+      On open, siblings of the modal portal-host receive `inert`
+      (or `aria-hidden` plus `tabindex="-1"` on focusables in older
+      browsers). The toggle traverses each subtree to update style
+      / accessibility-tree state. Above ~5000 descendant nodes per
+      subtree, a single frame budget cannot absorb the work and
+      the modal-open animation drops frames. Source: WHATWG inert
+      spec performance notes; Radix and Headless UI both document
+      large-page modals as the slowest open path. Mitigation:
+      portal the modal to body so siblings are limited to
+      `<header>`, `<main>`, `<footer>` rather than deeply-nested
+      content trees.
+  - name: backdropOverdraw
+    metric: viewport-coverage
+    threshold: 1
+    unit: viewports
+    rationale: >-
+      The backdrop is a full-viewport semi-transparent layer.
+      Each additional stacked modal adds another full-viewport
+      backdrop plus its own dialog subtree, multiplying the GPU
+      composite cost per frame during enter / exit animations.
+      Above one stacked backdrop (i.e. a second modal opened on
+      top of the first), the canonical guidance is to redesign
+      the flow rather than absorb the cost — modals should not
+      stack per `whenToUse.avoid`. Threshold codifies the
+      single-modal canon; the metric exists to flag stack-depth
+      regressions in performance budgets.
+
 a11yAcceptance:
   keyboardWalk:
     - keys: Tab

@@ -252,9 +252,13 @@ describe('performance field', () => {
     expect(tabs.performance?.find((p) => p.name === 'tablistOverflow')?.threshold).toBe(7);
   });
 
-  it('modal performance is omitted (stackDepth lives in whenToUse.avoid as a hard rule, not a perf threshold)', async () => {
+  it('modal performance covers focus-trap + inert + backdrop costs (P6-88); stackDepth still lives in whenToUse.avoid as a hard rule', async () => {
     const modal = await loadComponent(join(contentDir, 'modal.yaml'));
-    expect(modal.performance).toBeUndefined();
+    expect(modal.performance).toBeDefined();
+    const names = modal.performance!.map((p) => p.name);
+    expect(names).toEqual(
+      expect.arrayContaining(['focusTrapAttachLatency', 'inertSubtreeSize', 'backdropOverdraw']),
+    );
     expect(modal.whenToUse?.avoid).toMatch(/Stacking modals is non-canonical/);
   });
 

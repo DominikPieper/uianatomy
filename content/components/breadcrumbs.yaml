@@ -755,6 +755,15 @@ contracts:
         middle entirely, no overflow-collapse menu) — the
         responsive breakpoint rule documents this as a
         canonical mobile pattern.
+    - system: GitHub Primer
+      theirTerm: Breadcrumbs
+      note: >-
+        Primer ships an `overflow` prop with `wrap` /
+        `menu` / `menu-with-root` modes — same canonical
+        truncation contract under different API names.
+        `menu-with-root` keeps the root visible when other
+        items collapse (matches the canonical `showRoot`
+        property).
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/

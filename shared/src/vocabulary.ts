@@ -185,6 +185,10 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
     name: 'Angular CDK',
     url: 'https://material.angular.io/cdk/',
   },
+  primer: {
+    name: 'GitHub Primer',
+    url: 'https://primer.style/',
+  },
 } as const;
 
 // P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
@@ -206,6 +210,7 @@ export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> =
   vaul: ['Vaul'],
   reach: ['Reach UI', 'Reach'],
   angularCdk: ['Angular CDK', 'Angular Material'],
+  primer: ['GitHub Primer', 'Primer'],
 } as const;
 
 // Spec/platform/standards bodies that legitimately appear as
