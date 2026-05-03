@@ -10,7 +10,9 @@ dist/
 coverage/
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/agents/
 .mcp.json
 files.zip
 /.link-checker/
