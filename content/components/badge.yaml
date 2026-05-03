@@ -56,6 +56,14 @@ whenToUse:
         label marker that does not own a row. The decision test:
         does the message need its own block or inline next to a
         host?
+    - id: icon
+      difference: >-
+        `Icon` is the SVG-glyph primitive that may sit inside a
+        Badge as the icon-leading slot (severity glyph, status
+        cue). The Icon is decorative when paired with a visible
+        Badge label, meaningful when the Badge is dot-only — in
+        the latter case the accessible name moves to the Badge
+        root via `aria-label`.
 
 anatomy:
   - id: root

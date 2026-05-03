@@ -39,6 +39,13 @@ whenToUse:
         `MenuButton` opens a menu with multiple options and carries
         `aria-haspopup="menu"` plus `aria-expanded`. `Button` triggers
         a single action.
+    - id: icon
+      difference: >-
+        `Icon` is the SVG-glyph primitive that may sit inside a Button
+        as `icon-leading` or `icon-trailing`. Bare icons in clickable
+        hosts are an anti-pattern — wrap in a `<button>` with an
+        `aria-label` when the icon is the only label, so the host
+        carries the activator semantics and the icon stays decorative.
 
 anatomy:
   - id: root

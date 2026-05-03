@@ -90,7 +90,7 @@ export const CANON_PROPERTY_VOCAB: Record<string, readonly string[]> = {
 };
 
 export const CANON_PROPERTY_BOUNDED: Record<string, readonly string[]> = {
-  size: ['sm', 'md', 'lg', 'xl', 'full'],
+  size: ['xs', 'sm', 'md', 'lg', 'xl', 'full'],
 };
 
 export const CANON_INTERACTIVE_STATES = [

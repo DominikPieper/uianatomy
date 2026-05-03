@@ -1,0 +1,481 @@
+id: icon
+name: Icon
+description: >-
+  An SVG-based pictogram rendered inline with surrounding text or as
+  a standalone glyph inside another component. Carries either
+  decorative or meaningful semantics depending on whether a visible
+  text label accompanies it. The canonical primitive that every
+  larger component composes for affordance, status, or wayfinding
+  cues.
+
+intro: >-
+  Icon is the canonical SVG-glyph primitive — a pictogram that
+  renders inline with text or as a standalone glyph inside a host
+  component. The semantic split is decorative versus meaningful:
+  paired with a visible label, the icon is decorative and hides from
+  assistive tech; without a label, the icon is meaningful and carries
+  an accessible name. Two size families (token-driven and inline-with-
+  text), two semantic modes (decorative, meaningful), three colour
+  channels (stroke, fill, currentColor inheritance). The reference
+  documents the role-img versus aria-hidden contract, the
+  currentColor inheritance pattern that lets token-colour flow
+  through, and the canonical sizing tokens that keep icons in scale
+  with their host.
+
+alternateNames:
+  - 'SVG'
+  - 'Glyph'
+  - 'Pictogram'
+
+whenToUse:
+  use: >-
+    For affordance cues (chevron in a disclosure trigger, search
+    glyph in a search input), status cues (check, exclamation,
+    info), wayfinding cues (arrow, home, settings), and brand /
+    decorative imagery that pairs with text. Always SVG when
+    possible — token-colour flows through `currentColor`, sizing
+    is driven by canonical size-tokens, and the asset scales
+    cleanly across DPR.
+  avoid: >-
+    For substantive image content (photographs, illustrations) —
+    that is `<img>` with alt text rather than an icon glyph. For
+    icon-only buttons that lack an accessible name — use `Button`
+    with `aria-label`, not a bare icon. For decorative imagery
+    that exceeds the size-token range — use a brand-image or hero-
+    media slot in the host component.
+  vsRelated:
+    - id: button
+      difference: >-
+        `Button` is an interactive activator that may host an
+        Icon (icon-leading, icon-trailing, or icon-only). `Icon`
+        is the glyph itself, never interactive on its own.
+        Icon-only buttons compose Button + Icon and carry
+        `aria-label` on the button; bare icons in a clickable
+        host are an anti-pattern.
+    - id: link
+      difference: >-
+        `Link` is the navigation primitive; it may host an Icon
+        (external-link arrow, download glyph) as a decorative
+        cue alongside the link text. The Icon contributes
+        visual semantics; the Link's text carries the accessible
+        name.
+    - id: badge
+      difference: >-
+        `Badge` is a metadata marker that may host an Icon
+        (icon-leading slot) for severity glyphs (check,
+        exclamation). The Icon is decorative when paired with
+        the badge content; meaningful when the badge is dot-
+        only.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The SVG root element. Carries the `viewBox`, the size
+      attributes (width / height bound to a token), the
+      semantic role (`role="img"` for meaningful icons, omitted
+      for decorative), and the colour channel (fill / stroke
+      via `currentColor`).
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Icon component instance from the icon-set library; size bound to a "size" component property
+    code:
+      slot: root
+      semantic: svg
+    a11y:
+      hint: >-
+        Decorative icons set `aria-hidden="true"` (and no role).
+        Meaningful icons carry `role="img"` plus `aria-label`
+        describing the meaning ("Sort ascending", "Open menu").
+        Never both `aria-hidden="true"` and `role="img"` — they
+        contradict.
+    tokens:
+      color:
+        foreground: color.text.primary
+      typography:
+        size: text.md
+
+  - id: stroke
+    required: false
+    purpose: >-
+      The vector outline channel for line-weight glyphs. Bound
+      to `currentColor` so token-colour flows through, with
+      stroke-width as a CSS-variable for size-stepped weights.
+      Optional because filled-only icons (fill family) declare
+      no stroke.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 1
+      span: 6
+    figma:
+      type: frame
+      hint: Vector path with stroke; stroke colour set to "currentColor" via icon-set token
+    code:
+      slot: stroke
+      semantic: svg-path
+    a11y:
+      hint: >-
+        Vector paths inside an SVG are presentational by
+        default. No role needed; the SVG root carries the
+        accessible name via `aria-label` when meaningful.
+    tokens:
+      color:
+        foreground: color.text.primary
+
+  - id: fill
+    required: false
+    purpose: >-
+      The vector fill channel for solid-glyph treatments. Bound
+      to `currentColor` so token-colour flows through. Optional
+      because outline-only icons declare no fill.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 2
+      span: 6
+    figma:
+      type: frame
+      hint: Vector path with fill; fill colour set to "currentColor" via icon-set token
+    code:
+      slot: fill
+      semantic: svg-path
+    a11y:
+      hint: >-
+        Vector paths inside an SVG are presentational by
+        default. No role needed.
+    tokens:
+      color:
+        foreground: color.text.primary
+
+axes:
+  variants:
+    - outline
+    - solid
+  properties:
+    - name: size
+      kind: enum
+      values: [xs, sm, md, lg, xl]
+    - { name: meaningful, kind: primitive, of: boolean }
+    - { name: hasStroke, kind: primitive, of: boolean }
+  states:
+    interactive: []
+    data:
+      - idle
+      - inheriting
+      - explicit-color
+      - reduced-motion
+
+mismatches:
+  - figma: A specific icon variant (e.g. "Search-outline-md") drawn as a separate component
+    code: A single Icon component with a `name` prop selecting from an icon registry
+    consequence: >-
+      Designers ship N × M Figma components (every icon × every
+      size); developers ship one Icon component with a name and a
+      size prop. The Figma roster grows linearly with the icon
+      set; the code roster stays at one. Drift is invisible
+      because the Figma file does not enumerate "missing icons"
+      against the code registry.
+    correct: >-
+      Model Icon as a single component with `name` and `size`
+      props in both Figma and code. The Figma component carries
+      a "name" component property bound to the icon-set token
+      list; the code Icon imports from the same registry.
+
+  - figma: Icon size hard-coded as a px value
+    code: Size driven by a token (`text.md`, or icon-specific tokens like `--ui-icon-md`)
+    consequence: >-
+      Designers set `width: 16px` directly on the icon frame;
+      developers bind size to a token. When the type-scale
+      rebalances, the Figma file lags and the shipped icon
+      visually disagrees with the surrounding text size.
+    correct: >-
+      Bind size to a token in both surfaces. Figma uses a "size"
+      component property mapped to `xs / sm / md / lg / xl`;
+      code uses the same enum. Icon size matches the host text
+      size by default and falls back to explicit per-host
+      overrides only when documented.
+
+  - figma: Icon colour drawn as a fixed hex
+    code: Colour driven by `currentColor` inheriting from the host text colour
+    consequence: >-
+      Designers fix a black or grey hue in the Figma frame;
+      developers ship `fill="currentColor"` so the colour
+      inherits from the host. The two diverge any time the host
+      text colour is not the default; theming (light / dark)
+      breaks the design-fidelity claim.
+    correct: >-
+      Use `currentColor` for fill and stroke in both Figma
+      icon-set tokens and code. The icon colour follows the
+      host text colour automatically; explicit colour overrides
+      go through a documented `color` prop, not by hard-coding
+      a hex.
+
+  - figma: Meaningful icon drawn without an accompanying label
+    code: A bare `<svg>` with no `role="img"` and no `aria-label`
+    consequence: >-
+      Designers draw an icon that genuinely carries meaning (a
+      "lock" indicating account locked, a "warning" indicating
+      a risk) but provide no label. Developers ship the SVG as
+      decorative; SR users encounter the locked / warning
+      glyph without any AT signal.
+    correct: >-
+      Distinguish meaningful from decorative at design time. The
+      Figma component property "meaningful" toggles the
+      accessible-name field. Code reads the prop to either set
+      `aria-hidden="true"` (decorative) or `role="img"` plus
+      `aria-label` (meaningful). The two surfaces share the same
+      flag.
+
+mistakes:
+  - id: icon-meaningful-no-label
+    severity: blocker
+    title: Meaningful icon without an accessible name
+    description: >-
+      The icon carries semantic meaning (lock, warning, error,
+      external) but has no `role="img"` and no `aria-label`.
+      Sighted users see the glyph; SR users encounter nothing
+      where the meaning lives.
+    fix: >-
+      Set `role="img"` plus `aria-label` describing the icon's
+      meaning. Never label the glyph itself ("checkmark",
+      "exclamation-mark") — label the meaning ("Verified",
+      "Warning"). When the icon is the entire content of a
+      larger element (icon-only button, dot badge), move the
+      accessible name to the host instead.
+
+  - id: icon-decorative-not-hidden
+    severity: major
+    title: Decorative icon without `aria-hidden`
+    description: >-
+      A decorative icon paired with a visible label (button +
+      icon-leading, link + external-arrow, badge + severity
+      glyph) lacks `aria-hidden="true"`. SR reads "checkmark
+      Save" or "exclamation-mark Warning" — verbose echo of
+      the visible label, no added information.
+    fix: >-
+      Set `aria-hidden="true"` on every decorative icon. The
+      visible label carries the accessible name; the icon is
+      visual reinforcement only. Document the decorative-vs-
+      meaningful distinction in the host component's a11y hints
+      so authors do not flip the flag inconsistently.
+
+  - id: icon-color-not-currentcolor
+    severity: major
+    title: Icon colour hard-coded
+    description: >-
+      The icon's `fill` or `stroke` is set to a fixed hex or
+      named colour. Theming (light / dark, brand swap) breaks
+      because the icon stays its hard-coded hue while the
+      surrounding text shifts. The icon visually disconnects
+      from its host.
+    fix: >-
+      Use `fill="currentColor"` (filled icons) or
+      `stroke="currentColor"` (outline icons) in the SVG. The
+      colour inherits from the CSS `color` property of the host,
+      following theme automatically. Explicit per-instance
+      colour overrides go through a documented `color` prop or
+      a host-level CSS variable, not through hard-coded hex
+      values inside the SVG.
+
+  - id: icon-conflicting-aria-roles
+    severity: blocker
+    title: Both `aria-hidden="true"` and `role="img"` set
+    description: >-
+      The icon carries both `aria-hidden="true"` (says: ignore
+      me) and `role="img"` plus `aria-label` (says: read this
+      label). Browsers and SR resolve the contradiction
+      inconsistently; the canonical semantic is undefined.
+    fix: >-
+      Pick one. Decorative icons set `aria-hidden="true"` and
+      no role / label. Meaningful icons set `role="img"` plus
+      `aria-label` and no `aria-hidden`. Lint the component to
+      reject the combination.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-icon>` host with `name` attribute selecting from a registry; renders an inline `<svg>` with `viewBox` from the registry entry; size attribute mapped to a CSS variable
+    variantMechanism: attributes (`name="search"`, `size="md"`, `meaningful`); presence of `meaningful` toggles `role="img"` and consumes `label` attribute as the accessible name
+  react:
+    structureMechanism: Icon component imports from a registry (lucide-react, react-icons, custom set) and renders an inline `<svg>`; libraries include Heroicons, Phosphor Icons, Tabler Icons, Lucide
+    variantMechanism: 'props (`name`, `size`, `meaningful`); the `aria-label` prop pairs with `meaningful: true`; size prop maps to `width` and `height` on the svg root'
+  angularSignals:
+    structureMechanism: Angular component with `<ng-content>` projecting a chosen SVG, or input<IconName>() selecting from a registry; `[attr.role]` and `[attr.aria-hidden]` driven by signals
+    variantMechanism: input<IconName>(); input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>(); input<boolean>('meaningful') toggling role
+  vue:
+    structureMechanism: Single-file component with named slots or registry-driven rendering; v-bind for size and aria attributes
+    variantMechanism: defineProps with literal-union types; conditional aria-hidden via computed prop based on meaningful flag
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    rotate: motion.duration.slow
+    pulse: motion.duration.base
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, default icon size collapses one step
+        in the size scale (md → sm) for inline-with-text
+        contexts. Standalone icons in icon-only buttons keep
+        their explicit size to preserve hit-target.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps outline / solid icon family.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps xs / sm / md / lg / xl. Bound to a token; never px.
+  - figma: Name
+    code: name
+    kind: text
+    notes: Selects an icon from the registry; both surfaces share the registry roster.
+  - figma: Meaningful
+    code: meaningful
+    kind: boolean
+    notes: When true, root carries role=img and the consumer must supply an aria-label.
+  - figma: Has Stroke
+    code: hasStroke
+    kind: boolean
+  - figma: Stroke
+    code: stroke
+    kind: slot
+    notes: Vector outline path; renders only for outline-family icons.
+  - figma: Fill
+    code: fill
+    kind: slot
+    notes: Vector fill path; renders for solid-family icons.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Direction-bearing icons (arrows, chevrons, back / forward
+      glyphs) flip horizontally under `dir="rtl"`. Use the SVG
+      `transform` attribute or a CSS `transform: scaleX(-1)`
+      keyed off the `dir` attribute. Direction-neutral icons
+      (search, settings, gear) render identically in both
+      directions. Direction-bearing icons that depict a
+      written-language convention (numerals, currency symbols)
+      do NOT flip.
+  textExpansion: >-
+    Icons themselves do not text-expand. The `aria-label` on
+    meaningful icons may grow 30–50 % in German and Romance
+    languages; SR reads the label without truncation, but
+    visually the label is invisible (it lives in the
+    accessibility tree only).
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (decorative icon)
+      expected: >-
+        Decorative icons are not in the tab order. Tab moves
+        through the host element; the icon is presentational
+        and does not receive focus.
+    - keys: Tab (icon hosted inside a focusable element)
+      expected: >-
+        Focus enters the host (button, link, list-item). The
+        icon does not separately participate; the host carries
+        the focus ring.
+  announcements:
+    - trigger: SR encounters a decorative icon
+      expected: >-
+        Silent. `aria-hidden="true"` excludes the icon from the
+        accessibility tree; the host's accessible name reads
+        without icon-name interference.
+    - trigger: SR encounters a meaningful icon
+      expected: >-
+        SR announces the `aria-label` value, prefixed by the
+        role announcement ("graphic, Open menu" or "image,
+        Verified"). The label describes the icon's meaning,
+        not the glyph shape.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - svg-img-alt
+    - role-img-alt
+    - aria-allowed-attr
+    - aria-hidden-focus
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Decorative icons set `aria-hidden="true"` and no role.
+        Meaningful icons set `role="img"` plus `aria-label` and
+        no `aria-hidden`. Never both — the combination is a
+        contradiction.
+      source: apg
+      sourceRef: 'WAI-ARIA aria-hidden + role=img patterns'
+      consequence: >-
+        Without the binary distinction, browsers and SR resolve
+        the combined attributes inconsistently. Some surfaces
+        announce the label twice (once via role=img, once via
+        the host); others ignore the icon entirely. The contract
+        gives every consumer a deterministic announcement.
+    - rule: >-
+        SVG `fill` and `stroke` are bound to `currentColor` so
+        token-colour flows through CSS `color` inheritance.
+        Hard-coded hex values in the SVG are reserved for
+        brand-glyph cases documented at the host level.
+      source: html-spec
+      sourceRef: 'HTML inline SVG with currentColor keyword (W3C SVG + CSS Color)'
+      consequence: >-
+        Hard-coded hex breaks theming and forces icon-by-icon
+        edits when the palette shifts. `currentColor` is the
+        cheapest way to keep icons in step with their host text
+        across light / dark / brand-swap themes without
+        per-icon overrides.
+    - rule: >-
+        Icon-only buttons / links / badges (no visible label)
+        carry the accessible name on the host element via
+        `aria-label`, never on the icon itself. The icon stays
+        decorative; the host carries the meaning.
+      source: canon
+      consequence: >-
+        Putting `aria-label` on the icon when it sits inside a
+        button creates a name-from-content collision —
+        SR-output may include both labels in unpredictable
+        order. The host is the activator; the host owns the
+        name.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: 'svg / img'
+      note: >-
+        Native `<svg>` is the canonical icon-shape for inline
+        glyphs; `<img>` with an SVG src is acceptable for
+        non-inheriting icons but loses `currentColor` and
+        token-driven sizing.
+    - system: Material 3
+      theirTerm: 'Icon (Material Symbols)'
+      note: >-
+        Material Symbols ships variable-axis icons (weight,
+        grade, optical-size) on top of the canonical contract.
+        Implementation audits document the per-axis mapping.
+    - system: Polaris
+      theirTerm: Icon
+    - system: Carbon
+      theirTerm: Icon
+    - system: Atlassian
+      theirTerm: Icon
+
+sources:
+  - https://www.w3.org/TR/wai-aria-1.2/#img
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/svg
+  - https://developer.mozilla.org/en-US/docs/Web/CSS/color_value#currentcolor_keyword
+  - https://m3.material.io/styles/icons/applying-icons
+  - https://polaris.shopify.com/components/images-and-icons/icon
+  - https://carbondesignsystem.com/elements/icons/library/
+  - https://atlassian.design/components/icon/icon-explorer
+  - https://www.radix-ui.com/icons
+  - https://lucide.dev/
+
+lastReviewed: '2026-05-03'

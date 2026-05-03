@@ -487,6 +487,12 @@ whenToUse:
         activation. A "links-list rendered as a menu" pattern is
         either a real menu (MenuButton + menu items) or a
         navigation list with `<a>` items — never both.
+    - id: icon
+      difference: >-
+        `Icon` is the SVG-glyph primitive that may sit inside a Link
+        as a decorative cue (external-link arrow, download glyph).
+        The Link carries the accessible name through its visible
+        text; the Icon stays decorative with `aria-hidden="true"`.
 
 contracts:
   nonNegotiable:
