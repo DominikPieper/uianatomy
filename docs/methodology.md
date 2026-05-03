@@ -4,7 +4,7 @@ How component anatomies are researched, written, and validated.
 
 ## Core principle: canon first, implementations later
 
-The canonical anatomy of a component is documented *without reference to any specific implementation*, including Dominik Pieper's own libraries. Specific implementations are documented separately, after the canonical reference is stable.
+The canonical anatomy of a component is documented *without reference to any specific implementation*, including the maintainer's own libraries. Specific implementations are documented separately, after the canonical reference is stable.
 
 This protects against a subtle bias: when you write canonical documentation while having a specific implementation in mind, the canon ends up shaped by that implementation rather than by accumulated industry wisdom. The canon must be *unbiased* to be useful as a reference for auditing implementations.
 
