@@ -102,6 +102,79 @@ export const CANON_INTERACTIVE_STATES = [
   'current',
 ] as const;
 
+// Library-version table — single pin per library the canon refers to.
+// Phase-1 (ADR-028) ships the structure with version + verifiedAt
+// optional. The user fills them in during a verification cycle by
+// re-checking each library's current major version against canonical
+// claims. Bumping a library is a one-line edit here; canon-auditor
+// compares component.lastReviewed against verifiedAt to flag stale
+// component-level claims.
+export interface LibraryVersionEntry {
+  /** Human-readable name as cited in prose (frameworkMap, notes, vocabularyDrift). */
+  readonly name: string;
+  /** Canonical upstream URL (docs / project landing). */
+  readonly url: string;
+  /** Pinned version (semver, calver, or release-tag). Undefined until verified. */
+  readonly version?: string;
+  /** ISO date YYYY-MM-DD when the version was last verified upstream. Pairs with `version`. */
+  readonly verifiedAt?: string;
+}
+
+export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
+  radix: {
+    name: 'Radix UI Primitives',
+    url: 'https://www.radix-ui.com/primitives',
+  },
+  reactAria: {
+    name: 'React Aria',
+    url: 'https://react-spectrum.adobe.com/react-aria/',
+  },
+  headlessUi: {
+    name: 'Headless UI',
+    url: 'https://headlessui.com/',
+  },
+  spectrum: {
+    name: 'Spectrum Web Components',
+    url: 'https://opensource.adobe.com/spectrum-web-components/',
+  },
+  polaris: {
+    name: 'Shopify Polaris',
+    url: 'https://polaris.shopify.com/',
+  },
+  carbon: {
+    name: 'IBM Carbon Design System',
+    url: 'https://carbondesignsystem.com/',
+  },
+  atlassian: {
+    name: 'Atlassian Design System',
+    url: 'https://atlassian.design/',
+  },
+  material3: {
+    name: 'Material Design 3',
+    url: 'https://m3.material.io/',
+  },
+  govuk: {
+    name: 'GOV.UK Design System',
+    url: 'https://design-system.service.gov.uk/',
+  },
+  sonner: {
+    name: 'Sonner',
+    url: 'https://sonner.emilkowal.ski/',
+  },
+  vaul: {
+    name: 'Vaul',
+    url: 'https://vaul.emilkowal.ski/',
+  },
+  reach: {
+    name: 'Reach UI',
+    url: 'https://reach.tech/',
+  },
+  angularCdk: {
+    name: 'Angular CDK',
+    url: 'https://material.angular.io/cdk/',
+  },
+} as const;
+
 export interface CanonicalVocabularies {
   spacing: readonly string[];
   radius: readonly string[];
@@ -116,6 +189,7 @@ export interface CanonicalVocabularies {
   propertyVocab: Record<string, readonly string[]>;
   propertyBounded: Record<string, readonly string[]>;
   interactiveStates: readonly string[];
+  libraryVersions: Readonly<Record<string, LibraryVersionEntry>>;
 }
 
 export function getCanonicalVocabularies(): CanonicalVocabularies {
@@ -133,5 +207,6 @@ export function getCanonicalVocabularies(): CanonicalVocabularies {
     propertyVocab: CANON_PROPERTY_VOCAB,
     propertyBounded: CANON_PROPERTY_BOUNDED,
     interactiveStates: CANON_INTERACTIVE_STATES,
+    libraryVersions: LIBRARY_VERSIONS,
   };
 }

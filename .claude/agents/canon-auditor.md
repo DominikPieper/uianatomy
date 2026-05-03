@@ -97,6 +97,19 @@ Non-canonical token = **major**.
 
 Search the YAML for library names: `Radix`, `React Aria`, `Headless UI`, `Spectrum`, `Polaris`, `Carbon`, `Material`, `Atlassian`, `GOV.UK`, `Sonner`, `Reach`. For each occurrence, check for a date-stamp or version. Bare claims older than 6 months from `git log -1 --format=%cs content/components/<id>.yaml` = **minor**.
 
+### G. Library-version-staleness vs `LIBRARY_VERSIONS` (ADR-028)
+
+`shared/src/vocabulary.ts` exports a `LIBRARY_VERSIONS` table — the canonical pin per library. Each entry: `{ name, url, version?, verifiedAt? }`. Cross-check the audited component against this table.
+
+For each library cited in `frameworkMap` prose or `contracts.vocabularyDrift`:
+
+- **Library cited but key not in `LIBRARY_VERSIONS`** — flag **minor**. Either the table needs an entry (file an ADR-028-followup) or the citation is fabricated.
+- **`LIBRARY_VERSIONS[key].version` and `verifiedAt` are undefined** — phase-1 baseline-pending. Do **not** flag staleness; report `libraryVersionBaseline: 'pending'` in the output.
+- **`verifiedAt` set, and `verifiedAt > component.lastReviewed`** — library was bumped after the component was last reviewed; library-specific claims potentially stale → flag **minor** with the affected library names.
+- **`verifiedAt` set, but the component does not declare `lastReviewed`** — flag **major** (the component cannot prove it was reviewed at any point).
+
+Map prose-form library names to `LIBRARY_VERSIONS` keys via the entry's `name` field (case-insensitive substring match: "Radix" → key `radix`, "React Aria" → key `reactAria`). Unmatched citations go in the report's `crossComponent.unmatchedLibraryCitations` array.
+
 ## Output format
 
 Return one JSON-serializable block. **Strict JSON inside a fenced ` ```json ` block.** No prose outside the block.

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import axe from 'axe-core';
 import { loadComponents, loadPatterns } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
+import { LIBRARY_VERSIONS } from '../src/vocabulary.js';
 import {
   CANON_SPACING,
   CANON_RADIUS,
@@ -283,6 +284,34 @@ describe('cross-component consistency', () => {
             `${c.id}: a11yAcceptance.axeRules contains "${ruleId}" — not present in axe-core 4.10.2 ruleset (likely a typo, renamed rule, or hallucinated id). Verify against \`import('axe-core').default.getRules()\`.`,
           );
         }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('LIBRARY_VERSIONS table is well-formed (ADR-028)', () => {
+    const failures: string[] = [];
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const keyRegex = /^[a-z][a-zA-Z0-9]*$/;
+    for (const [key, entry] of Object.entries(LIBRARY_VERSIONS)) {
+      if (!keyRegex.test(key)) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: key must be camelCase (lowercase first letter, alphanumeric only).`);
+      }
+      if (!entry.name || entry.name.trim().length === 0) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: name is required and non-empty.`);
+      }
+      if (!entry.url || !/^https?:\/\//.test(entry.url)) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: url must be an http(s) URL.`);
+      }
+      // Cross-refine: version and verifiedAt are paired — either both set or both unset.
+      if (entry.version !== undefined && entry.verifiedAt === undefined) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: version is set but verifiedAt is missing.`);
+      }
+      if (entry.verifiedAt !== undefined && entry.version === undefined) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: verifiedAt is set but version is missing.`);
+      }
+      if (entry.verifiedAt !== undefined && !dateRegex.test(entry.verifiedAt)) {
+        failures.push(`LIBRARY_VERSIONS["${key}"]: verifiedAt must be YYYY-MM-DD; got "${entry.verifiedAt}".`);
       }
     }
     expect(failures, failures.join('\n')).toEqual([]);
