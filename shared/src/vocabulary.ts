@@ -175,6 +175,41 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
   },
 } as const;
 
+// P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
+// vocabularyDrift.system field and frameworkMap prose mention libraries
+// in human-readable form (e.g. "Radix" or "React Aria"); these aliases
+// let the consistency-test verify every mention maps to a known
+// LIBRARY_VERSIONS entry. Match is case-insensitive.
+export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  radix: ['Radix UI', 'Radix'],
+  reactAria: ['React Aria', 'React Spectrum'],
+  headlessUi: ['Headless UI', 'Vue Headless UI'],
+  spectrum: ['Spectrum Web Components', 'Adobe Spectrum'],
+  polaris: ['Shopify Polaris', 'Polaris'],
+  carbon: ['IBM Carbon', 'Carbon'],
+  atlassian: ['Atlassian Design System', 'Atlassian'],
+  material3: ['Material Design 3', 'Material 3', 'Material UI', 'Material'],
+  govuk: ['GOV.UK Design System', 'GOV.UK'],
+  sonner: ['Sonner'],
+  vaul: ['Vaul'],
+  reach: ['Reach UI', 'Reach'],
+  angularCdk: ['Angular CDK', 'Angular Material'],
+} as const;
+
+// Spec/platform/standards bodies that legitimately appear as
+// vocabularyDrift.system without belonging to LIBRARY_VERSIONS.
+export const KNOWN_NON_LIBRARY_SYSTEMS = [
+  'HTML',
+  'WAI-ARIA',
+  'APG',
+  'WCAG',
+  'Apple HIG',
+  'macOS HIG',
+  'Windows UX',
+  'Android Material',
+  'GOV.UK',
+] as const;
+
 export interface CanonicalVocabularies {
   spacing: readonly string[];
   radius: readonly string[];

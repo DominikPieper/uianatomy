@@ -4,7 +4,11 @@ import { dirname, join } from 'node:path';
 import axe from 'axe-core';
 import { loadComponents, loadPatterns } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
-import { LIBRARY_VERSIONS } from '../src/vocabulary.js';
+import {
+  LIBRARY_VERSIONS,
+  LIBRARY_NAME_ALIASES,
+  KNOWN_NON_LIBRARY_SYSTEMS,
+} from '../src/vocabulary.js';
 import {
   CANON_SPACING,
   CANON_RADIUS,
@@ -312,6 +316,55 @@ describe('cross-component consistency', () => {
       }
       if (entry.verifiedAt !== undefined && !dateRegex.test(entry.verifiedAt)) {
         failures.push(`LIBRARY_VERSIONS["${key}"]: verifiedAt must be YYYY-MM-DD; got "${entry.verifiedAt}".`);
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('LIBRARY_NAME_ALIASES keys mirror LIBRARY_VERSIONS keys (ADR-028 phase-3)', () => {
+    const versionKeys = new Set(Object.keys(LIBRARY_VERSIONS));
+    const aliasKeys = new Set(Object.keys(LIBRARY_NAME_ALIASES));
+    expect([...aliasKeys].sort()).toEqual([...versionKeys].sort());
+  });
+
+  it('every contracts.vocabularyDrift[].system maps to a known library or non-library spec (P5-35)', async () => {
+    const components = await loadComponents({ contentDir });
+    const patterns = await loadPatterns({ patternsDir });
+
+    const allAliases = new Set<string>();
+    for (const aliases of Object.values(LIBRARY_NAME_ALIASES)) {
+      for (const alias of aliases) allAliases.add(alias.toLowerCase());
+    }
+    for (const known of KNOWN_NON_LIBRARY_SYSTEMS) {
+      allAliases.add(known.toLowerCase());
+    }
+
+    const matches = (system: string): boolean => {
+      // Composite ("Radix / Headless UI") is acceptable if at least one part matches.
+      const parts = system.split(/\s*[/+]\s*|\s+and\s+/i).map((p) => p.trim());
+      for (const part of parts) {
+        if (allAliases.has(part.toLowerCase())) return true;
+      }
+      // Whole-string fallback for systems that contain slashes intentionally (e.g. "GOV.UK").
+      return allAliases.has(system.toLowerCase());
+    };
+
+    const failures: string[] = [];
+    const yaml: Array<{ id: string; kind: 'component' | 'pattern'; drift: { system: string }[] | undefined }> = [];
+    for (const c of components.values()) {
+      yaml.push({ id: c.id, kind: 'component', drift: c.contracts?.vocabularyDrift });
+    }
+    for (const p of patterns.values()) {
+      yaml.push({ id: p.id, kind: 'pattern', drift: (p as { contracts?: { vocabularyDrift?: { system: string }[] } }).contracts?.vocabularyDrift });
+    }
+
+    for (const item of yaml) {
+      for (const entry of item.drift ?? []) {
+        if (!matches(entry.system)) {
+          failures.push(
+            `${item.kind}/${item.id}: contracts.vocabularyDrift.system "${entry.system}" matches no LIBRARY_NAME_ALIASES alias and no KNOWN_NON_LIBRARY_SYSTEMS entry. Add an alias in shared/src/vocabulary.ts or correct the citation.`,
+          );
+        }
       }
     }
     expect(failures, failures.join('\n')).toEqual([]);
