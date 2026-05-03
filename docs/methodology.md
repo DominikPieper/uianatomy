@@ -114,6 +114,21 @@ A real risk in long-form curated reference sites is *drift* — component 12 has
 - **Anchor on previous components.** When writing a new component, use a previously-finalized component (e.g., Card or Modal) as a structural anchor.
 - **Periodic re-read.** Every 5 components, re-read the earlier ones for tone and depth alignment.
 
+## Versioning + changelog editorial trigger
+
+The schema's `since` and `changelog` fields ([schema.md → Versioning](./schema.md#versioning-optional)) are dormant by editorial design until a component has a published change worth versioning. As of 2026-05-03 no canonical component declares either field, and the `get_changelog` MCP tool returns `null` for all 27 components — that is the intended state.
+
+When a qualifying edit lands, the editor writes the changelog entry. Qualifying edits:
+
+- **Schema rename of a published field.** A slot, axis, variant, property, or event renames to a new canonical name. The previous name moves to `variantDeprecations` / per-property `deprecated` / per-slot `deprecated` with `replacement` pointing at the new name. Bumps MAJOR or MINOR depending on whether the rename is breaking.
+- **Mistake correction after publish.** A `mistakes[].id` is removed (no longer a real failure mode) or its `severity` is changed in a way that invalidates prior reader assumptions.
+- **Canonical-name change of the component itself.** The `name` field changes (e.g. "Notification" → "Toast"). Bumps MAJOR.
+- **Variant / property / event removed.** Anything that was in the canon and is now not. Bumps MAJOR.
+
+Non-qualifying edits (prose rewrites, additive contracts / mistakes / mismatches, `lastReviewed` bumps, new components) flow through normal commit history and do not land in `changelog[]`. Adding a new component to the canon is a project-level event tracked elsewhere (the `since` field on a brand-new component starts blank — it gets populated on its first qualifying edit, not on initial publication).
+
+The downstream consumer pattern (implementation audits, design-system bridges, MCP agents) caches `(componentId, lastSeenVersion)` and re-runs audits whenever `since` advances past the cached value. The `summary` text on each changelog entry tells the consumer whether the bump is breaking or additive; that is enough for triage.
+
 ## What this methodology is not
 
 - Not academic. We don't cite every claim like a paper.
