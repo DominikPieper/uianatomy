@@ -284,9 +284,12 @@ export function createServer(): McpServer {
 
   server.tool(
     'list_implementations',
-    'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId. **Takes no arguments — returns the full audit roster.** To see audits for a single canonical component, call `get_implementations({ componentId })` instead. Today the roster covers Modal × {radix, headlessui, cdk}; other components have no audits yet.',
-    {},
-    async () => {
+    'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId. Optional `componentId` filter narrows the roster to a single canonical component (returns an empty array when no audits exist for that component); optional `libraryId` filter narrows to a single library. Use this tool for the lightweight summary-row shape; use `get_implementations({ componentId })` to get full Implementation records (exampleCode + divergence list + rationale). Today the roster covers Modal × {radix, headlessui, cdk}; other components have no audits yet.',
+    {
+      componentId: z.string().optional(),
+      libraryId: z.string().optional(),
+    },
+    async ({ componentId, libraryId }) => {
       const byLibrary = await getImplementations();
       const rows: Array<{
         libraryId: string;
@@ -295,11 +298,13 @@ export function createServer(): McpServer {
         divergenceCount: number;
         lastReviewed: string;
       }> = [];
-      for (const [libraryId, byComponent] of byLibrary) {
-        for (const [componentId, impl] of byComponent) {
+      for (const [lib, byComponent] of byLibrary) {
+        if (libraryId !== undefined && lib !== libraryId) continue;
+        for (const [comp, impl] of byComponent) {
+          if (componentId !== undefined && comp !== componentId) continue;
           rows.push({
-            libraryId,
-            componentId,
+            libraryId: lib,
+            componentId: comp,
             componentName: impl.componentName,
             divergenceCount: impl.divergence?.length ?? 0,
             lastReviewed: impl.lastReviewed,

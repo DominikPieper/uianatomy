@@ -305,6 +305,36 @@ describe('mcp server', () => {
     expect(libs).toEqual(['cdk', 'headlessui', 'radix']);
   });
 
+  it('list_implementations({ componentId }) filters to that component only', async () => {
+    const { client } = await connect();
+    const modalRes = await client.callTool({
+      name: 'list_implementations',
+      arguments: { componentId: 'modal' },
+    });
+    const modalRows = parseJson(modalRes as any);
+    expect(modalRows.length).toBe(3);
+    for (const row of modalRows) expect(row.componentId).toBe('modal');
+
+    const buttonRes = await client.callTool({
+      name: 'list_implementations',
+      arguments: { componentId: 'button' },
+    });
+    const buttonRows = parseJson(buttonRes as any);
+    expect(buttonRows).toEqual([]);
+  });
+
+  it('list_implementations({ libraryId }) filters to that library only', async () => {
+    const { client } = await connect();
+    const radixRes = await client.callTool({
+      name: 'list_implementations',
+      arguments: { libraryId: 'radix' },
+    });
+    const radixRows = parseJson(radixRes as any);
+    expect(radixRows.length).toBe(1);
+    expect(radixRows[0].libraryId).toBe('radix');
+    expect(radixRows[0].componentId).toBe('modal');
+  });
+
   it('get_implementations(modal) returns all three library audits', async () => {
     const { client } = await connect();
     const result = await client.callTool({
