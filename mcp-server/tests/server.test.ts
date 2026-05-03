@@ -49,6 +49,7 @@ describe('mcp server', () => {
         'get_anatomy',
         'get_axes',
         'get_canonical_vocabularies',
+        'get_contracts',
         'get_changelog',
         'get_common_mistakes',
         'get_component',
@@ -339,6 +340,53 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     expect(parsed).toEqual([]);
+  });
+
+  it('get_contracts returns accordion nonNegotiable entries (component path)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_contracts',
+      arguments: { id: 'accordion' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('accordion');
+    expect(parsed.kind).toBe('component');
+    expect(parsed.contracts.nonNegotiable.length).toBeGreaterThanOrEqual(2);
+    for (const c of parsed.contracts.nonNegotiable) expect(c.source).toBe('apg');
+  });
+
+  it('get_contracts returns confirmation-flow contracts (pattern path)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_contracts',
+      arguments: { id: 'confirmation-flow' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('confirmation-flow');
+    expect(parsed.kind).toBe('pattern');
+    const rules = parsed.contracts.nonNegotiable.map((c: any) => c.rule);
+    expect(rules.some((r: string) => r.includes('alertdialog'))).toBe(true);
+  });
+
+  it('get_contracts returns null contracts for components without a block', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_contracts',
+      arguments: { id: 'card' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('card');
+    expect(parsed.kind).toBe('component');
+    expect(parsed.contracts).toBeNull();
+  });
+
+  it('get_contracts errors on unknown id (neither component nor pattern)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_contracts',
+      arguments: { id: 'definitely-not-anything' },
+    });
+    expect((result as any).isError).toBe(true);
   });
 
   it('get_canonical_vocabularies returns the master vocabulary set', async () => {

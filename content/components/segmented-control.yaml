@@ -574,16 +574,35 @@ whenToUse:
         (`tablist` vs `radiogroup`) and the keyboard model
         (Tabs may use manual activation; SegmentedControl
         always uses auto-activation per APG radiogroup).
+contracts:
+  nonNegotiable:
+    - rule: >-
+        SegmentedControl uses `role="radiogroup"` for view-toggle
+        semantics — exactly one option active at a time, exclusive
+        choice. `role="tablist"` is reserved for content-switching
+        tabs.
+      source: apg
+      sourceRef: 'APG: Radio Group pattern'
+      consequence: >-
+        A tablist styled as a segmented control for what is really
+        a view-toggle breaks the SR contract — assistive tech
+        announces the surface as a tab system and users expect
+        keyboard semantics that do not apply.
+  vocabularyDrift:
+    - system: Apple HIG
+      theirTerm: Segmented Control
+      note: 'Canonical name match.'
+    - system: Material 3
+      theirTerm: Segmented Buttons
+    - system: Polaris
+      theirTerm: ButtonGroup (segmented styling)
+    - system: Carbon
+      theirTerm: Content Switcher
+
 notes: >-
-  SegmentedControl vocabulary varies: Apple HIG calls this
-  "Segmented Control" (the canonical name); Material 3 calls
-  it "Segmented Buttons"; Polaris uses "ButtonGroup" with
-  segmented styling; Carbon calls it "Content Switcher". The
-  canonical name here matches Apple HIG and Material 3
-  vocabulary. The role-vs-pattern distinction (radiogroup vs
-  tablist) is the most-overlooked semantic decision — many
-  implementations ship a tablist styled as segmented for
-  what is really a view-toggle, breaking the SR contract.
+  The canonical name matches Apple HIG and Material 3 vocabulary.
+  The role-vs-pattern distinction (radiogroup vs tablist) is the
+  most-overlooked semantic decision in implementations.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/radio/

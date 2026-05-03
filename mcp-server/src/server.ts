@@ -394,6 +394,21 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    'get_contracts',
+    'Return the contracts block for a component or pattern: `{ id, kind: "component" | "pattern", contracts: { nonNegotiable[], vocabularyDrift[] } | null }`. `nonNegotiable` is hard-binding rules with `source` (apg | wcag | html-spec | platform | canon), optional `sourceRef`, and a `consequence` describing what breaks on violation. `vocabularyDrift` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts. Errors when the id resolves to neither a component nor a pattern.',
+    { id: z.string() },
+    async ({ id }) => {
+      const components = await getComponents();
+      const patterns = await getPatterns();
+      const c = components.get(id);
+      if (c) return jsonResult({ id, kind: 'component' as const, contracts: c.contracts ?? null });
+      const p = patterns.get(id);
+      if (p) return jsonResult({ id, kind: 'pattern' as const, contracts: p.contracts ?? null });
+      return notFound(id);
+    },
+  );
+
+  server.tool(
     'get_canonical_vocabularies',
     'Return the canonical token / motion / breakpoint / property / interactive-state vocabularies that YAML values must draw from. Same source the consistency-test enforces. Useful for resolving values like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or for surfacing the allowed enum to a downstream UI. Returns `{ spacing, radius, color, elevation, typography, motion: { durations, easing }, breakpoint, propertyVocab, propertyBounded, interactiveStates }`.',
     {},

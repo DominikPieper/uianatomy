@@ -7,7 +7,7 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 25 tools.
+The MCP server exposes this knowledge as 26 tools.
 
 ## Endpoint
 
@@ -98,6 +98,7 @@ const result = await client.callTool({
 | `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
 | `get_changelog` | `id: string` | Versioning metadata: `since` (semver) plus `changelog` array of `{ version, date, summary }`. `null` when neither is declared. |
 | `get_canonical_vocabularies` | — | Master canonical vocabularies (`spacing`, `radius`, `color`, `elevation`, `typography`, `motion: { durations, easing }`, `breakpoint`, `propertyVocab`, `propertyBounded`, `interactiveStates`) that YAML values must draw from. Same source the consistency-test enforces. Use to resolve a value like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or to surface allowed enum values to a downstream UI. |
+| `get_contracts` | `id: string` | Return the contracts block for a component **or** a pattern (single-tool dispatch by id). Returns `{ id, kind: "component" \| "pattern", contracts }`. `contracts.nonNegotiable[]` is hard-binding rules with `source: 'apg' \| 'wcag' \| 'html-spec' \| 'platform' \| 'canon'`, optional `sourceRef`, and a `consequence` describing what breaks on violation. `contracts.vocabularyDrift[]` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts; errors on unknown id. |
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
 | `get_pattern` | `id: string` | Full canonical pattern record (composition, whenToUse, decisions, mistakes, frameworkSkeletons, lastReviewed). |
 | `get_patterns_for_component` | `componentId: string` | Every pattern that composes the given canonical component, sorted by pattern name, with the role this component plays. Empty array when no pattern uses it. |
@@ -163,7 +164,7 @@ Picking between them:
 
 ## Tool loading
 
-The server returns all 25 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+The server returns all 26 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 

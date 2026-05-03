@@ -653,17 +653,33 @@ whenToUse:
         overlap if a non-modal drawer is misused as a permanent
         notice strip — reach for Banner or Alert there instead.
 
+contracts:
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Alert
+      note: >-
+        APG's "Alert" matches the canonical name (live-region
+        pattern).
+    - system: Carbon
+      theirTerm: Inline Notification
+    - system: Polaris
+      theirTerm: Banner
+    - system: Material 3
+      theirTerm: Banner
+    - system: Atlassian
+      theirTerm: Notice
+      note: >-
+        Several systems reserve "Alert" for the modal-confirmation
+        pattern that this canon calls `Modal[variant=alertdialog]`;
+        the whenToUse.vsRelated for Modal documents the distinction.
+
 notes: >-
-  Alert occupies a confusing terminology space. The W3C ARIA APG
-  uses "Alert" for the live-region pattern documented here; many
-  design systems use "Inline Notification" (Carbon), "Banner"
-  (Polaris, Material 3), or "Notice" (Atlassian) for the same
-  pattern, and reserve "Alert" for the modal-confirmation
-  pattern that this canon calls
-  `Modal[variant=alertdialog]`. The whenToUse.vsRelated for
-  Modal explicitly names this distinction. Implementation audits
-  should clarify the naming in `componentName` and document the
-  vocabulary divergence as a divergence row.
+  Alert occupies a confusing terminology space — the same pattern
+  is named "Alert", "Banner", "Inline Notification", or "Notice"
+  depending on the system, and "Alert" itself often refers to a
+  different pattern (alertdialog) elsewhere. Implementation audits
+  clarify the per-library naming in `componentName` and document
+  the vocabulary divergence as a divergence row.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/alert/

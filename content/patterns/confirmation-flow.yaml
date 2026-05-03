@@ -224,6 +224,33 @@ frameworkSkeletons:
         </ui-button>
       </div>
     </ui-modal>
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Use `role="alertdialog"` (not plain `dialog`) for
+        destructive or irreversible confirmations. The
+        alertdialog role triggers the SR's interruptive-message
+        treatment and signals to assistive tech that the user
+        must respond before continuing.
+      source: apg
+      sourceRef: 'APG: Alert and Message Dialogs pattern'
+      consequence: >-
+        A `role="dialog"` confirmation reads as a regular dialog
+        to assistive tech — SR users do not get the canonical
+        urgency signal and the destructive action loses its
+        attentional weight. The single most-cited a11y failure
+        in confirmation-flow audits.
+    - rule: >-
+        Initial focus lands on the safe (Cancel) action, never
+        on the destructive (Confirm) action.
+      source: canon
+      consequence: >-
+        Initial focus on Confirm makes Enter or Space — keys the
+        user reflexively presses to dismiss the dialog —
+        immediately commit the destructive action. Reverses the
+        dialog's "demand a decision" semantic into "trick the
+        user into committing".
+
 notes: >-
   This is the first canonical pattern entry. Prose was triangulated
   against APG (alertdialog role), Radix, Headless UI, CDK, Polaris,

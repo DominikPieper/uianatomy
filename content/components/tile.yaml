@@ -696,16 +696,38 @@ whenToUse:
         position. List is one-dimensional; tile grid is
         two-dimensional. ListItem favours dense metadata
         layouts; Tile favours image-led visual layouts.
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Tile is image-led — visual media is the primary content
+        surface. Content-led layouts (text-dominant, headline +
+        body) belong on Card; the two are not visually
+        interchangeable.
+      source: canon
+      consequence: >-
+        Tile-as-Card layouts (text-dominant tiles with optional
+        thumbnail) erode the canonical visual hierarchy and the
+        SR navigation rhythm. The image-led-vs-content-led
+        distinction is the most-load-bearing canonical decision
+        for this component and the most-overlooked in
+        implementations.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Carousel / Cards / Image list
+      note: >-
+        Material 3 splits the canonical Tile across multiple
+        components depending on layout context.
+    - system: Polaris
+      theirTerm: Thumbnail
+    - system: Carbon
+      theirTerm: Tile
+      note: 'Carbon ships clickable / selectable / expandable sub-types.'
+    - system: Atlassian
+      theirTerm: Tile
+
 notes: >-
-  Tile vocabulary varies: Material 3 calls this "Carousel"
-  (for horizontal-scrolling tile rows) or "Cards / Image
-  list"; Polaris uses "Thumbnail" for similar purposes;
-  Carbon uses "Tile" with sub-types (clickable, selectable,
-  expandable). The canonical "Tile" name and the variant
-  taxonomy here matches Carbon and Atlassian; the
-  image-led-vs-content-led distinction with Card is the
-  most-load-bearing canonical decision and the most-overlooked
-  in implementations.
+  The canonical "Tile" name and variant taxonomy match Carbon and
+  Atlassian most closely.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/grid/

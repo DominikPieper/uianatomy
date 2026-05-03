@@ -695,16 +695,29 @@ whenToUse:
         canon: render the trigger as a `MenuButton`, render
         the navigation entries inside as `Link` children.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        `role="menu"` hosts a list of commands invoked on
+        activation and uses the APG menu-keyboard contract
+        (ArrowKeys for item navigation, Enter / Space to invoke,
+        Escape / Tab to close). Form controls and arbitrary
+        interactive content do not belong inside `role="menu"`.
+      source: apg
+      sourceRef: 'APG: Menu Button pattern'
+      consequence: >-
+        Menus containing inputs or arbitrary interactive content
+        violate the role contract — SR users cannot Tab into the
+        items, and keyboard navigation breaks on both sides. Reach
+        for Popover (`role="dialog"`) when the surface needs to
+        host arbitrary content.
+
 notes: >-
-  MenuButton is the cleanest case of role-driven contract: the
-  difference between `role="menu"` (this) and `role="dialog"`
-  (Popover) is what determines the keyboard model and the
-  expected content. Many implementations conflate them, shipping
-  Popovers styled as menus or menus containing form controls;
-  the canonical reference documents the boundary as a hard
-  edge. Submenu nesting is real but Phase 1 ships single-level
-  menus only; submenu composition is filed as a follow-up
-  pattern.
+  MenuButton is the cleanest case of role-driven contract — the
+  `role="menu"` vs. `role="dialog"` boundary determines the
+  keyboard model and the expected content. Submenu nesting is real
+  but Phase 1 ships single-level menus only; submenu composition
+  is filed as a follow-up pattern.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/

@@ -429,6 +429,35 @@ frameworkSkeletons:
         <ui-link href="/sign-up" variant="inline">Create an account</ui-link>
       </p>
     </form>
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Email input carries `autocomplete="username"`; password
+        input carries `autocomplete="current-password"`. New-
+        password forms (registration, change-password) use
+        `autocomplete="new-password"` instead.
+      source: html-spec
+      sourceRef: 'HTML Living Standard — Autofill section (autocomplete tokens)'
+      consequence: >-
+        Without the canonical autocomplete tokens, password
+        managers cannot fill or save credentials reliably. Users
+        copy-paste from external managers, retype, or abandon —
+        the canonical interop contract is silently broken.
+    - rule: >-
+        Error messaging is enumeration-resistant — failed
+        authentication returns a single generic message
+        ("Invalid email or password") regardless of whether the
+        account exists. Per-account state ("This email is not
+        registered" / "Wrong password for this account") leaks
+        account-existence to attackers.
+      source: canon
+      sourceRef: 'OWASP ASVS 2.1 / NIST SP 800-63B (authentication guidance)'
+      consequence: >-
+        Account-enumeration is the foundation of credential-
+        stuffing attacks. A login form that distinguishes "no
+        account" from "wrong password" hands attackers a free
+        oracle for valid usernames.
+
 notes: >-
   This is the second canonical pattern after Confirmation Flow.
   Triangulated against APG (textbox + button patterns), HTML spec

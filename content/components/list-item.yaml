@@ -814,19 +814,40 @@ whenToUse:
         `ListItem` is text/metadata-led and arranges in a
         1D list. ListItem suits dense metadata layouts;
         Tile suits image-led visual layouts.
+contracts:
+  nonNegotiable:
+    - rule: >-
+        ListItem renders within list semantics (`<ul>`/`<ol>` or
+        `role="list"`) and preserves list rhythm — consistent
+        inline density, vertical separators or none, never
+        card-shaped elevation.
+      source: canon
+      consequence: >-
+        ListItem styled as a card breaks the list rhythm and the
+        SR list-navigation contract; users navigating by list
+        lose item count and position. The list-vs-card
+        distinction is the highest-load-bearing canonical
+        decision for this component.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: List item
+      note: >-
+        Material's single-line / two-line / three-line variants
+        match the canonical taxonomy.
+    - system: Polaris
+      theirTerm: ResourceItem (in ResourceList)
+    - system: Carbon
+      theirTerm: StructuredList
+    - system: Atlassian
+      theirTerm: List
+      note: >-
+        Atlassian layers "List" patterns on multiple base
+        primitives rather than a single ListItem.
+
 notes: >-
-  ListItem vocabulary varies: Material 3 calls this "List
-  item" (with single-line / two-line / three-line variants
-  matching the canonical taxonomy); Polaris uses
-  "ResourceList" with "ResourceItem" sub-component; Carbon
-  uses "StructuredList"; Atlassian's design system has
-  "List" patterns layered on multiple base primitives. The
-  canonical "ListItem" name and variant taxonomy here
-  matches Material 3 most closely. The list-vs-card
-  distinction is the highest-load-bearing canonical
-  decision and the most-overlooked in implementations
-  (designers often style ListItem-as-Card, breaking the
-  list rhythm).
+  The canonical "ListItem" name and variant taxonomy match Material
+  3 most closely. ListItem-as-Card is the most-overlooked failure
+  mode in implementations.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/

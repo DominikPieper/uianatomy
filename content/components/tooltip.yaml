@@ -541,16 +541,35 @@ whenToUse:
         anchored to a trigger. Toast appears without a hover or
         focus event; tooltip never appears unsolicited.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Tooltip body contains only descriptive text — no
+        buttons, links, form controls, or other interactive
+        content. Focus never enters the tooltip.
+      source: apg
+      sourceRef: 'APG: Tooltip pattern'
+      consequence: >-
+        Tooltips with interactive content violate the canonical
+        contract and break keyboard / SR access — the user can
+        see the content but cannot reach it. Reach for Popover
+        when interaction is needed.
+    - rule: >-
+        Reveal on hover OR focus; dismiss on pointer-leave AND
+        focus-leave OR Escape.
+      source: apg
+      sourceRef: 'APG: Tooltip pattern'
+      consequence: >-
+        Hover-only triggers exclude keyboard users from the
+        description entirely (WCAG 2.1.1 violation). Most-often
+        broken contract in real-world implementations.
+
 notes: >-
   Tooltip is the canonical reference's most contract-rigid
-  component. The "non-interactive content" rule is non-negotiable
-  per APG; many real-world tooltips violate it, which is exactly
-  why the canonical reference documents the boundary as a hard
-  edge and points designers needing interaction at Popover
-  instead. The reveal contract (hover OR focus, dismiss on
-  pointer-leave AND focus-leave OR Escape) is similarly strict
-  and most often broken in implementations that fire only on
-  hover.
+  component — both rules above are routinely violated, which is
+  exactly why the canonical reference documents the boundaries as
+  hard edges and points designers needing interaction at Popover
+  instead.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/

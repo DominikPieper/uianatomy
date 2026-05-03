@@ -751,19 +751,36 @@ whenToUse:
         Select-shaped trigger with action items inside; reach
         for MenuButton there.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Select implements typeahead-by-first-letter — typing a
+        character on the focused trigger jumps to and selects the
+        next option whose label starts with that character.
+      source: apg
+      sourceRef: 'APG: Listbox / Combobox-with-Listbox'
+      consequence: >-
+        The most-overlooked APG behaviour for this pattern.
+        Without it, keyboard-only users must arrow through the
+        full list to select, which scales poorly past ~10 options
+        and breaks the canonical keyboard discoverability flow.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Listbox / Combobox without textbox
+      note: 'APG uses different names for the variants.'
+    - system: HTML
+      theirTerm: native `<select>`
+      note: 'Platform-rendered picker; the `native: true` variant.'
+    - system: Vue Headless UI
+      theirTerm: Listbox
+
 notes: >-
   Select is one of the most-implemented patterns and one of the
-  most-fragmented in vocabulary: APG calls this "Listbox" or
-  "Combobox without textbox" depending on the variant; HTML
-  ships native `<select>` with platform pickers; design systems
-  layer custom implementations on top. The canonical Select
-  here covers both the native and custom paths via the `native`
-  property; implementation audits document the choice via
-  `componentName` (Radix "Select", React Aria "Select", Vue
-  Headless UI "Listbox") and divergence rows for the
-  contract differences. Typeahead-by-first-letter is the
-  most-overlooked APG behaviour; the canonical reference
-  documents it explicitly in a11yAcceptance and mistakes.
+  most-fragmented in vocabulary. The canonical Select here covers
+  both the native and custom paths via the `native` property.
+  Implementation audits document the per-library choice via
+  `componentName` (Radix "Select", React Aria "Select", Headless
+  UI "Listbox") and divergence rows for the contract differences.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/listbox/

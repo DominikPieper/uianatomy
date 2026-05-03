@@ -622,16 +622,39 @@ whenToUse:
         across navigation is also a redesign signal (use Banner
         plus an in-page Modal triggered from it).
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Cookie-consent banners offer a Decline option of equal
+        prominence to Accept (or an equivalent rejection path with
+        no coercive design).
+      source: canon
+      sourceRef: 'GDPR Art. 7 / EDPB Guidelines 05/2020 (region-binding)'
+      consequence: >-
+        Asymmetric prominence ("Accept" highlighted, "Decline"
+        buried or hidden) is a legal-compliance violation in GDPR
+        jurisdictions and a documented dark pattern globally.
+        Implementation audits flag libraries that do not enforce
+        the equal-prominence affordance.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Region / Status
+      note: 'Naming depends on urgency level.'
+    - system: Polaris
+      theirTerm: Banner
+    - system: Material 3
+      theirTerm: Banner
+    - system: Carbon
+      theirTerm: Notification
+    - system: Atlassian
+      theirTerm: Inline message
+      note: 'Part of the inline-message family.'
+
 notes: >-
-  Banner sits in the same vocabulary trap as Alert: APG calls
-  this "Region" or "Status" depending on urgency; many design
-  systems use "Banner" (Polaris, Material 3) or "Notification"
-  (Carbon, Atlassian inline-message family). The canonical
+  Banner sits in the same vocabulary trap as Alert. The canonical
   Banner here matches Polaris and Material 3's terminology and
   scope (region-wide persistent). Implementation audits document
-  the naming via `componentName` and the cookie-consent
-  legal-compliance contract via divergence rows where the audit
-  library does not enforce equal-prominence Decline.
+  the per-library naming in `componentName`.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/regions.html

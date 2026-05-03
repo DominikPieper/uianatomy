@@ -755,17 +755,34 @@ whenToUse:
         items are *steps in a process* (Stepper) or *peer
         destinations* (SidebarNav).
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Active item carries `aria-current="page"` (or
+        `aria-current="location"` for sub-page targets) on the
+        anchor element.
+      source: apg
+      sourceRef: 'WAI-ARIA aria-current property'
+      consequence: >-
+        Visual current-state is routinely shown without the
+        accessible counterpart; assistive tech then has no way to
+        announce the user's location in the navigation tree, and
+        SR-driven orientation breaks.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Navigation drawer
+      note: 'Material 3 splits into persistent / dismissible / modal sub-types.'
+    - system: Polaris
+      theirTerm: Navigation
+    - system: Carbon
+      theirTerm: Side navigation
+    - system: Atlassian
+      theirTerm: Side navigation
+
 notes: >-
-  SidebarNav vocabulary varies: Material 3 calls this
-  "Navigation drawer" (with persistent / dismissible /
-  modal sub-types), Polaris uses "Navigation", Carbon uses
-  "Side navigation", Atlassian uses "Side navigation". The
-  canonical "SidebarNav" name is used here for clarity; the
-  Drawer-as-mobile-nav relationship is canonical and
-  documented via `whenToUse.vsRelated`. The most-overlooked
-  contract is `aria-current="page"` on the active item —
-  visual current-state is routinely shown without the
-  accessible counterpart, breaking SR orientation.
+  The canonical "SidebarNav" name is used here for clarity; the
+  Drawer-as-mobile-nav relationship is canonical and documented via
+  `whenToUse.vsRelated`.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/regions.html

@@ -730,17 +730,40 @@ whenToUse:
         value is the input string, TagInput's value is the
         accumulated token list and the input is a transient
         staging area.
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Backspace pressed in an empty input removes the last
+        committed tag and re-focuses the input.
+      source: apg
+      sourceRef: 'APG: Combobox keyboard interaction (carry-over to chip-input)'
+      consequence: >-
+        The most-overlooked APG-aligned behaviour for this
+        component and the most-frequently broken. Without it,
+        keyboard-only users have no way to remove tags after they
+        commit — the only path is mouse-clicking the per-chip
+        remove button.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Chip input
+    - system: Atlassian
+      theirTerm: Tag picker
+    - system: Polaris
+      theirTerm: Tag
+      note: >-
+        Polaris ships "Tag" plus a separate tag-input documentation
+        page; the canonical "TagInput" here covers the composite.
+    - system: Radix / Headless UI
+      theirTerm: '(no primitive)'
+      note: >-
+        Neither library ships TagInput as a primitive; consumers
+        compose it from Combobox plus Tag rendering, or pull a
+        third-party library (react-tag-input, downshift).
+
 notes: >-
-  TagInput vocabulary varies: Material 3 calls this "Chip
-  input"; Atlassian uses "Tag picker"; Polaris uses "Tag" but
-  documents tag-input separately. Radix and Headless UI do
-  not ship TagInput as a primitive; consumers compose it from
-  Combobox plus Tag rendering, or use third-party libraries
-  (react-tag-input, downshift). The canonical "TagInput" here
-  matches the Material / Atlassian shape — input plus
-  inline-token list. The keyboard contract (Backspace at
-  empty input deletes last tag) is the most-overlooked APG-
-  aligned behaviour and the most-frequently broken.
+  The canonical "TagInput" matches the Material / Atlassian shape
+  — input plus inline-token list. Most production fragmentation
+  lives in the missing keyboard-removal path documented above.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/

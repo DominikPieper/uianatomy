@@ -715,17 +715,37 @@ whenToUse:
         persistent global navigation; Stepper is contextual
         to the current flow.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Active step carries `aria-current="step"`; the sequential
+        order semantic is preserved (steps reachable in their
+        defined order in linear mode, with `aria-disabled` on
+        not-yet-reachable steps).
+      source: apg
+      sourceRef: 'WAI-ARIA aria-current property'
+      consequence: >-
+        Implementations that render a Stepper as styled Tabs lose
+        both the order semantic and the `aria-current="step"`
+        accessible state — assistive tech announces the surface
+        as a tab system and the canonical sequential-flow
+        contract breaks. The Stepper-vs-Tabs distinction is the
+        most-load-bearing canonical decision for this component.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Stepper
+      note: 'Canonical name match; Material 3 also informs the variant taxonomy.'
+    - system: Polaris
+      theirTerm: Footer Help (with embedded progress)
+    - system: Atlassian
+      theirTerm: Progress Tracker
+    - system: Carbon
+      theirTerm: ProgressIndicator
+
 notes: >-
-  Stepper vocabulary varies: Material 3 calls this "Stepper"
-  (canonical name); Polaris uses "Footer Help" with
-  embedded progress; Atlassian has "Progress Tracker";
-  Carbon ships "ProgressIndicator". The canonical "Stepper"
-  name and the variant taxonomy match Material 3 most
-  closely. The Stepper-vs-Tabs distinction is the most-
-  load-bearing canonical decision; many implementations
-  use Tabs visually for what is semantically a Stepper,
-  losing both the order semantic and the
-  `aria-current="step"` accessible state.
+  The canonical "Stepper" name and variant taxonomy match Material
+  3 most closely. Stepper-styled-as-Tabs is the most-frequent
+  failure mode in implementations.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/practices/list-and-listbox/
