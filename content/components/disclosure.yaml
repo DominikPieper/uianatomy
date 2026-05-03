@@ -517,16 +517,73 @@ whenToUse:
         severs spatial relationship to the underlying content;
         Disclosure preserves it.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        `aria-expanded` on the trigger is the single source of
+        truth for the open/closed state. CSS modifiers and icon
+        rotation derive from `[aria-expanded="true"]`; never
+        from a parallel `data-expanded` attribute or visual cue
+        alone.
+      source: apg
+      sourceRef: 'APG: Disclosure pattern — aria-expanded'
+      consequence: >-
+        When the icon rotates but `aria-expanded` is missing or
+        stuck, sighted users perceive the state but SR users
+        hear "button" with no state cue. The icon is
+        decorative; the attribute carries the meaning.
+    - rule: >-
+        The trigger is a `<button type="button">`, never an
+        `<a>` element. Visual treatment may match link styling;
+        the underlying element is a button.
+      source: html-spec
+      sourceRef: 'HTML button vs anchor semantics'
+      consequence: >-
+        Anchors navigate; disclosures toggle. Middle-click on an
+        anchor-as-trigger opens an empty page; copy-link
+        captures `#`. The semantic distinction matters for
+        keyboard, AT, and browser-feature parity.
+    - rule: >-
+        `aria-controls` on the trigger references the panel's
+        id; the panel's `aria-labelledby` references the
+        trigger's id. The bidirectional relationship is wired
+        even when trigger and panel are visually adjacent.
+      source: apg
+      sourceRef: 'APG: Disclosure pattern — aria-controls'
+      consequence: >-
+        Without `aria-controls`, SR users know the state but
+        cannot navigate from trigger to disclosed content
+        directly. The relationship becomes implicit (visual
+        proximity) instead of explicit (programmatic).
+  vocabularyDrift:
+    - system: Radix
+      theirTerm: Collapsible
+      note: >-
+        Radix splits the disclosure pattern into `Collapsible`
+        (single, this canon's Disclosure) and `Accordion` (list,
+        the Accordion canon). The canonical separation here
+        matches that split, anchored on APG's pattern definitions.
+    - system: Headless UI
+      theirTerm: Disclosure
+      note: >-
+        Headless UI ships `<Disclosure>` matching this canonical
+        name; it does not ship a separate Accordion primitive,
+        leaving the list-grouping to the consumer.
+    - system: HTML
+      theirTerm: 'details / summary'
+      note: >-
+        Native `<details>` plus `<summary>` is the HTML-spec
+        equivalent of the canonical anatomy; the toggle is the
+        `<summary>` element and the disclosed region is the
+        rest of `<details>`. Browser-rendered triangle is the
+        UA's icon; consumers replace it via `details::-webkit-details-marker` or `summary::marker`.
+
 notes: >-
   Disclosure is the smallest disclosure-pattern component in
   the canon — three slots, single transition graph, single
   event. APG defines it as the fundamental disclosure pattern;
   Accordion is conceptually a list-of-Disclosures with shared
-  keyboard nav. Implementations rarely separate the two; Radix
-  ships `Collapsible` (single) and `Accordion` (list) as
-  distinct primitives, while Headless UI ships `<Disclosure>`
-  and `<Tab>` (no Accordion specifically, consumers compose).
-  The canonical separation here matches APG's pattern split.
+  keyboard nav.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/

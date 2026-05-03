@@ -730,18 +730,83 @@ whenToUse:
         nearly identical; reach for SearchInput specifically
         when the input drives a search results region.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The input element is `<input type="search">` (or
+        `role="searchbox"` on a non-input host). SearchInput
+        emits free-text queries; the with-suggestions popup
+        previews, it does not commit as the input value.
+      source: html-spec
+      sourceRef: 'HTML input type="search" + ARIA searchbox role'
+      consequence: >-
+        Implementing as a constrained Combobox (commit-from-
+        listbox sets value) silently rejects free-text queries
+        that do not match an option. Users type, press Enter,
+        and the search never fires. The contract — "free-text in,
+        free-text out" — is the whole point of the pattern.
+    - rule: >-
+        Enter on the input always submits the query. For
+        with-suggestions variant, Enter-with-highlight selects-
+        and-submits; Enter-without-highlight submits the typed
+        value verbatim. The submit-button click is equivalent.
+      source: canon
+      consequence: >-
+        Implementations that capture Enter for popup-close or
+        blur leave users without a keyboard submit path —
+        sighted users tab to the submit button, SR users have
+        no canonical action key. Breaks the form-control
+        keyboard contract that SearchInput inherits from
+        `<input>`.
+    - rule: >-
+        Clear-button activation resets the associated results
+        region back to its empty / default state. Query state
+        and results state are coupled; clearing one clears the
+        other.
+      source: canon
+      consequence: >-
+        Without coupled clear, the input shows empty but the
+        results page or panel still shows old hits. State
+        diverges silently — users see stale data and cannot
+        trust the surface to reflect their current intent.
+    - rule: >-
+        With-suggestions popup carries explicit AT structure:
+        `role="listbox"` with `aria-activedescendant` for
+        typeahead-style suggestions, or `role="region"` with a
+        polite live region announcing result counts for
+        result-preview style.
+      source: apg
+      sourceRef: 'APG: Combobox + Live Region patterns'
+      consequence: >-
+        Without listbox structure or live region, SR users hear
+        nothing as they type — no feedback that suggestions
+        exist, no count announcement, no path to navigate. The
+        suggestions become a sighted-pointer-only feature.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: 'input type="search"'
+      note: >-
+        Native `<input type="search">` provides the minimal
+        canonical shape (Enter-submit, browser-native clear,
+        autocomplete semantics). The canonical SearchInput
+        layers a styled composite on top — leading icon, clear,
+        optional submit button, optional suggestions popup —
+        without abandoning the underlying element.
+    - system: React Aria
+      theirTerm: SearchField
+      note: >-
+        React Aria ships `useSearchField` as a first-class
+        primitive matching the canonical contract; most other
+        libraries expect consumers to compose SearchInput from
+        Input plus auxiliary slots.
+
 notes: >-
-  SearchInput sits in a pattern-vs-component grey area: HTML's
-  `<input type="search">` provides a minimal canonical shape
-  (Enter-submit, browser-native clear, autocomplete
-  semantics); design systems layer SearchInput as a styled
-  composite. The canonical SearchInput here documents the
-  composite contract — leading icon, clear, optional submit
-  button, optional suggestions popup — while preserving
-  `<input type="search">` as the underlying element. Implementation
-  audits document whether libraries provide a SearchInput
-  primitive (React Aria does via `useSearchField`) or expect
-  consumers to compose from Input plus auxiliary slots.
+  SearchInput sits in a pattern-vs-component grey area: most
+  libraries do not ship a dedicated SearchInput primitive,
+  expecting composition from Input plus auxiliary slots. The
+  canonical SearchInput here documents the composite contract
+  so that implementation audits can confirm a candidate
+  matches it.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/

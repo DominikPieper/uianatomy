@@ -727,15 +727,69 @@ whenToUse:
         differentiates: "menu" for MenuButton, "dialog" for
         Popover.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Popover is non-modal. Tab moves focus through the
+        popover content and then out into the rest of the page.
+        No focus trap. Light-dismiss (Escape + outside-click +
+        focus-outside) handles closure.
+      source: canon
+      consequence: >-
+        Installing a focus trap turns Popover into a
+        non-announcing Modal — Tab cycles inside, users cannot
+        reach the rest of the page without dismissing first, and
+        the surface lies about its modality. If genuine modality
+        is needed, redesign as Modal or modal Drawer.
+    - rule: >-
+        The popover renders via a portal at the document root
+        (or a dedicated overlay container) — not as a DOM child
+        of its trigger. Native `<dialog popover>` and
+        `popover="auto"` auto-portal in Baseline 2024+ browsers.
+      source: html-spec
+      sourceRef: 'HTML Popover API + portal/Teleport for legacy'
+      consequence: >-
+        Rendering inline traps the popover under any ancestor's
+        `overflow: hidden`; z-index cannot rescue it because the
+        clipping is at paint time. A Card, a scrollable list, or
+        an off-screen sidebar all silently clip popovers their
+        children render.
+    - rule: >-
+        The trigger carries `aria-haspopup` (`"dialog"` for
+        content popovers, `"menu"` for menu popovers),
+        `aria-expanded` toggled with open state, and
+        `aria-controls` referencing the popover container's id.
+      source: apg
+      sourceRef: 'APG: Dialog (Modal) + Disclosure patterns — trigger semantics'
+      consequence: >-
+        Without these attributes, SR users have no signal that
+        the trigger reveals additional content, no signal that
+        the surface is open or closed, and no programmatic path
+        from trigger to popover. The relationship becomes
+        sighted-pointer-only.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: 'popover attribute / popover="auto"'
+      note: >-
+        Native HTML `popover` attribute (Baseline 2024) provides
+        the portal-and-stacking primitive on top of which the
+        canonical Popover layers its ARIA contract; bespoke
+        implementations either build on it or polyfill via
+        Floating UI / Popper.
+    - system: Radix
+      theirTerm: Popover
+      note: >-
+        Radix exposes per-source dismiss callbacks
+        (`onPointerDownOutside`, `onEscapeKeyDown`,
+        `onFocusOutside`) rather than a unified `dismiss` event;
+        consumers wrap to recover the canonical contract.
+
 notes: >-
   Popover sits between Modal (always modal) and Tooltip (never
-  interactive) and shares a positioning library lineage with both
-  Tooltip and (some) MenuButton implementations. The native HTML
-  `popover` attribute (Baseline 2024) provides a portal-and-stacking
-  primitive that all three patterns can build on; the canonical
-  Popover documents the ARIA contract layered above the primitive.
-  Bespoke implementations diverge most on (a) auto-flip behaviour and
-  (b) which dismiss reasons emit a unified event versus separate
+  interactive) and shares a positioning-library lineage with both
+  Tooltip and (some) MenuButton implementations. Bespoke
+  implementations diverge most on auto-flip behaviour and on
+  which dismiss reasons emit a unified event versus separate
   callbacks.
 
 sources:

@@ -853,21 +853,118 @@ whenToUse:
         list) is TagInput-shaped; single-value input is
         TextInput-shaped.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        A `<label for="<input-id>">` element exists in the DOM
+        for every field. Visually-hidden via sr-only is allowed;
+        replacement with `placeholder` is not. Placeholder is
+        reserved for example values, not for field identity.
+      source: html-spec
+      sourceRef: 'HTML label element + WCAG 1.3.1 / 3.3.2'
+      consequence: >-
+        Placeholder-as-label vanishes the field's identity once
+        the user starts typing; SR users never hear it (most AT
+        does not announce placeholder as accessible name); users
+        tabbing away and back lose orientation. Research
+        consistently shows placeholder reduces successful form
+        completion.
+    - rule: >-
+        When the field is in error: `aria-invalid="true"` on the
+        input, `aria-describedby` referencing the error message
+        node, and the error node carries `role="alert"` (or
+        `aria-live="polite"` for async announcements). Visual
+        error + ARIA error + invalid attribute ship together.
+      source: apg
+      sourceRef: 'APG: Form patterns + WCAG 3.3.1 (Error Identification)'
+      consequence: >-
+        Red border without `aria-invalid` is sighted-only;
+        SR users perceive a normal field. The cross-modal
+        contract — every visual cue has an AT cue — is the
+        foundation of accessible forms.
+    - rule: >-
+        Visible required indicators (asterisk, "(required)"
+        suffix) are paired with the `required` attribute on the
+        input. The HTML attribute implies `aria-required="true"`
+        and triggers browser-native constraint validation.
+      source: html-spec
+      sourceRef: 'HTML required attribute + WCAG 3.3.2 (Labels or Instructions)'
+      consequence: >-
+        Visual-only required loses browser validation, leaves
+        SR users unaware the field is mandatory, and shifts
+        all empty-required detection to the server. Worse: SR
+        may pronounce the asterisk as "asterisk" without any
+        required-state announcement.
+    - rule: >-
+        `autocomplete` is set to the field's semantic intent
+        (`email`, `username`, `current-password`, `new-password`,
+        `street-address`, `tel`, `cc-number`, etc.). Sitewide
+        `autocomplete="off"` is reserved for genuinely
+        autofill-hostile fields (one-time codes, captcha,
+        security-question answers).
+      source: html-spec
+      sourceRef: 'HTML autocomplete attribute (WHATWG) + WCAG 1.3.5 (Identify Input Purpose)'
+      consequence: >-
+        Disabling autofill sitewide breaks password managers
+        and platform autofill; user experience degrades for
+        the 80%+ of users who rely on autofill. Worse, WCAG
+        1.3.5 explicitly requires `autocomplete` for canonical
+        personal-data fields at AA conformance.
+    - rule: >-
+        Validation cadence is progressive: validate on blur
+        (user finishes the field), clear errors on input
+        (user corrects), surface errors at submit only as a
+        fallback for fields the user skipped. Browser-native
+        constraint validation (`type="email"`, `pattern`,
+        `min`/`max`) handles format checks at the right moment.
+      source: canon
+      consequence: >-
+        Submit-only validation produces forms where users get
+        bounced back to a field they typed minutes earlier;
+        long forms become exhausting; abandonment rates rise.
+        Inline-on-input validation overcorrects in the other
+        direction by yelling at users mid-typing.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: 'Text fields (filled / outlined)'
+      note: >-
+        Material 3 picks `filled` as default with `outlined` as
+        the alternate; canonical reference documents both plus
+        `underlined` because every variant ships in production
+        somewhere.
+    - system: Carbon
+      theirTerm: 'Text input'
+      note: >-
+        Carbon picks `outlined` as default; field-level density
+        and size axes match the canonical anatomy.
+    - system: Polaris
+      theirTerm: TextField
+      note: >-
+        Polaris picks `filled` as default with explicit
+        helper-text and error patterns matching the canonical
+        description / error-message slots.
+    - system: React Aria
+      theirTerm: TextField
+      note: >-
+        React Aria's `useTextField` hook provides the canonical
+        ARIA wiring (label, input, description, errorMessage)
+        as a single primitive matching this canon.
+    - system: Headless UI
+      theirTerm: 'Input + Field + Label + Description + ErrorMessage'
+      note: >-
+        Headless UI does not ship a single `TextInput`
+        primitive; consumers compose `<Field>` plus `<Input>`
+        plus surrounding `<Label>`, `<Description>`,
+        `<ErrorMessage>`. Same composite contract, different
+        granularity.
+
 notes: >-
   TextInput is the canonical form primitive — many composite
   components (SearchInput, Combobox, TagInput, NumberInput,
   PasswordInput as conventional sub-types) layer on top of it.
   The canonical anatomy here documents the universal field
   contract; specialised inputs document their additions in
-  their own canonical YAMLs. Implementation audits should note
-  whether a library provides a single TextInput primitive
-  (Radix Themes TextField, React Aria TextField, Polaris
-  TextField) or composes from a more primitive Input plus
-  surrounding form-field shell (Headless UI's pattern). The
-  three visual variants (outlined / filled / underlined)
-  represent industry convergence — Material 3, Carbon, and
-  Polaris each pick a default; the canon documents all three
-  because every variant ships in production somewhere.
+  their own canonical YAMLs.
 
 sources:
   - https://www.w3.org/TR/wai-aria-practices-1.2/#textbox
