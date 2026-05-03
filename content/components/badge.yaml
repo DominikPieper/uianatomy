@@ -10,7 +10,7 @@ intro: >-
   Badge is the canonical compact status / count primitive — a small
   surface that announces a piece of metadata about its host without
   competing for the host's affordance. Five severity variants
-  (default, success, warning, danger, info) cover the canonical
+  (default, success, warning, error, info) cover the canonical
   announcement ladder; the dot property collapses the surface to a
   glyph-only indicator. Common hosts: list items, nav items, avatars,
   buttons (notification count), tabs (unread count). The reference
@@ -168,7 +168,7 @@ axes:
     - default
     - success
     - warning
-    - danger
+    - error
     - info
   properties:
     - name: size
@@ -195,7 +195,7 @@ mismatches:
       in some implementations without anyone noticing).
     correct: >-
       Model severity as a single `variant` prop with closed-enum
-      values (default, success, warning, danger, info). The CSS
+      values (default, success, warning, error, info). The CSS
       contract picks tokens per severity; the Figma component
       property mirrors the same closed enum.
 
@@ -245,7 +245,7 @@ mistakes:
     title: Severity conveyed by colour alone
     description: >-
       The badge variant is communicated only by colour (red for
-      danger, yellow for warning). Users with colour-vision
+      error, yellow for warning). Users with colour-vision
       deficiencies cannot distinguish severity; SR users hear the
       content but not the severity grade.
     fix: >-
@@ -309,7 +309,7 @@ frameworkMap:
     variantMechanism: props with class-variance-authority for variant / size; controlled `count`-prop for live values; Material UI exposes a `<Badge>` wrapper that anchors its child
   angularSignals:
     structureMechanism: Angular component with `<ng-content>` for label, `<ng-content select="[badge-icon]">` for icon, signal-based input for count
-    variantMechanism: input<'default' | 'success' | 'warning' | 'danger' | 'info'>(); host-bindings drive `[attr.role]` and `[attr.aria-live]`
+    variantMechanism: input<'default' | 'success' | 'warning' | 'error' | 'info'>(); host-bindings drive `[attr.role]` and `[attr.aria-live]`
   vue:
     structureMechanism: Single-file component with `<slot name="icon">` and default slot; v-bind for severity prop; PrimeVue Badge / Naive UI Badge as third-party precedents
     variantMechanism: defineProps with literal-union types for severity; v-model:count for controlled live updates
@@ -356,7 +356,7 @@ propertyMap:
   - figma: Variant
     code: variant
     kind: enum
-    notes: Maps default / success / warning / danger / info severity grade.
+    notes: Maps default / success / warning / error / info severity grade.
   - figma: Size
     code: size
     kind: enum

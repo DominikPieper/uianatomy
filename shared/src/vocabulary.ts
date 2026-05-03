@@ -102,6 +102,18 @@ export const CANON_INTERACTIVE_STATES = [
   'current',
 ] as const;
 
+// P6-118 / ADR-029: canonical severity vocabulary + synonym map.
+// Components with a severity axis (Alert, Toast, Badge) use the four
+// canonical names in their variants[] arrays; synonyms support search
+// and authoring (search_components("danger") resolves to error).
+// Banner keeps `promotional` as a banner-specific exception (see ADR-029).
+export const CANON_SEVERITY = ['info', 'success', 'warning', 'error'] as const;
+
+export const SEVERITY_SYNONYMS: Readonly<Record<string, readonly string[]>> = {
+  error: ['danger', 'destructive', 'critical'],
+  warning: ['caution', 'attention'],
+};
+
 // Library-version table — single pin per library the canon refers to.
 // Phase-1 (ADR-028) ships the structure with version + verifiedAt
 // optional. The user fills them in during a verification cycle by
@@ -225,6 +237,8 @@ export interface CanonicalVocabularies {
   propertyBounded: Record<string, readonly string[]>;
   interactiveStates: readonly string[];
   libraryVersions: Readonly<Record<string, LibraryVersionEntry>>;
+  severity: readonly string[];
+  severitySynonyms: Readonly<Record<string, readonly string[]>>;
 }
 
 export function getCanonicalVocabularies(): CanonicalVocabularies {
@@ -243,5 +257,7 @@ export function getCanonicalVocabularies(): CanonicalVocabularies {
     propertyBounded: CANON_PROPERTY_BOUNDED,
     interactiveStates: CANON_INTERACTIVE_STATES,
     libraryVersions: LIBRARY_VERSIONS,
+    severity: CANON_SEVERITY,
+    severitySynonyms: SEVERITY_SYNONYMS,
   };
 }
