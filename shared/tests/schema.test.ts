@@ -685,7 +685,7 @@ describe('whenToUse field', () => {
   it('parses combobox whenToUse vsRelated entries (post P6-86 backfill)', async () => {
     const combobox = await loadComponent(join(contentDir, 'combobox.yaml'));
     const ids = combobox.whenToUse?.vsRelated?.map((v) => v.id) ?? [];
-    expect(ids).toEqual(['select', 'search-input', 'tag-input', 'text-input']);
+    expect(ids).toEqual(['select', 'search-input', 'tag-input', 'text-input', 'checkbox']);
     for (const v of combobox.whenToUse?.vsRelated ?? []) {
       expect(v.difference.length).toBeGreaterThan(0);
     }

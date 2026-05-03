@@ -67,6 +67,16 @@ whenToUse:
         free text explicitly). Migrate TextInput to Combobox when
         a finite set of acceptable values exists and typeahead
         narrows the field meaningfully.
+    - id: checkbox
+      difference: >-
+        `Checkbox` is a binary form field that toggles a single
+        boolean per option (multi-select via a list of
+        Checkbox); `Combobox` filters from a list with
+        typeahead and commits one or more selected options to
+        a single field. Bounded short option-sets (under ~10
+        items) read better as a list of Checkbox; large
+        unbounded sets need Combobox with multi-select for the
+        filter-and-overflow handling.
 
 anatomy:
   - id: input

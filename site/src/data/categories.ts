@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Inputs',
-    components: ['button', 'text-input', 'combobox', 'select', 'search-input', 'tag-input', 'menu-button'],
+    components: ['button', 'text-input', 'checkbox', 'combobox', 'select', 'search-input', 'tag-input', 'menu-button'],
   },
   {
     name: 'Overlay',

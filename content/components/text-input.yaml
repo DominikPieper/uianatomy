@@ -864,6 +864,16 @@ whenToUse:
         Multi-value input (recipients list, tag set, keyword
         list) is TagInput-shaped; single-value input is
         TextInput-shaped.
+    - id: checkbox
+      difference: >-
+        `Checkbox` is a binary form field whose submitted
+        value is the `value` attribute (default `"on"`) only
+        when checked; `TextInput` is a free-text field whose
+        value is the typed string. Both pair with a `<label>`
+        and optional description / error-message slots, but
+        the value type differs — boolean toggle vs string.
+        Use Checkbox for boolean fields; TextInput for typed
+        strings.
 
 contracts:
   nonNegotiable:

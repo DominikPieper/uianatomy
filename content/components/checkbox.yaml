@@ -1,0 +1,756 @@
+id: checkbox
+name: Checkbox
+description: >-
+  A binary form control with three visual states — unchecked,
+  checked, and mixed (indeterminate). Used for multi-select lists
+  ("select all that apply"), boolean form fields ("subscribe to
+  newsletter"), and parent-child group toggles where the parent
+  reflects the aggregate state of its children. Distinct from
+  Switch (momentary on/off) and Radio (mutually exclusive within
+  a group).
+
+intro: >-
+  Checkbox is the canonical binary-form-control primitive — a
+  square input that toggles between unchecked, checked, and the
+  tri-state mixed (indeterminate) value when it represents the
+  aggregate of a child group. Native HTML `<input type="checkbox">`
+  is the canonical wire (only checked checkboxes participate in
+  form submission; the indeterminate visual is JS-only, never an
+  attribute). Five canonical slots — root wrapper, input, indicator
+  glyph, label, optional description and error message — three
+  data states, and a parent/child mixed-state propagation contract
+  that codifies the "select all" pattern. The reference documents
+  the label-association rules, the WCAG hit-target threshold, and
+  the divergence from Switch and Radio.
+
+alternateNames:
+  - 'Tickbox'
+  - 'Check box'
+  - 'Tri-state checkbox'
+
+whenToUse:
+  use: >-
+    For multi-selection from a list of options ("Select all
+    interests that apply"), for boolean form fields ("I agree to
+    the terms"), and for parent-child group toggles ("Select all
+    rows" with mixed state when partial). Pair with a fieldset
+    plus legend when grouping related checkboxes. Use the
+    indeterminate state only when the checkbox represents the
+    aggregate of a controlled child set — never as a styled
+    "default" visual.
+  avoid: >-
+    For mutually exclusive choices — that is `Radio` (when authored)
+    or `SegmentedControl`. For momentary on/off without form
+    submission — that is `Switch` (when authored), which carries
+    `role="switch"` and conveys "this control immediately
+    enables/disables a behaviour" rather than "this is a boolean
+    field". For single-option opt-in confirmations where a
+    `<button>` is more appropriate — checkboxes communicate
+    "field with a value", not "action".
+  vsRelated:
+    - id: text-input
+      difference: >-
+        `TextInput` is a free-text field whose value is a string;
+        `Checkbox` is a binary field whose submitted value is the
+        `value` attribute (default `"on"`) only when checked.
+        Both participate in native form submission; both pair with
+        a `<label>` and optional description / error-message
+        slots. The decision test: is the value a string the user
+        types (TextInput) or a boolean field they toggle
+        (Checkbox)?
+    - id: combobox
+      difference: >-
+        `Combobox` lets a user pick one or more options from a
+        listbox bound to a textual filter; `Checkbox` is a
+        single binary field that does not require a popup.
+        Multi-select forms with bounded option counts use a list
+        of Checkbox; large unbounded sets use Combobox with
+        multi-select. The decision test: does the option set
+        fit comfortably as a static list (Checkbox) or does it
+        need filter and overflow handling (Combobox)?
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The wrapper that associates the input with its label and
+      optional description / error-message slots. Renders as a
+      `<label>` (when wrapping the input) or a `<div>` paired
+      with `<label for>` (when the input is sibling). Carries
+      the disabled / invalid / required visual states via
+      data-attributes so the indicator and label can style in
+      sync.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; input + label inline; description + error stacked below
+    code:
+      slot: root
+      semantic: label-or-div
+    a11y:
+      hint: >-
+        When the root is `<label>`, the input becomes the
+        accessible name's host automatically. When the root is
+        `<div>`, the inner `<label for="<input-id>">` provides
+        the association. Never leave the input without an
+        associated label — placeholder text and adjacent prose
+        are not equivalent to a programmatically-linked label.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: input
+    required: true
+    purpose: >-
+      The interactive control. Native `<input type="checkbox">`
+      is canonical — it carries `role="checkbox"` implicitly,
+      participates in form submission, and supports browser-
+      autofill / pwd-manager integrations. The hit-target
+      (clickable area) extends to the wrapping label; the
+      visual square is the focus host but the activation area
+      is larger. Width and height ≥ 24×24 px (WCAG 2.5.8).
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 1
+      span: 1
+      aspect: '1:1'
+    figma:
+      type: frame
+      hint: Square frame; size variant binds to size token; carries focus ring on focus-visible
+    code:
+      slot: input
+      semantic: input-checkbox
+    a11y:
+      hint: >-
+        `<input type="checkbox">` provides `role="checkbox"`
+        natively. `aria-checked` is set automatically by the
+        browser to `"true"` or `"false"`; for indeterminate the
+        DOM `indeterminate` property is set via JS, which the
+        browser surfaces as `aria-checked="mixed"`. Never set
+        `aria-checked` manually on a native input. Custom-rendered
+        checkboxes (built from `<button>`) must set `role="checkbox"`
+        plus `aria-checked` manually plus listen for Space-key
+        toggle.
+    tokens:
+      radius:
+        corner: radius.sm
+      color:
+        border: color.border.strong
+
+  - id: indicator
+    required: true
+    purpose: >-
+      The visual glyph rendered inside the input — a checkmark
+      for `checked`, a horizontal line (or dash) for `mixed`,
+      empty for `unchecked`. Decorative; the semantic state is
+      carried by `aria-checked` on the input host. Animates the
+      glyph stroke on state change (subject to
+      `prefers-reduced-motion`).
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 1
+      span: 1
+      parent: input
+    figma:
+      type: instance
+      hint: Icon component; check / dash / none variants per data state
+    code:
+      slot: indicator
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"` (or rendered via SVG
+        without a `role`). The state is announced via the
+        input's `aria-checked` value, never via the indicator
+        glyph. SR users hear "checkbox, checked" / "checkbox,
+        not checked" / "checkbox, partially checked"; they do
+        not hear "checkmark icon".
+    tokens:
+      color:
+        foreground: color.text.inverse
+
+  - id: label
+    required: true
+    purpose: >-
+      The visible text label. Identifies the field's meaning
+      ("Subscribe to newsletter", "I accept the terms"). Always
+      associated with the input — either by wrapping (`<label>` is
+      the root) or by `for` attribute. The label is the canonical
+      accessible name; never use placeholder or adjacent text as
+      a substitute.
+    slotKind: content
+    layout:
+      row: 2
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Text element; size matches root size variant; weight regular by default
+    code:
+      slot: label
+      semantic: label-text
+    a11y:
+      hint: >-
+        The label text is the input's accessible name. SR users
+        hear "checkbox, Subscribe to newsletter, not checked".
+        Avoid using just "yes" / "no" — the field meaning must
+        be in the label. For grouped checkboxes, the parent
+        `<fieldset>` carries a `<legend>` describing the group;
+        each checkbox's label describes its specific option.
+    tokens:
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+
+  - id: description
+    required: false
+    purpose: >-
+      Optional helper text rendered below the label. Communicates
+      auxiliary context — "We will email you weekly" or "Required
+      to continue". Always programmatically associated via
+      `aria-describedby`; never relies on visual proximity alone.
+    slotKind: content
+    layout:
+      row: 3
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Smaller text below label; muted color; visibility per "has description" property
+    code:
+      slot: description
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        Associate via `aria-describedby` on the input. SR
+        announces description after the label and the checked
+        state. Avoid putting required-field markers in the
+        description — use `required` attribute / `aria-required`
+        on the input.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+  - id: error-message
+    required: false
+    purpose: >-
+      Optional validation message rendered below the description
+      when the field is invalid. Replaces the description visually
+      while error is active or appears below it (per design
+      system). Carries `aria-live="polite"` so SR announces the
+      error when it appears; programmatically associated via
+      `aria-describedby` plus `aria-invalid="true"` on the input.
+    slotKind: content
+    layout:
+      row: 4
+      col: 2
+      span: 5
+    figma:
+      type: text
+      hint: Error-toned text below label/description; visibility per "has error" property
+    code:
+      slot: error-message
+      semantic: span-with-aria-live
+    a11y:
+      hint: >-
+        `aria-describedby` includes the error-message id;
+        `aria-invalid="true"` on the input triggers SR error
+        announcement on focus. The error-message element
+        itself carries `aria-live="polite"` so async-validation
+        errors announce when they appear without forcing
+        focus moves.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.danger
+
+axes:
+  variants:
+    - single
+    - group
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - { name: indeterminate, kind: primitive, of: boolean }
+    - { name: required, kind: primitive, of: boolean }
+    - { name: disabled, kind: primitive, of: boolean }
+    - { name: invalid, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - unchecked
+      - checked
+      - mixed
+      - invalid
+    transitions:
+      - from: unchecked
+        to: checked
+        trigger: User activates input (click on label, Space when input focused)
+      - from: checked
+        to: unchecked
+        trigger: User activates input (click on label, Space when input focused)
+      - from: mixed
+        to: checked
+        trigger: User activates parent group-checkbox (canonical "select all" path — APG tri-state)
+      - from: mixed
+        to: unchecked
+        trigger: User activates parent group-checkbox in alternative APG tri-state — "uncheck all"
+
+mismatches:
+  - figma: Indeterminate drawn as a separate "indeterminate" component variant
+    code: Indeterminate is a runtime JS-only property, never an HTML attribute
+    consequence: >-
+      Designers ship "Checkbox / Indeterminate" as a peer of
+      "Checkbox / Checked"; developers know `indeterminate` is
+      set via `inputElement.indeterminate = true` in JS — it
+      is not in the HTML markup. The two surfaces look like
+      they declare the same state but the design file misses
+      the JS-only semantic, leading to "why does my Figma
+      variant not exist as a prop?" friction.
+    correct: >-
+      Document indeterminate as a runtime data-state, not a
+      static variant. Figma uses a "Checkbox / State / Mixed"
+      variant labelled with a footnote ("set via JS at runtime")
+      so the designer-handoff carries the implementation
+      contract. Code uses `indeterminate` property; the browser
+      surfaces it as `aria-checked="mixed"` automatically.
+
+  - figma: Checkbox hit-target painted as the 16×16 visual square
+    code: Hit-target extends to the wrapping label (≥ 24×24 effective tap area)
+    consequence: >-
+      Designers draw the visual square at 16×16 px and assume
+      that is the click target; developers extend the hit-target
+      via the wrapping label and via padding. The two surfaces
+      look identical but the actual tap area differs. Design QA
+      sometimes "tightens" the label margin away from the
+      checkbox visually and breaks the WCAG 2.5.8 24×24
+      threshold without realising.
+    correct: >-
+      Document the hit-target as the wrapping label region
+      (input + label + adjacent padding). Figma's component
+      includes an invisible bounding box at ≥ 24×24 px that
+      encompasses the visual square. Code wraps the input in
+      `<label>` so the entire region is clickable.
+
+  - figma: '"Select all" parent shown as a regular checked checkbox when partial'
+    code: 'Parent reflects mixed state when child set is partial (`aria-checked="mixed"`)'
+    consequence: >-
+      Designers ship the "select all" parent in two states
+      (checked / unchecked); developers compute three states
+      (all / none / partial). The Figma file does not
+      illustrate the partial state, so designers cannot review
+      it; QA misses the missing dash glyph until SR users
+      report "select all is misleading".
+    correct: >-
+      Document the parent-child mixed-state propagation as a
+      canonical contract. Figma carries the three-state parent
+      variant (checked / unchecked / mixed). Code computes the
+      parent from the children via `aria-checked = all-checked
+      ? "true" : none-checked ? "false" : "mixed"` and renders
+      the dash glyph for mixed.
+
+  - figma: Label drawn as inline text disconnected from the input
+    code: Label associated via `<label for>` or `<label>`-wrap of the input
+    consequence: >-
+      Designers draw the label as a sibling text node; developers
+      ship the label as a `<label>` with `for` attribute or as
+      the wrapping element. The visual is the same but the
+      programmatic association is what AT relies on. Designers
+      sometimes split label text across multiple inline elements
+      (price + currency, primary + secondary lines) and break
+      the labelling contract.
+    correct: >-
+      Document the label as a single semantic unit in the
+      anatomy. Figma carries one label slot; complex labels are
+      composed inside the slot but live under one programmatic
+      `<label>` boundary in code.
+
+mistakes:
+  - id: checkbox-no-label-assoc
+    severity: blocker
+    title: Input has no programmatically-associated label
+    description: >-
+      The input renders with adjacent text but no `<label for>`,
+      no wrapping `<label>`, and no `aria-labelledby`. SR users
+      hear "checkbox, not checked" without the field meaning;
+      pointer users may have a working hit-target by accident
+      but keyboard / AT users cannot identify the field.
+    fix: >-
+      Wrap the input in `<label>` (the input becomes a child of
+      the label) or pair the input with `<label for="<id>">` as
+      a sibling. Either form establishes the canonical
+      association. Never substitute placeholder text, adjacent
+      paragraphs, or visual proximity — the AT contract is
+      programmatic.
+
+  - id: checkbox-mixed-not-set-on-partial
+    severity: blocker
+    title: Parent group-checkbox does not reflect mixed state when children are partial
+    description: >-
+      The "select all" parent shows checked or unchecked but
+      never the mixed (indeterminate) visual. Users who select
+      a subset of children see the parent as either fully
+      checked (lying about state) or fully unchecked (also
+      lying). SR users hear contradictory state on activation
+      ("checked, partially checked").
+    fix: >-
+      Compute the parent's `indeterminate` property from the
+      children. Set `parent.indeterminate = anyChecked && !allChecked`.
+      The browser surfaces this as `aria-checked="mixed"` and
+      the indicator slot renders the dash glyph. APG tri-state
+      pattern is the canonical reference.
+
+  - id: checkbox-target-too-small
+    severity: major
+    title: Hit-target is below the WCAG 2.5.8 24×24 threshold
+    description: >-
+      The clickable area (visual square plus surrounding margin)
+      is below 24×24 CSS pixels. WCAG 2.5.8 (Target Size, Level
+      AA in WCAG 2.2) requires ≥ 24×24; the AAA threshold is
+      44×44. Mobile users and users with motor-control
+      limitations miss the target — checkbox toggle becomes
+      pointer-precision-dependent.
+    fix: >-
+      Extend the hit-target via the wrapping `<label>`. The
+      visual square may stay 16×16 or 18×18 for typographic
+      density, but the clickable label region is ≥ 24×24.
+      Verify with browser DevTools layout inspector or
+      automated hit-target audits — the visual square is
+      misleading.
+
+  - id: checkbox-placeholder-as-label
+    severity: major
+    title: Field meaning lives in placeholder text or adjacent paragraph
+    description: >-
+      The checkbox has no associated label; the field meaning
+      is in adjacent paragraph text (or, more rarely, in
+      placeholder-styled text near the input). SR users hear
+      "checkbox" with no semantic. Sighted users can read the
+      adjacent text but the programmatic accessible name is
+      empty.
+    fix: >-
+      Author a `<label>` with the field meaning. Adjacent
+      explanation prose belongs in the description slot,
+      programmatically linked via `aria-describedby`. The
+      label is the canonical accessible name; the description
+      is supplementary.
+
+  - id: checkbox-color-only-state
+    severity: major
+    title: Checked state communicated via colour change alone
+    description: >-
+      The checked state is signalled only by a colour change of
+      the input border (e.g. light grey when unchecked, blue
+      when checked) without an indicator glyph. Colour-blind
+      users and users in low-light or grayscale display modes
+      cannot distinguish the states. Fails WCAG 1.4.1 (Use of
+      Colour).
+    fix: >-
+      Always render the indicator glyph in the checked state —
+      a checkmark for `true`, a dash for `mixed`, none for
+      `false`. The glyph is the primary state signal; colour is
+      secondary. Test in grayscale (`filter: grayscale(1)`) to
+      verify the state reads.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-checkbox>` host carrying `name`, `value`, `checked`, `indeterminate`, `required`, `disabled`, `invalid` attributes; internally renders a hidden `<input type="checkbox">` for form participation plus a styled visual layer
+    variantMechanism: attributes (`size="md"`, `disabled`, `invalid`); CSS `:state(checked)` / `:state(mixed)` for state-driven styling; reflects to native input via internal element-internals or hidden-input bridge
+  react:
+    structureMechanism: Function component (Radix Checkbox.Root + Indicator, React Aria Checkbox, Material UI Checkbox, Mantine Checkbox); compound or prop-driven; controlled via `checked` (or `isSelected` per React Aria) and `onCheckedChange`
+    variantMechanism: props with class-variance-authority; `checked` accepts `boolean | "indeterminate"` (Radix idiom) or paired `isIndeterminate` prop (React Aria); hidden native `<input>` rendered for form integration
+  angularSignals:
+    structureMechanism: Angular component with input<boolean | 'indeterminate'>('checked'), input<boolean>('required'), input<boolean>('disabled'); ControlValueAccessor implementation for ngModel/formControl integration
+    variantMechanism: input<'sm' | 'md' | 'lg'>(); host-binding [attr.role]="'checkbox'" plus [attr.aria-checked]; signal-derived indeterminate state from parent group-checkbox
+  vue:
+    structureMechanism: Single-file component with v-model for checked state (boolean), separate :indeterminate prop; PrimeVue Checkbox, Naive UI Checkbox as third-party precedents
+    variantMechanism: defineProps with literal-union types; computed property for aria-checked from checked + indeterminate; emit('update:modelValue') for controlled binding
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    indicatorDraw: motion.duration.fast
+    stateChange: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: checkedChange
+    payload: >-
+      `{ checked: boolean | 'mixed', previousChecked: boolean |
+      'mixed' }`. Fires when the checkbox state changes via user
+      interaction (click on label, Space when input focused). For
+      group-checkbox parents, fires when the parent's computed
+      mixed state changes due to child selections — though
+      typically the parent observes child changes rather than
+      emitting its own.
+    frameworkNotes:
+      webComponents: >-
+        `checkedChange` CustomEvent on the host with
+        `event.detail = { checked, previousChecked }`.
+      react: >-
+        `onCheckedChange(checked)` callback (Radix idiom) or
+        `onChange(isSelected)` (React Aria idiom).
+      angularSignals: >-
+        `output<boolean | 'mixed'>('checkedChange')` plus
+        ControlValueAccessor `onChange(value)` for forms.
+      vue: >-
+        `@update:modelValue` event for v-model binding;
+        `@change` for non-controlled.
+
+  - name: validityChange
+    optional: true
+    payload: >-
+      `{ valid: boolean, message: string | null }`. Fires when
+      the field's validity changes (e.g. required-but-unchecked
+      → checked). Only canonical when consumers manage validation
+      messages externally; native form-validation handles the
+      internal validity state without explicit events.
+    frameworkNotes:
+      webComponents: >-
+        `validityChange` CustomEvent with
+        `event.detail = { valid, message }`.
+      react: >-
+        `onValidationChange(validity)` (React Aria) or absent in
+        Radix (relies on consumer state).
+      angularSignals: >-
+        Absent — uses Angular forms-validators pattern; emit
+        only when state-driven external validation is wired.
+      vue: >-
+        Absent — uses VeeValidate or composables; no canonical
+        event emitter.
+
+formIntegration:
+  nativeElement: input
+  submittedValue: >-
+    The `value` attribute (default `"on"` per HTML spec) when
+    the checkbox is checked. Unchecked checkboxes do not
+    submit. Multiple checkboxes sharing a `name` create
+    multiple name-value pairs (`interest=coding&interest=music`).
+    Indeterminate visual is JS-only and never affects
+    submission — an indeterminate checkbox submits per its
+    underlying `checked` state.
+  requiredAttr: true
+  validation: >-
+    Native Constraint Validation API surfaces `valueMissing`
+    when `required` is set and the checkbox is unchecked.
+    Custom-rendered checkboxes (built from `<button
+    role="checkbox">`) need a hidden native `<input>` with the
+    same `name` plus `value` to participate; toggle the
+    hidden input's `checked` from the host. The custom
+    component then mirrors `aria-invalid` from the
+    `validity.valueMissing` observation.
+  bridges:
+    react: >-
+      Controlled via `checked` (Radix) or `isSelected` (React
+      Aria); `onCheckedChange` / `onChange` callbacks. Hidden
+      native input rendered automatically when `name` is
+      passed; React Hook Form / Formik integrate via
+      `register("name")` plus `setValue`.
+    vue: >-
+      Two-way binding via `v-model` for `checked` (boolean);
+      separate `:indeterminate` prop. VeeValidate / FormKit
+      integrate via field-level rules; the underlying native
+      input is rendered for form submission.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(boolean | 'indeterminate')` →
+      `checked.set(...)`. `formControl` /
+      `formControlName` plus Angular Validators.required
+      drive validation; ng-touched + ng-dirty surface in
+      template state.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus `internals.setFormValue(
+      checkedValue)`. Custom-element-internals submits via
+      `internals.formData(...)` when participating in form
+      lifecycle. Falls back to a hidden `<input>` when
+      element-internals is not available.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Checkbox + label inline order follows writing direction —
+      input on the inline-start, label on the inline-end (LTR:
+      left + right; RTL: right + left). Use `flex-direction: row`
+      with logical properties; the browser handles the swap
+      automatically. Indicator glyph is direction-neutral
+      (checkmark and dash are symmetric or non-directional).
+      Description and error-message inherit the writing
+      direction; SR announces label-first regardless because
+      the programmatic association is order-independent.
+  textExpansion: >-
+    Label text expands 30-50% under translation (English
+    "Subscribe" → German "Abonnieren" 25% longer; English
+    "I accept the terms" → French "J'accepte les conditions"
+    20% longer). Reserve no fixed width on the label slot;
+    let the wrapper flow and wrap to multiple lines under
+    pressure. The input slot stays size-token-bound and never
+    text-expands. Group `<legend>` follows the same expansion
+    pattern as the standalone label.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves to the input. Focus ring renders on the
+        input visual square (or on the wrapping label per
+        design system convention). The label is not separately
+        focusable.
+    - keys: Space (input focused)
+      expected: >-
+        Toggles the checked state. Unchecked → checked,
+        checked → unchecked, mixed → checked (canonical APG
+        tri-state path; some implementations use mixed →
+        unchecked instead — pick one and document).
+        `aria-checked` flips and the indicator glyph
+        re-renders.
+    - keys: Enter (input focused)
+      expected: >-
+        Does NOT toggle the checkbox in canonical implementations
+        (Enter is reserved for form submission per HTML spec).
+        Some libraries bind Enter to toggle for symmetry with
+        other custom controls; canonical guidance is to leave
+        Enter to the form-default behaviour.
+    - keys: Tab (group of checkboxes)
+      expected: >-
+        Each checkbox is its own tab stop (independent of
+        sibling state). Unlike Radio (which uses roving
+        tabindex within a group), Checkbox group siblings
+        all participate in the tab order so users can pick
+        any subset.
+  announcements:
+    - trigger: SR encounters an unchecked checkbox
+      expected: >-
+        "Checkbox, [label text], not checked". The role,
+        accessible name, and state are all announced. For
+        required fields, "required" is included before the
+        state.
+    - trigger: SR encounters a checked checkbox
+      expected: >-
+        "Checkbox, [label text], checked".
+    - trigger: SR encounters a mixed (indeterminate) checkbox
+      expected: >-
+        "Checkbox, [label text], partially checked" (or
+        "mixed" depending on the SR). Activating moves to
+        checked or unchecked per the implementation's tri-state
+        path.
+    - trigger: SR encounters an invalid checkbox after submit
+      expected: >-
+        "Checkbox, [label text], not checked, invalid entry,
+        [error message]". The error-message slot's content
+        announces via `aria-describedby` and `aria-invalid`.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - label
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The input has a programmatically-associated label —
+        either `<label for="<id>">` or a wrapping `<label>`.
+        Adjacent prose, placeholder text, and visual proximity
+        do not satisfy the contract. The label is the canonical
+        accessible name.
+      source: apg
+      sourceRef: 'APG: Checkbox pattern'
+      consequence: >-
+        Without the association, SR users hear "checkbox, not
+        checked" with no field meaning. The programmatic
+        contract is what AT relies on; visual layout is
+        sighted-only and breaks under voice navigation, mobile
+        SR, and accessibility tooling.
+    - rule: >-
+        Parent group-checkbox reflects the mixed (indeterminate)
+        state when its child set is partial. Set
+        `parent.indeterminate = anyChecked && !allChecked`; the
+        browser surfaces this as `aria-checked="mixed"` and the
+        indicator slot renders the dash glyph. Implementations
+        that show checked or unchecked when partial lie about
+        state.
+      source: apg
+      sourceRef: 'APG: Checkbox tri-state'
+      consequence: >-
+        Without the mixed propagation, the "select all" pattern
+        becomes misleading — users see a checked parent but
+        only some children are selected. SR users hear
+        contradictory state on parent activation. The tri-state
+        contract is a canonical APG requirement.
+    - rule: >-
+        Hit-target is ≥ 24×24 CSS pixels (WCAG 2.5.8 Level AA;
+        AAA threshold is 44×44). The visual square may be
+        smaller, but the clickable region — typically the
+        wrapping label — must meet the threshold.
+      source: wcag
+      sourceRef: 'WCAG 2.5.8 Target Size (Minimum)'
+      consequence: >-
+        Below the threshold, mobile users and users with motor-
+        control limitations cannot reliably activate the
+        checkbox. The visual square is misleading — designers
+        often paint 16×16 squares thinking that is the target.
+        Verify the effective hit-target, not the painted size.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: '`<input type="checkbox">`'
+      note: >-
+        Native HTML element. `indeterminate` is a JS-only
+        property (not an HTML attribute). Default submitted
+        value is `"on"` when no `value` attribute is set.
+        Only checked checkboxes participate in form
+        submission.
+    - system: WAI-ARIA
+      theirTerm: '`role="checkbox"` (with `aria-checked` true | false | mixed)'
+      note: >-
+        WAI-ARIA tri-state checkbox pattern. The native HTML
+        input provides the role implicitly; custom-rendered
+        checkboxes must set `role` plus `aria-checked` plus
+        Space-key handling manually.
+    - system: Material 3
+      theirTerm: Checkbox
+      note: >-
+        Material 3 uses the canonical name. Sizes converge on
+        a single "checkbox" with size-token variation.
+    - system: GOV.UK
+      theirTerm: Checkboxes
+      note: >-
+        GOV.UK uses plural "Checkboxes" because the canonical
+        usage is grouped (`<fieldset>` + `<legend>`). Single-
+        checkbox usage is also documented but the plural
+        framing nudges authors toward the group form.
+    - system: Polaris
+      theirTerm: Checkbox
+      note: >-
+        Polaris adds a `helpText` slot that maps to the
+        canonical description. The Polaris Checkbox does not
+        ship a built-in error-message slot; consumers compose
+        it.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox
+  - https://www.radix-ui.com/primitives/docs/components/checkbox
+  - https://react-aria.adobe.com/Checkbox
+  - https://m3.material.io/components/checkbox/specs
+  - https://design-system.service.gov.uk/components/checkboxes/
+  - https://polaris.shopify.com/components/forms/checkbox
+  - https://mui.com/material-ui/react-checkbox/
+
+lastReviewed: '2026-05-03'
