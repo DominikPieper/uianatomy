@@ -148,7 +148,7 @@ describe('mcp server', () => {
 
   it('get_motion returns null for components without motion', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'button' } });
+    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'link' } });
     const parsed = parseJson(result as any);
     expect(parsed).toBeNull();
   });
@@ -191,9 +191,9 @@ describe('mcp server', () => {
     expect(parsed.map((e: any) => e.name)).toContain('selectionChange');
   });
 
-  it('get_events returns null for Button', async () => {
+  it('get_events returns null for Link', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_events', arguments: { id: 'button' } });
+    const result = await client.callTool({ name: 'get_events', arguments: { id: 'link' } });
     const parsed = parseJson(result as any);
     expect(parsed).toBeNull();
   });

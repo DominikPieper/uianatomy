@@ -137,8 +137,8 @@ describe('motion field', () => {
   });
 
   it('omits motion on components without transition vocabulary', async () => {
-    const button = await loadComponent(join(contentDir, 'button.yaml'));
-    expect(button.motion).toBeUndefined();
+    const link = await loadComponent(join(contentDir, 'link.yaml'));
+    expect(link.motion).toBeUndefined();
   });
 
   it('rejects raw millisecond strings as duration values', async () => {
@@ -776,9 +776,9 @@ describe('events field', () => {
     expect(names).toContain('openChange');
   });
 
-  it('omits events on Button (primitive)', async () => {
-    const button = await loadComponent(join(contentDir, 'button.yaml'));
-    expect(button.events).toBeUndefined();
+  it('omits events on Link (primitive)', async () => {
+    const link = await loadComponent(join(contentDir, 'link.yaml'));
+    expect(link.events).toBeUndefined();
   });
 
   it('rejects empty events array', async () => {

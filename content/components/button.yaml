@@ -182,6 +182,39 @@ axes:
       - loading
       - pressed
 
+motion:
+  reducedMotionFallback: instant
+  durations:
+    spinnerRotation: motion.duration.slow
+    pressedFeedback: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: click
+    payload: >-
+      Standard `MouseEvent` (or synthetic equivalent) fired on
+      activation by pointer click, Enter, or Space. Suppressed
+      when the button is in the `disabled` or `loading` data
+      state — implementations guard the handler at the activation
+      boundary so consumers never observe a click in those
+      states.
+    frameworkNotes:
+      webComponents: >-
+        Native `click` event on the host `<button>`; consumers
+        listen with `addEventListener('click', …)`. The host
+        prevents default activation while `loading` or `disabled`.
+      react: >-
+        `onClick(event: React.MouseEvent<HTMLButtonElement>)`.
+        Loading-guard implemented by checking `props.loading`
+        before invoking the supplied handler.
+      angularSignals: >-
+        `output<MouseEvent>('click')` or the host-binding
+        `(click)` directive; loading-guard via `[disabled]`
+        binding tied to the loading signal.
+      vue: >-
+        Native `@click` listener on the `<button>` element;
+        wrapper components re-emit after the loading-guard.
+
 mismatches:
   - figma: A button drawn as a styled `<div>` (or "rectangle with text") with click-through interactions in the prototype
     code: A real `<button>` element with native focus, native key handling (Enter / Space), and form participation
