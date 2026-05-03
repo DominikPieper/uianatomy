@@ -1,0 +1,840 @@
+id: textarea
+name: Textarea
+description: >-
+  A multi-line plain-text editing control for free-form prose —
+  comments, feedback, descriptions, support-ticket bodies. Native
+  HTML `<textarea>` is canonical; carries `aria-multiline=true`
+  implicitly. Distinct from TextInput by the multi-line value
+  shape (line-breaks preserved on submission), by the `rows`
+  axis, and by the auto-resize contract that grows the field as
+  content fills.
+
+intro: >-
+  Textarea is the canonical multi-line-prose-input primitive — a
+  resizable rectangular field that accepts arbitrary line-broken
+  text. Standalone canonical (not a TextInput variant) because
+  the axes diverge: `rows`, `resize` direction, and the auto-
+  resize contract have no analog in the single-line surface.
+  Two variants — standard fixed-rows-with-manual-resize and
+  auto-resize bounded by `minRows` plus `maxRows` — and an
+  optional character-counter slot that announces remaining
+  characters via `aria-live`. The reference documents the
+  resize-blocks-zoom anti-pattern (a WCAG 1.4.10 reflow risk),
+  the auto-resize-thrash performance pitfall, and the
+  divergence from TextInput.
+
+alternateNames:
+  - 'Multi-line text input'
+  - 'Comment box'
+  - 'Text area'
+
+whenToUse:
+  use: >-
+    For free-form prose where the user may write more than a
+    single line — comments, reviews, support-ticket bodies,
+    feedback fields, descriptions. Use auto-resize when the
+    natural input length is unpredictable and a fixed rows
+    value either wastes space or forces internal scrolling
+    too eagerly. Use fixed rows when the surrounding layout
+    has firm vertical bounds (sidebar fields, dense forms).
+    Pair with a character-counter when the field has a
+    canonical maxlength that aids the user.
+  avoid: >-
+    For single-line inputs — that is `TextInput`. For
+    structured input (rich-text, code, formula) — that is
+    a dedicated rich-text editor or code-block editor; native
+    textarea does not support inline formatting. For very
+    short bounded prose (under ~40 chars) — TextInput plus
+    soft-warning is leaner. Never use textarea where the
+    value is conceptually a single line that may overflow —
+    overflow handling on a single-line `<input>` is the
+    correct surface.
+  vsRelated:
+    - id: text-input
+      difference: >-
+        `TextInput` is a single-line `<input type="text">`
+        whose value never contains line breaks; `Textarea` is
+        a multi-line `<textarea>` that preserves line breaks
+        on submission. The axes diverge: textarea ships
+        `rows`, `resize`, and auto-resize axes; text-input
+        does not. Both share the label association rules and
+        the form-integration discipline (Constraint
+        Validation API, autocomplete tokens). Decision test:
+        does the value carry meaningful line-breaks
+        (Textarea) or is it a single-line value (TextInput)?
+    - id: combobox
+      difference: >-
+        `Combobox` commits one value from a constrained list
+        with optional typeahead filter; `Textarea` accepts
+        free-form arbitrary multi-line text. Combobox uses a
+        listbox popup; Textarea is a flat field. Use Combobox
+        for structured single-value choice; Textarea for
+        unstructured prose entry.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The wrapper associating the textarea with its label and
+      optional description / error / character-count slots.
+      Carries the disabled / invalid / focus-visible visual
+      states via data-attributes. Provides the layout
+      boundary for the resize handle (the field grows or
+      shrinks within the root's inline axis).
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical frame; label + textarea + description + character-count
+    code:
+      slot: root
+      semantic: div-or-fieldset
+    a11y:
+      hint: >-
+        The root holds programmatic associations between the
+        textarea and its label / description / error /
+        character-count via `for` and `aria-describedby`. No
+        ARIA role is needed on the root itself — the textarea
+        carries the textbox role natively.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: label
+    required: true
+    purpose: >-
+      The visible text label identifying the field's purpose
+      ("Comments", "Description", "Tell us more"). Always
+      programmatically associated with the textarea via
+      `<label for>` (or wrapping `<label>`). The label is the
+      canonical accessible name; placeholder text and adjacent
+      paragraphs are not equivalent.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Text element above textarea; size matches form-label hierarchy
+    code:
+      slot: label
+      semantic: label-text
+    a11y:
+      hint: >-
+        Label text is the textarea's accessible name. SR users
+        hear "Comments, edit text, blank, multi-line" or the
+        equivalent per the SR. Required-field markers (visual
+        asterisk) live in the label slot but the canonical
+        signal is `required` attribute on the textarea, not
+        the visual asterisk.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.medium
+      color:
+        foreground: color.text.primary
+
+  - id: textarea
+    required: true
+    purpose: >-
+      The native `<textarea>` element. Carries the `textbox`
+      role implicitly with `aria-multiline=true` (no need to
+      set explicitly per HTML spec). Accepts arbitrary multi-
+      line text; line-breaks preserve on form submission.
+      Default `rows` is 2 (HTML spec); canonical practice
+      sets a meaningful initial size via `rows` or auto-
+      resize-derived height.
+    slotKind: interactive
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Multi-line text frame; min-height bound to rows token; resize-handle visual on bottom-end corner
+    code:
+      slot: textarea
+      semantic: textarea
+    a11y:
+      hint: >-
+        Native `<textarea>` provides the role and the
+        `aria-multiline=true`. Never substitute
+        `<div contenteditable="true">` for a textarea — the
+        contenteditable surface lacks form-submission
+        participation, lacks placeholder-and-required
+        attributes, and ships inconsistent SR support across
+        browsers. `aria-invalid="true"` plus
+        `aria-describedby` linking to error-message activate
+        validation surfacing.
+    tokens:
+      radius:
+        corner: radius.sm
+      color:
+        background: color.surface.bg
+        border: color.border.strong
+      typography:
+        size: text.sm
+      spacing:
+        padding: spacing.compact
+
+  - id: description
+    required: false
+    purpose: >-
+      Optional helper text below the textarea (or between
+      label and textarea). Communicates auxiliary context —
+      "Markdown supported" or "Be specific so we can help
+      faster". Programmatically associated via
+      `aria-describedby`.
+    slotKind: content
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Smaller text below textarea; muted color; visibility per "has description" property
+    code:
+      slot: description
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        Associate via `aria-describedby` on the textarea. SR
+        announces description after the label and the field
+        state. Avoid using description for required-field
+        markers — use `required` attribute on the textarea
+        plus visible asterisk in the label.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+  - id: error-message
+    required: false
+    purpose: >-
+      Optional validation message rendered when the field is
+      invalid. Carries `aria-live="polite"` so SR announces
+      async-validation errors when they appear. Programmatically
+      associated via `aria-describedby` plus `aria-invalid="true"`
+      on the textarea.
+    slotKind: content
+    layout:
+      row: 5
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Error-toned text below textarea; visibility per "has error" property
+    code:
+      slot: error-message
+      semantic: span-with-aria-live
+    a11y:
+      hint: >-
+        `aria-describedby` on the textarea includes the error-
+        message id; `aria-invalid="true"` triggers SR error
+        announcement on focus. The error-message element
+        carries `aria-live="polite"` so async-validation
+        errors announce when they appear without forcing
+        focus moves.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.danger
+
+  - id: character-count
+    required: false
+    purpose: >-
+      Optional character-counter rendered below the textarea
+      reading "X characters remaining" or "X / Y characters".
+      Updates as the user types; carries `aria-live="polite"`
+      so SR announces the count on pause. Threshold-based
+      visibility (GOV.UK convention) — show only when user
+      reaches a percentage of the limit so the counter does
+      not noise the field at low counts.
+    slotKind: content
+    layout:
+      row: 6
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Right-aligned smaller text below textarea; muted by default, error-toned when over limit
+    code:
+      slot: character-count
+      semantic: span-with-aria-live
+    a11y:
+      hint: >-
+        `aria-live="polite"` so the counter announces on
+        typing-pause without interrupting active typing.
+        `aria-describedby` on the textarea may include the
+        counter id so SR users hear the limit on field
+        focus. Avoid `aria-live="assertive"` — interrupting
+        every keystroke is hostile.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+axes:
+  variants:
+    - standard
+    - auto-resize
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - name: resize
+      kind: enum
+      values: [none, vertical, horizontal, both]
+    - { name: disabled, kind: primitive, of: boolean }
+    - { name: readonly, kind: primitive, of: boolean }
+    - { name: required, kind: primitive, of: boolean }
+    - { name: invalid, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - empty
+      - filled
+      - invalid
+      - at-limit
+    transitions:
+      - from: empty
+        to: filled
+        trigger: User types into the textarea
+      - from: filled
+        to: empty
+        trigger: User clears the textarea content
+      - from: filled
+        to: invalid
+        trigger: Validation fails (over maxlength, under minlength, required-but-empty on submit)
+      - from: filled
+        to: at-limit
+        trigger: User reaches the character-count threshold (typically 75-100% of maxlength)
+
+mismatches:
+  - figma: Textarea drawn with fixed pixel height
+    code: Textarea sized by `rows` attribute (line-count) plus auto-resize for content-driven growth
+    consequence: >-
+      Designers ship "120 px tall textarea"; developers know
+      the canonical surface is `rows` (line-count) which
+      varies by font-size, line-height, and platform. The
+      two surfaces diverge — the Figma frame height does not
+      match the rendered textarea height across browsers
+      (Mac vs Windows font-rendering shifts visible row
+      count). Auto-resize variants expand beyond the Figma
+      frame, breaking the design illustration.
+    correct: >-
+      Document size as `rows` plus `size` token. Figma
+      carries one frame per row count (3-row, 5-row, 8-row
+      illustrative variants); auto-resize variant carries an
+      annotation for `minRows` and `maxRows` bounds. Code
+      uses the `rows` attribute or computes height from
+      content.
+
+  - figma: Resize-handle drawn as a static decorative element
+    code: Resize-handle is a native browser affordance controlled by `resize` CSS property
+    consequence: >-
+      Designers paint a custom three-dot resize handle in the
+      bottom-right corner; developers rely on the browser-
+      provided handle (default) which renders differently
+      across browsers and platforms. The two surfaces look
+      different. Designers may not realise the handle is
+      browser-controlled and try to position custom controls.
+    correct: >-
+      Document the resize handle as browser-provided in the
+      anatomy. Figma uses a generic visual placeholder (or
+      omits it) with an annotation noting browser-rendering.
+      Custom resize handles require completely overriding
+      `resize: none` plus pointer-event handling — heavy
+      and rarely worth the divergence from native.
+
+  - figma: Auto-resize variant drawn at a single representative height
+    code: Auto-resize textarea grows from `minRows` to `maxRows` based on content
+    consequence: >-
+      Designers ship one auto-resize variant frame at "this
+      is roughly the typical content height"; developers
+      ship a textarea that ranges from 2 rows to 12 rows
+      (or whatever bounds). The Figma file does not
+      illustrate the empty / filled / overflow states, so
+      designers cannot review the boundary behaviours.
+    correct: >-
+      Document `minRows` and `maxRows` as canonical
+      properties. Figma carries three frames (empty at
+      minRows, filled at typical height, overflowing at
+      maxRows-with-internal-scroll). Code computes height
+      from content via `scrollHeight` measurement on input
+      events.
+
+  - figma: Character-counter drawn as plain static text
+    code: Character-counter is `aria-live="polite"` so SR announces the count on typing-pause
+    consequence: >-
+      Designers draw "120 / 500" as static text under the
+      textarea; developers wrap it in a live-region. The
+      visual is identical but the AT contract is invisible
+      in the Figma file — designers may move the counter
+      to a non-live span without realising the regression.
+    correct: >-
+      Document the character-counter slot as `aria-live="polite"`
+      in the anatomy. Figma's counter slot carries an
+      annotation for the live-region behaviour. Code wraps
+      the counter element in a live-region or sets
+      `aria-live` on the element itself.
+
+mistakes:
+  - id: textarea-no-label
+    severity: blocker
+    title: Textarea has no programmatically-associated label
+    description: >-
+      The textarea renders with no `<label for>`, no wrapping
+      `<label>`, and no `aria-labelledby`. SR users hear
+      "edit text, multi-line, blank" without the field
+      meaning. Form filling becomes blind for AT users.
+    fix: >-
+      Wrap the textarea in `<label>` (the textarea becomes a
+      child of the label) or pair it with `<label for="<id>">`.
+      Either form establishes the canonical association.
+      Adjacent paragraphs and placeholder text are NOT
+      substitutes — the AT contract is programmatic.
+
+  - id: textarea-placeholder-as-label
+    severity: major
+    title: Field meaning lives in placeholder text instead of a label
+    description: >-
+      The textarea has no visible label; placeholder text
+      ("Tell us more...") communicates the meaning. When the
+      user starts typing, the placeholder disappears and the
+      meaning is lost. SR may or may not announce the
+      placeholder; users with cognitive load or short-term
+      memory needs cannot recall what the field asks.
+    fix: >-
+      Always render a visible `<label>` with the field
+      meaning. Placeholder text is reserved for example
+      content ("e.g. Steps to reproduce") that supplements
+      but does not replace the label. The visible label
+      stays present; the placeholder is auxiliary.
+
+  - id: textarea-resize-blocks-zoom
+    severity: major
+    title: '`resize: none` plus narrow content area blocks WCAG 1.4.10 reflow'
+    description: >-
+      The textarea is rendered with `resize: none` to fit a
+      tight design layout. On narrow viewports or under user
+      zoom (e.g. 200% zoom for low-vision users), the
+      textarea content overflows or becomes unreadable
+      because the user cannot enlarge the field. Violates
+      WCAG 1.4.10 (Reflow).
+    fix: >-
+      Default to `resize: vertical` so users can extend the
+      field. Reserve `resize: none` for layouts where the
+      surrounding context auto-resizes (sidebar panels, full-
+      bleed modals) AND the field's `maxlength` is short
+      enough that overflow is unlikely. Test at 200% zoom
+      to verify content remains readable.
+
+  - id: textarea-autoresize-thrash
+    severity: major
+    title: Auto-resize recalculates layout on every keystroke without debounce
+    description: >-
+      Auto-resize textarea measures `scrollHeight` and updates
+      its CSS `height` on every `input` event. On long-form
+      content with rapid typing, the layout recalculates
+      hundreds of times per second — janks the input,
+      drops frames, and on slower devices breaks typing
+      cadence. Visible as cursor lag and stuttering.
+    fix: >-
+      Debounce the height-recalc via `requestAnimationFrame`
+      coalescing (one measure per frame) or via input-event
+      throttling (one measure per ~50 ms). Alternative
+      mechanism: hidden mirror element with the same content
+      and CSS, measured via offsetHeight without triggering
+      layout-recalc on the textarea itself. Both patterns
+      are well-documented in mature libraries (react-textarea-
+      autosize, autosize.js).
+
+  - id: textarea-character-count-no-aria-live
+    severity: major
+    title: Character-counter updates silently for SR users
+    description: >-
+      The character-counter ("120 / 500") renders as static
+      text and updates as the user types, but is not in a
+      live-region. SR users hear the field but never the
+      counter; they cannot tell when they are approaching
+      the limit and may submit invalid content.
+    fix: >-
+      Wrap the counter in `aria-live="polite"` so SR
+      announces the count on typing-pause. For threshold-
+      visibility patterns (GOV.UK), make the count visible
+      and live only above ~75% of the limit so AT users
+      get the warning when it matters. Avoid
+      `aria-live="assertive"` — every keystroke
+      announcement is hostile.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-textarea>` host with `name`, `value`, `rows`,
+      `auto-resize`, `min-rows`, `max-rows`, `disabled`,
+      `required`, `invalid` attributes; renders native
+      `<textarea>` slotted inside, plus optional label /
+      description / character-count slots
+    variantMechanism: >-
+      attributes (`size="md"`, `resize="vertical"`,
+      `auto-resize`); CSS `resize` property on the textarea
+      drives the resize-handle availability; `:state(at-limit)`
+      for state-driven styling
+  react:
+    structureMechanism: >-
+      Function component (Material UI TextField with
+      multiline, React Aria TextField with TextArea, Atlassian
+      Textarea, Polaris TextField with multiline, Mantine
+      Textarea); auto-resize via react-textarea-autosize or
+      built-in props (`autoResize`, `minRows`, `maxRows`)
+    variantMechanism: >-
+      props with class-variance-authority; `multiline` boolean
+      (Polaris idiom) or dedicated component (Atlassian);
+      `value` plus `onChange` for controlled state
+  angularSignals:
+    structureMechanism: >-
+      Angular component with input<string>('value'),
+      input<boolean>('autoResize'), input<number>('minRows'),
+      input<number>('maxRows'); ControlValueAccessor for
+      ngModel/formControl integration; CDK TextFieldModule
+      provides cdkTextareaAutosize directive
+    variantMechanism: >-
+      input<'sm' | 'md' | 'lg'>('size'); host-binding
+      [attr.aria-invalid] from form-control state; signal-
+      derived height for auto-resize via ResizeObserver
+  vue:
+    structureMechanism: >-
+      Single-file component with v-model for value (string);
+      PrimeVue Textarea, Naive UI Input with type="textarea"
+      as third-party precedents; auto-resize via composable
+      or directive
+    variantMechanism: >-
+      defineProps with literal-union types; v-bind for rows /
+      autoResize; computed property for aria-invalid from
+      validation state
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    autoResizeAdjust: motion.duration.fast
+    focusRingFade: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: valueChange
+    payload: >-
+      `{ value: string, previousValue: string }`. Fires when
+      the textarea content changes via user input (typing,
+      paste, cut). Multi-line values preserve `\n` line-
+      breaks. Programmatic value changes (controlled-prop
+      updates) typically suppress the event to avoid loops.
+    frameworkNotes:
+      webComponents: >-
+        `valueChange` CustomEvent on the host with
+        `event.detail = { value, previousValue }`.
+      react: >-
+        `onChange(event)` (native) or `onChange(value)`
+        (controlled idiom — React Aria, Material UI).
+      angularSignals: >-
+        `output<string>('valueChange')` plus
+        ControlValueAccessor `onChange(value)` for forms.
+      vue: >-
+        `@update:modelValue` event for v-model binding;
+        `@input` for non-controlled.
+
+  - name: heightChange
+    optional: true
+    payload: >-
+      `{ height: number, rows: number }`. Fires when the
+      auto-resize textarea adjusts its height in response to
+      content changes. Only canonical when consumers track
+      layout reflow externally; standalone auto-resize
+      manages height internally without exposing the event.
+    frameworkNotes:
+      webComponents: >-
+        `heightChange` CustomEvent with
+        `event.detail = { height, rows }`.
+      react: >-
+        `onHeightChange(height, rows)` (react-textarea-
+        autosize idiom).
+      angularSignals: >-
+        `output<{ height: number; rows: number }>('heightChange')`.
+      vue: >-
+        `@height-change` event with payload `{ height, rows }`.
+
+formIntegration:
+  nativeElement: textarea
+  submittedValue: >-
+    The textarea's `.value` (string with line-breaks
+    preserved as `\n`). Submits as `<name>=<encoded-value>`;
+    line-breaks encode as `%0A` in URL-encoded forms or
+    preserve as raw `\n` in multipart. Default value is the
+    text content between opening and closing tags (HTML
+    spec). Empty textarea submits an empty string when
+    present in the form (unlike checkbox which omits when
+    unchecked).
+  requiredAttr: true
+  validation: >-
+    Native Constraint Validation API surfaces `valueMissing`
+    when `required` and empty, `tooLong` when over
+    `maxlength`, `tooShort` when under `minlength`. The
+    `pattern` attribute does NOT apply to textarea (HTML
+    spec — pattern is input-only). For multi-line patterns,
+    use `validate` callback in React Aria or
+    custom-validation prop in form libraries. Custom
+    validation surfaces via `setCustomValidity()` on the
+    textarea element.
+  bridges:
+    react: >-
+      Controlled via `value` (Radix, React Aria, Material
+      UI); `onChange` callbacks. React Hook Form / Formik
+      integrate via `register("name")` plus `setValue`.
+    vue: >-
+      Two-way binding via `v-model`; VeeValidate / FormKit
+      integrate via field-level rules; the underlying
+      `<textarea>` is rendered for native form submission.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(value: string)` → `value.set(...)`.
+      `formControl` / `formControlName` plus
+      Validators.required + Validators.maxLength /
+      Validators.minLength drive validation; CDK
+      cdkTextareaAutosize directive integrates with
+      reactive forms.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus
+      `internals.setFormValue(value)`. Native `<textarea>`
+      slotted inside provides form participation
+      automatically; element-internals is needed only when
+      the textarea is encapsulated in shadow DOM.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Textarea inherits `dir` from the document or accepts
+      explicit `dir` attribute. Under `direction: rtl`, the
+      caret starts at the inline-end (right side) and text
+      flows right-to-left. Resize handle position swaps to
+      the bottom-inline-start corner via logical positioning.
+      The character-counter alignment (typically right-end
+      in LTR) flips to left-end via `text-align: end`.
+  textExpansion: >-
+    Label text expands 30-50% under translation. Description
+    and error-message expand similarly; reserve no fixed
+    width on text slots. The textarea field itself
+    accommodates expansion naturally because the value is
+    user-supplied, not translated. Character-counter text
+    ("X / Y characters" → "X / Y caractères" or "X / Y
+    Zeichen") follows generic prose expansion. Auto-resize
+    variants need no special handling for expansion because
+    the height adapts to content.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves to the textarea. Focus ring renders on
+        the field. The textarea is its own tab stop.
+    - keys: Enter (focus inside textarea)
+      expected: >-
+        Inserts a newline in the value. Does NOT submit the
+        form (unlike single-line `<input>` where Enter
+        submits). For ctrl+Enter or cmd+Enter to submit, the
+        consumer wires the keydown handler externally —
+        this is convention in chat / comment surfaces but
+        not canonical to the textarea primitive.
+    - keys: Shift+Tab
+      expected: >-
+        Moves focus to the previous focusable element. The
+        textarea does not capture Tab — Tab inserts a tab
+        character only if the consumer explicitly opts in
+        (rare; generally Tab moves focus per HTML default).
+    - keys: Resize handle drag (mouse)
+      expected: >-
+        When `resize: vertical | horizontal | both`, the
+        bottom-end corner shows a resize affordance. Drag
+        adjusts the textarea height (and width if
+        applicable). Keyboard users have no equivalent
+        canonical mechanism — auto-resize variants make
+        this point moot by growing automatically with
+        content.
+  announcements:
+    - trigger: SR encounters an empty textarea
+      expected: >-
+        "[label text], edit text, multi-line, blank" or the
+        SR-equivalent. The role (textbox), the multi-line
+        property, and the empty state all announce.
+    - trigger: SR encounters a filled textarea
+      expected: >-
+        "[label text], edit text, multi-line, [first line of
+        content]" — most SR read the first line plus
+        position; users navigate with Down arrow to read
+        further lines.
+    - trigger: User types and reaches the character-count threshold
+      expected: >-
+        Character-counter announces via `aria-live="polite"`
+        on typing-pause — "20 characters remaining" or "5
+        characters over the limit". The textarea's
+        `aria-invalid` flips when the limit is crossed.
+    - trigger: SR encounters a textarea with validation error after submit
+      expected: >-
+        "[label text], edit text, multi-line, invalid entry,
+        [error message]". The error-message announces via
+        `aria-describedby` plus `aria-invalid`.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - label
+    - color-contrast
+    - autocomplete-valid
+
+performance:
+  - name: autoResizeRecalcInterval
+    metric: input-event-coalesce
+    threshold: 50
+    unit: ms
+    rationale: >-
+      Auto-resize textareas measure content height on input
+      events to update `height`. Without coalescing,
+      hundreds of recalcs per second jank typing on slower
+      devices (cursor lag, dropped frames). Throttle to one
+      measurement per ~50 ms (or one per
+      `requestAnimationFrame`) so the visual updates feel
+      smooth without saturating the layout pipeline. Sources:
+      react-textarea-autosize, autosize.js, Material UI
+      TextField multiline implementation all coalesce.
+  - name: maxLengthGuardrail
+    metric: characters
+    threshold: 100000
+    unit: characters
+    rationale: >-
+      Native `<textarea>` accepts arbitrary content length,
+      but DOM `value` getter / setter performance degrades
+      with very large strings (~100k characters), and form
+      submission of multi-megabyte text bodies stresses
+      server validation and database storage. For
+      structured-content surfaces (rich-text, code, formula),
+      use a dedicated editor; for prose surfaces, set a
+      sensible `maxlength` and surface the limit via the
+      character-counter slot.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The textarea has a programmatically-associated label
+        — either `<label for="<id>">` or a wrapping `<label>`.
+        Adjacent prose and placeholder text are not
+        substitutes. The label is the canonical accessible
+        name.
+      source: apg
+      sourceRef: 'WAI-ARIA textbox + label patterns'
+      consequence: >-
+        Without the association, SR users hear "edit text,
+        multi-line" without the field meaning. The
+        programmatic contract is what AT relies on; visual
+        proximity is sighted-only and breaks under voice
+        navigation, mobile SR, and accessibility tooling.
+    - rule: >-
+        `resize: none` is restricted to layouts that auto-
+        resize themselves OR fields with short `maxlength`
+        bounds. Default `resize: vertical` so users with
+        zoom requirements (WCAG 1.4.10 Reflow) can adjust
+        the field. Implementations that lock resize without
+        compensating for low-vision zoom block accessible
+        content entry.
+      source: wcag
+      sourceRef: 'WCAG 1.4.10 Reflow'
+      consequence: >-
+        Without resize freedom, low-vision users at 200%
+        zoom encounter content that does not fit or is
+        truncated. The reflow contract is one of the
+        canonical 2.x AA requirements; locking resize is
+        the most common single textarea regression in
+        accessibility audits.
+    - rule: >-
+        Auto-resize implementations coalesce height-recalc
+        to one measurement per ~50 ms (or per
+        `requestAnimationFrame`). Recalculating on every
+        input event without throttle drops frames on
+        commodity hardware and breaks typing cadence on
+        slower devices.
+      source: canon
+      consequence: >-
+        Without coalescing, textareas with auto-resize
+        become unusable on tablets, low-end Android, and
+        older laptops. The performance threshold is
+        invisible in static design review but surfaces
+        immediately in real-device QA — and by then the
+        implementation is harder to fix.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: '`<textarea>`'
+      note: >-
+        Native HTML element. `aria-multiline=true` is
+        implicit; do not set explicitly. Default `rows="2"`
+        per spec; canonical practice sets a meaningful
+        initial size. Line-breaks preserve on form
+        submission as `\n`.
+    - system: WAI-ARIA
+      theirTerm: '`role="textbox"` (with `aria-multiline=true`)'
+      note: >-
+        WAI-ARIA textbox role. Native textarea provides this
+        implicitly; custom-rendered multi-line surfaces
+        (rare — `contenteditable` is the alternative) need
+        the role plus `aria-multiline` plus key handling.
+    - system: Material 3
+      theirTerm: Text field (multi-line variant)
+      note: >-
+        Material 3 codifies multi-line as a variant of the
+        text field component, not a separate primitive.
+        Same canonical contract; the spec splits multi-line
+        guidance into a dedicated specs page.
+    - system: Polaris
+      theirTerm: TextField (multiline prop)
+      note: >-
+        Polaris exposes multi-line as a `multiline` boolean
+        prop on TextField. Same canonical contract; the
+        prop activates auto-resize and the dedicated
+        textarea anatomy.
+    - system: Atlassian
+      theirTerm: Textarea
+      note: >-
+        Atlassian ships Textarea as a separate component
+        with `resize`, `minimumRows`, `maxHeight` props.
+        Canonical name match; the auto-resize bounds
+        (minimumRows + maxHeight) align with the canonical
+        `minRows` + `maxRows` axis.
+    - system: GOV.UK
+      theirTerm: Textarea + Character count
+      note: >-
+        GOV.UK ships Textarea plus a separate Character
+        count component (textarea with built-in counter).
+        The canonical anatomy folds character-count as an
+        optional slot; GOV.UK's threshold-visibility pattern
+        is a canonical optimisation captured in the slot
+        prose.
+
+sources:
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
+  - https://react-aria.adobe.com/TextField
+  - https://m3.material.io/components/text-fields/specs
+  - https://atlassian.design/components/textarea/examples
+  - https://design-system.service.gov.uk/components/character-count/
+  - https://polaris-react.shopify.com/components/forms/text-field
+  - https://www.w3.org/TR/wai-aria-1.2/#textbox
+
+lastReviewed: '2026-05-03'

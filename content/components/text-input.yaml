@@ -874,6 +874,17 @@ whenToUse:
         the value type differs — boolean toggle vs string.
         Use Checkbox for boolean fields; TextInput for typed
         strings.
+    - id: textarea
+      difference: >-
+        `Textarea` is a multi-line `<textarea>` whose value
+        carries line-breaks; `TextInput` is single-line
+        `<input type="text">` whose value never contains line
+        breaks. The axes diverge: textarea ships `rows`,
+        `resize`, and auto-resize axes; text-input does not.
+        Both share the label-association rules and the
+        Constraint Validation API. Decision test: does the
+        value carry meaningful line-breaks (Textarea) or is
+        it a single-line value (TextInput)?
 
 contracts:
   nonNegotiable:

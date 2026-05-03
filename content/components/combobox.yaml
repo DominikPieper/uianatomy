@@ -77,6 +77,15 @@ whenToUse:
         items) read better as a list of Checkbox; large
         unbounded sets need Combobox with multi-select for the
         filter-and-overflow handling.
+    - id: textarea
+      difference: >-
+        `Textarea` accepts arbitrary multi-line free-form
+        prose; `Combobox` commits one structured value from
+        a constrained list with optional typeahead filter.
+        Combobox uses a listbox popup; Textarea is a flat
+        field. Use Combobox for structured single-value
+        choice from a bounded set; Textarea for unstructured
+        prose entry.
 
 anatomy:
   - id: input
