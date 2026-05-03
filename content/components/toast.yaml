@@ -723,6 +723,13 @@ whenToUse:
         `Tooltip` is hover/focus-revealed descriptive text;
         `Toast` is system-pushed notification. Tooltip is pulled
         by the user; Toast is pushed by the system.
+    - id: skeleton
+      difference: >-
+        `Skeleton` reserves layout space during a load; `Toast`
+        announces a transient state change after the load
+        completes. The two often pair across a load lifecycle —
+        Skeleton during the wait, optional Toast as the success
+        / failure confirmation when the load resolves.
 
 contracts:
   nonNegotiable:

@@ -1,0 +1,497 @@
+id: skeleton
+name: Skeleton
+description: >-
+  A placeholder element that occupies the layout footprint of content
+  not yet loaded. Distinct from a spinner: the skeleton preserves the
+  exact dimensions of the eventual content, eliminating layout shift
+  on load. Three variants cover the canonical placeholder shapes —
+  text rows, circular avatars, and rectangular blocks.
+
+intro: >-
+  Skeleton is the canonical layout-preserving loading placeholder —
+  a wireframe stand-in that occupies the exact footprint of content
+  not yet loaded. Three variants (text, circle, rect) cover the
+  canonical placeholder shapes; the shimmer or wave animation
+  reinforces the in-flight signal but collapses under
+  prefers-reduced-motion. Common hosts: list rows, card grids,
+  avatar groups, paragraph blocks. The reference documents the
+  aria-busy contract on the parent container, the
+  aria-hidden-on-individual-skeletons rule, the role=status sibling
+  for the textual loading announcement, and the divergence from
+  Progress (use Progress when the percentage is known).
+
+alternateNames:
+  - 'Loader'
+  - 'Placeholder'
+  - 'Shimmer'
+
+whenToUse:
+  use: >-
+    For loading states where the eventual content has known
+    dimensions and the wait is short enough that a layout-preserving
+    placeholder reads better than a spinner. Common contexts: list
+    rows, card grids, paragraph blocks, avatar groups, dashboard
+    tiles. Skeleton tells the user "this content is coming, the
+    layout will not jump".
+  avoid: >-
+    For loading states where progress is measurable — that is
+    `Progress` (linear or circular determinate). For loading states
+    where the eventual layout is unknown or genuinely empty — that
+    is a centred spinner or an empty-state surface. For brief
+    in-button or in-link loading — that is the host's loading
+    state, not a skeleton overlay.
+  vsRelated:
+    - id: toast
+      difference: >-
+        `Toast` announces transient state changes after they
+        complete; `Skeleton` reserves space during the wait.
+        Skeletons disappear on load; toasts may follow as
+        completion confirmations.
+
+anatomy:
+  - id: container
+    required: true
+    purpose: >-
+      The wrapper that groups multiple skeleton elements covering a
+      single loading region (a list row, a card, a paragraph block).
+      Carries the `aria-busy="true"` attribute that announces the
+      whole region as in-flight.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout frame mirroring the eventual content's layout grid; aria-busy bound to the loading state
+    code:
+      slot: container
+      semantic: region-or-div
+    a11y:
+      hint: >-
+        Container carries `aria-busy="true"` while the loading is
+        in-flight. The container's `role` matches the eventual
+        content's role when known (`role="region"` for landmarks,
+        `role="row"` for table rows). Pair with a sibling
+        `role="status"` element that announces the loading start
+        textually (visually-hidden if no visual loading text).
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: shape
+    required: true
+    purpose: >-
+      The individual skeleton element — a text row, a circle, or a
+      rect. Multiple shapes inside a container compose the layout
+      preview. Carries the shimmer or wave animation, the radius
+      from the variant token, and the size from the eventual-
+      content dimensions.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 1
+      span: 8
+    figma:
+      type: frame
+      hint: Frame with placeholder fill; radius and aspect bound to variant; animation via Smart Animate or simply documented as "shimmer"
+    code:
+      slot: shape
+      semantic: presentational
+    a11y:
+      hint: >-
+        Each individual skeleton is `aria-hidden="true"` so SR
+        users do not encounter N empty placeholders read out as
+        graphic-graphic-graphic. The container's `aria-busy` and
+        the sibling `role="status"` carry the loading announcement
+        for AT.
+    tokens:
+      color:
+        background: color.surface.sunken
+      radius:
+        corner: radius.sm
+
+  - id: announcement
+    required: false
+    purpose: >-
+      A visually-hidden (or visible) sibling region carrying the
+      textual loading announcement for screen readers — "Loading
+      messages", "Loading product list". Lives alongside the
+      skeleton container, never inside it (so the
+      `aria-hidden="true"` on shapes does not swallow the
+      announcement).
+    slotKind: content
+    layout:
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Visually-hidden text (sr-only) describing what is loading
+    code:
+      slot: announcement
+      semantic: status-region
+    a11y:
+      hint: >-
+        Wraps in `role="status"` with `aria-live="polite"`. The
+        text describes what is loading ("Loading messages") and
+        updates to a completion / error message when the load
+        resolves. Avoid writing it as "Loading…" generically;
+        name the content so SR users can predict what arrives.
+    tokens:
+      typography:
+        size: text.sm
+
+axes:
+  variants:
+    - text
+    - circle
+    - rect
+  properties:
+    - name: size
+      kind: enum
+      values: [xs, sm, md, lg, xl]
+    - { name: animated, kind: primitive, of: boolean }
+    - { name: count, kind: primitive, of: boolean }
+  states:
+    interactive: []
+    data:
+      - loading
+      - complete
+      - error
+      - reduced-motion
+
+mismatches:
+  - figma: A static grey rectangle placeholder with no animation
+    code: A skeleton with shimmer animation by default
+    consequence: >-
+      Designers ship a static grey block; developers ship an
+      animated shimmer. The two visually disagree — designers
+      assume "loading state" reads from the static placeholder;
+      developers add motion that designers never reviewed.
+    correct: >-
+      Document the animation as a canonical part of the skeleton
+      anatomy in Figma — either via Smart Animate or a "Shimmer"
+      prototype frame. Code matches the Figma motion spec. The
+      animated property toggles motion off for environments
+      where it is hostile (reduced-motion, embedded screenshots).
+
+  - figma: One large skeleton block standing in for an entire card
+    code: Multiple shape elements inside a container, each mirroring a content row
+    consequence: >-
+      Designers draw one big grey rect; developers ship 4-8
+      separate skeleton shapes mirroring the eventual layout
+      (avatar circle + two text rows + a rect). The two diverge
+      visually and the user sees a less-faithful preview than the
+      design intended.
+    correct: >-
+      The Figma skeleton uses the same anatomy as the eventual
+      content — one shape per layout row. The container holds
+      multiple shapes, each sized to the content it stands in
+      for. Design and code both express the layout preview at the
+      same fidelity.
+
+  - figma: Skeleton drawn without distinguishing the loading announcement
+    code: Container has `aria-busy="true"` and a sibling `role="status"` text region
+    consequence: >-
+      Designers focus on the visual placeholder; developers wire
+      AT semantics that the design file does not document. The
+      visual passes review; the AT-side breaks because the
+      announcement region is missing or names something generic
+      ("Loading…") rather than the content.
+    correct: >-
+      Add a "loading announcement" annotation in the Figma file
+      naming what loads ("Loading messages", "Loading product
+      list"). The annotation maps to the canonical announcement
+      slot; both surfaces ship the meaningful announcement.
+
+  - figma: Skeleton with shimmer animation set as always-on
+    code: Animation respects `prefers-reduced-motion` and falls back to a static placeholder
+    consequence: >-
+      The Figma file ships shimmer-by-default with no
+      reduced-motion variant; developers shipping
+      reduced-motion-aware code remove the shimmer for users who
+      need it. The two diverge under accessibility settings.
+    correct: >-
+      Document the reduced-motion variant in Figma as a separate
+      static frame. Code matches: animation runs by default,
+      collapses to static under `prefers-reduced-motion: reduce`.
+      The animated property in the canonical schema gates the
+      same toggle.
+
+mistakes:
+  - id: skeleton-no-aria-busy
+    severity: blocker
+    title: Skeleton container without `aria-busy`
+    description: >-
+      The skeleton renders during loading but the container has no
+      `aria-busy="true"`. SR users may navigate into the region
+      and encounter placeholder shapes that read as graphics with
+      no signal that the content is in flight.
+    fix: >-
+      Set `aria-busy="true"` on the skeleton container while
+      loading. Remove it when the eventual content arrives. Pair
+      with a sibling `role="status"` region carrying the textual
+      loading announcement so SR users hear the loading start
+      AND know the region is busy.
+
+  - id: skeleton-no-reduced-motion
+    severity: major
+    title: Shimmer animation runs unconditionally
+    description: >-
+      The skeleton's shimmer or wave animation runs regardless of
+      the user's `prefers-reduced-motion` setting. Users with
+      vestibular disorders or motion sensitivity see continuous
+      motion they cannot suppress.
+    fix: >-
+      Wrap the animation in a `prefers-reduced-motion: no-preference`
+      media query. Under `prefers-reduced-motion: reduce`, render
+      a static placeholder. Document the reduced-motion fallback
+      as part of the canonical anatomy.
+
+  - id: skeleton-conflicting-loading-message
+    severity: major
+    title: Multiple loading announcements compete
+    description: >-
+      The skeleton ships its own `role="status"` announcement, the
+      page-level loader ships another, and a toast spawns a third.
+      SR users hear "Loading… Loading messages… Page loading
+      complete" in a chaotic order; the canonical signal is lost.
+    fix: >-
+      The skeleton's announcement is region-scoped — names what
+      loads in this region only. The page-level loader, if any,
+      announces page-level status. Toasts announce completion
+      events, not loading start. Avoid duplicating announcements;
+      one loading start per region, one completion announcement
+      per resolution.
+
+  - id: skeleton-shape-not-aria-hidden
+    severity: major
+    title: Individual skeleton shapes read as graphics
+    description: >-
+      Each shape in the container lacks `aria-hidden="true"`. SR
+      users encounter N empty placeholders read as
+      "graphic, graphic, graphic" instead of the single
+      loading-announcement.
+    fix: >-
+      Set `aria-hidden="true"` on every individual skeleton
+      shape. Only the container's `aria-busy` and the sibling
+      `role="status"` announcement live in the AT tree; shapes
+      are decorative.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-skeleton>` host attribute-driven for variant; a `<ui-skeleton-group>` host wraps multiple skeletons and reflects `aria-busy`
+    variantMechanism: attributes (`variant="text"`, `size="md"`, `animated`); CSS @media respects prefers-reduced-motion
+  react:
+    structureMechanism: Function component (Polaris Skeleton, Material UI Skeleton, Mantine Skeleton, Chakra UI Skeleton) wrapping a div with shape classes; group component pairs with aria-busy region
+    variantMechanism: props with class-variance-authority for variant / size; `animated` prop toggles motion; library convention varies (Skeleton vs SkeletonText vs SkeletonCircle as separate components)
+  angularSignals:
+    structureMechanism: Angular component with input<'text' | 'circle' | 'rect'>(); host-binding [attr.aria-hidden]="true" on shape; container component wraps and emits loading state
+    variantMechanism: input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>(); reduced-motion via signal effect or CSS @media
+  vue:
+    structureMechanism: Single-file component with v-bind for variant; PrimeVue Skeleton, Naive UI Skeleton, Vuetify v-skeleton-loader as third-party precedents
+    variantMechanism: defineProps with literal-union types; v-if for animated state; reduced-motion via composable
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    shimmer: motion.duration.slower
+    pulse: motion.duration.base
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, multi-shape skeleton containers collapse
+        to a simpler layout (one or two shapes per row instead of
+        three or four). The eventual content's responsive layout
+        drives the skeleton's responsive layout — they share the
+        same breakpoint reflow rules.
+
+events:
+  - name: loadingComplete
+    optional: true
+    payload: >-
+      `{ region: string, durationMs: number }`. Fires when the
+      skeleton container transitions from loading to content. Only
+      canonical when the consumer wants to track perceived loading
+      duration for performance telemetry.
+    frameworkNotes:
+      webComponents: >-
+        `loadingComplete` CustomEvent on the container with
+        `event.detail = { region, durationMs }`.
+      react: >-
+        `onLoadingComplete(region, durationMs)` callback; or
+        derived from the controlled `loading` prop transition.
+      angularSignals: >-
+        `output<{ region: string; durationMs: number }>('loadingComplete')`
+        emitted in an effect on the loading signal.
+      vue: >-
+        `@loading-complete` event with payload `{ region, durationMs }`.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps text / circle / rect placeholder shape.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps xs / sm / md / lg / xl. Bound to the eventual content's size.
+  - figma: Animated
+    code: animated
+    kind: boolean
+    notes: Toggles shimmer / wave animation. Always falls back to static under prefers-reduced-motion regardless of this prop.
+  - figma: Count
+    code: count
+    kind: boolean
+    notes: When true, the skeleton stands in for a list of N items rather than a single shape; consumer drives the actual count via children rendering.
+  - figma: Loading Announcement
+    code: announcement
+    kind: text
+    notes: Names what loads ("Loading messages"); rendered into the role=status sibling region.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Text-variant skeletons render direction-neutral (a grey rect
+      reads identically in either direction). Multi-shape
+      containers preserve the layout-direction of the eventual
+      content via logical properties (`inset-inline-start` for
+      leading shapes), so the skeleton mirrors when the content
+      mirrors. Shimmer animation direction follows the writing
+      direction (left-to-right in LTR, right-to-left in RTL).
+  textExpansion: >-
+    The text-variant skeleton width should match the eventual
+    text width — including the 30–50 % expansion for German and
+    Romance languages. Reserve width via `min-width` mirroring
+    the typical content length, allow growth to accommodate
+    longer text. The loading announcement text expands like any
+    UI string and follows the canonical i18n contract.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (skeleton container)
+      expected: >-
+        Skeleton shapes are not in the tab order — they are
+        decorative placeholders. Tab moves through any genuinely
+        focusable elements outside the skeleton; if the eventual
+        content has interactive children, those become focusable
+        only when the load resolves and the skeleton is removed.
+    - keys: Tab (after loading completes)
+      expected: >-
+        Focus moves into the now-rendered content following the
+        eventual content's tab-order rules. The skeleton's
+        removal does not steal focus; if focus was inside the
+        skeleton container at completion (rare), it moves to the
+        first focusable child of the rendered content.
+  announcements:
+    - trigger: Skeleton mounts (loading begins)
+      expected: >-
+        SR announces the textual loading-announcement via the
+        role=status sibling region — "Loading messages",
+        "Loading product list". The shapes themselves are silent
+        (aria-hidden).
+    - trigger: Loading completes (skeleton replaced by content)
+      expected: >-
+        SR may announce a completion message via the same
+        role=status region updating to "Messages loaded" or
+        equivalent, OR by SR re-encountering the now-rendered
+        content. Avoid double-announcing — pick one.
+    - trigger: Loading fails
+      expected: >-
+        SR announces an error via the role=status region or by
+        replacing the skeleton with an error surface that
+        carries its own announcement. Skeleton stuck in
+        permanent loading without an error path is a bug.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-hidden-focus
+    - color-contrast
+    - landmark-unique
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The skeleton container carries `aria-busy="true"` while
+        loading is in-flight; individual skeleton shapes carry
+        `aria-hidden="true"`. A sibling `role="status"` region
+        announces the loading start textually.
+      source: apg
+      sourceRef: 'WAI-ARIA aria-busy + status role patterns'
+      consequence: >-
+        Without `aria-busy`, SR users navigating into the region
+        encounter placeholders read as graphics with no signal
+        that content is loading. Without `aria-hidden` on shapes,
+        each placeholder reads separately and floods the
+        announcement queue. Without the status region, the
+        textual announcement of what loads is missing entirely.
+    - rule: >-
+        Shimmer / wave / pulse animation respects
+        `prefers-reduced-motion: reduce` and falls back to a
+        static placeholder. The motion is reinforcement, not the
+        contract; users with motion sensitivity must be able to
+        suppress it.
+      source: wcag
+      sourceRef: 'WCAG 2.3.3 — Animation from Interactions (AAA) + 2.2 user-controllable timing'
+      consequence: >-
+        Continuous shimmer animation across multiple skeletons
+        triggers vestibular discomfort and cognitive load for
+        affected users; the layout-preserving promise of
+        Skeleton becomes hostile when motion cannot be turned
+        off. The reduced-motion fallback is a non-negotiable
+        accessibility floor.
+    - rule: >-
+        The textual loading announcement names what loads,
+        scoped to the region. "Loading messages", not "Loading…"
+        or "Please wait". One announcement per loading region;
+        page-level loaders handle page-level status separately.
+      source: canon
+      consequence: >-
+        Generic "Loading…" announcements give SR users no
+        prediction of what arrives; multiple competing
+        announcements ("Loading… Loading messages… Loading
+        product list") confuse the user about which region
+        actually completed. Region-scoped, content-named
+        announcements give the user a model of the page.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: 'Loading indicator (Skeleton variant)'
+      note: >-
+        Material 3 documents Skeleton as a Loading-indicator
+        sub-pattern alongside circular and linear progress; the
+        canonical separation here treats Skeleton and Progress
+        as distinct components.
+    - system: Polaris
+      theirTerm: SkeletonBodyText / SkeletonDisplayText / SkeletonThumbnail
+      note: >-
+        Polaris ships variant-specific Skeleton components rather
+        than one component with a variant prop; the composite
+        contract matches but the surface granularity differs.
+    - system: Carbon
+      theirTerm: SkeletonText / SkeletonPlaceholder
+    - system: Atlassian
+      theirTerm: Spinner / Loading
+      note: >-
+        Atlassian historically uses a centred Spinner rather than
+        layout-preserving Skeleton; production teams adopting the
+        canonical Skeleton pattern lean on third-party libraries.
+    - system: Radix
+      theirTerm: Skeleton
+
+sources:
+  - https://www.w3.org/TR/wai-aria-1.2/#aria-busy
+  - https://www.w3.org/TR/WCAG22/#animation-from-interactions
+  - https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
+  - https://m3.material.io/components/loading-indicator/overview
+  - https://polaris.shopify.com/components/feedback-indicators/skeleton-body-text
+  - https://carbondesignsystem.com/components/skeleton/usage/
+  - https://www.radix-ui.com/themes/docs/components/skeleton
+  - https://mantine.dev/core/skeleton/
+  - https://chakra-ui.com/docs/components/skeleton
+
+lastReviewed: '2026-05-03'
