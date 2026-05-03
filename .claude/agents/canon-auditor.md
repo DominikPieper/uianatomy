@@ -56,7 +56,7 @@ Read `shared/tests/depth.test.ts` to check for per-component overrides (Card, Li
 
 - **`mistake.severity`** (P6-72) — required field, `'blocker' | 'major' | 'minor'`. Missing on any entry = **critical** (Zod will fail).
 - **`axeCoreVersion`** (P6-71) — when `a11yAcceptance.axeRules` declared, should be pinned (`4.10.2`). Cross-refine catches it; missing = **major**.
-- **`propertyMap.kind`** (P6-65 / ADR-025) — must use `enum | boolean | text | slot | number`. Old vocabulary (`Boolean | Variant | Text | Instance Swap`) = **critical** (Zod rejects).
+- **`propertyMap.kind`** (P6-65 / ADR-025) — must use `enum | boolean | text | slot | number`. Old vocabulary (`Boolean | Variant | Text | Instance Swap`) = **critical** (Zod rejects). **Do not confuse with `axes.properties[].kind`** — that is a different schema (ADR-010 / P1-9 discriminated-union: `kind: 'primitive', of: boolean` vs `kind: 'enum', values: [...]`). The two `kind` fields share a name but have separate vocabularies and separate ADRs. Only audit `propertyMap[].kind` here; `axes.properties[].kind: primitive` is canonical and must not be flagged.
 - **`events[].optional`** (P6-76) — context-sensitive events should set `optional: true`; flag if payload prose hedges ("when implementation chooses") without the flag = **minor**.
 - **`vsRelated` bidirectional** (P6-79 / P6-86) — every `whenToUse.vsRelated[].id` must have a reverse-ref on the target. Read the target's YAML, check. Missing reverse = **major**. Generic reverse-ref prose ("see X") = **minor**.
 - **`contracts`** (ADR-027) — long `notes:` (> 400 chars) is a structurable-content candidate. Flag = **minor**.
@@ -67,6 +67,8 @@ Read `shared/tests/depth.test.ts` to check for per-component overrides (Card, Li
 - Patterns referencing this component in `composition[].componentId` (check `content/patterns/*.yaml`): note them in the report so the main agent knows aggregate-tools are affected.
 
 ### E. Vocabulary drift
+
+**Scope clarification:** vocabulary-drift checks apply to *token references* (anatomy slot tokens, motion durations/easing, responsive breakpoints, color/spacing/radius/elevation/typography vocab). Do **not** flag `axes.properties[].kind: primitive | enum` — that is a structural discriminator from ADR-010 (P1-9), not a token reference. Do **not** flag `slotKind: structural | content | interactive | decorative` — that is ADR-020 vocabulary, separate from token canon. Only flag values that fail to match a list in `shared/src/vocabulary.ts`.
 
 Cross-check against `shared/src/vocabulary.ts`:
 

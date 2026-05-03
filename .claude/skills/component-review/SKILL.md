@@ -69,7 +69,7 @@ These rolled out 2026-05-01 → 2026-05-03. Pre-existing components need migrati
 
 - **`mistake.severity` (P6-72)** — every `mistakes[].severity` must be `'blocker' | 'major' | 'minor'`. Required field. No omissions.
 - **`axeCoreVersion` (P6-71)** — when `a11yAcceptance.axeRules` is declared, `axeCoreVersion` should be pinned (current canon: `4.10.2`). Cross-refine: only meaningful when `axeRules` declared.
-- **`propertyMap.kind` (P6-65 / ADR-025)** — must use tool-neutral vocabulary `enum | boolean | text | slot | number`. Old `Boolean | Variant | Text | Instance Swap` is rejected by Zod; flag any leftover prose in `notes` referencing old vocabulary.
+- **`propertyMap.kind` (P6-65 / ADR-025)** — must use tool-neutral vocabulary `enum | boolean | text | slot | number`. Old `Boolean | Variant | Text | Instance Swap` is rejected by Zod; flag any leftover prose in `notes` referencing old vocabulary. **Do not confuse with `axes.properties[].kind`** — that is a separate schema (ADR-010 / P1-9 discriminated-union: `kind: 'primitive', of: boolean` vs `kind: 'enum', values: [...]`). Same field name, different vocabularies, different ADRs. `axes.properties[].kind: primitive` is canonical and must never be flagged.
 - **`events.optional` (P6-76)** — context-sensitive canonical events (auto-flip behaviors, manual-vs-automatic activation) should have `optional: true`. Audit: does any event's payload prose hedge ("when implementation chooses to emit") without the flag?
 - **`vsRelated` bidirectional (P6-79 / P6-86)** — every `whenToUse.vsRelated[].id` must have a reverse-ref on the target. Lint enforces this; check the test passes for the component under review.
 - **`contracts` (P6-73 / ADR-027)** — long `notes:` blocks should have structurable content extracted. Three patterns: vocabulary-drift, non-negotiable-contracts, implementation-audit-guidance.
@@ -86,6 +86,8 @@ These rolled out 2026-05-01 → 2026-05-03. Pre-existing components need migrati
 - **Motion** — `motion.durations` and `motion.easing` must reference canonical vocab.
 - **Breakpoints** — `responsive.breakpoints[].at` must reference `breakpoint.{xs,sm,md,lg,xl}`.
 - **States** — `axes.states.transitions[].from|to` must exist in `axes.states.interactive ∪ data` (Zod refine catches; verify the test runs).
+
+**Scope clarification:** vocabulary-drift covers *token references* only. Do **not** flag `axes.properties[].kind: primitive | enum` (ADR-010 discriminator) or `slotKind: structural | content | interactive | decorative` (ADR-020 vocabulary) — those are structural enums, not token canon. Only flag values that fail to match a list in `shared/src/vocabulary.ts`.
 
 ### F. Source-claim staleness
 
