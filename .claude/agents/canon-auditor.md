@@ -32,6 +32,21 @@ Project root: `/Users/dominikpieper/Projects/uianatomy`. All paths in this promp
 
 Run every dimension. Each finding is one entry in the report.
 
+### ⚠️ Two pre-flight rules (read before flagging anything)
+
+These two false-positives recurred across the 2026-05-03 pilot batch. **Internalize them or your report will be wrong.**
+
+**Rule 1 — `kind: primitive` in `axes.properties` is canonical.** The schema has TWO fields named `kind` in two separate Zod schemas:
+
+| Field | Schema | Vocabulary | Source |
+|---|---|---|---|
+| `axes.properties[].kind` | `propertyPrimitiveSchema \| propertyEnumSchema` discriminated-union | `'primitive' \| 'enum'` (with `of: boolean` or `values: [...]`) | ADR-010 / P1-9 |
+| `propertyMap[].kind` | `propertyKindSchema` enum | `'enum' \| 'boolean' \| 'text' \| 'slot' \| 'number'` | ADR-025 / P6-65 |
+
+Same name, different schemas, different ADRs. **Never flag `axes.properties[].kind: primitive` as a vocabulary issue.** Only `propertyMap[].kind` belongs to the ADR-025 vocabulary check. If you see `kind: primitive, of: boolean` inside `axes.properties[]`, that is correct and must not appear in `findings` or `vocabularyDrift`.
+
+**Rule 2 — `vsRelated` reverse-refs require literal file-read of the target.** Do not skim, do not infer from the directory. For each `whenToUse.vsRelated[].id` in the audited component, open `content/components/<targetId>.yaml`, search for `whenToUse.vsRelated`, and verify a `- id: <auditedComponentId>` entry exists. If you skip the read, you will hallucinate missing reverse-refs that the bidirectional lint already validates green. The lint runs in `pnpm -F @uianatomy/shared test` — if all 155 tests pass, no reverse-ref is structurally missing. Reverse-ref **prose quality** (generic vs target-perspective) is a separate, narrower judgement.
+
 ### A. Schema-section presence
 
 Required (parse-fail if missing): `id`, `name`, `description`, `anatomy[]`, `axes`, `mismatches[]`, `mistakes[]`, `frameworkMap`.
