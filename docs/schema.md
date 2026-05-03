@@ -525,6 +525,35 @@ properties:
 
 This shape replaces the previous free-form `type: string` (e.g., `type: 'sm | md | lg'`). Authors no longer escape pipe characters inside YAML strings, and Zod validates that enum values are unique, non-empty, and at least two in number.
 
+#### Two `kind` vocabularies — same name, different schemas
+
+Be careful: the canon uses the field name `kind` in two separate Zod schemas with two separate vocabularies. They share the name only.
+
+| Field | Schema | Vocabulary | Source ADR | Used for |
+|---|---|---|---|---|
+| `axes.properties[].kind` | `propertyPrimitiveSchema \| propertyEnumSchema` discriminated union | `'primitive' \| 'enum'` (with `of: boolean` or `values: [...]`) | [ADR-010](./adr/010-property-type-union.md) (P1-9) | Code-side type discriminator — primitive vs enum |
+| `propertyMap[].kind` | `propertyKindSchema` enum | `'enum' \| 'boolean' \| 'text' \| 'slot' \| 'number'` | [ADR-025](./adr/025-property-map-kind.md) (P6-65) | Tool-neutral role tag — Figma↔code bridge |
+
+Reading either field requires knowing which schema you are inside:
+
+```yaml
+axes:
+  properties:
+    - { name: iconOnly, kind: primitive, of: boolean }   # ADR-010 vocabulary
+    - name: size
+      kind: enum                                          # ADR-010 vocabulary
+      values: [sm, md, lg]
+propertyMap:
+  - figma: Size
+    code: size
+    kind: enum                                            # ADR-025 vocabulary
+  - figma: Has Leading Icon
+    code: hasIcon
+    kind: boolean                                         # ADR-025 vocabulary
+```
+
+**Do not flag `axes.properties[].kind: primitive` as a vocabulary issue** — that is the canonical type-discriminator from ADR-010, not a violation of the ADR-025 propertyMap-vocabulary. The `canon-auditor` subagent's pre-flight rules cover this explicitly. A future schema-rename (P6-132 backlog item) could split the field name (`axes.properties[].typeKind` vs `propertyMap[].propertyKind`) but the migration cost is heavy (27-component touch + ADR + cross-reference update); current consensus is doc-clarification only.
+
 ### Boolean polarity convention
 
 Boolean properties name the **positive** state, with the canonical default value being `true`. Avoid `non*` / `no*` / negative-default booleans — they invert the mental model and force every consumer to think in double-negatives.
