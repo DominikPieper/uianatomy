@@ -137,9 +137,7 @@ describe('motion field', () => {
   });
 
   it('omits motion on components without transition vocabulary', async () => {
-    const card = await loadComponent(join(contentDir, 'card.yaml'));
     const button = await loadComponent(join(contentDir, 'button.yaml'));
-    expect(card.motion).toBeUndefined();
     expect(button.motion).toBeUndefined();
   });
 
@@ -260,10 +258,8 @@ describe('performance field', () => {
     expect(modal.whenToUse?.avoid).toMatch(/Stacking modals is non-canonical/);
   });
 
-  it('omits performance on Card and Button', async () => {
-    const card = await loadComponent(join(contentDir, 'card.yaml'));
+  it('omits performance on Button (primitive)', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));
-    expect(card.performance).toBeUndefined();
     expect(button.performance).toBeUndefined();
   });
 
@@ -780,10 +776,8 @@ describe('events field', () => {
     expect(names).toContain('openChange');
   });
 
-  it('omits events on Card and Button', async () => {
-    const card = await loadComponent(join(contentDir, 'card.yaml'));
+  it('omits events on Button (primitive)', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));
-    expect(card.events).toBeUndefined();
     expect(button.events).toBeUndefined();
   });
 

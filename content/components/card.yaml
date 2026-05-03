@@ -493,6 +493,176 @@ a11yAcceptance:
     - heading-order
     - image-alt
 
+motion:
+  reducedMotionFallback: instant
+  durations:
+    hoverLift: motion.duration.fast
+    selectToggle: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: clickActivate
+    optional: true
+    payload: >-
+      `{ cardId: string }`. Fires when the user activates the
+      card (click on `interactive: true` variant, Enter on the
+      keyboard-focused activator). For cards wrapping a
+      navigation anchor, the consumer's router handles
+      navigation and this event is informational. Only canonical
+      when `interactive: true`.
+    frameworkNotes:
+      webComponents: >-
+        `clickActivate` CustomEvent on the host with
+        `event.detail = { cardId }`.
+      react: >-
+        `onClick(event)` standard DOM event on the activator;
+        `onActivate(cardId)` when consumers prefer the canonical
+        event shape over the per-element click.
+      angularSignals: >-
+        `output<string>('clickActivate')`.
+      vue: >-
+        `@click-activate` event with payload `{ cardId }`.
+
+  - name: selectedChange
+    optional: true
+    payload: >-
+      `{ cardId: string, selected: boolean }`. Fires when the
+      card's `selected` data state flips — typically via a
+      checkbox or whole-card-click on selectable cards or by
+      programmatic change. Only canonical when the consumer is
+      using cards as a selectable collection.
+    frameworkNotes:
+      webComponents: >-
+        `selectedChange` CustomEvent with
+        `event.detail = { cardId, selected }`.
+      react: >-
+        `onSelectedChange(selected: boolean)` per-card callback
+        or aggregated `onSelectionChange(set: Set<string>)` at
+        the grid wrapper.
+      angularSignals: >-
+        `output<{ cardId: string, selected: boolean }>('selectedChange')`.
+      vue: >-
+        `@update:selected` on the card or `@update:selection`
+        on the grid wrapper.
+
+performance:
+  - name: cardsPerViewportDesktop
+    metric: visible-card-count
+    threshold: 30
+    unit: cards
+    rationale: >-
+      Above ~30 cards visible simultaneously at typical desktop
+      widths the surface ceases to read as a feed and becomes a
+      grid; consumers should switch to `Tile` (image-led grid
+      semantics) or paginate. Card optimises for ~10–30 visible
+      at typical content-feed densities.
+  - name: mediaLazyLoadThreshold
+    metric: viewport-distance
+    threshold: 200
+    unit: px
+    rationale: >-
+      Cards with media inside the viewport (and within ~200 px
+      of viewport edges) load eagerly; further cards lazy-load
+      via `loading="lazy"` on the image element or
+      IntersectionObserver-driven loading. Same canonical buffer
+      as Tile to keep the LCP-vs-bandwidth trade-off consistent
+      across image-bearing components.
+  - name: perCardPaintBudget
+    metric: paint-time
+    threshold: 16
+    unit: ms
+    rationale: >-
+      Each card aims to paint in under one 60 Hz frame. Cards
+      with elaborate hover/elevation transitions, parallax media,
+      or expensive shadow filters routinely exceed this on long
+      feeds and produce jank during fast scroll. Designers
+      compose the elevated variant within this budget.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        When the whole card is interactive, the activator is a
+        single real `<a href>` (navigation) or `<button>`
+        (in-page action) — never a `<div onclick>` and never
+        `role="button"` on the card root. Nested actions remain
+        reachable via the pseudo-element overlay pattern (the
+        title's anchor extends a `::before` pseudo over the card,
+        nested buttons sit on a higher stacking context).
+      source: html-spec
+      sourceRef: 'HTML interactive element semantics + WAI-ARIA Authoring Practices'
+      consequence: >-
+        Wrapping the entire card in `<a>` traps nested buttons —
+        keyboard users cannot activate inner controls, and SR
+        reads the nested buttons as part of the link's
+        accessible name. `<div onclick>` makes the card
+        unfocusable and unannounceable. The overlay pattern is
+        the only construction that keeps both the
+        whole-card-clickable affordance and the nested-actions
+        contract.
+    - rule: >-
+        Card and Tile and ListItem are not interchangeable.
+        Card is content-led (hierarchical title + body + media +
+        actions); Tile is image-led (visual content primary,
+        text supplementary or absent); ListItem is a horizontal
+        list row with leading icon + primary + secondary +
+        trailing affordances. The decision test is "what is the
+        user scanning for?" — text hierarchy, visual content,
+        or row-of-rows metadata.
+      source: canon
+      consequence: >-
+        Mixing the three contracts produces composite components
+        that read incoherently — text-heavy "tiles" lose the
+        gallery-scan affordance; image-led "cards" force
+        designers to invent media-dominant variants the canon
+        does not endorse; row-style cards collapse the
+        list/grid distinction that drives layout choice.
+    - rule: >-
+        Interactive states (hover / focus-visible / active /
+        disabled) are NOT modelled as Figma variants. Variants
+        are reserved for structurally different versions
+        (`elevated` / `outlined` / `flat`); states are
+        documented once and rendered via CSS pseudo-classes and
+        `aria-disabled` / `aria-selected`.
+      source: canon
+      consequence: >-
+        Modelling states as variants explodes the matrix
+        (3 variants × 4 interactive states × 2 orientations × 2
+        densities = 48+ Figma variants) and forces designers
+        and developers to translate the variant matrix into
+        pseudo-classes by hand on every implementation. The
+        anatomy splits intentionally to keep both surfaces
+        small.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Card
+      note: >-
+        Material 3 picks `elevated` and `outlined` as canonical
+        variants matching this canon; `flat` does not appear in
+        Material's roster but ships in Polaris and Atlassian as
+        a low-emphasis variant.
+    - system: Polaris
+      theirTerm: Card
+      note: >-
+        Polaris ships a Card primitive with built-in section
+        slots (`Card.Section`) — finer-grained than the
+        canonical anatomy's body slot. The composite contract
+        matches; the slot granularity differs.
+    - system: Carbon
+      theirTerm: Tile (selectable / clickable)
+      note: >-
+        Carbon labels its content-led card primitive "Tile",
+        producing terminology collision with this canon's image-
+        led `Tile`. Implementation audits document the
+        per-library naming via `componentName` and the
+        contract-vs-naming distinction matters because
+        Carbon-Tile ≈ canonical-Card, not canonical-Tile.
+    - system: Atlassian
+      theirTerm: Card
+      note: >-
+        Atlassian's Card matches the canonical content-led
+        contract; the elevated / outlined / flat axis maps to
+        Atlassian's `appearance` prop.
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article

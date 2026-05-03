@@ -148,7 +148,7 @@ describe('mcp server', () => {
 
   it('get_motion returns null for components without motion', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'card' } });
+    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'button' } });
     const parsed = parseJson(result as any);
     expect(parsed).toBeNull();
   });
@@ -372,10 +372,10 @@ describe('mcp server', () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_contracts',
-      arguments: { id: 'card' },
+      arguments: { id: 'button' },
     });
     const parsed = parseJson(result as any);
-    expect(parsed.id).toBe('card');
+    expect(parsed.id).toBe('button');
     expect(parsed.kind).toBe('component');
     expect(parsed.contracts).toBeNull();
   });
