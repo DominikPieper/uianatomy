@@ -80,6 +80,16 @@ whenToUse:
         Decision test: can the user select more than one
         option simultaneously (Checkbox) or exactly one
         (RadioGroup)?
+    - id: switch
+      difference: >-
+        `Switch` is an immediate-effect on/off control whose
+        activation applies the behaviour right away; `Checkbox`
+        is a boolean form field whose value submits with the
+        form. Checkbox supports the tri-state mixed value for
+        parent/child propagation; Switch is strictly binary.
+        Decision test: does the activation submit a form
+        value (Checkbox) or immediately apply a setting
+        (Switch)?
 
 anatomy:
   - id: root

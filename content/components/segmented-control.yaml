@@ -595,6 +595,15 @@ whenToUse:
         (compact-pill vs spaced-radios) and the value-target
         (UI state vs form data) are the canonical
         differences.
+    - id: switch
+      difference: >-
+        `Switch` is binary on/off (a single setting);
+        `SegmentedControl` selects one of multiple mutually-
+        exclusive options. Use SegmentedControl when the
+        choice has more than two values; Switch only when
+        the answer is exactly on or off. SegmentedControl
+        uses `role="radiogroup"`; Switch uses `role="switch"`
+        — different roles, different keyboard contracts.
 contracts:
   nonNegotiable:
     - rule: >-

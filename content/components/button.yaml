@@ -46,6 +46,15 @@ whenToUse:
         hosts are an anti-pattern — wrap in a `<button>` with an
         `aria-label` when the icon is the only label, so the host
         carries the activator semantics and the icon stays decorative.
+    - id: switch
+      difference: >-
+        A toggle `Button` with `aria-pressed` is a momentary
+        action that may be in a pressed state (toolbar formatting
+        — bold / italic / underline); `Switch` is a setting-state
+        control whose activation persists as configuration. Decision
+        test: does activation perform a transient action with state
+        memory (toggle button) or change a configuration setting
+        that persists (Switch)?
 
 anatomy:
   - id: root

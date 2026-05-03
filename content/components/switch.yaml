@@ -1,0 +1,771 @@
+id: switch
+name: Switch
+description: >-
+  A binary on/off control with immediate effect — track plus thumb
+  that slides between two positions. Uses `role="switch"` to
+  signal "this control immediately enables/disables a behaviour"
+  rather than "this is a boolean form field" (which is `Checkbox`).
+  Common alternate name "Toggle" across design systems
+  (Atlassian, Carbon, Polaris). No tri-state mixed value —
+  switches are strictly binary.
+
+intro: >-
+  Switch is the canonical immediate-effect-on-off primitive. Track
+  with sliding thumb communicates "this control toggles a
+  behaviour the moment you activate it" — settings panes, feature
+  flags, notification preferences, dark-mode toggles. Distinct
+  from Checkbox by the activation semantic (Switch is "do this
+  now", Checkbox is "this field carries this value when the form
+  submits") and by the absence of the indeterminate (mixed) state.
+  The reference documents the four canonical slots, the noun-not-
+  verb label rule, the form-integration bridge (no native HTML
+  input exists for switch — components must mirror state into a
+  hidden `<input type="checkbox">` or controlled value), and the
+  divergence from Checkbox and SegmentedControl.
+
+alternateNames:
+  - 'Toggle'
+  - 'Toggle switch'
+  - 'On/off switch'
+
+whenToUse:
+  use: >-
+    For immediate-effect on/off controls — settings panes that
+    take effect on activation, feature flags, dark-mode toggle,
+    notification opt-in / opt-out, sound mute. Pair with a
+    noun-shaped label ("Notifications", "Dark mode", "Save
+    drafts") that stays constant across both states; the
+    on/off semantic is conveyed by the switch position. Use
+    when activation should immediately apply without form
+    submission.
+  avoid: >-
+    For boolean form fields that submit with the form — that is
+    `Checkbox`. The semantic differs: switches signal "this
+    setting is now active"; checkboxes signal "this field has
+    this value when the form submits". For mutually-exclusive
+    multi-option choice (List / Grid view) — that is
+    `SegmentedControl`. For toggle buttons in a toolbar
+    (bold / italic / underline) — those are `Button` with
+    `aria-pressed`, not Switch. Never use a switch when the
+    activation needs explicit confirm-then-apply (deferred-
+    effect contexts where a partial choice should not yet take
+    effect).
+  vsRelated:
+    - id: checkbox
+      difference: >-
+        `Checkbox` is a boolean form field whose value submits
+        with the form (only checked checkboxes submit); `Switch`
+        is an immediate-effect control whose activation applies
+        the behaviour right away. Checkbox supports the tri-
+        state mixed value for parent/child propagation;
+        Switch is strictly binary. Decision test: does the
+        activation submit a form value (Checkbox) or
+        immediately apply a setting (Switch)?
+    - id: segmented-control
+      difference: >-
+        `SegmentedControl` selects one of multiple mutually-
+        exclusive options (List / Grid / Calendar); `Switch`
+        is a binary on/off. SegmentedControl is multi-option
+        mutex; Switch is binary. Use SegmentedControl when
+        the choice has more than two values; Switch only when
+        the answer is exactly on or off.
+    - id: button
+      difference: >-
+        A toggle `Button` with `aria-pressed` is a momentary
+        action that may be in a pressed state (toolbar
+        formatting buttons — bold / italic). `Switch` is a
+        setting-state control that persists. Decision test:
+        does activation perform a transient action with state
+        memory (toggle button) or change a configuration
+        setting that persists (Switch)?
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The wrapper associating the switch visual with its label.
+      Renders as a `<label>` (when wrapping the input) or a
+      `<div>` paired with `<label for>` (when sibling). Carries
+      the disabled / required / focus-visible visual states via
+      data-attributes so track and thumb can style in sync.
+      The hit-target spans this region — track plus thumb plus
+      label — to meet the WCAG 2.5.8 24×24 minimum.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; track + thumb leading or trailing the label
+    code:
+      slot: root
+      semantic: label-or-div
+    a11y:
+      hint: >-
+        When the root is `<label>`, the input becomes the
+        accessible name's host automatically. When the root is
+        `<div>`, the inner `<label for="<input-id>">` provides
+        association. Hit-target ≥ 24×24 px (WCAG 2.5.8); the
+        wrapping label region is the canonical clickable area
+        — clicking anywhere on the label toggles the switch.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: track
+    required: true
+    purpose: >-
+      The rail along which the thumb slides. Communicates the
+      switch's two positions visually — wider than the thumb,
+      with a coloured background that shifts between off-state
+      colour (typically muted) and on-state colour (typically
+      accent). The track is decorative; the semantic state is
+      carried by the input plus `aria-checked`. Width is
+      typically 1.7-2× the thumb diameter.
+    slotKind: decorative
+    layout:
+      row: 1
+      col: 1
+      span: 2
+    figma:
+      type: frame
+      hint: Pill-shaped frame; background bound to data-state token (off/on)
+    code:
+      slot: track
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"` (or rendered via SVG
+        without a `role`). The state is announced via the
+        input's `aria-checked` value; SR users hear "switch,
+        on" / "switch, off", not "track at right position".
+        Track colour is reinforcement; the thumb position is
+        the primary state signal.
+    tokens:
+      radius:
+        corner: radius.pill
+      color:
+        background: color.surface.sunken
+
+  - id: thumb
+    required: true
+    purpose: >-
+      The handle that slides between off (inline-start) and on
+      (inline-end) positions within the track. The thumb's
+      position is the primary visual state signal — never
+      rely on track colour alone. Animates via translation
+      (transform: translateX) on state change, subject to
+      `prefers-reduced-motion`.
+    slotKind: decorative
+    layout:
+      row: 1
+      col: 1
+      span: 1
+      parent: track
+    figma:
+      type: frame
+      hint: Circle inside track frame; absolute position bound to data-state (off → start, on → end)
+    code:
+      slot: thumb
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"`. Thumb position
+        communicates state to sighted users; AT receives
+        state via `aria-checked` on the input host. The
+        thumb may carry an optional inline icon (check for
+        on, X for off — Material 3 precedent) but the icon
+        is also decorative.
+    tokens:
+      radius:
+        corner: radius.full
+      color:
+        background: color.surface.bg
+
+  - id: input
+    required: true
+    purpose: >-
+      The interactive control bearing `role="switch"` plus
+      `aria-checked`. May be a hidden native `<input
+      type="checkbox" role="switch">` (so the form receives the
+      value and the browser provides the role) or a custom
+      `<button role="switch">` with explicit aria-checked
+      management. Receives keyboard focus; Space and Enter
+      toggle the state per APG.
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 1
+      span: 2
+      parent: track
+    figma:
+      type: frame
+      hint: Invisible interactive layer overlapping track; carries focus ring on focus-visible
+    code:
+      slot: input
+      semantic: input-or-button-with-role-switch
+    a11y:
+      hint: >-
+        `role="switch"` is mandatory — a `<button>` without the
+        role is announced as "button" not "switch". Native
+        HTML has no `<input type="switch">` (the experimental
+        `switch` attribute is limited browser support); the
+        canonical pattern is `<input type="checkbox"
+        role="switch">` for form integration or `<button
+        role="switch" aria-checked="true|false">` for
+        custom-rendered switches. `aria-checked="mixed"` is
+        INVALID for switches — the role only accepts true /
+        false per APG.
+    tokens:
+      color:
+        border: color.border.focus
+
+  - id: label
+    required: true
+    purpose: >-
+      The visible text label identifying the controlled
+      behaviour. Always a noun ("Notifications", "Dark mode",
+      "Save drafts") — never the on/off state words alone.
+      Stays constant across both states per APG ("it is
+      critical the label on a switch does not change when its
+      state changes"). Programmatically associated with the
+      input via wrapping label or `for` attribute.
+    slotKind: content
+    layout:
+      row: 1
+      col: 3
+      span: 5
+    figma:
+      type: text
+      hint: Text element inline with track; size matches root size variant
+    code:
+      slot: label
+      semantic: label-text
+    a11y:
+      hint: >-
+        Label text is the input's accessible name. SR users
+        hear "switch, Notifications, on" / "switch,
+        Notifications, off" — the noun stays constant; the
+        state is carried by the role plus `aria-checked`. A
+        label like "On" / "Off" or "Enabled" / "Disabled"
+        violates the APG rule; the user cannot identify what
+        is being toggled.
+    tokens:
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+
+  - id: description
+    required: false
+    purpose: >-
+      Optional helper text rendered below or beside the label.
+      Communicates auxiliary context — "Email and push for new
+      messages" or "Applies on next reload". Programmatically
+      associated via `aria-describedby`. Useful when the noun
+      label alone does not communicate the consequence of
+      activation.
+    slotKind: content
+    layout:
+      row: 2
+      col: 3
+      span: 5
+    figma:
+      type: text
+      hint: Smaller text below label; muted color; visibility per "has description" property
+    code:
+      slot: description
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        Associate via `aria-describedby` on the input. SR
+        announces description after the label and the on/off
+        state. Avoid using description for the on/off semantic
+        — that lives in the role plus `aria-checked`.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+axes:
+  variants:
+    - standard
+    - with-icons
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: disabled, kind: primitive, of: boolean }
+    - { name: required, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - 'off'
+      - 'on'
+    transitions:
+      - from: 'off'
+        to: 'on'
+        trigger: User activates the input (Space, Enter, or click on label)
+      - from: 'on'
+        to: 'off'
+        trigger: User activates the input (Space, Enter, or click on label)
+
+mismatches:
+  - figma: Track colour drawn as the only state signal (grey → blue)
+    code: Thumb position is the primary state signal; track colour is reinforcement
+    consequence: >-
+      Designers ship a switch where the only visual change
+      between off and on is the track-background colour;
+      developers ship a switch where the thumb also slides
+      from inline-start to inline-end. The two surfaces
+      visually agree in colour but designers may not draw
+      the thumb-translation path, leaving developers without
+      a motion specification.
+    correct: >-
+      Document the thumb position as the primary state signal
+      in the anatomy. Figma carries an off-state frame (thumb
+      at inline-start) and an on-state frame (thumb at
+      inline-end). Code uses `transform: translateX(...)` on
+      state change; the track-colour shift is secondary.
+
+  - figma: Switch labelled "On / Off" or "Yes / No"
+    code: Label is a noun ("Notifications") that stays constant; on/off carried by `aria-checked`
+    consequence: >-
+      Designers label the switch with the state words ("On" /
+      "Off" or "Enabled" / "Disabled"); developers know the
+      APG rule says the label must stay constant. The two
+      surfaces ship contradictory labelling intent —
+      designers may not realise the AT contract is
+      violated when the visible label changes per state.
+    correct: >-
+      Document the label as a noun in the anatomy. Figma's
+      label slot carries the canonical noun ("Notifications");
+      the on/off semantic lives in the track-and-thumb
+      visual plus the input's `role="switch"` and
+      `aria-checked`. Per-state label-text override is an
+      anti-pattern.
+
+  - figma: Switch component variants for "checked"/"unchecked"/"indeterminate"
+    code: Switch has only on / off; mixed (indeterminate) is INVALID per APG
+    consequence: >-
+      Designers ship three component variants by analogy with
+      Checkbox; developers know `aria-checked="mixed"` is
+      not a valid value for `role="switch"`. The third
+      variant ships as visual-only with no semantic mapping
+      — implementers either add a fake mixed visual or drop
+      it, leading to design / implementation drift.
+    correct: >-
+      Switch is strictly binary. Document the two data states
+      (off / on) and reject the mixed variant as a Switch
+      anti-pattern in the anatomy. If the use case truly
+      needs three states, the surface is a Checkbox or a
+      RadioGroup, not a Switch.
+
+  - figma: Switch shipped without a hidden form-bridge input
+    code: Native HTML has no `<input type="switch">`; bridge required for form participation
+    consequence: >-
+      Designers do not consider form submission; developers
+      know that `<button role="switch">` does not submit any
+      value to the form. Without a hidden `<input
+      type="checkbox" role="switch">` mirror or a controlled
+      bridge in JS, the switch's state is lost on form
+      submission. Settings panes that "save on submit" lose
+      every switch value silently.
+    correct: >-
+      Document the form-bridge as canonical when the switch
+      is form-bound. Either render `<input type="checkbox"
+      role="switch">` (the native checkbox provides form
+      participation, the role overrides the announcement) or
+      mirror state into a hidden checkbox via JS plus
+      controlled-prop bridge. Settings that take effect
+      immediately without form submission omit the bridge.
+
+mistakes:
+  - id: switch-label-is-state
+    severity: blocker
+    title: Label text is the on/off state instead of the controlled noun
+    description: >-
+      The visible label reads "On" / "Off", "Enabled" /
+      "Disabled", or "Yes" / "No". Users cannot identify what
+      the switch controls; SR users hear "switch, On, on" —
+      circular and meaningless. The APG rule that the label
+      must stay constant is violated when the label text
+      itself shifts with state.
+    fix: >-
+      Use a noun describing the controlled behaviour
+      ("Notifications", "Dark mode", "Save drafts"). The
+      label stays constant; on/off is conveyed by the track-
+      and-thumb visual plus the input's `aria-checked`. SR
+      users hear "switch, Notifications, on" — clear and
+      identifiable.
+
+  - id: switch-no-form-bridge
+    severity: blocker
+    title: Form-bound switch loses state on submit because no hidden input is rendered
+    description: >-
+      The switch is rendered as `<button role="switch">` and
+      placed inside a `<form>`. The form submits but the
+      switch's state is not in the form data — `<button>` does
+      not contribute form values. Users save settings that do
+      not persist; the bug is silent (no error, no visual cue).
+    fix: >-
+      Render a hidden `<input type="checkbox" role="switch"
+      name="<key>" value="<on-value>">` (the native checkbox
+      provides form participation; `role="switch"` overrides
+      the announcement) or mirror the switch state into a
+      hidden checkbox via JS bridge. Native form submission
+      then carries the value. Immediate-effect switches that
+      do not bind to a form omit the bridge and apply the
+      change directly via state-update.
+
+  - id: switch-color-only-state
+    severity: major
+    title: Switch state communicated via track colour alone
+    description: >-
+      The off and on states differ only in track-background
+      colour (e.g. light grey ↔ accent blue). Colour-blind
+      users and users in grayscale or low-light displays
+      cannot distinguish the states. Fails WCAG 1.4.1 (Use
+      of Colour).
+    fix: >-
+      The thumb position is the primary state signal — off
+      sits at the inline-start, on sits at the inline-end.
+      Track colour is reinforcement, not the sole signal.
+      Test in grayscale (`filter: grayscale(1)`) — the thumb
+      position must remain unambiguous. Optional with-icons
+      variant adds a check / dash glyph to the thumb for
+      additional reinforcement.
+
+  - id: switch-aria-checked-mixed
+    severity: major
+    title: Switch uses `aria-checked="mixed"` for an indeterminate visual
+    description: >-
+      The switch ships a third "indeterminate" or "mixed"
+      visual for when the controlled state is loading or
+      partially applied. The implementer sets
+      `aria-checked="mixed"`. Per APG, `mixed` is invalid for
+      `role="switch"` — the role accepts only `true` and
+      `false`. AT users hear unexpected announcements; some
+      SR fall back to "checked" silently.
+    fix: >-
+      Switch is strictly binary. For loading / pending states,
+      pair the switch with a separate progress indicator or
+      use the disabled state during the transient phase. For
+      tri-state semantics, the canonical surface is Checkbox
+      (which validly supports `aria-checked="mixed"`), not
+      Switch.
+
+  - id: switch-target-too-small
+    severity: major
+    title: Hit-target is below the WCAG 2.5.8 24×24 threshold
+    description: >-
+      The clickable area (track plus thumb plus surrounding
+      label region) is below 24×24 CSS pixels — common in
+      compact settings rows where the track is rendered at
+      28×16 or smaller. Mobile users and motor-control-
+      limited users struggle to activate; the visual track
+      is misleading.
+    fix: >-
+      Extend the hit-target via the wrapping `<label>`. The
+      track may stay 32×18 or 36×20 visually, but the
+      clickable label region (track + label + adjacent
+      padding) is ≥ 24×24. Verify with browser DevTools or
+      automated hit-target audits. Per Apple HIG iOS, the
+      threshold is 44×44 pt; meet the higher bar on
+      touch-first surfaces.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-switch>` host with `name`, `value`, `checked`,
+      `disabled`, `required` attributes; renders track + thumb
+      + hidden `<input type="checkbox" role="switch">` for
+      form participation
+    variantMechanism: >-
+      attributes (`size="md"`, `disabled`, `with-icons`); CSS
+      `:state(checked)` for state-driven styling; reflects to
+      hidden input via element-internals or the bridge input
+  react:
+    structureMechanism: >-
+      Function component (Radix Switch.Root + Thumb, React
+      Aria Switch, Material UI Switch, Mantine Switch);
+      compound or prop-driven; controlled via `checked` (or
+      `isSelected`) and `onCheckedChange`; hidden native
+      input rendered when `name` is passed
+    variantMechanism: >-
+      props with class-variance-authority; `size` / `disabled`
+      / `required` props; `checked` is strictly boolean (no
+      "indeterminate" allowed unlike Checkbox)
+  angularSignals:
+    structureMechanism: >-
+      Angular component with input<boolean>('checked'),
+      input<boolean>('disabled'); ControlValueAccessor for
+      ngModel/formControl integration; renders hidden input
+      under formAssociated host
+    variantMechanism: >-
+      input<'sm' | 'md'>('size'); host-binding
+      [attr.role]="'switch'" plus [attr.aria-checked]; signal-
+      derived state from controlled prop
+  vue:
+    structureMechanism: >-
+      Single-file component with v-model for checked state
+      (boolean); PrimeVue InputSwitch, Naive UI Switch as
+      third-party precedents
+    variantMechanism: >-
+      defineProps with literal-union types; computed property
+      for aria-checked from checked; emit('update:modelValue')
+      for controlled binding
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    thumbSlide: motion.duration.fast
+    trackColorShift: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: checkedChange
+    payload: >-
+      `{ checked: boolean, previousChecked: boolean }`. Fires
+      when the switch toggles via user interaction (Space,
+      Enter, or click on label). Strictly binary — `checked`
+      is `true` or `false`, never `'mixed'`.
+    frameworkNotes:
+      webComponents: >-
+        `checkedChange` CustomEvent on the host with
+        `event.detail = { checked, previousChecked }`.
+      react: >-
+        `onCheckedChange(checked)` callback (Radix idiom) or
+        `onChange(isSelected)` (React Aria idiom).
+      angularSignals: >-
+        `output<boolean>('checkedChange')` plus
+        ControlValueAccessor `onChange(value)` for forms.
+      vue: >-
+        `@update:modelValue` event for v-model binding;
+        `@change` for non-controlled usage.
+
+formIntegration:
+  nativeElement: input
+  submittedValue: >-
+    When form-bound, the switch is implemented as `<input
+    type="checkbox" role="switch">` so native form-submission
+    rules apply — the `value` attribute submits as `<name>=<value>`
+    when the switch is on; off-state switches do not submit
+    (consistent with Checkbox semantics). Default submitted
+    value is `"on"` per HTML spec when no `value` is set.
+    Custom `<button role="switch">` implementations need a
+    hidden checkbox bridge or controlled-state form-binding.
+  requiredAttr: true
+  validation: >-
+    For form-bound switches, the native Constraint Validation
+    API surfaces `valueMissing` when `required` is set and the
+    switch is off. Most switches are immediate-effect (not
+    form-bound) so validation does not apply. When a switch
+    is conceptually required ("must accept terms" — though
+    `Checkbox` is more idiomatic there), use the bridge plus
+    `required` attribute.
+  bridges:
+    react: >-
+      Controlled via `checked` (Radix) or `isSelected` (React
+      Aria); hidden native input rendered automatically when
+      `name` is passed. React Hook Form / Formik integrate
+      via `register("name")` plus `setValue`.
+    vue: >-
+      Two-way binding via `v-model` for checked (boolean);
+      VeeValidate / FormKit integrate via field-level rules.
+      The underlying native input is rendered for form
+      submission.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(boolean)` → `checked.set(...)`. `formControl`
+      / `formControlName` plus Angular Validators.required
+      drive validation; ng-touched + ng-dirty surface in
+      template state.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus `internals.setFormValue(
+      checkedValue)`. Falls back to a hidden `<input>` when
+      element-internals is not available.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Track + thumb inline order follows writing direction —
+      track on the inline-start, label on the inline-end (LTR:
+      track left, label right; RTL: track right, label left).
+      Thumb position uses logical properties:
+      `transform: translateX(0)` for off (inline-start) and
+      `transform: translateX(<track-width>)` for on (inline-
+      end); under RTL the translation reverses automatically
+      via writing-direction-aware positioning. Track and
+      thumb shapes are direction-neutral.
+  textExpansion: >-
+    Label text expands 30-50% under translation (English
+    "Notifications" → German "Benachrichtigungen" 70% longer;
+    "Dark mode" → French "Mode sombre" minor expansion).
+    Reserve no fixed width on the label slot; let it wrap to
+    multiple lines under pressure. The track + thumb stay
+    size-token-bound and never text-expand. Avoid embedding
+    state words in the label — those would also need
+    translation and break the constant-label rule.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves to the input. Focus ring renders on the
+        track or wrapping label per design system convention.
+        Switch is its own tab stop.
+    - keys: Space (input focused)
+      expected: >-
+        Toggles the state. Off → on, on → off. `aria-checked`
+        flips and the thumb translates. Per APG, Space is
+        canonical; Enter is optional (most libraries accept
+        both for symmetry with other interactive controls).
+    - keys: Enter (input focused)
+      expected: >-
+        Optional toggle per APG. Most implementations bind
+        Enter to toggle for symmetry; some restrict to Space
+        only. Document the choice.
+  announcements:
+    - trigger: SR encounters an off switch
+      expected: >-
+        "Switch, [label text], off". The role, accessible
+        name, and state are all announced. Some SR announce
+        "off" as "not pressed" or "unchecked" depending on
+        the SR's switch-handling — the role announces as
+        "switch" when supported.
+    - trigger: SR encounters an on switch
+      expected: >-
+        "Switch, [label text], on".
+    - trigger: User toggles the switch
+      expected: >-
+        SR announces the new state — "on" / "off". The label
+        text does NOT announce again because it has not
+        changed (per APG constant-label rule).
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - label
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The label is a noun describing the controlled
+        behaviour and stays constant across both states.
+        Implementations that ship "On" / "Off" or "Enabled" /
+        "Disabled" labels violate the APG constant-label rule.
+        The on/off semantic is conveyed by the track-and-
+        thumb visual plus the input's `role="switch"` and
+        `aria-checked`.
+      source: apg
+      sourceRef: 'APG: Switch pattern'
+      consequence: >-
+        Without the constant noun label, users cannot identify
+        what the switch controls. SR users hear "switch, On,
+        on" — circular and meaningless. The label is the
+        canonical accessible name; state words duplicate the
+        role + `aria-checked` announcement and break the
+        identification contract.
+    - rule: >-
+        Switch is strictly binary — `aria-checked` accepts
+        only `true` and `false`. The mixed (indeterminate)
+        value is INVALID for `role="switch"` per APG. Tri-
+        state semantics belong to `Checkbox`.
+      source: apg
+      sourceRef: 'APG: Switch role binary states'
+      consequence: >-
+        Without this rule, implementations ship third
+        "indeterminate" or "mixed" visuals that violate the
+        ARIA spec. AT receives invalid attribute values and
+        announces unpredictably (some SR fall back to
+        "checked" silently; others read "mixed" but the role
+        does not support it). The misuse is a category error
+        — Switch is not Checkbox.
+    - rule: >-
+        Form-bound switches render a hidden `<input
+        type="checkbox" role="switch">` (or controlled-state
+        bridge to a native checkbox) so form submission
+        carries the value. Implementations using `<button
+        role="switch">` without a form bridge lose state
+        silently on submit.
+      source: html-spec
+      sourceRef: 'HTML form-submission via input checkbox'
+      consequence: >-
+        Without the bridge, switches inside `<form>` produce
+        no submission data. Users save settings that do not
+        persist; the bug is silent and only surfaces in
+        downstream behaviour ("my preferences keep
+        resetting"). Native HTML has no `<input
+        type="switch">` so the bridge is the canonical
+        pattern.
+  vocabularyDrift:
+    - system: WAI-ARIA
+      theirTerm: '`role="switch"` (with `aria-checked` true | false)'
+      note: >-
+        WAI-ARIA switch role. Native HTML has no equivalent
+        input type — the experimental `switch` attribute on
+        checkbox has limited browser support. The canonical
+        web wire is `<input type="checkbox" role="switch">`.
+    - system: HTML
+      theirTerm: '`<input type="checkbox" switch>` (experimental)'
+      note: >-
+        Experimental `switch` attribute (Safari 17.4+, partial
+        Chrome support). Renders as a switch visual without
+        custom CSS. Limited browser support; the role-override
+        bridge remains canonical until adoption catches up.
+    - system: Material 3
+      theirTerm: Switch
+      note: >-
+        Material 3 codifies the with-icons variant — a check
+        glyph on the thumb when on, optional dash when off —
+        as a first-class visual treatment. Canonical name
+        match; the icon variant is one of the canonical
+        variants in the UI Anatomy reference.
+    - system: Atlassian
+      theirTerm: Toggle
+      note: >-
+        Atlassian uses "Toggle" — naming-only divergence from
+        the canonical "Switch". Same role and contracts.
+    - system: Carbon
+      theirTerm: Toggle
+      note: >-
+        Carbon uses "Toggle" with on/off icons baked into the
+        track. Canonical contract is preserved; naming and
+        with-icons variant align with Material 3.
+    - system: Polaris
+      theirTerm: Setting Toggle
+      note: >-
+        Polaris combines a Switch with a heading-and-helper-
+        text wrapper as a "Setting Toggle". The wrapper is
+        composition; the switch primitive itself follows the
+        canonical Switch contract.
+    - system: Apple HIG
+      theirTerm: Toggle
+      note: >-
+        Apple HIG distinguishes immediate-effect from deferred-
+        effect toggles. iOS UISwitch and SwiftUI Toggle map to
+        the immediate-effect canonical pattern. Canonical name
+        divergence ("Toggle"); the immediate-effect semantic
+        is the canonical one for the Switch component.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/switch/
+  - https://www.radix-ui.com/primitives/docs/components/switch
+  - https://react-aria.adobe.com/Switch
+  - https://m3.material.io/components/switch/specs
+  - https://atlassian.design/components/toggle/examples
+  - https://carbondesignsystem.com/components/toggle/usage/
+  - https://polaris.shopify.com/components/forms/setting-toggle
+  - https://developer.apple.com/design/human-interface-guidelines/toggles
+
+lastReviewed: '2026-05-03'
