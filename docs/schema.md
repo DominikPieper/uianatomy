@@ -284,9 +284,23 @@ events:                                            # optional
         `@update:modelValue` for `v-model` on the selected id.
 ```
 
+### `eventsRationale` — explicit "no-events-by-design" sentinel
+
+Components that **legitimately ship without an events block** (Icon, Link) declare an `eventsRationale: string` (50–400 chars) explaining why. Distinguishes "no events by canonical design" from "we forgot to author events" — the missing-events case becomes ambiguous without the rationale, especially when consumers compare components to each other.
+
+```yaml
+eventsRationale: >-                                # 50–400 chars
+  Icon is a decorative-or-meaningful primitive — it carries no
+  user-driven activation, no internal state transitions, and no
+  payload worth surfacing. Activation lives on the host (button,
+  link, badge); the icon stays declarative.
+```
+
+The field is optional on every component; required-by-discipline (not by Zod) on components that omit `events`. Per P6-122, the `canon-component-author` skill should reject empty-events components that fail to declare a rationale.
+
 **Shape rules:**
 
-- `events` itself is optional. Components without first-class event vocabulary (Card, Button) omit the field entirely.
+- `events` itself is optional. Components without first-class event vocabulary (Icon, Link) omit the field entirely and instead declare `eventsRationale`.
 - When present, `events` is a non-empty array. Each entry has exactly three required fields: `name`, `payload`, `frameworkNotes`.
 - `name` is a camelCase identifier (`/^[a-z][a-zA-Z0-9]*$/`). Mirrors the conventional event-name shape across frameworks (`onChange`, `update:modelValue` strip both reduce to the same canonical name).
 - `payload` is free-text prose describing what the consumer receives — the value, the shape of a structured payload, or "No payload" for void events. Carries the meaning callers need to wire correctly.

@@ -327,6 +327,13 @@ responsive:
         contexts. Standalone icons in icon-only buttons keep
         their explicit size to preserve hit-target.
 
+eventsRationale: >-
+  Icon is a decorative-or-meaningful primitive — it carries no
+  user-driven activation, no internal state transitions, and no
+  payload worth surfacing to the consumer. Activation lives on
+  the host (button, link, badge); the icon stays declarative.
+  No events by canonical design.
+
 propertyMap:
   - figma: Variant
     code: variant

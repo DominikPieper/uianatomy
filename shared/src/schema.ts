@@ -681,6 +681,11 @@ export const componentSchema = z.object({
   motion: motionSchema.optional(),
   responsive: responsiveSchema.optional(),
   events: z.array(eventSchema).min(1).optional(),
+  eventsRationale: z
+    .string()
+    .min(50, 'eventsRationale must be at least 50 chars when present')
+    .max(400, 'eventsRationale must be at most 400 chars')
+    .optional(),
   a11yAcceptance: a11yAcceptanceSchema.optional(),
   propertyMap: propertyMapSchema.optional(),
   formIntegration: formIntegrationSchema.optional(),

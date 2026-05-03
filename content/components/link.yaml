@@ -396,6 +396,14 @@ a11yAcceptance:
     - target-size
     - identical-links-same-purpose
 
+eventsRationale: >-
+  Link emits no synthetic events — native HTML `click` on the
+  underlying `<a>` plus browser-handled navigation are the
+  canonical interaction surface. A synthetic event would either
+  re-emit click (redundant) or intercept default (anti-pattern).
+  Consumers wire `addEventListener('click', …)` on the host for
+  analytics or routing hooks.
+
 propertyMap:
   - figma: Variant
     code: variant

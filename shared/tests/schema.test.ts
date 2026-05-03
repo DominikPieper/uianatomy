@@ -1648,6 +1648,40 @@ describe('pattern schema', () => {
   });
 });
 
+describe('eventsRationale field (P6-122)', () => {
+  it('accepts eventsRationale 50-400 chars on icon and link (no-events-by-design)', async () => {
+    const icon = await loadComponent(join(contentDir, 'icon.yaml'));
+    const link = await loadComponent(join(contentDir, 'link.yaml'));
+    expect(icon.eventsRationale).toBeDefined();
+    expect(icon.eventsRationale!.length).toBeGreaterThanOrEqual(50);
+    expect(icon.eventsRationale!.length).toBeLessThanOrEqual(400);
+    expect(link.eventsRationale).toBeDefined();
+    expect(link.eventsRationale!.length).toBeGreaterThanOrEqual(50);
+    expect(link.eventsRationale!.length).toBeLessThanOrEqual(400);
+  });
+
+  it('rejects eventsRationale shorter than 50 chars', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, eventsRationale: 'too short' };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects eventsRationale longer than 400 chars', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, eventsRationale: 'x'.repeat(401) };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('eventsRationale is optional on components that declare events', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    expect(button.events).toBeDefined();
+    // Button has events; eventsRationale is allowed but not required
+    expect(button.eventsRationale).toBeUndefined();
+  });
+});
+
 describe('intro field (P6-42)', () => {
   it('every canonical component declares an intro 200–800 chars', async () => {
     const components = await loadComponents({ contentDir });
