@@ -53,6 +53,13 @@ whenToUse:
         with text rather than in a grid. Tile dimensions vary with
         media aspect ratio; Avatar locks to a square or circle in a
         canonical size.
+    - id: avatar-group
+      difference: >-
+        `Avatar Group` composes multiple Avatar instances with a
+        bounded `max` count and an overflow indicator; Avatar is the
+        single-entity primitive that Avatar Group composes. When the
+        count is one, render Avatar directly — Avatar Group with
+        one child is an anti-pattern.
 
 anatomy:
   - id: container

@@ -1,0 +1,660 @@
+id: avatar-group
+name: Avatar Group
+description: >-
+  A composition of avatar instances rendered as a stack or grid with
+  bounded count and an overflow indicator (+N) for collaborator lists,
+  attribution rows, and shared-document headers. Codifies the canonical
+  overflow contract — counts beyond `max` collapse into a single
+  indicator tile — and the disclosure pattern for revealing the full
+  member list.
+
+intro: >-
+  Avatar Group composes multiple Avatar instances into a single visual
+  unit when a surface needs to communicate "this is a group" rather than
+  "this is a person". Two layouts (stack-overlapped or grid-tiled), a
+  bounded `max` count that triggers a +N overflow indicator, and an
+  optional disclosure that reveals the collapsed members on click. The
+  reference documents the group-role + accessible-name contract, the
+  overflow-tile interactivity rule (button when it opens a popover,
+  static text otherwise), and the divergence between libraries that
+  ship a single AvatarGroup (MUI, Atlassian, HeroUI) and libraries
+  that defer overflow to manual composition (Mantine, Chakra,
+  PrimeReact).
+
+alternateNames:
+  - 'Avatar stack'
+  - 'Stacked avatars'
+  - 'User stack'
+  - 'Member list'
+
+whenToUse:
+  use: >-
+    For representing a group of users, organisations, or entities in a
+    bounded surface — collaborator strips on shared documents, member
+    rows in team headers, attribution lines on commits, and viewer
+    lists in real-time editors. Pair with a textual count or member-
+    list affordance when the overflow indicator is the only access
+    path to the collapsed members. Stack layout suits dense inline
+    contexts (header strips, attribution lines); grid layout suits
+    member-management surfaces (settings pages, organisation rosters).
+  avoid: >-
+    For a single-entity representation — that is `Avatar`, not a group
+    of one. For a long member list with metadata (presence, role,
+    activity timestamp) — that is a list of `ListItem` rows with a
+    leading avatar slot, not a stack. For unbounded counts on dense
+    surfaces — set a sensible `max` (typically 3-5) so the visual
+    weight stays predictable. For decorative groupings without
+    identity meaning — that is layered tiles, not avatars.
+  vsRelated:
+    - id: avatar
+      difference: >-
+        `Avatar` is the single-entity representation primitive that
+        Avatar Group composes; Avatar Group is the bounded set
+        representation. A single Avatar is "this person"; an Avatar
+        Group is "this group of people". When the count is one,
+        render Avatar directly — Avatar Group with one child is an
+        anti-pattern.
+    - id: list-item
+      difference: >-
+        `ListItem` is a one-dimensional row with leading avatar +
+        primary text + secondary text + trailing affordances; Avatar
+        Group is a bounded visual unit that collapses identity into a
+        compact strip. ListItem suits member-management with metadata
+        (presence, role, activity); Avatar Group suits inline density
+        where the group is a single visual marker. The decision test:
+        does each member need its own row of metadata (ListItem) or
+        can the group be summarised as a single strip (Avatar Group)?
+
+anatomy:
+  - id: container
+    required: true
+    purpose: >-
+      The bounded surface that frames the avatar set. Carries the
+      group semantics (`role="group"` plus `aria-label` describing
+      the group identity — "Document collaborators", "Team members"),
+      the layout direction (stack or grid), and the overflow
+      threshold. The container is the parent over which avatars and
+      the optional overflow indicator are flow-laid.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout frame; horizontal direction for stack variant, wrap-grid for grid variant; negative item-spacing for stack-overlap effect
+    code:
+      slot: container
+      semantic: span-with-role-group
+    a11y:
+      hint: >-
+        Carries `role="group"` plus `aria-label` describing the group
+        ("Document collaborators (5)", "Team A members"). Without
+        the label, SR users hear a sequence of individual avatar
+        names without group context. The accessible name should
+        include the total member count when the overflow indicator
+        does not announce it.
+    tokens:
+      spacing:
+        gap: spacing.tight
+      color:
+        background: color.surface.bg
+
+  - id: avatar
+    required: true
+    purpose: >-
+      The repeating slot for individual avatar instances (composes the
+      Avatar component). Renders up to `max` instances; counts beyond
+      collapse into the overflow-indicator slot. The first avatar
+      (DOM order) renders at the inline-start in stack layout; later
+      avatars overlap the prior with a negative offset bound to the
+      avatar size token.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: 6
+      repeats: 3
+    figma:
+      type: instance
+      hint: Avatar component instance; repeats per max property; z-index increments to layer correctly
+    code:
+      slot: avatar
+      semantic: avatar-instance
+    a11y:
+      hint: >-
+        Each child Avatar carries its own accessible name (per the
+        Avatar canon — image variant via `<img alt>`, initials / icon
+        variants via `role="img"` + `aria-label`). The container's
+        `role="group"` collects them; SR announces "group, Alex
+        Black, Jamie Lee, Sam Reyes, +4 more".
+    tokens:
+      radius:
+        corner: radius.full
+
+  - id: overflow-indicator
+    required: false
+    purpose: >-
+      The +N tile that surfaces the count of collapsed members
+      beyond `max`. Visually styled to match the size and shape of
+      the avatar slots (circle in stack, square or rounded in grid),
+      with the literal "+N" text or "+N more" label. When the group
+      is interactive (the indicator opens a member-list popover), it
+      renders as `<button>`; when static, it renders as a labelled
+      span. Activates when total count > `max`.
+    slotKind: interactive
+    layout:
+      row: 2
+      col: 7
+      span: 2
+    figma:
+      type: frame
+      hint: Avatar-shaped frame with "+N" centred text; visibility per "has overflow" property
+    code:
+      slot: overflow-indicator
+      semantic: button-or-span
+    a11y:
+      hint: >-
+        When interactive, `<button>` with `aria-label="N more
+        members"` (or "+N more") plus `aria-expanded` reflecting the
+        popover state. When static, `<span>` with the visible "+N"
+        text and a visually-hidden "more members" suffix. Never rely
+        on the literal "+N" alone — SR users without context cannot
+        decode the plus sign.
+    tokens:
+      radius:
+        corner: radius.full
+      color:
+        background: color.surface.sunken
+        foreground: color.text.muted
+      typography:
+        size: text.sm
+        weight: weight.semibold
+
+  - id: overflow-popover
+    required: false
+    purpose: >-
+      Optional disclosure surface anchored to the overflow-indicator,
+      revealing the full member list when activated. Renders as a
+      list of avatars plus member names, typically with a fixed
+      max-height and overflow-y scroll for long lists. Activates on
+      indicator click; dismisses on outside-click or Escape.
+    slotKind: interactive
+    layout:
+      parent: overflow-indicator
+      overlay: true
+      floating:
+        anchor: overflow-indicator
+        position: below
+        offset: 4
+    figma:
+      type: frame
+      hint: Floating panel anchored below the overflow indicator; vertical list of member rows; popover-style elevation
+    code:
+      slot: overflow-popover
+      semantic: dialog-or-listbox
+    a11y:
+      hint: >-
+        The popover follows the disclosure pattern (APG): the
+        overflow-indicator carries `aria-expanded` plus
+        `aria-controls` referencing the popover; focus moves into
+        the popover on open; Escape closes and returns focus to the
+        indicator. When the popover is a list of selectable members,
+        use `role="listbox"` with arrow-key navigation; when it is a
+        read-only overview, use a generic container with a heading.
+    tokens:
+      radius:
+        corner: radius.md
+      color:
+        background: color.surface.raised
+        border: color.border.subtle
+      elevation:
+        depth: elevation.overlay
+
+axes:
+  variants:
+    - stack
+    - grid
+  properties:
+    - name: size
+      kind: enum
+      values: [xs, sm, md, lg, xl]
+    - name: overflowDirection
+      kind: enum
+      values: [end, start]
+    - { name: interactive, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - empty
+      - partial
+      - overflowing
+      - expanded
+    transitions:
+      - from: overflowing
+        to: expanded
+        trigger: User activates overflow indicator (click, Enter, Space)
+      - from: expanded
+        to: overflowing
+        trigger: User dismisses popover (Escape, outside click, indicator re-click)
+
+mismatches:
+  - figma: Avatars laid out with positive item-spacing (no overlap)
+    code: Stack variant uses negative `margin-inline-start` to overlap avatars
+    consequence: >-
+      Designers ship the stack variant with non-overlapping avatars
+      (positive gap); developers implement the canonical overlap with
+      negative margins. The two surfaces look like different layouts
+      even though they intend the same. Designers find the overlap
+      "broken"; developers find the spec "underspecified".
+    correct: >-
+      Document the stack variant as overlapping by canonical contract
+      (negative inline-start margin per avatar after the first; offset
+      bound to size token). Grid variant uses positive gap and no
+      overlap. Figma component variants enforce both layouts as
+      first-class.
+
+  - figma: Overflow indicator drawn as static text "+5"
+    code: Overflow indicator rendered as `<button>` with `aria-label`
+    consequence: >-
+      Designers ship "+5" as a text label; developers ship a button
+      with `aria-label="5 more members"`. The visual element looks
+      static but behaves as a focusable, clickable target. Designers
+      do not draw the focus ring or hover state; developers ship them
+      anyway, leading to design / implementation drift on focus
+      affordance.
+    correct: >-
+      Document the overflow indicator as `<button>` whenever the
+      group is interactive (opens a popover). Figma carries the
+      button-state variants (default / hover / focused / active) so
+      the focus ring is part of the design. Static overflow (no
+      popover) is the rare case — document it separately as a
+      labelled `<span>`.
+
+  - figma: Stack overlap direction hard-coded as left-overlaps-right
+    code: Overlap direction follows `inset-inline-start` (logical, RTL-aware)
+    consequence: >-
+      Designers ship a fixed overlap direction (left avatar on top);
+      developers use logical inline properties that flip under RTL.
+      In RTL contexts the LTR Figma file ships with the reverse
+      visual order, but the logical-property code agrees with the
+      RTL reading direction. The two surfaces visually disagree.
+    correct: >-
+      Document the overlap direction as logical — `overflowDirection`
+      `end` means the last DOM-order avatar sits on top in LTR and
+      on the bottom in RTL. Figma shows both LTR and RTL frames;
+      code uses logical properties uniformly.
+
+  - figma: Max count baked into Figma as a fixed-instance count
+    code: '`max` prop drives the runtime bound; total count comes from `total` prop or children length'
+    consequence: >-
+      Designers ship a 5-avatar variant frame; developers compute
+      visible count from `min(total, max)` and render the indicator
+      from the surplus. The two surfaces decouple — designers may
+      not draw the overflow-indicator state for every avatar count
+      they author.
+    correct: >-
+      Document `max` and `total` as canonical properties; Figma
+      illustrates the three data states (partial / overflowing /
+      expanded) for at least one representative count. Code computes
+      visible avatars and surplus from those props at render time.
+
+mistakes:
+  - id: avatar-group-no-group-role
+    severity: blocker
+    title: Container has no `role="group"` or `aria-label`
+    description: >-
+      The container is a bare `<div>` with no role and no
+      accessible name. SR users hear a sequence of individual
+      avatar names without group context — "Alex Black image,
+      Jamie Lee image, Sam Reyes image" — losing the "this is a
+      collaborator strip" semantic entirely.
+    fix: >-
+      Set `role="group"` on the container plus `aria-label`
+      describing the group ("Document collaborators (5)", "Team A
+      members"). The label should include the total member count
+      when the overflow indicator does not surface it. Avoid
+      `role="list"` — list semantics are for sequential
+      enumeration, not a bounded set.
+
+  - id: avatar-group-overflow-no-aria-label
+    severity: blocker
+    title: Overflow indicator shows "+N" with no accessible label
+    description: >-
+      The indicator renders `<span>+5</span>` with no `aria-label`,
+      no visually-hidden suffix, and no associated description. SR
+      users hear "five" or "plus five" with no semantic — the count
+      is ambiguous (more avatars? more members? more icons?).
+    fix: >-
+      When interactive, `<button aria-label="5 more members">+5</
+      button>` (or "+5 more"). When static, append a visually-hidden
+      suffix — `<span>+5<span class="sr-only"> more members</span>
+      </span>`. Never rely on the literal "+N" — the plus sign is
+      visual shorthand without context for AT.
+
+  - id: avatar-group-overflow-not-button-when-interactive
+    severity: major
+    title: Overflow indicator is `<div>` or `<span>` but opens a popover
+    description: >-
+      The indicator opens a member-list popover when clicked but
+      ships as a non-button element (often a div with onClick). The
+      element is not in the keyboard tab order, has no
+      `aria-expanded`, and offers no Enter / Space activation. The
+      popover is mouse-only.
+    fix: >-
+      Render the interactive overflow indicator as `<button>` with
+      `aria-expanded` reflecting the popover state and
+      `aria-controls` referencing the popover id. Static (no
+      popover) overflow uses a `<span>`. The interactive boolean
+      property toggles the rendered semantic — never ship a div
+      that behaves like a button.
+
+  - id: avatar-group-counts-beyond-max-silent-collapse
+    severity: major
+    title: Counts beyond `max` collapse without the overflow indicator
+    description: >-
+      The implementation hides avatars beyond `max` but does not
+      render the +N indicator. Users see five collaborators in a
+      ten-collaborator group with no signal that more exist. The
+      group communicates a smaller membership than reality.
+    fix: >-
+      Whenever total count > `max`, render the overflow indicator
+      with the literal surplus ("+N" where N = total - max). The
+      indicator is non-optional in the overflowing state; only the
+      partial state (total ≤ max) omits it.
+
+  - id: avatar-group-popover-no-focus-trap
+    severity: major
+    title: Popover opens but focus does not move into it
+    description: >-
+      The disclosure popover opens on indicator click but keyboard
+      focus stays on the indicator. Tab does not enter the popover;
+      Escape does nothing. Keyboard users cannot navigate the
+      member list — the popover is mouse-only despite the indicator
+      being a button.
+    fix: >-
+      On open, move focus into the popover (first focusable
+      element, or the popover container itself with `tabindex="-1"`
+      for read-only lists). Escape closes the popover and returns
+      focus to the indicator. Outside-click closes without focus
+      restoration unless the click landed on another focusable
+      element.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-avatar-group>` host with `max`, `total`, `size`, `variant`, `overflow-direction`, `interactive` attributes; renders slotted `<ui-avatar>` children up to max plus an internal overflow tile when total exceeds max
+    variantMechanism: attributes (`variant="stack"`, `variant="grid"`, `size="md"`, `interactive`); CSS uses logical properties (`margin-inline-start`) for overlap direction
+  react:
+    structureMechanism: Function component (Material UI AvatarGroup, Atlassian AvatarGroup, HeroUI AvatarGroup, PrimeReact AvatarGroup) wrapping a span / div; children-based composition where the parent computes surplus from children.length and max
+    variantMechanism: props with class-variance-authority for variant / size; `max` + `total` + `renderSurplus` props for overflow customisation; `interactive` (or library-specific naming like `onClickMore`) toggles button-vs-span overflow tile
+  angularSignals:
+    structureMechanism: Angular component with input<number>('max'), input<number | undefined>('total'), input<'stack' | 'grid'>('variant'); content-projects child Avatar instances via ng-content with selector
+    variantMechanism: input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>(); host-binding [attr.role]="'group'" plus [attr.aria-label]; signal-derived overflow count from contentChildren
+  vue:
+    structureMechanism: Single-file component with default slot for avatar children; PrimeVue AvatarGroup, Naive UI AvatarGroup as third-party precedents; computed property derives surplus from slot children length and max
+    variantMechanism: defineProps with literal-union types; v-if for overflow indicator rendering
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    popoverOpen: motion.duration.fast
+    hoverShift: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: overflowActivate
+    optional: true
+    payload: >-
+      `{ surplus: number }`. Fires when the user activates the
+      overflow indicator (click, Enter, Space). Only canonical when
+      the group is interactive (opens a popover); static groups
+      never observe it.
+    frameworkNotes:
+      webComponents: >-
+        `overflowActivate` CustomEvent on the host with
+        `event.detail = { surplus }`.
+      react: >-
+        `onOverflowActivate(surplus)` callback; or a generic
+        `onClick` on the overflow indicator with library-internal
+        surplus computation.
+      angularSignals: >-
+        `output<{ surplus: number }>('overflowActivate')`.
+      vue: >-
+        `@overflow-activate` event with payload `{ surplus }`.
+
+  - name: expandedChange
+    optional: true
+    payload: >-
+      `{ expanded: boolean }`. Fires when the popover open-state
+      changes (open or dismiss). Only canonical when the consumer
+      controls the popover state externally; uncontrolled groups
+      manage state internally.
+    frameworkNotes:
+      webComponents: >-
+        `expandedChange` CustomEvent with
+        `event.detail = { expanded }`.
+      react: >-
+        `onExpandedChange(expanded)` callback (matches the
+        controlled-disclosure idiom).
+      angularSignals: >-
+        `output<boolean>('expandedChange')`.
+      vue: >-
+        `@expanded-change` event or `v-model:expanded` two-way
+        binding.
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, dense stacks step the avatar size down
+        one tier (md → sm) and reduce the visible `max` by one or
+        two so the strip fits without horizontal overflow. Grid
+        variants reflow to fewer columns. Overflow-indicator
+        always remains visible when total exceeds the reduced max.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the canonical max applies and
+        the size token returns to the explicit size. Grid variants
+        return to their authored column count.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps stack / grid layout variant.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps xs / sm / md / lg / xl; mirrors Avatar size.
+  - figma: Overflow Direction
+    code: overflowDirection
+    kind: enum
+    notes: end (default, last DOM avatar on top) or start (first DOM avatar on top).
+  - figma: Interactive
+    code: interactive
+    kind: boolean
+    notes: When true, overflow indicator renders as `<button>` and opens a popover; when false, indicator is a labelled `<span>`.
+  - figma: Max
+    code: max
+    kind: number
+    notes: Bound on visible avatar count; counts beyond render as +N indicator.
+  - figma: Total
+    code: total
+    kind: number
+    notes: Optional explicit total; when present, overrides children length for surplus computation.
+  - figma: Avatars
+    code: avatar
+    kind: slot
+    notes: Repeatable slot for child Avatar instances.
+  - figma: Overflow Popover
+    code: overflow-popover
+    kind: slot
+    notes: Optional disclosure surface; required when interactive is true.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Stack overlap direction follows `margin-inline-start` and the
+      `overflowDirection` enum is logical — `end` flips from
+      right-side-on-top (LTR) to left-side-on-top (RTL)
+      automatically. Grid variant tile order also mirrors via
+      writing-direction-aware grid auto-flow. Overflow indicator
+      sits at the inline-end of the stack regardless of language —
+      it follows the direction of growth, not a fixed visual
+      corner.
+  textExpansion: >-
+    Overflow indicator text "+5" stays compact across languages.
+    The accessible-name suffix ("more members" → German "weitere
+    Mitglieder" 60 % longer; Russian "еще участников" 80 % longer)
+    expands invisibly to AT but never affects layout. Group
+    `aria-label` ("Document collaborators") follows generic prose
+    expansion — reserve no extra width because the label is not
+    visible.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (static group, no overflow popover)
+      expected: >-
+        Static avatar groups are not in the tab order — the group
+        is decorative-or-informational and individual avatars are
+        not focusable. Tab moves through the surrounding host
+        controls (sidebar, header, list).
+    - keys: Tab (interactive group, overflow indicator opens popover)
+      expected: >-
+        Tab lands on the overflow indicator (a `<button>`) as a
+        single tab stop. The avatar slots themselves remain non-
+        focusable unless individually wrapped in their own buttons /
+        links by the host context (member-link composition).
+    - keys: Enter, Space (overflow indicator focused)
+      expected: >-
+        Activates the indicator. Popover opens; focus moves into
+        the popover (first focusable element or the popover
+        container with `tabindex="-1"`). `aria-expanded` flips to
+        true.
+    - keys: Escape (popover open)
+      expected: >-
+        Closes the popover. Focus returns to the overflow
+        indicator. `aria-expanded` flips back to false.
+    - keys: Tab (popover open, focus inside popover)
+      expected: >-
+        Moves through focusable elements inside the popover (member
+        rows, dismiss button). When the popover is a `role="listbox"`
+        member-list, arrow keys navigate instead of Tab.
+  announcements:
+    - trigger: SR encounters the avatar group container
+      expected: >-
+        SR announces the group role and accessible name first
+        ("group, Document collaborators, 8 members"). Reading
+        continues with the visible avatars in DOM order ("Alex
+        Black, Jamie Lee, Sam Reyes") and ends with the overflow
+        indicator ("button, 5 more members, collapsed").
+    - trigger: User activates the overflow indicator
+      expected: >-
+        SR announces the popover open ("dialog" or "list, 5
+        items") and reads the first focusable element. The
+        indicator's `aria-expanded` flip is announced.
+    - trigger: Popover dismisses
+      expected: >-
+        SR announces focus return to the indicator. The
+        `aria-expanded="false"` state is reflected in the next
+        announcement.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - button-name
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The container carries `role="group"` plus `aria-label`
+        describing the group. Without either, SR users hear a
+        sequence of individual avatar names without the "this is a
+        group" semantic. The label should include the total member
+        count when the overflow indicator does not surface it
+        independently.
+      source: apg
+      sourceRef: 'WAI-ARIA role=group plus accessible-name pattern'
+      consequence: >-
+        Without the role and label, the group is a sighted-only
+        composition. AT users encounter ambiguous avatar
+        sequences — the membership boundary, the count, and the
+        group's purpose all collapse into a flat list of names.
+    - rule: >-
+        Counts beyond `max` collapse into a single overflow
+        indicator with the literal surplus ("+N"). The indicator
+        is non-optional whenever total count > `max`. Implementations
+        that hide surplus avatars without the indicator
+        communicate a smaller membership than reality.
+      source: canon
+      consequence: >-
+        Without the indicator, users perceive the group as smaller
+        than it is. The collapsed members lose representation;
+        the membership count becomes lossy.
+    - rule: >-
+        The overflow indicator is `<button>` whenever it opens a
+        popover (interactive group). It carries `aria-expanded`
+        reflecting the popover state and `aria-controls`
+        referencing the popover. Static groups (no popover) render
+        the indicator as a labelled `<span>`. Implementations that
+        ship a `<div>` with onClick lose keyboard activation,
+        focus order, and disclosure semantics.
+      source: apg
+      sourceRef: 'APG: Disclosure pattern'
+      consequence: >-
+        Without the button semantic, keyboard users cannot reach
+        the popover. AT users cannot perceive that the indicator
+        is interactive — `aria-expanded` is the canonical signal
+        for "this control toggles disclosed content".
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Avatar
+      note: >-
+        Material 3 spec defines Avatar but not AvatarGroup as a
+        first-class component; library implementations (Material
+        UI) ship AvatarGroup as a composition utility on top of
+        Avatar. Same canonical contract, different documentation
+        surface.
+    - system: Atlassian
+      theirTerm: Avatar Group
+      note: >-
+        Atlassian explicitly supports two layouts (stack or grid)
+        as first-class variants — the rationale for the canonical
+        variant axis. Most other libraries default to stack only.
+    - system: Polaris
+      theirTerm: Avatar
+      note: >-
+        Polaris ships Avatar but does not ship a canonical
+        AvatarGroup — composition is left to the consumer. The
+        canon documents this absence as an industry-divergence
+        point, not a gap in the canon itself.
+    - system: Carbon
+      theirTerm: User Avatar
+      note: >-
+        Carbon ships User Avatar but no AvatarGroup — same pattern
+        as Polaris. Consumers compose manually with custom
+        layouts.
+    - system: GOV.UK
+      theirTerm: '—'
+      note: >-
+        GOV.UK Design System does not spec Avatar or AvatarGroup
+        at all — government services rarely surface user-identity
+        strips. The canon documents Avatar Group for the
+        productivity-app context where the pattern is dominant.
+
+sources:
+  - https://www.w3.org/TR/wai-aria-1.2/#group
+  - https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/
+  - https://atlassian.design/components/avatar-group
+  - https://mui.com/material-ui/react-avatar/
+  - https://mantine.dev/core/avatar/
+  - https://chakra-ui.com/docs/components/avatar
+  - https://primer.style/components/avatar-stack/react/beta
+  - https://primefaces.org/primereact/avatargroup/
+  - https://heroui.com/docs/components/avatar
+
+lastReviewed: '2026-05-03'

@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Inputs',
-    components: ['button', 'combobox', 'select', 'search-input', 'tag-input', 'menu-button'],
+    components: ['button', 'text-input', 'combobox', 'select', 'search-input', 'tag-input', 'menu-button'],
   },
   {
     name: 'Overlay',
@@ -22,6 +22,14 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Feedback',
-    components: ['alert', 'toast', 'banner', 'link'],
+    components: ['alert', 'toast', 'banner', 'link', 'skeleton'],
+  },
+  {
+    name: 'Identity',
+    components: ['avatar', 'avatar-group'],
+  },
+  {
+    name: 'Display',
+    components: ['badge', 'icon'],
   },
 ];

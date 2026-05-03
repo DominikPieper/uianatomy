@@ -826,6 +826,17 @@ whenToUse:
         `ListItem` is text/metadata-led and arranges in a
         1D list. ListItem suits dense metadata layouts;
         Tile suits image-led visual layouts.
+    - id: avatar-group
+      difference: >-
+        `Avatar Group` collapses a bounded set of members into
+        a compact strip with a +N overflow indicator;
+        `ListItem` rows render each member as an explicit row
+        with leading avatar plus name and metadata. ListItem
+        suits member-management surfaces where each member
+        needs its own affordances (presence, role, activity);
+        Avatar Group suits inline density where the group is a
+        single visual marker. The decision test: does each
+        member need its own row of metadata?
 contracts:
   nonNegotiable:
     - rule: >-
