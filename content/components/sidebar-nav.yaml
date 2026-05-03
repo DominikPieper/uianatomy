@@ -612,7 +612,7 @@ a11yAcceptance:
   axeRules:
     - aria-allowed-role
     - aria-required-attr
-    - aria-current
+    - aria-valid-attr-value
     - color-contrast
     - link-name
     - landmark-unique

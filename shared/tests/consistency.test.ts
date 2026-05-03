@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import axe from 'axe-core';
 import { loadComponents, loadPatterns } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
 import {
@@ -266,6 +267,23 @@ describe('cross-component consistency', () => {
           );
         }
       });
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('every a11yAcceptance.axeRules entry exists in axe-core 4.10.2 ruleset', async () => {
+    const components = await loadComponents({ contentDir });
+    const validRuleIds = new Set(axe.getRules().map((r) => r.ruleId));
+    const failures: string[] = [];
+    for (const c of components.values()) {
+      const rules = c.a11yAcceptance.axeRules ?? [];
+      for (const ruleId of rules) {
+        if (!validRuleIds.has(ruleId)) {
+          failures.push(
+            `${c.id}: a11yAcceptance.axeRules contains "${ruleId}" — not present in axe-core 4.10.2 ruleset (likely a typo, renamed rule, or hallucinated id). Verify against \`import('axe-core').default.getRules()\`.`,
+          );
+        }
+      }
     }
     expect(failures, failures.join('\n')).toEqual([]);
   });

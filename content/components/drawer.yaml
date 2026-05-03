@@ -620,7 +620,7 @@ a11yAcceptance:
   axeRules:
     - aria-dialog-name
     - aria-required-attr
-    - aria-modal-misuse
+    - aria-hidden-focus
     - color-contrast
     - focus-order-semantics
     - landmark-unique
