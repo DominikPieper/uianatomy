@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { LIBRARY_VERSIONS } from './vocabulary.js';
+
+const LIBRARY_KEYS = Object.keys(LIBRARY_VERSIONS) as [string, ...string[]];
 
 const slug = z
   .string()
@@ -558,6 +561,32 @@ const SOURCE_REF_PATTERNS: Record<string, RegExp> = {
   'html-spec': /\b(HTML|WHATWG|DOM)\b/,
 };
 
+// P5-34 / ADR-028 phase-2: sources[] entries can be either bare URL strings
+// (back-compat with phase-1; suitable for spec/MDN/WCAG/APG references) or
+// structured objects pinning a library key to a verifiedAt date.
+export const sourceEntrySchema = z.union([
+  z.string().min(1),
+  z
+    .object({
+      url: z.string().url('source.url must be an http(s) URL'),
+      library: z.enum(LIBRARY_KEYS).optional(),
+      verifiedAt: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'source.verifiedAt must be ISO YYYY-MM-DD')
+        .optional(),
+    })
+    .strict()
+    .refine(
+      (v) =>
+        (v.library === undefined && v.verifiedAt === undefined) ||
+        (v.library !== undefined && v.verifiedAt !== undefined),
+      {
+        message:
+          'source.library and source.verifiedAt are paired — declare both or neither.',
+      },
+    ),
+]);
+
 export const nonNegotiableContractSchema = z
   .object({
     rule: z.string().min(1),
@@ -636,7 +665,7 @@ export const componentSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD')
     .optional(),
-  sources: z.array(z.string().min(1)).optional(),
+  sources: z.array(sourceEntrySchema).optional(),
   since: semver.optional(),
   changelog: changelogSchema.optional(),
   anatomy: z.array(anatomySlotSchema).min(1),

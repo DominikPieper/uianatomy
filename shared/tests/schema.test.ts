@@ -1450,6 +1450,106 @@ describe('contracts field (P6-73)', () => {
   });
 });
 
+describe('sources[] entry shape (P5-34 / ADR-028 phase-2)', () => {
+  it('accepts back-compat bare URL strings', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      sources: ['https://www.w3.org/WAI/ARIA/apg/patterns/'],
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts structured source with library + verifiedAt', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      sources: [
+        {
+          url: 'https://www.radix-ui.com/primitives/docs/components/dialog',
+          library: 'radix',
+          verifiedAt: '2026-05-03',
+        },
+      ],
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts structured source without library/verifiedAt (URL-only object)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      sources: [{ url: 'https://www.w3.org/WAI/ARIA/apg/patterns/' }],
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts mixed array: bare URL + structured', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      sources: [
+        'https://www.w3.org/WAI/ARIA/apg/patterns/',
+        {
+          url: 'https://www.radix-ui.com/primitives/docs/components/dialog',
+          library: 'radix',
+          verifiedAt: '2026-05-03',
+        },
+      ],
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown library key', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      sources: [
+        {
+          url: 'https://example.com/',
+          library: 'not-in-table',
+          verifiedAt: '2026-05-03',
+        },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects library set without verifiedAt (or vice versa)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const cases = [
+      { url: 'https://www.radix-ui.com/', library: 'radix' }, // missing verifiedAt
+      { url: 'https://www.radix-ui.com/', verifiedAt: '2026-05-03' }, // missing library
+    ];
+    for (const c of cases) {
+      const bad = { ...card, sources: [c] };
+      const result = componentSchema.safeParse(bad);
+      expect(result.success, JSON.stringify(c)).toBe(false);
+    }
+  });
+
+  it('rejects verifiedAt that is not YYYY-MM-DD', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      sources: [
+        {
+          url: 'https://www.radix-ui.com/',
+          library: 'radix',
+          verifiedAt: 'May 3, 2026',
+        },
+      ],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('pattern schema', () => {
   it('parses confirmation-flow.yaml', async () => {
     const map = await loadPatterns({ patternsDir });
