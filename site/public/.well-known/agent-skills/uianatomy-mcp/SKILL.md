@@ -146,6 +146,18 @@ Useful when reviewing a vendor library API description, a design-system RFC, or 
 
 This complements `validate_implementation`, which scores generated code; spec-parity scores prose intent.
 
+## Recipe — spec-to-canon parity audit
+
+The compact 5-step form. Use this when scoring a vendor library API description, a design-system RFC, or any prose specification against the canon.
+
+1. `list_components` → enumerate canonical inventory.
+2. For each spec entry, `search_components({ query })` to find the canon match (try the spec's own name and known aliases like `Snackbar` → Toast, `Dialog` → Modal).
+3. For each match, `get_component({ id })` (deep) to retrieve the full record in one round-trip.
+4. Diff axes, variants, slots, events between the spec and the canonical record.
+5. Output a mismatch table grouped by severity — critical (missing required slot / event / state), drift (renamed value, wrong polarity), naming (alias not declared).
+
+Pair with `get_mismatches({ id })` and `get_common_mistakes({ id })` to surface canonical pitfalls the spec should also account for. The longer walkthrough in *Typical agent flows* above expands each step; the compact form here is the recipe to recall in-flow.
+
 ## When to use which tool
 
 `get_component({ id })` returns the full canonical record. Many of the per-axis tools (`get_anatomy`, `get_axes`, `get_motion`, `get_events`, `get_when_to_use`, `get_tokens`, `get_responsive`, `get_transitions`, `get_framework_map`, `get_mismatches`, `get_common_mistakes`, `get_changelog`) are subsets of that same record. They are **not redundant** — they exist for two reasons:
@@ -162,9 +174,15 @@ Picking between them:
 
 `get_pattern` is **not** a subset of any component — patterns are independent records (compositions on top of canonical components). Always use `get_pattern` / `list_patterns` / `get_patterns_for_component` for pattern queries.
 
-## Tool loading
+## First call: load tools
 
-The server returns all 26 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. If your client surfaces fewer tools than expected, restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+The server returns all 26 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. **Some clients (Claude Code among them) defer per-tool schema-loading regardless** — the agent sees a tool name but cannot invoke it until the schema is fetched, and a direct call fails with `InputValidationError`. Bulk-load the common tools up front to avoid mid-flow latency:
+
+```
+ToolSearch query: "select:mcp__uianatomy__list_components,mcp__uianatomy__get_component,mcp__uianatomy__search_components,mcp__uianatomy__list_patterns,mcp__uianatomy__get_pattern,mcp__uianatomy__get_implementations"
+```
+
+Add per-axis tools (`get_anatomy`, `get_motion`, `get_events`, `get_contracts`, etc.) as the specific audit flow demands. If your client surfaces fewer than 26 tools at the catalogue level (not the schema level), restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 
