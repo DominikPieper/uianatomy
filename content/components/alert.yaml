@@ -21,6 +21,12 @@ intro: >-
   reference covers the four severity variants, the live-region
   politeness contract, and the boundary between Alert and the
   modal alertdialog.
+
+alternateNames:
+  - 'Inline notification'
+  - 'Callout'
+  - 'Notice'
+
 anatomy:
   - id: container
     required: true

@@ -23,6 +23,7 @@ intro: >-
 alternateNames:
   - 'Snackbar'
   - 'Flag'
+  - 'Notification'
 
 anatomy:
   - id: viewport
