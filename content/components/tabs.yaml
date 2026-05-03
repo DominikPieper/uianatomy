@@ -633,6 +633,65 @@ a11yAcceptance:
     - color-contrast
     - focus-order-semantics
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Tablist uses the roving-tabindex pattern: only the
+        selected tab carries `tabindex="0"`, all others carry
+        `tabindex="-1"`. Arrow keys (Left/Right horizontal,
+        Up/Down vertical) move focus and update the roving
+        index; Tab enters and exits the tablist as a single
+        stop.
+      source: apg
+      sourceRef: 'APG: Tabs pattern — Keyboard interaction'
+      consequence: >-
+        Without roving tabindex, Tab walks through every tab
+        plus the panels below; SR users hear "tab 1 of N"
+        announcements that conflict with document order. The
+        canonical "tablist is one stop, arrows navigate inside"
+        contract is broken from the keyboard perspective.
+    - rule: >-
+        `aria-selected` on each tab is the single source of
+        truth for selection state. CSS modifiers and the
+        indicator animation derive from `[aria-selected="true"]`
+        — never from a parallel `data-selected` attribute that
+        has to stay in sync.
+      source: apg
+      sourceRef: 'APG: Tabs pattern — aria-selected'
+      consequence: >-
+        When selection lives only in `data-selected`, AT
+        reports every tab as unselected; the visual selection
+        is a sighted-only signal. The contract that "the
+        attribute is the meaning, the visual derives from it"
+        applies here as it does for `aria-expanded` on
+        Disclosure / Accordion.
+    - rule: >-
+        Each tab carries `aria-controls` referencing its
+        tabpanel's id; each tabpanel carries `aria-labelledby`
+        referencing its tab's id. The bidirectional relationship
+        is wired even when tabs and panels are visually
+        adjacent.
+      source: apg
+      sourceRef: 'APG: Tabs pattern — aria-controls and aria-labelledby'
+      consequence: >-
+        Without `aria-labelledby` on the panel, SR users
+        navigating the page out-of-order land on a panel with
+        no signal of which tab owns it. Without `aria-controls`
+        on the tab, there is no programmatic path from tab to
+        panel for AT and assistive navigation features.
+    - rule: >-
+        Disabled tabs use `aria-disabled="true"` — never the
+        HTML `disabled` attribute. The disabled tab remains
+        focusable and announceable; activation (Enter / Space)
+        is the operation that becomes a no-op.
+      source: apg
+      sourceRef: 'APG: Tabs pattern — Managing disabled tabs'
+      consequence: >-
+        HTML `disabled` removes the tab from the focus order;
+        arrow-key navigation jumps over it without warning,
+        leaving keyboard users stranded mid-traversal and
+        SR users with no announcement that the tab exists.
+
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/tab_role
