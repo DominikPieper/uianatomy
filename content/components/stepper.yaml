@@ -241,7 +241,7 @@ axes:
     - dot
     - vertical
   properties:
-    - { name: nonLinear, kind: primitive, of: boolean }
+    - { name: linear, kind: primitive, of: boolean }
     - { name: hasDescriptions, kind: primitive, of: boolean }
     - name: size
       kind: enum
@@ -262,7 +262,7 @@ axes:
         trigger: >-
           User progresses to this step — by completing the
           prior step (linear mode) or by clicking the step
-          directly (`nonLinear: true`). The previously-
+          directly (`linear: false`). The previously-
           active step transitions out of active; this step
           becomes active and `aria-current="step"`.
       - from: active
@@ -290,7 +290,7 @@ axes:
         to: active
         trigger: >-
           User navigates back to a previous step (per
-          `nonLinear: true` or the canonical "user may
+          `linear: false` or the canonical "user may
           revisit prior steps" pattern). Previously-active
           step transitions to its appropriate state
           (typically pending if not yet completed, or
@@ -333,7 +333,7 @@ mismatches:
       number itself can be `aria-hidden`.
 
   - figma: Sequential and non-linear stepper drawn as the same component
-    code: 'A `nonLinear: boolean` property that gates whether the user may click prior or future steps'
+    code: 'A `linear: boolean` property that gates whether the user may click prior or future steps'
     consequence: >-
       Designers do not distinguish linear (one-direction-
       only) from non-linear (jump-anywhere). Implementations
@@ -343,12 +343,13 @@ mismatches:
       non-linear mode skip required steps and the underlying
       flow breaks downstream.
     correct: >-
-      Document `nonLinear` as a first-class property. Linear
-      (default false): only completed and current steps are
-      reachable; future steps are `aria-disabled`. Non-linear
-      (true): all steps reachable; user navigates freely.
-      Visual treatment communicates the mode (disabled-future-
-      steps in linear mode are clearly muted and unclickable).
+      Document `linear` as a first-class property — positive-
+      default boolean (default true): only completed and current
+      steps are reachable, future steps are `aria-disabled`.
+      `linear: false` (non-linear mode): all steps reachable,
+      user navigates freely. Visual treatment communicates the
+      mode (disabled-future-steps in linear mode are clearly
+      muted and unclickable).
 
   - figma: Connectors drawn as a single uniform line
     code: Connectors with style per adjacent-step-state pair (solid for completed-to-completed, muted for pending)
@@ -392,7 +393,7 @@ mistakes:
       regardless. Required validation per step is bypassed;
       the underlying flow breaks downstream.
     fix: >-
-      In linear mode (`nonLinear: false`), future steps
+      In linear mode (`linear: true`), future steps
       are `aria-disabled` until prior steps complete.
       Click is a no-op (or shows a "complete prior steps
       first" message). The "Next" button is the canonical
@@ -458,7 +459,7 @@ frameworkMap:
     variantMechanism: props with class-variance-authority for variant / size; controlled or uncontrolled `activeStep` index; per-step `completed`, `error` state props
   angularSignals:
     structureMechanism: Angular Material `MatStepper` plus `MatStep`; or Angular CDK Stepper for headless composition; signal-based active-step state
-    variantMechanism: input<'standard' | 'dot' | 'vertical'>(); `[nonLinear]`, `[size]` host bindings; per-step `[state]` input
+    variantMechanism: input<'standard' | 'dot' | 'vertical'>(); `[linear]`, `[size]` host bindings; per-step `[state]` input
   vue:
     structureMechanism: Vuetify `<v-stepper>` plus `<v-stepper-item>`; or custom composition with `<ol>` plus per-step components
     variantMechanism: defineProps with literal-union types; `:variant`, `:non-linear` props
@@ -493,7 +494,7 @@ events:
     payload: >-
       `{ stepId: string, stepIndex: number }`. Fires when
       the user navigates to a step — by clicking (in
-      `nonLinear: true` mode), by completing the prior
+      `linear: false` mode), by completing the prior
       step in linear mode, or by programmatic
       `setActiveStep`. The previously-active step
       transitions out of active.
@@ -626,10 +627,10 @@ propertyMap:
     code: size
     kind: enum
     notes: sm / md / lg. Drives indicator size and typography.
-  - figma: Non Linear
-    code: nonLinear
+  - figma: Linear
+    code: linear
     kind: boolean
-    notes: Toggles whether future steps are reachable. Default false (linear sequence).
+    notes: 'Positive-default boolean. Default true (linear sequence — only completed and current steps reachable). `linear: false` enables non-linear mode (all steps reachable). Renamed from previous `nonLinear` to follow positive-default-boolean polarity convention.'
   - figma: Has Descriptions
     code: hasDescriptions
     kind: boolean

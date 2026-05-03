@@ -487,6 +487,18 @@ properties:
 
 This shape replaces the previous free-form `type: string` (e.g., `type: 'sm | md | lg'`). Authors no longer escape pipe characters inside YAML strings, and Zod validates that enum values are unique, non-empty, and at least two in number.
 
+### Boolean polarity convention
+
+Boolean properties name the **positive** state, with the canonical default value being `true`. Avoid `non*` / `no*` / negative-default booleans — they invert the mental model and force every consumer to think in double-negatives.
+
+| Avoid | Prefer |
+|---|---|
+| `nonLinear: false` (default) | `linear: true` (default) |
+| `noWrap: false` (default) | `wrap: true` (default) |
+| `disableHover: false` | `hoverEnabled: true` |
+
+The Stepper canonical property `linear: boolean` is the precedent (renamed from `nonLinear` per P6-119). Schema does not encode default values; the rule lives in authoring discipline and the property's `notes` field documents the canonical default. The `canon-component-author` skill rejects negative-default booleans during the YAML-write step.
+
 **Test for variant vs. property:**
 
 - Variant = "a structurally different version of this component"

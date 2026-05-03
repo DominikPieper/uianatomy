@@ -160,6 +160,7 @@ If the SVG override is required (rare), document why in `notes`.
 - **Atelier UI is invisible.** Per ADR-001. Do not consult Atelier source. Do not match its anatomy.
 - **Disagreement is named.** If Radix and React Aria disagree on Tab semantics in an open Combobox, name the disagreement and pick a recommendation with rationale.
 - **Tone**: declarative, no hedging. Sentence-case headings. "Anatomy" = slot/region structure, never visual styling. "Variant" / "Property" / "State" are technical terms with precise meanings — use them precisely.
+- **Positive-default boolean polarity (P6-119).** Boolean properties name the *positive* state with the canonical default `true`. Reject `nonLinear`, `noWrap`, `disableHover`-style negatives — invert and rename (`linear: true` default, `wrap: true` default, `hoverEnabled: true`). The default lives in the property's `notes` field; the schema does not encode it. Stepper's `linear` is the precedent (renamed from `nonLinear` 2026-05-03).
 
 ## Final summary template
 
