@@ -152,7 +152,7 @@ axes:
       kind: enum
       values: [xs, sm, md, lg, xl]
     - { name: animated, kind: primitive, of: boolean }
-    - { name: count, kind: primitive, of: boolean }
+    - { name: multiple, kind: primitive, of: boolean }
   states:
     interactive: []
     data:
@@ -344,10 +344,10 @@ propertyMap:
     code: animated
     kind: boolean
     notes: Toggles shimmer / wave animation. Always falls back to static under prefers-reduced-motion regardless of this prop.
-  - figma: Count
-    code: count
+  - figma: Multiple
+    code: multiple
     kind: boolean
-    notes: When true, the skeleton stands in for a list of N items rather than a single shape; consumer drives the actual count via children rendering.
+    notes: When true, the skeleton stands in for a list of N items rather than a single shape; consumer drives the actual item count via children rendering. Renamed from `count` to avoid the boolean-named-as-number naming-trap.
   - figma: Loading Announcement
     code: announcement
     kind: text
