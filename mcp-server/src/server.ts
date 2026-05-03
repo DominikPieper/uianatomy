@@ -118,7 +118,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_anatomy',
-    'Return only the anatomy section (slot/region definitions) for a component.',
+    'Return only the anatomy section (slot/region definitions) for a component. Slice tool — use for narrow round-trip needs (e.g. anatomy-only review). For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -130,7 +130,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_axes',
-    'Return only variants/properties/states for a component.',
+    'Return only variants/properties/states for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -142,7 +142,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_mismatches',
-    'Return only the Figma↔Code mismatches for a component.',
+    'Return only the Figma↔Code mismatches for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -154,7 +154,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_common_mistakes',
-    'Return only the documented common implementation mistakes for a component.',
+    'Return only the documented common implementation mistakes for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -166,7 +166,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_framework_map',
-    'Return the cross-framework expression map for a component.',
+    'Return the cross-framework expression map for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -178,7 +178,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_tokens',
-    'Return the per-slot token bindings (spacing/radius/color/elevation/typography) for a component. Slots without tokens are omitted from the result.',
+    'Return the per-slot token bindings (spacing/radius/color/elevation/typography) for a component. Slots without tokens are omitted from the result. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -193,7 +193,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_motion',
-    'Return the motion block (durations/easing/reducedMotionFallback) for a component. Returns null when the component declares no motion.',
+    'Return the motion block (durations/easing/reducedMotionFallback) for a component. Returns null when the component declares no motion. Slice tool — use for narrow round-trip needs (e.g. motion-only review across multiple components). For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -205,7 +205,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_responsive',
-    'Return the responsive block (breakpoints) for a component. Returns null when the component declares no responsive behaviour.',
+    'Return the responsive block (breakpoints) for a component. Returns null when the component declares no responsive behaviour. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -217,7 +217,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_transitions',
-    'Return the state-machine transitions (from/to/trigger) for a component. Returns null when the component declares no transitions.',
+    'Return the state-machine transitions (from/to/trigger) for a component. Returns null when the component declares no transitions. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -229,7 +229,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_events',
-    'Return the events array (name/payload/per-framework notes) for a component. Returns null when the component declares no events.',
+    'Return the events array (name/payload/per-framework notes) for a component. Returns null when the component declares no events. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -241,7 +241,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_changelog',
-    'Return the versioning block (since + changelog entries) for a component. Returns null when the component declares no version metadata. Each changelog entry is { version (semver), date (ISO YYYY-MM-DD), summary }.',
+    'Return the versioning block (since + changelog entries) for a component. Returns null when the component declares no version metadata (today no canonical component declares either; this surface activates when a component lands its first published rename / mistake-correction / canonical-name-change and the editor bumps `since` + appends a changelog entry per docs/methodology.md). Each changelog entry is { version (semver), date (ISO YYYY-MM-DD), summary }. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -254,7 +254,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_when_to_use',
-    'Return the whenToUse block (use/avoid prose plus per-related differentiators) for a component. Returns null when the component declares no whenToUse.',
+    'Return the whenToUse block (use/avoid prose plus per-related differentiators) for a component. Returns null when the component declares no whenToUse. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const map = await getComponents();
@@ -400,7 +400,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_contracts',
-    'Return the contracts block for a component or pattern: `{ id, kind: "component" | "pattern", contracts: { nonNegotiable[], vocabularyDrift[] } | null }`. `nonNegotiable` is hard-binding rules with `source` (apg | wcag | html-spec | platform | canon), optional `sourceRef`, and a `consequence` describing what breaks on violation. `vocabularyDrift` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts. Errors when the id resolves to neither a component nor a pattern.',
+    'Return the contracts block for a component or pattern: `{ id, kind: "component" | "pattern", contracts: { nonNegotiable[], vocabularyDrift[] } | null }`. `nonNegotiable` is hard-binding rules with `source` (apg | wcag | html-spec | platform | canon), optional `sourceRef`, and a `consequence` describing what breaks on violation. `vocabularyDrift` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts. Errors when the id resolves to neither a component nor a pattern. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
     { id: z.string() },
     async ({ id }) => {
       const components = await getComponents();
