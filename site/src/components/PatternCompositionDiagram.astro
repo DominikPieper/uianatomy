@@ -1,0 +1,67 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { Component } from '@uianatomy/shared/schema';
+import { renderCompositionSVG } from '@uianatomy/shared/svg';
+
+interface Props {
+  entry: CollectionEntry<'patterns'>;
+}
+const { entry } = Astro.props;
+const pattern = entry.data;
+
+const components = await getCollection('components');
+const componentMap = new Map<string, Component>(
+  components.map((c) => [c.data.id, c.data as Component]),
+);
+
+const svg = renderCompositionSVG(pattern, componentMap);
+---
+
+<figure class="composition-host" role="img" aria-label={`${pattern.name} composition diagram`}>
+  <Fragment set:html={svg} />
+</figure>
+
+<style>
+  .composition-host {
+    margin: 0 0 32px;
+  }
+  .composition-host :global(.composition-diagram) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  .composition-host :global(.composition-outer) {
+    stroke: var(--accent-active);
+    stroke-width: 1;
+  }
+  .composition-host :global(.composition-outer-label) {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 500;
+    fill: var(--fg-muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .composition-host :global(.composition-entry) {
+    stroke: var(--fg-default);
+    stroke-width: 1;
+  }
+  .composition-host :global(.composition-entry-name) {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    fill: var(--fg-default);
+  }
+  .composition-host :global(.composition-entry-role) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .composition-host :global(.composition-entry-slots) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--fg-muted);
+  }
+</style>

@@ -13,7 +13,7 @@ import {
   propertySchema,
 } from '../src/schema.js';
 import { loadPatterns } from '../src/loader.js';
-import { renderAnatomySVG, validateOverride } from '../src/svg.js';
+import { renderAnatomySVG, renderCompositionSVG, validateOverride } from '../src/svg.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
@@ -1645,5 +1645,50 @@ describe('pattern schema', () => {
       lastReviewed: '2026-05-01',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('composition SVG renderer (P6-49 stage-4)', () => {
+  it('renders confirmation-flow with one frame per composition entry', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = patterns.get('confirmation-flow');
+    expect(pattern).toBeDefined();
+    const components = await loadComponents({ contentDir });
+    const svg = renderCompositionSVG(pattern!, components);
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('class="composition-diagram"');
+    expect(svg).toContain('class="composition-outer"');
+    const entryRects = svg.match(/class="composition-entry"/g) ?? [];
+    expect(entryRects.length).toBe(pattern!.composition.length);
+  });
+
+  it('renders the pattern name as outer label', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = patterns.get('login-form');
+    const components = await loadComponents({ contentDir });
+    const svg = renderCompositionSVG(pattern!, components);
+    expect(svg).toContain(pattern!.name);
+    expect(svg).toContain('class="composition-outer-label"');
+  });
+
+  it('renders each composition entry name and role', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = patterns.get('confirmation-flow');
+    const components = await loadComponents({ contentDir });
+    const svg = renderCompositionSVG(pattern!, components);
+    for (const entry of pattern!.composition) {
+      const comp = components.get(entry.componentId);
+      expect(svg).toContain(comp?.name ?? entry.componentId);
+      expect(svg).toContain(entry.role);
+    }
+  });
+
+  it('declares slot count per entry from canonical anatomy', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = patterns.get('confirmation-flow');
+    const components = await loadComponents({ contentDir });
+    const svg = renderCompositionSVG(pattern!, components);
+    const modal = components.get('modal');
+    expect(svg).toContain(`${modal!.anatomy.length} slots`);
   });
 });

@@ -541,6 +541,78 @@ export interface ResolveOptions {
   width?: number;
 }
 
+// P6-49 stage-4: composition-SVG-renderer. Mirrors renderAnatomySVG's
+// wireframe vocabulary (dashed outer frame for the pattern boundary,
+// solid inner frames per composition entry) so the visual language
+// stays consistent across component-anatomy and pattern-composition.
+export function renderCompositionSVG(
+  pattern: import('./schema.js').Pattern,
+  components: Map<string, Component>,
+  options: RenderOptions = {},
+): string {
+  const width = options.width ?? CANVAS_WIDTH;
+  const OUTER_PAD = 24;
+  const OUTER_LABEL_STRIP = 28;
+  const INNER_PAD = 16;
+  const ENTRY_HEIGHT = 56;
+  const ENTRY_GAP = 8;
+  const ROLE_BADGE_WIDTH = 140;
+  const SLOTS_BADGE_WIDTH = 80;
+
+  const entries = pattern.composition;
+  const innerWidth = width - OUTER_PAD * 2 - INNER_PAD * 2;
+  const innerHeight = entries.length * ENTRY_HEIGHT + (entries.length - 1) * ENTRY_GAP;
+  const outerHeight = OUTER_LABEL_STRIP + INNER_PAD + innerHeight + INNER_PAD;
+  const totalHeight = OUTER_PAD + outerHeight + OUTER_PAD;
+
+  const parts: string[] = [];
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalHeight}" width="${width}" height="${totalHeight}" class="composition-diagram" role="img" aria-label="${escape(pattern.name)} composition">`,
+  );
+
+  const outerX = OUTER_PAD;
+  const outerY = OUTER_PAD;
+  const outerW = width - OUTER_PAD * 2;
+  const outerH = outerHeight;
+  parts.push(
+    `<rect x="${outerX}" y="${outerY}" width="${outerW}" height="${outerH}" rx="6" class="composition-outer" stroke-dasharray="6 4" fill="none" />`,
+  );
+  parts.push(
+    `<text x="${outerX + 12}" y="${outerY + 18}" class="composition-outer-label">${escape(pattern.name)}</text>`,
+  );
+
+  let cursorY = outerY + OUTER_LABEL_STRIP + INNER_PAD;
+  const innerX = outerX + INNER_PAD;
+  for (const entry of entries) {
+    const comp = components.get(entry.componentId);
+    const compName = comp?.name ?? entry.componentId;
+    const slotCount = comp?.anatomy.length ?? 0;
+    const slotsLabel = slotCount > 0 ? `${slotCount} slot${slotCount === 1 ? '' : 's'}` : '—';
+
+    parts.push(
+      `<rect x="${innerX}" y="${cursorY}" width="${innerWidth}" height="${ENTRY_HEIGHT}" rx="4" class="composition-entry" fill="none" />`,
+    );
+    parts.push(
+      `<text x="${innerX + 12}" y="${cursorY + 22}" class="composition-entry-name">${escape(compName)}</text>`,
+    );
+    parts.push(
+      `<text x="${innerX + 12}" y="${cursorY + 40}" class="composition-entry-role">${escape(entry.role)}</text>`,
+    );
+
+    const slotsX = innerX + innerWidth - SLOTS_BADGE_WIDTH - 8;
+    parts.push(
+      `<text x="${slotsX + SLOTS_BADGE_WIDTH - 4}" y="${cursorY + 22}" class="composition-entry-slots" text-anchor="end">${escape(slotsLabel)}</text>`,
+    );
+    const roleX = slotsX - ROLE_BADGE_WIDTH;
+    void roleX; // reserved for future right-aligned role-badge if needed
+
+    cursorY += ENTRY_HEIGHT + ENTRY_GAP;
+  }
+
+  parts.push('</svg>');
+  return parts.join('');
+}
+
 export async function resolveAnatomySVG(component: Component, options: ResolveOptions): Promise<string> {
   const overridePath = join(options.contentDir, `${component.id}.anatomy.svg`);
   if (existsSync(overridePath)) {

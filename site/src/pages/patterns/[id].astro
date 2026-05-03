@@ -2,6 +2,7 @@
 import { getCollection, getEntry } from 'astro:content';
 import PatternPageShell from '../../components/PatternPageShell.astro';
 import PatternComposition from '../../components/sections/PatternComposition.astro';
+import PatternCompositionDiagram from '../../components/PatternCompositionDiagram.astro';
 import PatternWhenToUse from '../../components/sections/PatternWhenToUse.astro';
 import PatternDecisions from '../../components/sections/PatternDecisions.astro';
 
@@ -15,6 +16,7 @@ const entry = await getEntry('patterns', id!);
 if (!entry) throw new Error(`Pattern ${id} not found`);
 ---
 <PatternPageShell entry={entry} view="designer">
+  <PatternCompositionDiagram entry={entry} />
   <PatternComposition entry={entry} />
   <PatternWhenToUse entry={entry} />
   <PatternDecisions entry={entry} />
