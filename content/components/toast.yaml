@@ -714,6 +714,48 @@ whenToUse:
         by the user; Toast is pushed by the system.
 
 contracts:
+  nonNegotiable:
+    - rule: >-
+        Auto-dismiss timer pauses on pointer-enter and focus-into
+        the viewport region; resumes only when both pointer-leave
+        AND focus-out are true. Default duration is at least 5
+        seconds for short messages, scaled with message length.
+      source: wcag
+      sourceRef: 'WCAG 2.2.1 — Timing Adjustable'
+      consequence: >-
+        Without pause-on-hover/focus, users with motor or
+        cognitive impairments — and any user reading at normal
+        speed — cannot reliably consume the message before
+        dismissal. WCAG 2.2.1 fails. The auto-dismiss is hostile
+        to the people most likely to need the confirmation.
+    - rule: >-
+        Live-region politeness derives from severity, not from a
+        single role applied to every toast. `info` and `success`
+        use `role="status"` (polite, queued); `error` uses
+        `role="alert"` (assertive, interrupting); `warning` is
+        polite by default and only escalates per use case.
+      source: apg
+      sourceRef: 'APG: Alert and status patterns — politeness mapping'
+      consequence: >-
+        When every toast carries `role="alert"` regardless of
+        severity, SR users are interrupted on every "Saved" or
+        "Copied" confirmation; the assertive flood causes them to
+        mute the application entirely, and the genuinely urgent
+        errors lose their interrupt power. Politeness is a
+        budget, not a default.
+    - rule: >-
+        Escape dismisses the focused toast (or the most recent
+        toast if none is focused) when focus is inside the toast
+        viewport region. The keyboard contract matches the
+        light-dismiss family (Popover, Tooltip, Drawer).
+      source: canon
+      consequence: >-
+        Without an Escape binding, keyboard users have no
+        symmetric exit — they must Tab to the dismiss button and
+        activate it, or wait for auto-dismiss to fire. The
+        contract feels broken compared to peer light-dismiss
+        patterns and forces sighted-keyboard users to memorise a
+        Toast-specific path.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Snackbar
