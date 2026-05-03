@@ -585,6 +585,16 @@ whenToUse:
         (`tablist` vs `radiogroup`) and the keyboard model
         (Tabs may use manual activation; SegmentedControl
         always uses auto-activation per APG radiogroup).
+    - id: radio-group
+      difference: >-
+        `RadioGroup` is a form field whose selected value
+        submits with the form; `SegmentedControl` is a denser-
+        mutex view-mode toggle that drives UI state without
+        form-field semantics. Both use `role="radiogroup"`
+        with roving-tabindex per APG; the visual style
+        (compact-pill vs spaced-radios) and the value-target
+        (UI state vs form data) are the canonical
+        differences.
 contracts:
   nonNegotiable:
     - rule: >-

@@ -761,6 +761,17 @@ whenToUse:
         common confusion is rendering an "actions" menu as a
         Select-shaped trigger with action items inside; reach
         for MenuButton there.
+    - id: radio-group
+      difference: >-
+        `Select` houses options behind a popup trigger,
+        suiting long bounded sets and dense forms;
+        `RadioGroup` surfaces all options inline, suiting
+        short sets where seeing every option aids decision.
+        Both produce a single-value form submission. Migrate
+        from RadioGroup to Select when the option count
+        crosses ~7 and inline density becomes noisy; migrate
+        from Select to RadioGroup when the set is short and
+        the choice deserves visible weight.
 
 contracts:
   nonNegotiable:

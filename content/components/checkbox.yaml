@@ -68,6 +68,18 @@ whenToUse:
         multi-select. The decision test: does the option set
         fit comfortably as a static list (Checkbox) or does it
         need filter and overflow handling (Combobox)?
+    - id: radio-group
+      difference: >-
+        `RadioGroup` enforces single-selection mutex via shared
+        `name`; `Checkbox` allows independent multi-selection
+        (or stands alone as a single boolean). RadioGroup
+        produces one value per group; a Checkbox list produces
+        zero-to-N values (one per checked instance). Checkbox
+        uniquely supports the tri-state mixed value for
+        parent/child propagation; RadioGroup has no equivalent.
+        Decision test: can the user select more than one
+        option simultaneously (Checkbox) or exactly one
+        (RadioGroup)?
 
 anatomy:
   - id: root

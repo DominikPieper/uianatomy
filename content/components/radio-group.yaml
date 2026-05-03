@@ -1,0 +1,883 @@
+id: radio-group
+name: Radio Group
+description: >-
+  A mutually-exclusive selection control — a fieldset of radio
+  buttons where exactly one option is selected at a time. Native
+  `<input type="radio">` instances grouped by a shared `name`
+  attribute, wrapped in a `<fieldset>` with `<legend>` (or
+  `role="radiogroup"` with `aria-labelledby`). Distinct from
+  Checkbox by enforcing single-selection mutex; distinct from
+  Select by surfacing all options inline rather than behind a
+  popup.
+
+intro: >-
+  Radio Group is the canonical single-selection-from-finite-set
+  primitive. Each radio is its own focusable element only by
+  the canonical roving-tabindex contract (only the checked radio
+  participates in the page tab order; arrow keys move focus and
+  selection within the group). Native HTML `<input type="radio"
+  name>` enforces the mutex via shared `name`; the canonical
+  YAML documents the radio-as-sub-anatomy plus the group-level
+  contracts (legend label, aria-required, validation surfacing).
+  Two variants — standard inline radios for compact forms and
+  card-style radios for prominent choice surfaces — and the
+  divergence from Checkbox (independent toggles), Select
+  (popup-housed), and SegmentedControl (denser-mutex without
+  field semantics).
+
+alternateNames:
+  - 'Radio buttons'
+  - 'Radios'
+  - 'Option group'
+
+whenToUse:
+  use: >-
+    For mutually-exclusive single-selection from a small bounded
+    set (typically 2-7 options) where surfacing all options
+    inline aids decision-making — yes/no choices, contact-method
+    pickers, plan tier selectors, payment-method choices. Pair
+    with a `<fieldset>` plus `<legend>` (or `role="radiogroup"`
+    plus `aria-labelledby`) so the group has a single accessible
+    name. Pre-select a default only when there is a meaningful
+    canonical choice; for "must answer" decisions, leave all
+    radios unchecked and pair with `aria-required`.
+  avoid: >-
+    For independent on/off toggles where multiple options can be
+    selected simultaneously — that is `Checkbox`. For dense-mutex
+    UI where the group represents view modes / display modes
+    rather than a form field — that is `SegmentedControl`. For
+    long bounded sets (more than ~7 options) where inline surface
+    becomes overwhelming — that is `Select` (or `Combobox` for
+    typeahead). Never use radios as toggle buttons that change
+    behaviour without form submission — that misuses the
+    "field with a value" semantic.
+  vsRelated:
+    - id: checkbox
+      difference: >-
+        `Checkbox` is a binary form field where multiple
+        instances allow independent selection (multi-select);
+        `Radio Group` enforces single-selection mutex via
+        shared `name`. Decision test: can the user select more
+        than one option simultaneously (Checkbox) or exactly
+        one (Radio Group)? Tri-state mixed is unique to
+        Checkbox; Radio Group has no equivalent partial state.
+    - id: segmented-control
+      difference: >-
+        `SegmentedControl` is a denser-mutex pattern for view-
+        mode / display-mode toggles ("List / Grid", "Day /
+        Week / Month") without form-field semantics; `Radio
+        Group` is a form field whose value submits with the
+        form. SegmentedControl uses `role="tablist"`-style
+        switching; Radio Group uses `role="radiogroup"` with
+        roving-tabindex. The decision test: is the choice a
+        form value (Radio Group) or a UI state (Segmented
+        Control)?
+    - id: select
+      difference: >-
+        `Select` houses options behind a popup trigger,
+        suiting long bounded sets and dense layouts; `Radio
+        Group` surfaces all options inline, suiting short
+        sets where seeing every option aids decision. Both
+        produce a single-value form submission. Migrate from
+        Radio Group to Select when option count crosses ~7
+        and inline density becomes noisy; migrate from
+        Select to Radio Group when the set is short and the
+        choice is consequential enough to deserve visible
+        weight.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The `<fieldset>` (or `<div role="radiogroup">`) wrapping
+      the radio set. Carries the group semantics (`role="radiogroup"`
+      either implicitly via fieldset or explicitly via the role
+      attribute). Provides the boundary for the roving-tabindex
+      contract — only one radio inside the root is tab-focusable
+      at a time. The root carries `aria-required="true"` when
+      the group is required and `aria-invalid="true"` when
+      validation fails.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout vertical (or horizontal per orientation property) frame; group wrapper
+    code:
+      slot: root
+      semantic: fieldset-or-div-radiogroup
+    a11y:
+      hint: >-
+        `<fieldset>` is canonical because it provides the
+        grouping semantic and pairs with `<legend>` for the
+        accessible name without ARIA. Custom-rendered groups
+        use `<div role="radiogroup">` plus `aria-labelledby`
+        referencing the legend element. The root carries
+        `aria-required` and `aria-invalid` for validation
+        surfaces; per-radio `required` is technically valid
+        but only one is needed (the group-level state is the
+        canonical surface).
+    tokens:
+      spacing:
+        gap: spacing.compact
+
+  - id: legend
+    required: true
+    purpose: >-
+      The `<legend>` element labelling the entire group. Provides
+      the canonical accessible name for the radiogroup ("Preferred
+      contact method", "Payment frequency"). Visible by default
+      but may be visually-hidden via `sr-only` when the group
+      label is supplied by surrounding context (a section heading,
+      a question prompt). Must be the first child of `<fieldset>`
+      per HTML spec.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Group title; size matches form-section heading; weight semibold by default
+    code:
+      slot: legend
+      semantic: legend
+    a11y:
+      hint: >-
+        `<legend>` provides the accessible name when the root
+        is `<fieldset>`. For custom-rendered groups, the legend
+        element is referenced via `aria-labelledby` on the
+        radiogroup root. Never substitute adjacent paragraph
+        text for the legend — the programmatic association is
+        what AT relies on. SR announces the legend on entry
+        ("group, Preferred contact method, radio button, 1 of
+        3, Email").
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: radio
+    required: true
+    purpose: >-
+      The repeating slot for individual radio options. Each radio
+      contains an input plus indicator plus radio-label. The
+      first radio in DOM order is the canonical default tab-stop
+      when no radio is checked; once any radio is checked, that
+      radio becomes the tab-stop and siblings drop out of the
+      tab order. Repeats per option; typical count is 2-7.
+    slotKind: content
+    layout:
+      row: 3
+      col: 1
+      span: full
+      repeats: 3
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame containing input + indicator + label; repeats per option
+    code:
+      slot: radio
+      semantic: label-wrapping-input
+    a11y:
+      hint: >-
+        Each radio is a single label region — wrap input plus
+        text in a single `<label>` so the entire region is
+        clickable. The input carries `role="radio"` natively;
+        custom-rendered radios set `role` plus `aria-checked`
+        plus tabindex manually (only the checked radio carries
+        `tabindex="0"`; siblings carry `tabindex="-1"`).
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: input
+    required: true
+    purpose: >-
+      The native `<input type="radio">` inside each radio item.
+      All radios in the group share the same `name` attribute
+      so the browser enforces the mutex. The `value` attribute
+      carries the data submitted when the radio is checked;
+      the default is `"on"` per HTML spec. Hit-target extends
+      via the wrapping label to ≥ 24×24 px (WCAG 2.5.8).
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 1
+      span: 1
+      aspect: '1:1'
+      parent: radio
+    figma:
+      type: frame
+      hint: Square frame; size variant binds to size token; carries focus ring on focus-visible
+    code:
+      slot: input
+      semantic: input-radio
+    a11y:
+      hint: >-
+        `<input type="radio">` carries `role="radio"` implicitly.
+        `aria-checked` is set automatically by the browser. The
+        roving-tabindex is enforced via `tabindex="0"` on the
+        checked radio and `tabindex="-1"` on siblings — when no
+        radio is checked, the first radio in DOM order is the
+        tab-stop. Custom-rendered radios must set the
+        attributes manually plus listen for ArrowKey navigation.
+    tokens:
+      radius:
+        corner: radius.full
+      color:
+        border: color.border.strong
+
+  - id: indicator
+    required: true
+    purpose: >-
+      The visual circle / filled-dot rendered inside the input
+      for the checked state. Decorative; the semantic state is
+      carried by `aria-checked` on the input. Animates the dot
+      stroke or fill on state change (subject to
+      `prefers-reduced-motion`).
+    slotKind: decorative
+    layout:
+      row: 1
+      col: 1
+      span: 1
+      parent: input
+    figma:
+      type: instance
+      hint: Filled-dot variant inside input frame; visible when checked
+    code:
+      slot: indicator
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative — `aria-hidden="true"` (or rendered via SVG
+        without `role`). The state is announced via the input's
+        `aria-checked` value; SR users hear "radio button,
+        selected" / "radio button, not selected", not "filled
+        circle".
+    tokens:
+      color:
+        background: color.accent.bg
+
+  - id: radio-label
+    required: true
+    purpose: >-
+      The per-radio text label identifying the option ("Email",
+      "Phone", "SMS"). Always associated with its input —
+      either by wrapping (the radio is `<label>`) or by `for`.
+      The label is the canonical accessible name for that
+      specific radio; the legend is the accessible name for
+      the group.
+    slotKind: content
+    layout:
+      row: 1
+      col: 2
+      span: 5
+      parent: radio
+    figma:
+      type: text
+      hint: Text element inline with input; size matches root size variant
+    code:
+      slot: radio-label
+      semantic: label-text
+    a11y:
+      hint: >-
+        SR announces label after the group context — "group,
+        Preferred contact method, radio button, 1 of 3, Email,
+        not selected". The label is per-radio; never collapse
+        multiple options into a single label. For options with
+        descriptions ("Email — Best for non-urgent updates"),
+        compose the description as a separate per-radio
+        description slot bound via `aria-describedby`.
+    tokens:
+      typography:
+        size: text.sm
+      color:
+        foreground: color.text.primary
+
+  - id: description
+    required: false
+    purpose: >-
+      Optional group-level helper text rendered between the
+      legend and the radio set. Communicates auxiliary group
+      context — "Choose how we should contact you about your
+      order". Programmatically associated via `aria-describedby`
+      on the root. Per-radio descriptions are a separate
+      concern and live within the radio item.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Smaller text below legend; muted color; visibility per "has description" property
+    code:
+      slot: description
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        Associate via `aria-describedby` on the root. SR
+        announces description after the legend on group entry.
+        Avoid putting required-field markers in the
+        description; use `aria-required` on the root instead.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
+
+  - id: error-message
+    required: false
+    purpose: >-
+      Optional group-level validation message rendered below the
+      radio set when the group is invalid. Carries `aria-live="polite"`
+      so SR announces async-validation errors when they appear.
+      Programmatically associated via `aria-describedby` plus
+      `aria-invalid="true"` on the root.
+    slotKind: content
+    layout:
+      row: 4
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Error-toned text below radio set; visibility per "has error" property
+    code:
+      slot: error-message
+      semantic: span-with-aria-live
+    a11y:
+      hint: >-
+        `aria-describedby` on the root includes the error-
+        message id; `aria-invalid="true"` on the root triggers
+        SR error announcement on group focus. The error-
+        message element carries `aria-live="polite"` so async
+        validation announces without forcing focus moves.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.danger
+
+axes:
+  variants:
+    - standard
+    - card
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - name: orientation
+      kind: enum
+      values: [vertical, horizontal]
+    - { name: required, kind: primitive, of: boolean }
+    - { name: disabled, kind: primitive, of: boolean }
+    - { name: invalid, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - empty
+      - selected
+      - invalid
+    transitions:
+      - from: empty
+        to: selected
+        trigger: User activates a radio (Space when focused, or click on label, or Arrow key per APG roving-tabindex contract)
+      - from: selected
+        to: selected
+        trigger: User moves selection to a sibling (Arrow key auto-selects per APG; previous radio becomes unchecked atomically)
+      - from: invalid
+        to: selected
+        trigger: User makes a valid selection after a failed validation pass
+
+mismatches:
+  - figma: Each radio drawn as an independent component instance with its own checked state
+    code: Radios share a `name` attribute; selecting one auto-deselects siblings
+    consequence: >-
+      Designers ship "Radio / Email / Checked" + "Radio / Phone
+      / Checked" as separate components and check both in a
+      mock; developers know the `name`-grouping enforces mutex
+      so only one is checked at runtime. Designers may not
+      realise that selecting any second radio in a real form
+      deselects the first — Figma allows the impossible state.
+    correct: >-
+      Document the group as the canonical unit. Figma's
+      Radio Group component carries the value-prop binding so
+      switching radios within the group enforces mutex
+      visually. Code uses native `name` grouping or a
+      controlled `value` prop on the group root.
+
+  - figma: Every radio drawn as tab-focusable
+    code: Roving-tabindex — only the checked radio carries `tabindex="0"`; siblings carry `tabindex="-1"`
+    consequence: >-
+      Designers see every radio as a focusable element and
+      sketch focus-ring states on each; developers ship the
+      roving-tabindex contract where Tab moves over the entire
+      group as a single stop and Arrow keys move within. The
+      two surfaces visually disagree on what receives focus
+      during keyboard navigation — designers may misunderstand
+      the contract and mock per-radio Tab navigation.
+    correct: >-
+      Document roving-tabindex as the canonical interaction
+      contract in the anatomy. Figma carries a single focus
+      treatment for the group plus per-radio focus-visible
+      treatment for arrow-key-driven moves. Code enforces
+      `tabindex` per the APG pattern.
+
+  - figma: Hit-target painted as the 16×16 visual circle
+    code: Hit-target extends to the wrapping label (≥ 24×24 effective tap area)
+    consequence: >-
+      Designers paint the visual circle at 16×16 px; developers
+      extend the hit-target via the wrapping label and
+      surrounding padding. The two surfaces look identical but
+      the actual tap area differs. Tightening the gap between
+      input and label visually breaks the WCAG 2.5.8 24×24
+      threshold without warning.
+    correct: >-
+      Document the hit-target as the wrapping label region.
+      Figma's component includes an invisible bounding box at
+      ≥ 24×24 px encompassing input plus label. Code wraps
+      input in `<label>` so the entire region activates.
+
+  - figma: Card-variant radio drawn without a visible radio circle
+    code: Card variant retains the radio input (visible or visually-hidden) for AT
+    consequence: >-
+      Designers ship a card-style radio variant where only the
+      card border and background communicate selection;
+      developers either drop the input (breaking AT) or hide
+      it visually but keep it semantic. Without the radio
+      input, SR users cannot determine that the cards are a
+      mutex group — they may read as buttons or links.
+    correct: >-
+      Card variant retains the radio input either visibly
+      (small dot in a corner) or visually-hidden via
+      `sr-only` so AT receives the role and state. Card
+      selection is purely visual reinforcement; the radio
+      semantic is preserved. Document the visually-hidden-
+      input pattern in the card-variant anatomy.
+
+mistakes:
+  - id: radio-group-no-label
+    severity: blocker
+    title: Group has no `<legend>` or `aria-labelledby`
+    description: >-
+      The radio set ships without a fieldset+legend wrapper and
+      without `aria-labelledby` on a custom radiogroup root.
+      SR users hear individual radio names without the group
+      context — "radio button, Email, not selected" — losing
+      the "Preferred contact method" semantic. The group's
+      meaning is invisible to AT.
+    fix: >-
+      Wrap the radios in `<fieldset>` with `<legend>` carrying
+      the group label. For custom-rendered groups, set
+      `role="radiogroup"` plus `aria-labelledby` referencing a
+      heading or labelled element. The legend may be visually-
+      hidden via `sr-only` when the group label is supplied
+      by surrounding context, but the programmatic
+      association is non-negotiable.
+
+  - id: radio-tabindex-not-roving
+    severity: blocker
+    title: Every radio is in the page tab order
+    description: >-
+      All radios carry `tabindex="0"` (or no tabindex on
+      native inputs without roving-management); Tab moves
+      focus through every radio one by one. Keyboard users
+      cannot escape the group quickly — a 7-option group
+      requires 7 Tab presses to bypass. Violates the APG
+      radiogroup roving-tabindex contract.
+    fix: >-
+      Implement roving-tabindex — only the checked radio
+      carries `tabindex="0"`; siblings carry `tabindex="-1"`.
+      When no radio is checked, the first radio in DOM order
+      is the tab-stop. Tab enters and exits the group as a
+      single stop; Arrow keys move focus and selection within.
+      Native HTML `<input type="radio">` provides this
+      automatically per browser convention; custom-rendered
+      radios need explicit management.
+
+  - id: radio-arrow-keys-no-wrap
+    severity: major
+    title: Arrow keys stop at the boundary instead of wrapping
+    description: >-
+      Pressing ArrowDown on the last radio does nothing
+      (focus stuck at the boundary); pressing ArrowUp on the
+      first radio does nothing. Users learn to press Tab to
+      escape, but the canonical APG contract is wrap-around
+      — last → first and first → last.
+    fix: >-
+      Implement wrap-around in the Arrow-key handler.
+      ArrowDown / ArrowRight on the last radio moves to the
+      first; ArrowUp / ArrowLeft on the first moves to the
+      last. The wrap is APG-canonical. Toolbar-context groups
+      may opt out (Arrow without selection is the toolbar
+      pattern); standalone radiogroups always wrap.
+
+  - id: radio-no-fallback-default-with-required
+    severity: major
+    title: Group is required but no radio is pre-selected and the user has no signal
+    description: >-
+      The group carries `aria-required="true"` (or per-radio
+      `required` attribute) but no radio is pre-selected and
+      the form prompt does not communicate the requirement.
+      Users may submit the form without selecting; the
+      validation error fires only on submit. Sighted users
+      see no asterisk; SR users hear "required" but not what
+      the canonical answer is.
+    fix: >-
+      Either pre-select a sensible default radio when one
+      exists canonically (the most common choice, the
+      least-destructive option) or surface the required
+      state visibly via legend prefix ("Required: Preferred
+      contact method") plus inline validation hint. Never
+      rely on submit-time error messaging alone — the user
+      should know the field is required before attempting
+      submission.
+
+  - id: radio-color-only-state
+    severity: major
+    title: Selection state communicated via colour change alone
+    description: >-
+      The selected radio is signalled only by a colour change
+      of the input border or background (e.g. light grey
+      ring → blue ring) without a visible filled dot or
+      checkmark. Colour-blind users and users in grayscale or
+      low-light displays cannot distinguish selected from
+      unselected. Fails WCAG 1.4.1 (Use of Colour).
+    fix: >-
+      Always render the indicator dot in the selected state.
+      The filled circle is the primary state signal; colour
+      is secondary reinforcement. Test in grayscale (`filter:
+      grayscale(1)`) — if the selection is invisible, the
+      indicator is missing or under-emphasised.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-radio-group>` host with `name`, `value`,
+      `orientation`, `required`, `disabled` attributes plus
+      slotted `<ui-radio>` children; group manages roving-
+      tabindex and Arrow-key navigation; child radios reflect
+      their value to a hidden native input for form
+      participation.
+    variantMechanism: >-
+      attributes (`variant="card"`, `orientation="horizontal"`,
+      `size="md"`); CSS `:state(checked)` for selected
+      styling; `direction: rtl` flips horizontal orientation.
+  react:
+    structureMechanism: >-
+      Compound component (Radix RadioGroup.Root + Item +
+      Indicator, React Aria RadioGroup + Radio, Material UI
+      RadioGroup, Mantine Radio.Group); group root is
+      controlled via `value` plus `onValueChange`; child
+      radios receive `value` prop and report selection up.
+    variantMechanism: >-
+      props with class-variance-authority; `orientation` prop
+      on root drives layout; `isRequired`, `isDisabled`,
+      `isInvalid` on root cascade to children; per-radio
+      `isDisabled` overrides for individual disabling.
+  angularSignals:
+    structureMechanism: >-
+      Angular component with input<string>('value') and
+      input<string>('name'); content-projects Radio components
+      via ng-content; ControlValueAccessor for
+      ngModel/formControl integration; signal-derived
+      selection from radio children.
+    variantMechanism: >-
+      input<'vertical' | 'horizontal'>('orientation');
+      input<'standard' | 'card'>('variant'); host-binding
+      [attr.role]="'radiogroup'" plus [attr.aria-labelledby];
+      signal-derived aria-required/aria-invalid from form-
+      control state.
+  vue:
+    structureMechanism: >-
+      Single-file component with v-model for selected value
+      (string); default slot for child Radio components;
+      PrimeVue RadioButton, Naive UI Radio.Group as third-
+      party precedents.
+    variantMechanism: >-
+      defineProps with literal-union types; computed property
+      for aria-required from form-state; provide/inject for
+      child-radio communication.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    indicatorScale: motion.duration.fast
+    selectionShift: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: valueChange
+    payload: >-
+      `{ value: string, previousValue: string | null }`. Fires
+      when the selected radio changes via user interaction
+      (click, Space when focused, Arrow key per APG roving-
+      tabindex contract). Empty group transitions emit
+      `previousValue: null`; selecting from one radio to
+      another emits both values.
+    frameworkNotes:
+      webComponents: >-
+        `valueChange` CustomEvent on the host with
+        `event.detail = { value, previousValue }`.
+      react: >-
+        `onValueChange(value)` callback (Radix idiom) or
+        `onChange(value)` (React Aria idiom).
+      angularSignals: >-
+        `output<string>('valueChange')` plus
+        ControlValueAccessor `onChange(value)` for forms.
+      vue: >-
+        `@update:modelValue` event for v-model binding;
+        `@change` for non-controlled usage.
+
+  - name: validityChange
+    optional: true
+    payload: >-
+      `{ valid: boolean, message: string | null }`. Fires when
+      the group's validity changes (e.g. required-but-empty →
+      selected). Only canonical when consumers manage
+      validation messages externally; native form-validation
+      handles the internal validity state without explicit
+      events.
+    frameworkNotes:
+      webComponents: >-
+        `validityChange` CustomEvent with
+        `event.detail = { valid, message }`.
+      react: >-
+        `onValidationChange(validity)` (React Aria) or absent
+        in Radix (relies on consumer state).
+      angularSignals: >-
+        Absent — uses Angular forms-validators pattern; emit
+        only when state-driven external validation is wired.
+      vue: >-
+        Absent — uses VeeValidate or composables; no canonical
+        event emitter.
+
+formIntegration:
+  nativeElement: input
+  submittedValue: >-
+    The `value` attribute of the checked radio submits as
+    `<name>=<value>` (default `"on"` per HTML spec when no
+    `value` attribute is set). Only one radio per group
+    submits because the group is mutex via shared `name`.
+    Empty groups (no radio checked) omit the field entirely
+    from form submission.
+  requiredAttr: true
+  validation: >-
+    Native Constraint Validation API surfaces `valueMissing`
+    when the group is required and no radio is checked.
+    `required` on a single radio in the group satisfies the
+    HTML requirement for the entire group (browsers enforce
+    group-level required when any one radio carries the
+    attribute). Custom-rendered radios mirror state to a
+    hidden native input or set `aria-invalid` on the root.
+  bridges:
+    react: >-
+      Controlled via `value` (Radix RadioGroup.Root) or
+      `value` (React Aria RadioGroup); `onValueChange` /
+      `onChange` callbacks. Hidden native inputs rendered
+      automatically when `name` is passed; React Hook Form /
+      Formik integrate via `register("name")` plus
+      `setValue`.
+    vue: >-
+      Two-way binding via `v-model` on the group root for the
+      selected value (string). VeeValidate / FormKit
+      integrate via group-level rules; the underlying native
+      inputs are rendered for form submission.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(value: string)` → group's `value.set(...)`.
+      `formControl` / `formControlName` plus
+      Validators.required drive validation; ng-touched +
+      ng-dirty surface in template state.
+    webComponents: >-
+      ElementInternals API for form-association on the group
+      host: `static formAssociated = true` plus
+      `internals.setFormValue(selectedValue)`. Falls back to
+      hidden `<input>` per radio when element-internals is
+      not available.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Radio + label inline order follows writing direction —
+      input on the inline-start, label on the inline-end (LTR:
+      left + right; RTL: right + left). Use `flex-direction:
+      row` with logical properties; the browser handles the
+      swap. Indicator dot is direction-neutral. Horizontal
+      orientation flips the radio order — first radio sits at
+      the inline-start (left in LTR, right in RTL); Arrow-key
+      navigation respects the visual order so ArrowRight in
+      RTL moves to the next radio (which is to the visual
+      left, but logically the next in DOM order).
+  textExpansion: >-
+    Radio labels expand 30-50% under translation; long-label
+    horizontal orientations may need a fallback to vertical
+    on narrow viewports. Legend text follows generic prose
+    expansion. Reserve no fixed width on labels; let the
+    wrapper flow and wrap to multiple lines under pressure.
+    Card-variant radios with rich content (heading +
+    description) need explicit min-width tokens to prevent
+    layout collapse under expansion.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (entering the group)
+      expected: >-
+        Focus lands on the checked radio. If no radio is
+        checked, focus lands on the first radio in DOM order.
+        Subsequent Tab presses exit the group as a single tab
+        stop — Tab does NOT move between radios.
+    - keys: ArrowDown / ArrowRight (focus inside group)
+      expected: >-
+        Moves focus to the next radio AND selects it
+        (auto-selection per APG canonical). Wraps from last
+        to first. ArrowDown / ArrowRight equivalent for
+        vertical / horizontal orientation.
+    - keys: ArrowUp / ArrowLeft (focus inside group)
+      expected: >-
+        Moves focus to the previous radio AND selects it.
+        Wraps from first to last.
+    - keys: Space (focus on unchecked radio)
+      expected: >-
+        Selects the focused radio. Used when the user has
+        moved into the group via Tab and needs to confirm
+        selection without triggering arrow-key auto-select.
+    - keys: Tab (exiting the group)
+      expected: >-
+        Moves focus to the next focusable outside the group.
+        The radio set behaves as a single tab stop.
+  announcements:
+    - trigger: SR enters the radiogroup
+      expected: >-
+        Announces "group, [legend text]" on group entry, then
+        the focused radio's role + position + label + state —
+        "radio button, 1 of 3, Email, selected" or "not
+        selected". The 1-of-N position counter aids
+        orientation.
+    - trigger: SR encounters arrow-key navigation
+      expected: >-
+        Announces the new selection plus state — "radio
+        button, 2 of 3, Phone, selected". The previously-
+        selected radio is implicitly unchecked; SR may or may
+        not announce the deselection (varies by SR).
+    - trigger: SR encounters group with validation error
+      expected: >-
+        Announces "group, [legend], invalid entry, [error
+        message]" via aria-invalid + aria-describedby on the
+        root. Per-radio state continues to announce normally.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - label
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The radio set is wrapped in `<fieldset>` with
+        `<legend>` (or `role="radiogroup"` with
+        `aria-labelledby`). The legend is the canonical
+        accessible name for the entire group. Implementations
+        that ship loose radios without group semantics lose
+        the "this is a single decision" frame for AT.
+      source: apg
+      sourceRef: 'APG: Radio Group pattern'
+      consequence: >-
+        Without group semantics, SR users hear individual
+        radio labels but not the group context. The
+        decision-frame ("Preferred contact method") is
+        invisible; users may navigate radios without
+        understanding what the choice is for. Group label is
+        the most-load-bearing accessibility contract.
+    - rule: >-
+        Roving-tabindex — only the checked radio (or first if
+        none checked) carries `tabindex="0"`; siblings carry
+        `tabindex="-1"`. Tab enters and exits the group as a
+        single stop; Arrow keys move focus and selection
+        within. Native HTML radio inputs provide this
+        automatically; custom-rendered radios must implement
+        explicitly.
+      source: apg
+      sourceRef: 'APG: Radio Group keyboard interaction'
+      consequence: >-
+        Without roving-tabindex, keyboard users tab through
+        every radio individually — a 7-option group requires
+        7 Tab presses to bypass. The group becomes a tab-stop
+        burden rather than a single decision. Arrow-key auto-
+        selection is the canonical interaction; users do not
+        need Space to commit.
+    - rule: >-
+        All radios in a single group share the same `name`
+        attribute (native HTML) or the same group `value`
+        binding (controlled). The mutex is enforced by the
+        group, not per-radio. Loose radios with distinct
+        names ship as independent toggles, not a group.
+      source: html-spec
+      sourceRef: 'HTML input radio name-grouping'
+      consequence: >-
+        Without shared `name` (or controlled `value`),
+        selecting a second radio does not deselect the
+        first. Multiple radios can be checked simultaneously
+        — the mutex is broken. Users see contradictory
+        state and form submission carries multiple values
+        for what should be a single field.
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: '`<input type="radio">`'
+      note: >-
+        Native HTML element. `name`-grouping enforces mutex.
+        `required` on any one radio in the group satisfies
+        the HTML requirement for the entire group. Default
+        submitted value is `"on"` when no `value` attribute.
+    - system: WAI-ARIA
+      theirTerm: '`role="radiogroup"` + `role="radio"` (with `aria-checked`)'
+      note: >-
+        WAI-ARIA radiogroup pattern. Native fieldset provides
+        the group semantic implicitly; custom-rendered groups
+        set `role="radiogroup"` plus `aria-labelledby` plus
+        manage roving-tabindex.
+    - system: Material 3
+      theirTerm: Radio button
+      note: >-
+        Material 3 documents per-radio specs (size, hit-target);
+        group semantics are deferred to the consumer (Material
+        does not ship a RadioGroup primitive in the spec
+        itself, only in library implementations like Material
+        UI).
+    - system: GOV.UK
+      theirTerm: Radios
+      note: >-
+        GOV.UK uses plural "Radios" because the canonical
+        usage is grouped. Inline-display variant for short
+        two-option pairs (yes / no) plus "or" divider for
+        "none of the above" — both compose with the canonical
+        anatomy without extending it.
+    - system: Atlassian
+      theirTerm: Radio (single) + Radio Group (composition)
+      note: >-
+        Atlassian splits Radio (single item) from Radio Group
+        (composition) — same canonical anatomy split as the
+        UI Anatomy reference, codified in the radio sub-
+        anatomy slot.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/radio/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio
+  - https://www.radix-ui.com/primitives/docs/components/radio-group
+  - https://react-aria.adobe.com/RadioGroup
+  - https://m3.material.io/components/radio-button/specs
+  - https://design-system.service.gov.uk/components/radios/
+  - https://atlassian.design/components/radio/examples
+  - https://carbondesignsystem.com/components/radio-button/usage/
+
+lastReviewed: '2026-05-03'
