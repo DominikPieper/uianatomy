@@ -1648,6 +1648,66 @@ describe('pattern schema', () => {
   });
 });
 
+describe('formIntegration structured fields (P6-121)', () => {
+  it('accepts existing prose-only formIntegration entries (back-compat)', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    expect(button.formIntegration).toBeDefined();
+    expect(button.formIntegration?.name).toBeTypeOf('string');
+  });
+
+  it('accepts formIntegration with structured fields (nativeElement / submittedValue / requiredAttr / bridges)', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const ok = {
+      ...button,
+      formIntegration: {
+        ...button.formIntegration,
+        nativeElement: 'button',
+        submittedValue: 'value attribute when type=submit',
+        requiredAttr: false,
+        bridges: {
+          react: 'controlled (value, onChange) | uncontrolled (defaultValue, onChange)',
+          vue: 'v-model:modelValue / update:modelValue',
+          angularSignals: 'ControlValueAccessor',
+          webComponents: 'native form-associated custom element via formAssociated=true',
+        },
+      },
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown nativeElement enum value', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bad = {
+      ...button,
+      formIntegration: {
+        ...button.formIntegration,
+        nativeElement: 'not-a-real-element',
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects bridges entry missing one framework', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bad = {
+      ...button,
+      formIntegration: {
+        ...button.formIntegration,
+        bridges: {
+          react: 'controlled',
+          vue: 'v-model',
+          angularSignals: 'CVA',
+          // webComponents missing
+        },
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('eventsRationale field (P6-122)', () => {
   it('accepts eventsRationale 50-400 chars on icon and link (no-events-by-design)', async () => {
     const icon = await loadComponent(join(contentDir, 'icon.yaml'));

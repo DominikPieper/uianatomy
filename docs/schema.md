@@ -393,6 +393,30 @@ formIntegration:                              # optional
 - Each sub-field is free prose, non-empty when present.
 - The four sub-fields are the universal-core HTML-form concerns: name attribute behaviour, FormData serialization, `form.reset()` interaction, HTML5 validation. Extension with `autocomplete`, `enctype`, etc. is reserved for a follow-up ADR if a concrete component needs them.
 
+### Structured fields (P6-121)
+
+Beyond the four prose fields, `formIntegration` accepts an optional set of structured fields that capture machine-readable form-integration metadata. All optional; declare what is known per component.
+
+```yaml
+formIntegration:
+  # ...prose fields above...
+  nativeElement: input                # input | button | select | textarea | none
+  submittedValue: 'string (value attribute when checked)'
+  requiredAttr: true                  # boolean — does the HTML required attribute apply
+  bridges:                            # all four frameworks required when bridges is declared
+    react: 'controlled (value, onChange) | uncontrolled (defaultValue, onChange)'
+    vue: 'v-model:modelValue / update:modelValue'
+    angularSignals: 'ControlValueAccessor'
+    webComponents: 'native form-associated custom element via formAssociated=true'
+```
+
+- **`nativeElement`** — closed enum naming the underlying HTML form element. `none` for components that compose without delegating to a single HTML form-control (e.g. Combobox, Tag Input).
+- **`submittedValue`** — free prose describing what the form submission carries (`'string'`, `'string[]'`, `'boolean'`, `'FormData multipart'`, etc.). Captures the wire-shape consumers need to validate downstream.
+- **`requiredAttr`** — does the HTML `required` attribute apply to the canonical native element? `true` for inputs / textareas / selects with required-validation; `false` for buttons (no required-attribute semantics) and for composite components that map required-validation to a non-native attribute.
+- **`bridges`** — strict object keyed by framework, each value free-prose naming the canonical binding pattern (React controlled/uncontrolled, Vue v-model, Angular ControlValueAccessor, Web Components form-associated custom elements). All four framework keys required when `bridges` is declared.
+
+The structured fields complement the prose fields rather than replacing them: prose explains the contract narratively; structured fields make the same contract queryable. P6-121 backlog item tracks the migration of existing components to add structured-field coverage.
+
 **Render:** `FormIntegrationSection.astro` renders in Dev view (after Events, before Accessibility) and Bridge view (after Events, before Accessibility). Designer view does not render the section.
 
 ## `propertyMap` (optional, top-level)

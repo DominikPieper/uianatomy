@@ -371,12 +371,35 @@ export const i18nSchema = z
   })
   .strict();
 
+export const formIntegrationNativeElementSchema = z.enum([
+  'input',
+  'button',
+  'select',
+  'textarea',
+  'none',
+]);
+
+export const formIntegrationBridgesSchema = z
+  .object({
+    react: z.string().min(1),
+    vue: z.string().min(1),
+    angularSignals: z.string().min(1),
+    webComponents: z.string().min(1),
+  })
+  .strict();
+
 export const formIntegrationSchema = z
   .object({
+    // Original prose fields (P2-13).
     name: z.string().min(1).optional(),
     formData: z.string().min(1).optional(),
     reset: z.string().min(1).optional(),
     validation: z.string().min(1).optional(),
+    // P6-121 structured-fields extension. All optional; declare when known.
+    nativeElement: formIntegrationNativeElementSchema.optional(),
+    submittedValue: z.string().min(1).optional(),
+    requiredAttr: z.boolean().optional(),
+    bridges: formIntegrationBridgesSchema.optional(),
   })
   .strict()
   .refine(
@@ -384,10 +407,14 @@ export const formIntegrationSchema = z
       v.name !== undefined ||
       v.formData !== undefined ||
       v.reset !== undefined ||
-      v.validation !== undefined,
+      v.validation !== undefined ||
+      v.nativeElement !== undefined ||
+      v.submittedValue !== undefined ||
+      v.requiredAttr !== undefined ||
+      v.bridges !== undefined,
     {
       message:
-        'formIntegration must declare at least one of name, formData, reset, validation',
+        'formIntegration must declare at least one of name, formData, reset, validation, nativeElement, submittedValue, requiredAttr, bridges',
     },
   );
 
