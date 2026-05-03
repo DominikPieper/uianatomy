@@ -717,6 +717,15 @@ whenToUse:
         layout pattern. The decision test: are you scanning for
         visual content (Tile) or marking metadata on visual
         content (Badge)?
+    - id: avatar
+      difference: >-
+        `Avatar` is a bounded entity-representation surface
+        (image / initials / icon fallback chain), typically
+        inline with text; `Tile` is an image-led grid item for
+        media galleries. Avatar locks to circle-or-square in a
+        canonical size; Tile dimensions vary with media aspect
+        ratio. Avatars sit in lists, headers, attribution lines;
+        tiles sit in 2D grids.
 contracts:
   nonNegotiable:
     - rule: >-

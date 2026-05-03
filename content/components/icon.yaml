@@ -66,6 +66,14 @@ whenToUse:
         exclamation). The Icon is decorative when paired with
         the badge content; meaningful when the badge is dot-
         only.
+    - id: avatar
+      difference: >-
+        `Avatar` is the entity-representation primitive that hosts
+        Icon as its `fallback-icon` slot — the ultimate fallback
+        when neither image nor initials are available. The Icon
+        represents a generic-person glyph; Avatar represents the
+        specific entity. The accessible-name for Avatar lives on
+        the container, not on the Icon.
 
 anatomy:
   - id: root

@@ -6,7 +6,7 @@
       "type": "skill-md",
       "description": "Query the UI Anatomy MCP server for canonical UI component anatomy, axes, slots, transitions, motion, tokens, events, cross-framework mapping, library divergences, and compositional patterns.",
       "url": "https://uianatomy.dev/.well-known/agent-skills/uianatomy-mcp/SKILL.md",
-      "digest": "sha256:e967ab38703419b190c94880c5bc515a819efdb09d492fd63c3f5daf9430a877"
+      "digest": "sha256:80ce0be0238e83b7cfa9f9b8e4df4341e54e2b712eee4c5c9c0d73694df7a7b1"
     }
   ]
 }

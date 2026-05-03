@@ -1,0 +1,582 @@
+id: avatar
+name: Avatar
+description: >-
+  A graphic representation of a user, organisation, or entity — image,
+  initials, or icon — rendered in a bounded surface (circle or square).
+  Carries a fallback chain when the primary representation is missing
+  or fails to load. Often paired with a status indicator and composed
+  into avatar-groups for collaborator lists.
+
+intro: >-
+  Avatar is the canonical user-or-entity-representation primitive — a
+  bounded surface (circle or square) that renders an image, initials,
+  or fallback icon for the represented entity. The fallback chain
+  (image → initials → icon) is deterministic by canonical contract;
+  implementations that pick a different order ship inconsistent
+  surfaces under network failure or missing-data. Five sizes (xs / sm
+  / md / lg / xl), two shapes (circle / square), and an optional
+  status indicator (online / offline / away / busy). The reference
+  documents the slot anatomy, the fallback contract, the accessible-
+  name rules across the three render-modes, and the divergence from
+  Icon and Tile.
+
+alternateNames:
+  - 'User photo'
+  - 'Profile picture'
+  - 'Pic'
+
+whenToUse:
+  use: >-
+    For representing a user, organisation, or entity in lists, headers,
+    comment threads, attribution lines, and group-membership displays.
+    Pair with a label or name when the avatar is the only marker; pair
+    with the entity's display name when the avatar is decorative
+    reinforcement. The status-indicator slot communicates presence
+    (online / offline / away / busy) for collaborator-aware contexts.
+  avoid: >-
+    For decorative thumbnails that do not represent an entity — that
+    is `Tile` (image-led grid item) or a plain image. For organisation
+    branding above content — that is brand imagery, not avatar. For
+    icon-only buttons — that is `Button` with `Icon`, not Avatar
+    repurposed.
+  vsRelated:
+    - id: icon
+      difference: >-
+        `Icon` is the SVG-glyph primitive that may sit inside Avatar
+        as the fallback-icon slot; Avatar is the entity-
+        representation surface. Icon represents an action or
+        concept; Avatar represents an entity.
+    - id: tile
+      difference: >-
+        `Tile` is an image-led grid item for media galleries; Avatar
+        is a bounded entity-representation surface, typically inline
+        with text rather than in a grid. Tile dimensions vary with
+        media aspect ratio; Avatar locks to a square or circle in a
+        canonical size.
+
+anatomy:
+  - id: container
+    required: true
+    purpose: >-
+      The bounded surface that frames the avatar content. Carries the
+      shape (circle via `border-radius: 50%` or square via
+      `radius.md`), the size token, and the optional status-indicator
+      anchor. The container is the focusable / hoverable surface when
+      the avatar is interactive (rare — typically the host element
+      handles interaction).
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout fixed-size frame; aspect-ratio 1:1; border-radius bound to shape variant
+    code:
+      slot: container
+      semantic: span-or-figure
+    a11y:
+      hint: >-
+        Container's role depends on the render-mode. Image variant
+        wraps `<img>` carrying `alt`. Initials / icon variants set
+        `role="img"` plus `aria-label` describing the entity (the
+        person's name, the organisation, etc.). Decorative avatars
+        (paired with a visible name in the surrounding layout) set
+        `aria-hidden="true"` and let the host's name carry the
+        accessible name.
+    tokens:
+      radius:
+        corner: radius.full
+      color:
+        background: color.surface.sunken
+        border: color.border.subtle
+
+  - id: image
+    required: false
+    purpose: >-
+      The primary image representation. Rendered as `<img>` with the
+      entity's photo / logo URL. Loads asynchronously; on error or
+      missing-src, the fallback chain advances to initials. Cropped
+      to the container shape via overflow-hidden plus
+      object-fit: cover.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: 6
+    figma:
+      type: frame
+      hint: Image fill on the container frame; aspect 1:1; object-fit cover
+    code:
+      slot: image
+      semantic: img
+    a11y:
+      hint: >-
+        `<img alt="">` for decorative avatars (host carries the name)
+        or `<img alt="<entity name>">` for meaningful avatars. Never
+        leave alt undefined — that defaults to the file path being
+        announced in some screen readers.
+    tokens:
+      color:
+        background: color.surface.sunken
+
+  - id: initials
+    required: false
+    purpose: >-
+      Text-based fallback when no image is present. Typically the
+      entity's first one or two letters (one for single-name accounts,
+      two for first+last). Rendered centred in the container with
+      typography size scaled to the avatar size. Activates when
+      `image` is undefined or fails to load.
+    slotKind: content
+    layout:
+      row: 2
+      col: 2
+      span: 3
+    figma:
+      type: text
+      hint: Centred text inside the container; size bound to avatar size token
+    code:
+      slot: initials
+      semantic: text
+    a11y:
+      hint: >-
+        When initials carry the entity name (no surrounding label),
+        the container carries `role="img"` plus `aria-label` with the
+        full entity name — never just the initials, which are
+        ambiguous to SR users (`"AB"` is meaningless without context).
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        foreground: color.text.muted
+
+  - id: fallback-icon
+    required: false
+    purpose: >-
+      Icon-based ultimate fallback when neither image nor initials are
+      available. Typically a generic person glyph or a question-mark
+      placeholder. Last in the canonical fallback chain.
+    slotKind: decorative
+    layout:
+      row: 2
+      col: 3
+      span: 3
+    figma:
+      type: instance
+      hint: Icon component instance; size bound to avatar size token
+    code:
+      slot: fallback-icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        Decorative when the host carries the entity name. When the
+        icon is the entire avatar content, the container carries
+        `role="img"` plus `aria-label` with the entity name (or
+        "Unknown user" / "Anonymous" placeholder if the entity is
+        genuinely unknown).
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: status-indicator
+    required: false
+    purpose: >-
+      Optional small badge anchored to the container's bottom-right
+      (LTR) or bottom-left (RTL) corner, indicating presence —
+      online, offline, away, or busy. Renders as a coloured dot with
+      an optional border that matches the page background to give
+      visual separation from the avatar surface.
+    slotKind: decorative
+    layout:
+      row: 3
+      col: 1
+      span: 2
+    figma:
+      type: frame
+      hint: Small circle anchored to container's bottom-right; colour bound to status enum
+    code:
+      slot: status-indicator
+      semantic: span
+    a11y:
+      hint: >-
+        Status indicator carries `aria-label` with the status word
+        ("online", "offline", "away", "busy") so SR users hear it
+        alongside the avatar's accessible name. Without the label, the
+        coloured dot is meaningless to AT.
+    tokens:
+      radius:
+        corner: radius.full
+      color:
+        border: color.surface.bg
+
+axes:
+  variants:
+    - circle
+    - square
+  properties:
+    - name: size
+      kind: enum
+      values: [xs, sm, md, lg, xl]
+    - name: status
+      kind: enum
+      values: [online, offline, away, busy]
+    - { name: hasStatusIndicator, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+    data:
+      - image-loading
+      - image-loaded
+      - image-error
+      - initials-fallback
+      - icon-fallback
+
+mismatches:
+  - figma: Image and initials drawn as separate component variants
+    code: A single Avatar component with a fallback chain (image → initials → icon)
+    consequence: >-
+      Designers ship "Avatar (image)" and "Avatar (initials)" as
+      separate Figma components; developers ship one component with
+      runtime fallback. The two diverge — designers may not draw the
+      initials variant for every avatar instance, leaving developers
+      without a design reference for the fallback case.
+    correct: >-
+      Model the fallback chain as a single Avatar component in both
+      Figma and code. Document each fallback rung as a state in the
+      canonical anatomy (image-loaded / initials-fallback /
+      icon-fallback). Designers draw all three states for at least
+      one representative avatar; developers ship the chain runtime.
+
+  - figma: Status indicator drawn as a separate floating element with no relationship
+    code: Status indicator anchored to the avatar with logical-property positioning
+    consequence: >-
+      Designers place a coloured dot near the avatar with absolute
+      coordinates; developers ship `inset-inline-end` anchoring that
+      flips under RTL. The two surfaces look the same in LTR but
+      diverge under RTL when the status indicator stays anchored to
+      the wrong edge.
+    correct: >-
+      Document the status indicator as a slot of the Avatar component,
+      anchored via logical properties (`inset-inline-end`,
+      `inset-block-end`). Both Figma and code express the slot as a
+      child of the container, not a sibling.
+
+  - figma: Initials baked into the Figma component as static text "AB"
+    code: A controlled `name` prop drives the initials computation
+    consequence: >-
+      Designers ship static "AB" in every initials-variant frame;
+      developers compute initials from a `name` prop at render time.
+      The Figma file does not document the computation algorithm
+      (first letter? first two? first letter of each word?) so
+      developers reinvent it.
+    correct: >-
+      Document the canonical initials algorithm in the anatomy
+      (`first letter of each word, max two`). The Figma file uses
+      placeholder strings for design illustration; the algorithm
+      lives in code with the `name` prop driving it.
+
+  - figma: Avatar size hard-coded as a px value
+    code: Size driven by a token (`xs / sm / md / lg / xl`)
+    consequence: >-
+      Designers set `width: 24px` directly on the avatar frame;
+      developers bind size to a token. When the size scale rebalances,
+      the Figma file lags and the shipped avatar visually disagrees
+      with the surrounding text.
+    correct: >-
+      Bind size to a token in both surfaces. Figma's size component-
+      property maps to `xs / sm / md / lg / xl`; code uses the same
+      enum.
+
+mistakes:
+  - id: avatar-no-fallback-order
+    severity: blocker
+    title: Fallback chain order undefined or random
+    description: >-
+      The implementation falls back to initials when the image fails
+      OR to the icon — depending on environment, network, or library
+      version. Users see different fallback content for the same
+      entity across surfaces; the avatar's identity becomes unstable.
+    fix: >-
+      Document the fallback order as image → initials → icon in the
+      canonical anatomy. The image rung activates when the `src` is
+      present and the load succeeds; the initials rung activates when
+      `name` is present and the image rung failed; the icon rung
+      activates when both prior rungs failed. Pick one and never
+      diverge.
+
+  - id: avatar-no-aria-label
+    severity: blocker
+    title: Initials or icon variant ships without accessible name
+    description: >-
+      The avatar renders initials "AB" or a generic person icon, but
+      the container has no `aria-label` and the host has no visible
+      label. SR users encounter "image" with no entity-name; the
+      avatar is meaningless to AT.
+    fix: >-
+      Set `role="img"` plus `aria-label` with the full entity name on
+      the container for initials / icon variants. Image variant uses
+      `<img alt="<entity name>">`. Decorative avatars (paired with a
+      visible name in the layout) set `aria-hidden="true"` and let
+      the host's name carry the accessible name.
+
+  - id: avatar-status-no-label
+    severity: major
+    title: Status indicator dot has no accessible label
+    description: >-
+      The status indicator renders a coloured dot anchored to the
+      avatar's corner. SR users hear the avatar's name but no status
+      cue; the presence-information is sighted-only.
+    fix: >-
+      The status indicator carries `aria-label` with the status word
+      ("online", "offline", "away", "busy"). SR announces the status
+      alongside the avatar's name. Document the canonical status
+      vocabulary so every implementation announces consistently.
+
+  - id: avatar-initials-only-as-label
+    severity: major
+    title: Initials are the entire accessible name
+    description: >-
+      The container's `aria-label="AB"` — just the initials. SR reads
+      "image, AB" with no entity context. Initials are visual
+      shorthand; AT needs the full name.
+    fix: >-
+      `aria-label` carries the full entity name ("Alex Black") even
+      when the visual is just the initials. The initials are visual
+      only; the accessible name is the canonical source of truth.
+
+  - id: avatar-image-no-alt
+    severity: major
+    title: Image variant has no alt attribute
+    description: >-
+      The `<img>` element has no `alt` attribute (different from
+      `alt=""`). Some SR announce the file path or URL; others
+      silently skip the avatar entirely.
+    fix: >-
+      Always set `alt` on the `<img>`. `alt=""` for decorative avatars
+      (host carries the name); `alt="<entity name>"` for meaningful
+      avatars without a surrounding label. Never leave alt undefined.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: A `<ui-avatar>` host with `name`, `src`, `size`, `shape`, `status` attributes; renders image / initials / icon based on internal state machine
+    variantMechanism: attributes (`shape="circle"`, `size="md"`, `status="online"`); CSS @media respects prefers-reduced-motion
+  react:
+    structureMechanism: Function component (Radix Avatar, MUI Avatar, Mantine Avatar, Chakra UI Avatar) wrapping a span / figure; library convention varies between compound components (Avatar.Image / Avatar.Fallback) and prop-driven render
+    variantMechanism: props with class-variance-authority for shape / size; controlled `src` + `name` + `status` props; fallback chain handled by `<Avatar.Image onError>` plus `<Avatar.Fallback>` (Radix idiom)
+  angularSignals:
+    structureMechanism: Angular component with input<string>('name'), input<string | null>('src'), signal-based loading state for fallback chain
+    variantMechanism: input<'circle' | 'square'>(); input<'xs' | 'sm' | 'md' | 'lg' | 'xl'>(); host-binding [attr.aria-label] driven by name signal
+  vue:
+    structureMechanism: Single-file component with v-bind for src / name / status; PrimeVue Avatar, Naive UI Avatar as third-party precedents
+    variantMechanism: defineProps with literal-union types; v-if for fallback chain rendering
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    fadeIn: motion.duration.fast
+    statusChange: motion.duration.fast
+  easing: motion.easing.standard
+
+events:
+  - name: imageLoad
+    optional: true
+    payload: >-
+      `{ src: string, durationMs: number }`. Fires when the image
+      successfully loads. Only canonical when consumers want
+      load-timing telemetry; static avatars never observe it.
+    frameworkNotes:
+      webComponents: >-
+        `imageLoad` CustomEvent on the host with
+        `event.detail = { src, durationMs }`.
+      react: >-
+        `onImageLoad(src, durationMs)` callback; or derived from a
+        controlled `loading` prop transition.
+      angularSignals: >-
+        `output<{ src: string; durationMs: number }>('imageLoad')`.
+      vue: >-
+        `@image-load` event with payload `{ src, durationMs }`.
+
+  - name: imageError
+    optional: true
+    payload: >-
+      `{ src: string, fallbackTier: 'initials' | 'icon' }`. Fires
+      when the image fails to load and the fallback chain advances.
+      Only canonical when consumers want error telemetry or want to
+      report broken-link-rate per source.
+    frameworkNotes:
+      webComponents: >-
+        `imageError` CustomEvent with
+        `event.detail = { src, fallbackTier }`.
+      react: >-
+        `onImageError(src, fallbackTier)` callback.
+      angularSignals: >-
+        `output<{ src: string; fallbackTier: AvatarFallbackTier }>('imageError')`.
+      vue: >-
+        `@image-error` event with payload `{ src, fallbackTier }`.
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, avatars in dense list rows collapse one
+        size step (md → sm). Avatars in profile-header contexts
+        keep their explicit size to preserve identity prominence.
+
+propertyMap:
+  - figma: Variant
+    code: shape
+    kind: enum
+    notes: Maps circle / square shape variant.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: Maps xs / sm / md / lg / xl.
+  - figma: Status
+    code: status
+    kind: enum
+    notes: Maps online / offline / away / busy presence indicator.
+  - figma: Has Status Indicator
+    code: hasStatusIndicator
+    kind: boolean
+  - figma: Name
+    code: name
+    kind: text
+    notes: Drives initials computation and accessible-name fallback.
+  - figma: Source
+    code: src
+    kind: text
+    notes: Image URL; null or undefined activates initials fallback.
+  - figma: Image
+    code: image
+    kind: slot
+  - figma: Fallback Icon
+    code: fallback-icon
+    kind: slot
+
+i18n:
+  rtl:
+    mirroring: >-
+      Status indicator anchors to the bottom-end edge via
+      `inset-inline-end` / `inset-block-end`, so it flips from
+      bottom-right (LTR) to bottom-left (RTL) automatically.
+      Initials computation respects the writing direction — for
+      LTR-name "Alex Black" the initials are "AB"; for RTL-name
+      computation the same letter-extraction rule applies but the
+      visual order reverses (browser-handled when initials are
+      rendered as text content).
+  textExpansion: >-
+    Initials do not text-expand (always 1-2 characters).
+    Status-indicator `aria-label` text follows i18n string-
+    expansion (German "online" → "online" stable, but
+    "unavailable" → "nicht verfügbar" 60 % longer for SR).
+    Avatar dimensions are size-token-driven; no width-reservation
+    needed for text expansion.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab (decorative avatar)
+      expected: >-
+        Decorative avatars are not in the tab order. Focus moves
+        through the host element (button, link, list-item).
+    - keys: Tab (interactive avatar, rare)
+      expected: >-
+        Interactive avatars (used as a profile-link) participate
+        as a single tab stop. Focus ring renders on the container.
+        Hit target ≥ 24×24 px (WCAG 2.5.8) — small avatar sizes
+        (xs / sm) need explicit padding to meet the threshold when
+        clickable.
+  announcements:
+    - trigger: SR encounters an avatar with image variant
+      expected: >-
+        SR announces the `<img>` alt text. For decorative avatars
+        with `alt=""`, SR is silent and the host's name reads.
+    - trigger: SR encounters an avatar with initials / icon variant
+      expected: >-
+        SR announces the container's `role="img"` accessible name
+        ("Alex Black"). The initials letters or icon glyph are
+        decorative; AT reads the entity-name only.
+    - trigger: SR encounters an avatar with status indicator
+      expected: >-
+        SR announces avatar name plus status word ("Alex Black,
+        online"). Status follows the avatar in DOM and reading order.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - image-alt
+    - aria-allowed-attr
+    - aria-required-attr
+    - role-img-alt
+    - color-contrast
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Fallback chain is image → initials → icon, in that order.
+        Image rung activates when `src` is present and the load
+        succeeds; initials rung activates when `name` is present and
+        the image rung failed; icon rung is the ultimate fallback.
+        Implementations that pick a different order ship inconsistent
+        avatar surfaces under network failure or missing-data.
+      source: canon
+      consequence: >-
+        Without a deterministic order, the same entity may appear as
+        initials in one surface and as the generic icon in another;
+        the avatar's identity becomes unstable. Users lose trust in
+        the avatar as a reliable entity-marker.
+    - rule: >-
+        Initials and icon variants carry `role="img"` plus
+        `aria-label` with the full entity name on the container.
+        Image variants use `<img alt>` for the same purpose. The
+        accessible name is always the entity name — never the
+        initials letters, never the icon glyph name, never the file
+        path.
+      source: apg
+      sourceRef: 'WAI-ARIA role=img + img alt patterns'
+      consequence: >-
+        Without the entity-name accessible-name, SR users hear
+        "image" or "AB" — neither identifies the entity. The avatar
+        becomes a sighted-only marker. Decorative avatars escape
+        the rule by setting `aria-hidden="true"` and relying on the
+        host's name; meaningful avatars must carry the name
+        themselves.
+    - rule: >-
+        Status indicator carries `aria-label` with the status word
+        ("online", "offline", "away", "busy"). The coloured dot is
+        sighted-only; AT needs the word.
+      source: canon
+      consequence: >-
+        Without the label, presence is invisible to SR users —
+        critical for collaborator-aware contexts where presence
+        determines whether to message synchronously or
+        asynchronously.
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Avatar
+    - system: Polaris
+      theirTerm: Avatar
+    - system: Carbon
+      theirTerm: User Avatar
+    - system: Atlassian
+      theirTerm: Avatar
+    - system: Radix
+      theirTerm: Avatar
+      note: >-
+        Radix exposes the fallback chain as compound subcomponents
+        (`Avatar.Image` + `Avatar.Fallback`); other libraries ship a
+        single component with internal state. Either expression of the
+        same canonical contract.
+
+sources:
+  - https://www.w3.org/TR/wai-aria-1.2/#img
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
+  - https://www.radix-ui.com/primitives/docs/components/avatar
+  - https://m3.material.io/components/avatar/overview
+  - https://polaris.shopify.com/components/images-and-icons/avatar
+  - https://carbondesignsystem.com/components/user-avatar/usage/
+  - https://atlassian.design/components/avatar/examples
+  - https://chakra-ui.com/docs/components/avatar
+  - https://mantine.dev/core/avatar/
+
+lastReviewed: '2026-05-03'
