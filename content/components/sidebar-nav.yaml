@@ -509,6 +509,7 @@ responsive:
 
 events:
   - name: variantChange
+    optional: true
     payload: >-
       `{ variant: 'expanded' | 'collapsed' }`. Fires when the
       user toggles the sidebar variant via the collapsible

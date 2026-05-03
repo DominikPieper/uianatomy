@@ -483,6 +483,7 @@ events:
         the reason wrap `@close` from the underlying library.
 
   - name: positionChange
+    optional: true
     payload: >-
       `{ side, align }` with the actual rendered placement after
       auto-flip and shift. Differs from the authored `side` and

@@ -568,6 +568,7 @@ events:
         on the parent list.
 
   - name: swipeAction
+    optional: true
     payload: >-
       `{ itemId: string, action: string, direction: 'start' | 'end' }`.
       Fires when the user completes a swipe gesture

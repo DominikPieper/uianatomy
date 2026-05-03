@@ -520,6 +520,7 @@ events:
         `@dismiss` event with payload `{ source }`.
 
   - name: actionInvoke
+    optional: true
     payload: >-
       `{ actionId: string }` — fires when the user activates the
       action slot's button. Consumers handle the effect (typically
