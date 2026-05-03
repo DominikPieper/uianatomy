@@ -3,7 +3,18 @@ import { z } from 'zod';
 import { getComponents, getImplementations, getPatterns } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
-import { getCanonicalVocabularies } from '@uianatomy/shared/vocabulary';
+import { getCanonicalVocabularies, SEVERITY_SYNONYMS } from '@uianatomy/shared/vocabulary';
+
+// P6-118b: reverse-index for severity-synonym query expansion.
+// "danger" → "error", "destructive" → "error", "caution" → "warning", etc.
+// Built once at module-load; never mutated.
+const SEVERITY_SYNONYM_REVERSE: Readonly<Record<string, string>> = (() => {
+  const r: Record<string, string> = {};
+  for (const [canonical, synonyms] of Object.entries(SEVERITY_SYNONYMS)) {
+    for (const s of synonyms) r[s.toLowerCase()] = canonical;
+  }
+  return r;
+})();
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
 type View = (typeof VIEW_VALUES)[number];
@@ -266,16 +277,20 @@ export function createServer(): McpServer {
 
   server.tool(
     'search_components',
-    'Case-insensitive substring search across component id, name, description, and anatomy slot ids.',
+    'Case-insensitive substring search across component id, name, description, anatomy slot ids, and variant names. Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Plain queries that are not synonyms behave unchanged.',
     { query: z.string().min(1) },
     async ({ query }) => {
       const map = await getComponents();
       const q = query.toLowerCase();
+      const expanded = [q];
+      const canonical = SEVERITY_SYNONYM_REVERSE[q];
+      if (canonical && !expanded.includes(canonical)) expanded.push(canonical);
       const matches = [...map.values()]
         .filter((c) => {
-          const haystack =
-            c.id + ' ' + c.name + ' ' + c.description + ' ' + c.anatomy.map((s) => s.id).join(' ') + ' ' + c.axes.variants.join(' ');
-          return haystack.toLowerCase().includes(q);
+          const haystack = (
+            c.id + ' ' + c.name + ' ' + c.description + ' ' + c.anatomy.map((s) => s.id).join(' ') + ' ' + c.axes.variants.join(' ')
+          ).toLowerCase();
+          return expanded.some((term) => haystack.includes(term));
         })
         .map((c) => ({ id: c.id, name: c.name, description: c.description }));
       return jsonResult(matches);

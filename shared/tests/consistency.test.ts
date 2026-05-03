@@ -21,6 +21,7 @@ import {
   CANON_PROPERTY_VOCAB,
   CANON_PROPERTY_BOUNDED,
   CANON_INTERACTIVE_STATES,
+  CANON_SEVERITY,
 } from '../src/vocabulary.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -363,6 +364,100 @@ describe('cross-component consistency', () => {
         if (!matches(entry.system)) {
           failures.push(
             `${item.kind}/${item.id}: contracts.vocabularyDrift.system "${entry.system}" matches no LIBRARY_NAME_ALIASES alias and no KNOWN_NON_LIBRARY_SYSTEMS entry. Add an alias in shared/src/vocabulary.ts or correct the citation.`,
+          );
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  // P6-120 — performance-block coverage rule.
+  // Components with a stack / count / queue / virtualisation / overlay-cost
+  // dimension carry a `performance[]` block. Registry is explicit because
+  // "does this component have a numeric perf threshold" is a judgement call
+  // per ADR / authoring guidance — heuristic detection (variants count,
+  // anatomy size) does not work. Adding a new component with a perf-relevant
+  // dimension means adding it here; the lint surfaces the gap on next test
+  // run. Tooltip explicitly opts in via openDelay/closeDelay even though
+  // earlier audit notes called it "no real perf-budget" — the post-audit
+  // canonical thresholds make the entry mandatory.
+  it('every component in PERFORMANCE_REQUIRED registry declares a performance[] block', async () => {
+    const components = await loadComponents({ contentDir });
+
+    const PERFORMANCE_REQUIRED: readonly string[] = [
+      'tabs',
+      'modal',
+      'combobox',
+      'toast',
+      'alert',
+      'card',
+      'list-item',
+      'tile',
+      'stepper',
+      'drawer',
+      'textarea',
+      'tooltip',
+      'sidebar-nav',
+      'accordion',
+      'segmented-control',
+      'popover',
+    ];
+
+    const failures: string[] = [];
+    for (const id of PERFORMANCE_REQUIRED) {
+      const c = components.get(id);
+      if (!c) {
+        failures.push(
+          `PERFORMANCE_REQUIRED registry includes "${id}" but no component with that id was loaded — remove from registry or add the component.`,
+        );
+        continue;
+      }
+      if (!c.performance || c.performance.length === 0) {
+        failures.push(
+          `${id}: declared in PERFORMANCE_REQUIRED registry but performance[] is missing or empty. Add at least one threshold (stack-depth, item-count, frame-budget, etc.) or remove from the registry with a rationale.`,
+        );
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  // P6-118c — severity-variant-membership lint.
+  // Components with a severity-axis must declare variants drawn from CANON_SEVERITY
+  // (info / success / warning / error) plus an explicit allowlist of structural
+  // exceptions per component. The registry is explicit (no heuristic detection)
+  // because severity-themed-vs-structural variant detection is fragile per
+  // P6-118c's own deferral note. Adding a new severity-axis component means
+  // adding it here; the lint surfaces the gap on next test run.
+  it('every severity-axis component has variants in CANON_SEVERITY plus documented exceptions', async () => {
+    const components = await loadComponents({ contentDir });
+
+    const SEVERITY_AXIS_REGISTRY: Readonly<Record<string, readonly string[]>> = {
+      // Badge ships a neutral `default` variant alongside the four severity tones.
+      badge: ['default'],
+      // Alert and Toast use exactly the four canonical severity variants.
+      alert: [],
+      toast: [],
+      // Banner ships `promotional` as a banner-specific marketing variant
+      // (documented in ADR-029 as the canonical severity-vocabulary exception).
+      banner: ['promotional'],
+    };
+
+    const canonSeveritySet = new Set<string>(CANON_SEVERITY);
+    const failures: string[] = [];
+
+    for (const [id, exceptions] of Object.entries(SEVERITY_AXIS_REGISTRY)) {
+      const c = components.get(id);
+      if (!c) {
+        failures.push(
+          `severity-axis registry includes "${id}" but no component with that id was loaded — remove from SEVERITY_AXIS_REGISTRY or add the component.`,
+        );
+        continue;
+      }
+      const allowed = new Set<string>([...canonSeveritySet, ...exceptions]);
+      for (const variant of c.axes.variants) {
+        if (!allowed.has(variant)) {
+          failures.push(
+            `${id}: variant "${variant}" is not in CANON_SEVERITY (${[...canonSeveritySet].join(', ')}) and not in the documented exception list (${exceptions.length === 0 ? '—' : exceptions.join(', ')}). Either rename to canonical severity or add to SEVERITY_AXIS_REGISTRY exceptions with rationale.`,
           );
         }
       }

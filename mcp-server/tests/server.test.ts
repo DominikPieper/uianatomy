@@ -129,6 +129,27 @@ describe('mcp server', () => {
     expect(parsed.some((c: any) => c.id === 'card')).toBe(true);
   });
 
+  it('search_components expands severity synonyms (P6-118b — danger → error variant)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'search_components', arguments: { query: 'danger' } });
+    const parsed = parseJson(result as any);
+    // Badge / Alert / Toast all carry an `error` variant; the synonym expansion should surface them.
+    const ids = parsed.map((c: any) => c.id);
+    expect(ids).toContain('badge');
+    expect(ids).toContain('alert');
+    expect(ids).toContain('toast');
+  });
+
+  it('search_components synonym expansion is symmetric for warning aliases', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'search_components', arguments: { query: 'caution' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.map((c: any) => c.id);
+    // Components with `warning` variant should resolve via the caution → warning synonym.
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids).toContain('badge');
+  });
+
   it('get_tokens returns slot-keyed token entries for Button', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'get_tokens', arguments: { id: 'button' } });
