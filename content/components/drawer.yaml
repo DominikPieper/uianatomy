@@ -791,18 +791,36 @@ whenToUse:
         transient distinction is canonical even when the visual
         rendering converges on small viewports.
 
+contracts:
+  vocabularyDrift:
+    - system: Polaris
+      theirTerm: Modal
+      note: >-
+        Polaris's "Modal" covers both centred dialogs and
+        edge-anchored panels under one component; the canonical
+        Drawer is the edge-anchored half.
+    - system: Carbon
+      theirTerm: Side panel
+    - system: Material 3
+      theirTerm: Navigation drawer / Side sheet
+      note: >-
+        Material 3 ships two separate components for what the
+        canonical Drawer covers as one (with `variant: navigation`
+        vs other variants).
+    - system: vaul
+      theirTerm: Drawer
+      note: >-
+        vaul's "Drawer" is specifically the bottom-sheet variant;
+        the canonical Drawer covers all four sides plus modal and
+        non-modal modes.
+
 notes: >-
-  Drawer is one of the most fragmented patterns in the field —
-  Polaris uses "Modal", Carbon uses "Side panel", Material 3 uses
-  "Navigation drawer" and "Side sheet" as separate components, vaul
-  uses "Drawer" for the bottom-sheet variant specifically. The
-  canonical "Drawer" here covers all four sides plus modal and
-  non-modal modes; design systems may split the canonical Drawer
-  into multiple named components for editorial reasons (often
-  "Drawer" for side-anchored vs "Sheet" for bottom-anchored). The
-  audit relationship in `implementations/<lib>/drawer.yaml` covers
-  the naming via `componentName` plus divergence rows for the
-  splits.
+  Drawer is one of the most fragmented patterns in the field; design
+  systems may split the canonical Drawer into multiple named
+  components for editorial reasons (often "Drawer" for side-anchored
+  vs. "Sheet" for bottom-anchored). The audit relationship in
+  `implementations/<lib>/drawer.yaml` covers the naming via
+  `componentName` plus divergence rows for the splits.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/

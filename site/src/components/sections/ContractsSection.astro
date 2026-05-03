@@ -1,0 +1,140 @@
+---
+import type { Component, Pattern, ContractSource } from '@uianatomy/shared/schema';
+interface Props { entry: Component | Pattern }
+const { entry } = Astro.props;
+
+const contracts = entry.contracts;
+
+const SOURCE_LABEL: Record<ContractSource, string> = {
+  apg: 'APG',
+  wcag: 'WCAG',
+  'html-spec': 'HTML spec',
+  platform: 'Platform',
+  canon: 'Canon',
+};
+---
+{contracts && (
+  <div class="contracts">
+    {contracts.nonNegotiable && contracts.nonNegotiable.length > 0 && (
+      <section class="contracts-block">
+        <h3 class="contracts-heading">Non-negotiable contracts</h3>
+        <ol class="contracts-list">
+          {contracts.nonNegotiable.map((c) => (
+            <li class={`contract contract--${c.source}`}>
+              <header class="contract-header">
+                <span class={`contract-source contract-source--${c.source}`}>{SOURCE_LABEL[c.source]}</span>
+                {c.sourceRef && <span class="contract-ref">{c.sourceRef}</span>}
+              </header>
+              <p class="contract-rule">{c.rule}</p>
+              <p class="contract-consequence">{c.consequence}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+    {contracts.vocabularyDrift && contracts.vocabularyDrift.length > 0 && (
+      <section class="contracts-block">
+        <h3 class="contracts-heading">Vocabulary drift</h3>
+        <dl class="vocab-drift">
+          {contracts.vocabularyDrift.map((v) => (
+            <div class="vocab-drift-row">
+              <dt class="vocab-drift-system">{v.system}</dt>
+              <dd class="vocab-drift-term"><code>{v.theirTerm}</code></dd>
+              {v.note && <dd class="vocab-drift-note">{v.note}</dd>}
+            </div>
+          ))}
+        </dl>
+      </section>
+    )}
+  </div>
+)}
+
+<style>
+  .contracts {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .contracts-heading {
+    font-family: var(--font-display);
+    font-size: var(--text-step-1);
+    font-weight: 500;
+    margin: 0 0 12px;
+  }
+  .contracts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .contract {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    padding: 16px 18px;
+  }
+  .contract-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .contract-source {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--text-step--1);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .contract-ref {
+    font-family: var(--font-mono);
+    font-size: var(--text-step--1);
+    color: var(--fg-muted);
+  }
+  .contract-rule {
+    margin: 0 0 6px;
+    font-weight: 500;
+    line-height: var(--leading-normal, 1.5);
+  }
+  .contract-consequence {
+    margin: 0;
+    color: var(--fg-muted);
+    line-height: var(--leading-normal, 1.5);
+    font-size: calc(var(--text-step-0) * 0.95);
+  }
+  .vocab-drift {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+  .vocab-drift-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 200px) auto;
+    column-gap: 16px;
+    row-gap: 4px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .vocab-drift-row:last-child {
+    border-bottom: 0;
+  }
+  .vocab-drift-system {
+    font-weight: 600;
+    margin: 0;
+  }
+  .vocab-drift-term {
+    margin: 0;
+  }
+  .vocab-drift-note {
+    grid-column: 1 / -1;
+    margin: 4px 0 0;
+    color: var(--fg-muted);
+    font-size: calc(var(--text-step-0) * 0.95);
+    line-height: var(--leading-normal, 1.5);
+  }
+</style>

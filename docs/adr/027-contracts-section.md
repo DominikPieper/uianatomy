@@ -1,6 +1,6 @@
 # ADR 027: Structured `contracts` Section
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05
 **Supersedes:** none (additive)
 **Related:** [ADR-005](./005-anatomy-doc-format.md) (notes is canonical catch-all), Atelier-feedback v2 P6-50

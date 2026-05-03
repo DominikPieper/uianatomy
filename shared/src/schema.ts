@@ -544,6 +544,45 @@ export const frameworkSkeletonsSchema = z
   })
   .strict();
 
+export const contractSourceSchema = z.enum([
+  'apg',
+  'wcag',
+  'html-spec',
+  'platform',
+  'canon',
+]);
+
+export const nonNegotiableContractSchema = z
+  .object({
+    rule: z.string().min(1),
+    source: contractSourceSchema,
+    sourceRef: z.string().min(1).optional(),
+    consequence: z.string().min(1),
+  })
+  .strict();
+
+export const vocabularyDriftEntrySchema = z
+  .object({
+    system: z.string().min(1),
+    theirTerm: z.string().min(1),
+    note: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const contractsSchema = z
+  .object({
+    nonNegotiable: z.array(nonNegotiableContractSchema).min(1).optional(),
+    vocabularyDrift: z.array(vocabularyDriftEntrySchema).min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (v) => v.nonNegotiable !== undefined || v.vocabularyDrift !== undefined,
+    {
+      message:
+        'contracts must declare at least one of nonNegotiable, vocabularyDrift',
+    },
+  );
+
 export const patternSchema = z
   .object({
     id: slug,
@@ -559,6 +598,7 @@ export const patternSchema = z
     decisions: z.array(patternDecisionSchema).min(1),
     mistakes: z.array(mistakeSchema).min(3),
     frameworkSkeletons: frameworkSkeletonsSchema,
+    contracts: contractsSchema.optional(),
     notes: z.string().min(1).optional(),
     lastReviewed: z
       .string()
@@ -593,6 +633,7 @@ export const componentSchema = z.object({
   formIntegration: formIntegrationSchema.optional(),
   i18n: i18nSchema.optional(),
   performance: performanceSchema.optional(),
+  contracts: contractsSchema.optional(),
 });
 
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
@@ -607,6 +648,10 @@ export type Axes = z.infer<typeof axesSchema>;
 export type Mismatch = z.infer<typeof mismatchSchema>;
 export type Mistake = z.infer<typeof mistakeSchema>;
 export type MistakeSeverity = z.infer<typeof mistakeSeveritySchema>;
+export type Contracts = z.infer<typeof contractsSchema>;
+export type NonNegotiableContract = z.infer<typeof nonNegotiableContractSchema>;
+export type VocabularyDriftEntry = z.infer<typeof vocabularyDriftEntrySchema>;
+export type ContractSource = z.infer<typeof contractSourceSchema>;
 export type FrameworkMap = z.infer<typeof frameworkMapSchema>;
 export type Motion = z.infer<typeof motionSchema>;
 export type ReducedMotionFallback = z.infer<typeof reducedMotionFallbackSchema>;

@@ -1339,6 +1339,80 @@ describe('mistake severity', () => {
   });
 });
 
+describe('contracts field (P6-73)', () => {
+  it('parses accordion contracts (nonNegotiable, no vocabularyDrift)', async () => {
+    const accordion = await loadComponent(join(contentDir, 'accordion.yaml'));
+    expect(accordion.contracts?.nonNegotiable?.length).toBeGreaterThanOrEqual(2);
+    expect(accordion.contracts?.vocabularyDrift).toBeUndefined();
+    const rules = accordion.contracts?.nonNegotiable?.map((c) => c.source) ?? [];
+    for (const s of rules) expect(s).toBe('apg');
+  });
+
+  it('parses drawer contracts (vocabularyDrift only)', async () => {
+    const drawer = await loadComponent(join(contentDir, 'drawer.yaml'));
+    expect(drawer.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(4);
+    expect(drawer.contracts?.nonNegotiable).toBeUndefined();
+    const systems = drawer.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
+    expect(systems).toEqual(expect.arrayContaining(['Polaris', 'Carbon', 'Material 3', 'vaul']));
+  });
+
+  it('parses toast contracts (vocabularyDrift only)', async () => {
+    const toast = await loadComponent(join(contentDir, 'toast.yaml'));
+    expect(toast.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(4);
+    const systems = toast.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
+    expect(systems).toEqual(expect.arrayContaining(['Material 3', 'Atlassian', 'Polaris', 'Sonner']));
+  });
+
+  it('rejects empty contracts (refine: at least one of nonNegotiable / vocabularyDrift)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, contracts: {} };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown source enum', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      contracts: {
+        nonNegotiable: [
+          { rule: 'r', source: 'best-practice', consequence: 'c' },
+        ],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all five canonical source values', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    for (const source of ['apg', 'wcag', 'html-spec', 'platform', 'canon']) {
+      const ok = {
+        ...card,
+        contracts: {
+          nonNegotiable: [{ rule: 'r', source, consequence: 'c' }],
+        },
+      };
+      const result = componentSchema.safeParse(ok);
+      expect(result.success, `source=${source}`).toBe(true);
+    }
+  });
+
+  it('rejects empty rule / consequence / system / theirTerm', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const cases = [
+      { contracts: { nonNegotiable: [{ rule: '', source: 'apg', consequence: 'c' }] } },
+      { contracts: { nonNegotiable: [{ rule: 'r', source: 'apg', consequence: '' }] } },
+      { contracts: { vocabularyDrift: [{ system: '', theirTerm: 't' }] } },
+      { contracts: { vocabularyDrift: [{ system: 's', theirTerm: '' }] } },
+    ];
+    for (const c of cases) {
+      const result = componentSchema.safeParse({ ...card, ...c });
+      expect(result.success).toBe(false);
+    }
+  });
+});
+
 describe('pattern schema', () => {
   it('parses confirmation-flow.yaml', async () => {
     const map = await loadPatterns({ patternsDir });

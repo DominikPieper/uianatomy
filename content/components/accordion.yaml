@@ -692,17 +692,40 @@ whenToUse:
         like an accordion but is canonically a Stepper — the
         ordering and validation contract differs.
 
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Each accordion trigger is wrapped in a heading element
+        (`<h2>`–`<h6>`) at the appropriate document-outline level.
+      source: apg
+      sourceRef: 'APG: Accordion pattern — Heading element wrapping the button'
+      consequence: >-
+        Without the heading wrapper, the accordion items vanish
+        from the AT headings list and the entire section is
+        unreachable for screen-reader users navigating by
+        heading. Routinely violated in production — the canonical
+        reference documents this as a hard contract, not styling
+        guidance.
+    - rule: >-
+        `aria-expanded` on the trigger is the single source of
+        truth for the open/closed state; CSS or JS state must
+        derive from it, not the other way around.
+      source: apg
+      sourceRef: 'APG: Accordion pattern — aria-expanded on the button'
+      consequence: >-
+        When `aria-expanded` is treated as a presentational
+        mirror rather than the authoritative state, AT
+        announcements drift from the visible state and keyboard-
+        only flows lose orientation between expansions.
+
 notes: >-
   Accordion is one of the most-implemented patterns and one of
-  the most-broken in production. The "trigger inside heading"
-  rule (APG canonical) is routinely violated; the
-  "aria-expanded as source of truth" rule even more so. The
-  canonical reference documents both as non-negotiable
-  contracts. Animation handling is the second-most-common
+  the most-broken in production; both contracts above are
+  routinely violated. Animation handling is the second-most-common
   failure mode — implementations either ship without animation
   (jumpy) or with animation but no `prefers-reduced-motion`
-  fallback. The motion block plus `reducedMotionFallback:
-  instant` is the canonical answer.
+  fallback. The motion block plus `reducedMotionFallback: instant`
+  is the canonical answer.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/accordion/

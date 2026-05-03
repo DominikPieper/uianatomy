@@ -712,16 +712,32 @@ whenToUse:
         `Toast` is system-pushed notification. Tooltip is pulled
         by the user; Toast is pushed by the system.
 
+contracts:
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Snackbar
+      note: >-
+        Material's "Snackbar" matches our Toast on the queue and
+        viewport contract; canonical name picked Radix / Sonner
+        precedent because that is the React-ecosystem default.
+    - system: Atlassian
+      theirTerm: Flag
+    - system: Polaris
+      theirTerm: Toast
+    - system: Sonner
+      theirTerm: Toast
+      note: >-
+        Sonner's queue-based architecture (single viewport,
+        prioritised display) matches the canonical contract most
+        closely; Radix Toast exposes lower-level primitives that
+        consumers compose into the same architecture.
+
 notes: >-
-  Toast vocabulary varies across design systems: Material 3 calls
-  this "Snackbar"; Atlassian uses "Flag"; Polaris uses "Toast".
-  The canonical "Toast" here matches the Radix and Sonner
-  vocabulary which has become the React-ecosystem default.
-  Implementation audits document the naming via
-  `componentName`. Sonner's queue-based architecture (one
-  viewport, prioritised display) matches the canonical contract
-  most closely; Radix Toast exposes lower-level primitives that
-  consumers compose into the same architecture.
+  Implementation audits document the naming via `componentName`.
+  Most production fragmentation around Toast lives in queue
+  semantics (one global queue vs. multiple regions), max-stack
+  policy, and pause-on-hover behaviour — all canonical here, but
+  rarely all three together in any single library.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/alert/
