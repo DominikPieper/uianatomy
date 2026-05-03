@@ -552,6 +552,12 @@ export const contractSourceSchema = z.enum([
   'canon',
 ]);
 
+const SOURCE_REF_PATTERNS: Record<string, RegExp> = {
+  apg: /^(APG: |WAI-ARIA)/,
+  wcag: /^WCAG \d\.\d\.\d/,
+  'html-spec': /\b(HTML|WHATWG|DOM)\b/,
+};
+
 export const nonNegotiableContractSchema = z
   .object({
     rule: z.string().min(1),
@@ -559,7 +565,20 @@ export const nonNegotiableContractSchema = z
     sourceRef: z.string().min(1).optional(),
     consequence: z.string().min(1),
   })
-  .strict();
+  .strict()
+  .refine(
+    (v) => {
+      if (v.sourceRef === undefined) return true;
+      const pattern = SOURCE_REF_PATTERNS[v.source];
+      if (!pattern) return true; // platform | canon: free-form
+      return pattern.test(v.sourceRef);
+    },
+    {
+      path: ['sourceRef'],
+      message:
+        'sourceRef shape must match source: apg → "APG: …", wcag → "WCAG N.N.N …", html-spec → contains "HTML"/"WHATWG"/"DOM" (platform / canon free-form).',
+    },
+  );
 
 export const vocabularyDriftEntrySchema = z
   .object({

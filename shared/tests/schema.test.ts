@@ -1405,6 +1405,49 @@ describe('contracts field (P6-73)', () => {
       expect(result.success).toBe(false);
     }
   });
+
+  it('accepts canonical sourceRef shapes per source enum', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const cases = [
+      { source: 'apg', sourceRef: 'APG: Dialog (Modal) pattern — Keyboard interaction' },
+      { source: 'apg', sourceRef: 'WAI-ARIA aria-current property' },
+      { source: 'wcag', sourceRef: 'WCAG 2.4.4 — Link Purpose (In Context)' },
+      { source: 'html-spec', sourceRef: 'HTML inert attribute + ARIA dialog-modal pattern' },
+      { source: 'html-spec', sourceRef: 'HTML autocomplete attribute (WHATWG) + WCAG 1.3.5' },
+      { source: 'platform', sourceRef: 'macOS HIG — Window placement' },
+      { source: 'canon', sourceRef: 'GDPR Art. 7 / EDPB Guidelines 05/2020' },
+    ];
+    for (const c of cases) {
+      const ok = {
+        ...card,
+        contracts: {
+          nonNegotiable: [{ rule: 'r', consequence: 'c', ...c }],
+        },
+      };
+      const result = componentSchema.safeParse(ok);
+      expect(result.success, `source=${c.source} sourceRef=${c.sourceRef}`).toBe(true);
+    }
+  });
+
+  it('rejects sourceRef shape that does not match source enum', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const cases = [
+      { source: 'apg', sourceRef: 'Just a free-form string' }, // missing APG: / WAI-ARIA prefix
+      { source: 'wcag', sourceRef: 'WCAG without numeric section' }, // missing N.N.N
+      { source: 'wcag', sourceRef: '2.4.4 — link purpose' }, // missing leading WCAG
+      { source: 'html-spec', sourceRef: 'Some prose with no spec word' }, // missing HTML/WHATWG/DOM
+    ];
+    for (const c of cases) {
+      const bad = {
+        ...card,
+        contracts: {
+          nonNegotiable: [{ rule: 'r', consequence: 'c', ...c }],
+        },
+      };
+      const result = componentSchema.safeParse(bad);
+      expect(result.success, `source=${c.source} sourceRef=${c.sourceRef}`).toBe(false);
+    }
+  });
 });
 
 describe('pattern schema', () => {
