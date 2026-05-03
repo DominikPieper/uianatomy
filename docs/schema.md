@@ -816,6 +816,51 @@ axes:
 - All versioning fields are optional. Components without an active deprecation history can omit the lot.
 - **Convention (not enforced):** `since` values on slots/properties/variantDeprecations should appear in `changelog[].version` for the same component. Drift is reviewer-caught, not Zod-caught — keeping it loose lets components add deprecation metadata before a full changelog exists.
 
+### When to populate (editorial-trigger contract)
+
+The `since` + `changelog` surface is **dormant by editorial design** until a component has a published change worth versioning. As of 2026-05-03 no canonical component declares either field, and `get_changelog` returns `null` for all 27 components — that is the correct state until the first qualifying edit lands.
+
+A change qualifies for a changelog entry when at least one of these is true:
+
+1. **Schema rename of a published field** — a slot, axis, variant, property, or event renames to a new canonical name. `since` records the version of the new name; the previous name is added to `variantDeprecations` / per-property `deprecated` / per-slot `deprecated` with `replacement` pointing at the new name. Example trigger: P6-119's `nonLinear → linear` polarity rename — once the canon ships its first official version, this rename becomes the first changelog entry on Stepper.
+2. **Mistake correction after publish** — a `mistakes[].id` is removed (no longer a real failure mode) or its `severity` is changed in a way that invalidates prior reader assumptions. Bumps `MINOR` (additive) or `MAJOR` (semantic shift).
+3. **Canonical-name change of the component itself** — the `name` field changes (e.g. "Notification" → "Toast") and downstream consumers need to know to migrate references. Bumps `MAJOR`.
+4. **Variant / property / event removed** — anything that was in the canon and is now not. Bumps `MAJOR`.
+
+A change does **not** qualify when:
+
+- A new component is added to the canon (no per-component changelog event; project-level changelog handles roster expansion).
+- Prose is rewritten without changing the meaning (descriptions, intro, mistake fix-text).
+- A new mistake / mismatch / contracts entry is added (additive prose; not a versionable canonical change).
+- A `lastReviewed` date changes (use `lastReviewed`, not `changelog`).
+
+### How to populate
+
+When a qualifying change lands:
+
+1. Add `since: 1.0.0` to the component if not already present (initial canonical baseline). All currently-shipping components share the same baseline version when their first changelog event lands.
+2. Add the new entry at the **top** of `changelog[]` (newest first):
+   ```yaml
+   changelog:
+     - version: 2.0.0
+       date: 2026-MM-DD
+       summary: One-line description of what changed and why.
+   ```
+3. Bump the new top-line `since` to match the new version (component-level) or the rename target's `since` (slot / property / variant level).
+4. Wire `deprecated.replacement` on the renamed-from element pointing to the renamed-to id / name.
+5. Update component `lastReviewed`.
+
+### Downstream consumer pattern
+
+Consumers that depend on canonical naming (implementation audits, design-system bridges, MCP-integrated agents) should subscribe to changelog updates as a re-audit trigger:
+
+1. Cache `(componentId, lastSeenVersion)` per component the consumer audits against.
+2. Periodically poll `get_changelog({ id })` (or fetch the bundle and read `since`).
+3. When the returned `since` exceeds the cached `lastSeenVersion`, re-run the audit against that component — a canonical change has shipped.
+4. The `summary` text on each changelog entry tells the consumer whether the change is breaking (rename / removal / canonical-name change) or additive (mistake-correction). Consumers can prioritise re-audits accordingly.
+
+The `get_changelog` MCP tool surfaces this contract per-component; future tooling could expose a project-level changelog feed (RSS or aggregate JSON) when the volume warrants it.
+
 ## Schema evolution
 
 The schema will evolve. When it does:
