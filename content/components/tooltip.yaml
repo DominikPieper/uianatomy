@@ -132,7 +132,7 @@ axes:
   properties:
     - name: side
       kind: enum
-      values: [top, right, bottom, left]
+      values: [block-start, inline-end, block-end, inline-start]
     - name: align
       kind: enum
       values: [start, center, end]
@@ -323,13 +323,13 @@ mistakes:
 frameworkMap:
   webComponents:
     structureMechanism: A `<ui-tooltip>` host element that wires the trigger via `id` reference and renders a `[role=tooltip]` container; positioning via Floating UI or CSS anchor positioning; arrow as a slot or pseudo-element
-    variantMechanism: attributes (`variant="inline-help"`, `side="top"`, `align="center"`, `delay="base"`, `arrow`); `data-state="open|closed|opening|closing"` for CSS
+    variantMechanism: attributes (`variant="inline-help"`, `side="block-start"`, `align="center"`, `delay="base"`, `arrow`); `data-state="open|closed|opening|closing"` for CSS
   react:
     structureMechanism: Radix `Tooltip.Root` / `Tooltip.Trigger` / `Tooltip.Portal` / `Tooltip.Content` compositing the slots; positioning via Floating UI; React Aria `useTooltip` provides an alternative
     variantMechanism: props with class-variance-authority for variant; `side`, `align`, `sideOffset`, `delayDuration` props on `Tooltip.Content`; `data-state` exposed
   angularSignals:
     structureMechanism: Angular CDK `cdkTooltip` directive plus `OverlayModule` for positioning; signal-based `[uiTooltip]` content input; consumer wires it on focusable elements
-    variantMechanism: input<'standard' | 'inline-help'>(), input<'top' | 'right' | 'bottom' | 'left'>(); `[delay]` input for the show-delay
+    variantMechanism: input<'standard' | 'inline-help'>(), input<'block-start' | 'inline-end' | 'block-end' | 'inline-start'>(); `[delay]` input for the show-delay
   vue:
     structureMechanism: third-party (Radix Vue, Headless UI does not ship Tooltip as of 2026-04, vue-floating); custom composable `useTooltip` wires aria-describedby plus pointer/focus listeners
     variantMechanism: defineProps with literal-union types; `:side`, `:align`, `:delay`, `:arrow` props
@@ -439,7 +439,7 @@ propertyMap:
   - figma: Side
     code: side
     kind: enum
-    notes: top / right / bottom / left. Authored placement preference; auto-flips when colliding with viewport.
+    notes: block-start / inline-end / block-end / inline-start (logical, RTL-aware). Authored placement preference; auto-flips when colliding with viewport.
   - figma: Align
     code: align
     kind: enum
@@ -460,8 +460,10 @@ propertyMap:
 i18n:
   rtl:
     mirroring: >-
-      Side property is direction-neutral (top/right/bottom/left are
-      physical). Align is logical (start/center/end follow inline
+      Side property uses logical-direction values (block-start /
+      inline-end / block-end / inline-start) — `inline-end` flips
+      from right (LTR) to left (RTL) automatically; `inline-start`
+      mirrors. Align is logical (start/center/end follow inline
       direction). Tooltip text inherits document direction;
       mixed-direction text (Arabic content with English code
       snippets in the tooltip) follows the inner spans' `dir`

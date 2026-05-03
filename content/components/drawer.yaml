@@ -277,7 +277,7 @@ axes:
   properties:
     - name: side
       kind: enum
-      values: [start, end, top, bottom]
+      values: [inline-start, inline-end, block-start, block-end]
     - name: size
       kind: enum
       values: [sm, md, lg, full]
@@ -389,7 +389,7 @@ mismatches:
       threshold conventions in the canonical reference (e.g. "release
       velocity > 800px/s OR distance > 30% closes").
 
-  - figma: Side `start` vs `end` drawn as two separate components
+  - figma: Side `inline-start` vs `inline-end` drawn as two separate components
     code: A single component with a `side` property toggling logical positioning
     consequence: >-
       Designers and developers count drawers differently — designers
@@ -474,13 +474,13 @@ mistakes:
 frameworkMap:
   webComponents:
     structureMechanism: A `<ui-drawer>` host with named slots for `header`, `body`, `footer`, `handle`; modal variant uses native `<dialog>` internally with custom positioning, non-modal uses a positioned `<aside>`
-    variantMechanism: attributes (`variant="modal"`, `side="end"`, `size="md"`, `dismissible`, `swipeable`); `data-state="open|closed|opening|closing|dragging"` for CSS transitions
+    variantMechanism: attributes (`variant="modal"`, `side="inline-end"`, `size="md"`, `dismissible`, `swipeable`); `data-state="open|closed|opening|closing|dragging"` for CSS transitions
   react:
     structureMechanism: portal-based primitives (Radix has no first-party Drawer; vaul or React Aria Drawer-via-Modal compose the slots as children) compositing the slots as named children
     variantMechanism: props with class-variance-authority for variant/side/size; `data-state` attribute for transition states; `onOpenChange` / `onDismiss` controlled-pattern callbacks
   angularSignals:
     structureMechanism: Angular CDK Overlay + custom positioning strategy (top/bottom/start/end attached); content projection for header / body / footer slots
-    variantMechanism: input<'modal' | 'non-modal' | 'navigation'>(), input<'start' | 'end' | 'top' | 'bottom'>(); host bindings drive `[attr.role]` (dialog vs region)
+    variantMechanism: input<'modal' | 'non-modal' | 'navigation'>(), input<'inline-start' | 'inline-end' | 'block-start' | 'block-end'>(); host bindings drive `[attr.role]` (dialog vs region)
   vue:
     structureMechanism: Headless UI does not yet ship a Drawer (as of 2026-04); third-party (vue-final-modal, custom composable around Teleport) provides the portal + focus trap; named slots for header/body/footer
     variantMechanism: defineProps with literal-union types; `:data-state` for transition states; emits `update:open` / `dismiss`
@@ -559,8 +559,9 @@ events:
   - name: sideChange
     optional: true
     payload: >-
-      `'start' | 'end' | 'top' | 'bottom'`. Fires when the responsive
-      auto-flip kicks in (e.g. authored `side: end` becomes `bottom`
+      `'inline-start' | 'inline-end' | 'block-start' | 'block-end'`.
+      Fires when the responsive auto-flip kicks in (e.g. authored
+      `side: inline-end` becomes `block-end`
       below `breakpoint.sm`). Lets consumers re-anchor satellite UI
       (toast positioning, tooltip arrows) when the drawer reflows.
       Only canonical when the implementation actually performs the

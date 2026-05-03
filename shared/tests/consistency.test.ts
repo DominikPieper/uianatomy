@@ -226,6 +226,11 @@ describe('cross-component consistency', () => {
     const failures: string[] = [];
     for (const c of map.values()) {
       for (const ref of c.whenToUse?.vsRelated ?? []) {
+        // P6-133 — pending forward-references are allowed to point at
+        // not-yet-authored components; resolution check is suspended for
+        // them. The pair is still surfaced as a follow-up by the canon-
+        // auditor.
+        if (ref.pending) continue;
         if (!ids.has(ref.id)) {
           failures.push(`${c.id}: vsRelated.id "${ref.id}" does not resolve to a canonical component`);
         }
@@ -237,12 +242,23 @@ describe('cross-component consistency', () => {
   // Bidirectional vsRelated lint: every `whenToUse.vsRelated[].id` reference
   // requires the target component to reference back. New asymmetric pairs may
   // be added to ALLOWED_ASYMMETRIC with explicit rationale; the canon today
-  // has zero asymmetric pairs (P6-86 backfilled the original 19).
+  // has zero asymmetric pairs (P6-86 backfilled the original 19). Forward-
+  // references with `pending: true` (P6-133) are excluded from the lint —
+  // the target does not yet exist so a reverse-ref cannot be authored.
   it('whenToUse.vsRelated is bidirectional', async () => {
     const map = await loadComponents({ contentDir });
     const refs = new Map<string, Set<string>>();
+    const pendingRefs = new Map<string, Set<string>>();
     for (const c of map.values()) {
-      refs.set(c.id, new Set((c.whenToUse?.vsRelated ?? []).map((r) => r.id)));
+      const allEntries = c.whenToUse?.vsRelated ?? [];
+      refs.set(
+        c.id,
+        new Set(allEntries.filter((r) => !r.pending).map((r) => r.id)),
+      );
+      pendingRefs.set(
+        c.id,
+        new Set(allEntries.filter((r) => r.pending).map((r) => r.id)),
+      );
     }
     const ALLOWED_ASYMMETRIC = new Set<string>();
     const failures: string[] = [];
@@ -251,6 +267,10 @@ describe('cross-component consistency', () => {
         const targetRefs = refs.get(t);
         if (!targetRefs) continue; // resolution failure already caught upstream
         if (targetRefs.has(src)) continue;
+        // Allow the case where the target has a pending forward-ref back
+        // to the source — the pair is being intentionally one-sided until
+        // the target's authoring cycle authors the prose.
+        if (pendingRefs.get(t)?.has(src)) continue;
         if (ALLOWED_ASYMMETRIC.has(`${src}->${t}`)) continue;
         failures.push(
           `${src}: vsRelated → "${t}" has no reverse ref. Add reverse-ref to ${t}.yaml or allowlist the pair in consistency.test.ts.`,

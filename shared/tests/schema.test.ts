@@ -752,6 +752,34 @@ describe('whenToUse field', () => {
     const result = componentSchema.safeParse(ok);
     expect(result.success).toBe(true);
   });
+
+  it('accepts vsRelated entry with `pending: true` for forward-references (P6-133)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const ok = {
+      ...card,
+      whenToUse: {
+        use: 'x',
+        avoid: 'y',
+        vsRelated: [{ id: 'future-component', difference: 'placeholder prose', pending: true }],
+      },
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects vsRelated entry with non-boolean `pending`', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      whenToUse: {
+        use: 'x',
+        avoid: 'y',
+        vsRelated: [{ id: 'tile', difference: 'real prose', pending: 'true' as unknown as boolean }],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('events field', () => {

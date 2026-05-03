@@ -256,8 +256,9 @@ whenToUse:                                  # optional
 
 - `whenToUse` itself is optional. Components without a meaningful "use vs. avoid" distinction omit the field.
 - When present, `use` and `avoid` are required prose, both non-empty.
-- `vsRelated` is optional. When present, it is a non-empty array of `{ id, difference }` records. Each `id` follows the kebab-case slug regex (matches a canonical component id, even if that component is not yet documented).
+- `vsRelated` is optional. When present, it is a non-empty array of `{ id, difference, pending? }` records. Each `id` follows the kebab-case slug regex (matches a canonical component id, even if that component is not yet documented).
 - `difference` prose names the *distinguishing characteristic* between this component and the related one — not a description of the related component itself.
+- `pending: true` (optional, P6-133) marks a forward-reference to a component not yet authored. The bidirectional-lint and the resolution-lint both skip pending entries; the canon-auditor surfaces them as follow-ups so the back-edge gets authored when the target component lands. Once the target ships, drop `pending: true` and the bidirectional lint catches the missing reverse-ref naturally. Use sparingly — manual reverse-ref authoring after the target lands is the canonical path.
 - The bare `related: [slug]` field is gone. Where you previously wrote `related: [tile, list-item]`, you now write `whenToUse.vsRelated[].id` paired with a `difference`. Templates render the chips from the structured form.
 
 **Why dropped, not coexisting:** ADR-001's "single source of truth" plus ADR-012's "decisions need rationale" both point to a single structured entry. Two ways to spell the same data is the failure mode the schema is meant to prevent.
@@ -553,6 +554,23 @@ propertyMap:
 ```
 
 **Do not flag `axes.properties[].kind: primitive` as a vocabulary issue** — that is the canonical type-discriminator from ADR-010, not a violation of the ADR-025 propertyMap-vocabulary. The `canon-auditor` subagent's pre-flight rules cover this explicitly. A future schema-rename (P6-132 backlog item) could split the field name (`axes.properties[].typeKind` vs `propertyMap[].propertyKind`) but the migration cost is heavy (27-component touch + ADR + cross-reference update); current consensus is doc-clarification only.
+
+### Direction vocabulary convention
+
+Property values that encode a direction, side, or anchored position use **logical** vocabulary, not physical. The canon's logical primitives are `inline-start` / `inline-end` (the inline-axis edges) and `block-start` / `block-end` (the block-axis edges). Center alignment uses the literal `center`.
+
+| Avoid (physical) | Prefer (logical) |
+|---|---|
+| `left` | `inline-start` |
+| `right` | `inline-end` |
+| `top` | `block-start` |
+| `bottom` | `block-end` |
+
+**Compound positions** (corner anchors on Toast-style overlays) follow `<block-edge>-<inline-edge>` where the inline-edge is `start` / `end` / `center` (already logical). Example: `block-end-end` is bottom-right in LTR, bottom-left in RTL.
+
+**Why logical wins:** physical names break under RTL writing direction. A drawer authored as `side: right` ends up on the wrong edge in Arabic / Hebrew layouts; a tooltip authored as `side: left` flips against the user's reading direction. Logical names map to native CSS logical properties (`inset-inline-start`, `margin-block-end`) and survive the writing-direction change without per-locale overrides.
+
+**Migration precedent (P6-117):** Drawer `side` migrated from `[start, end, top, bottom]` (logical-mix) to `[inline-start, inline-end, block-start, block-end]` (fully logical). Tooltip `side` migrated from `[top, right, bottom, left]` (physical) to `[block-start, inline-end, block-end, inline-start]`. Toast `position` migrated from `[top-start, top-end, bottom-start, bottom-end, top-center, bottom-center]` (logical-compound, physical-prefix) to `[block-start-start, block-start-end, block-start-center, block-end-start, block-end-end, block-end-center]` (fully logical compound). Future direction-axes adopt the logical vocabulary at authoring time.
 
 ### Boolean polarity convention
 

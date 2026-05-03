@@ -307,6 +307,15 @@ export const vsRelatedEntrySchema = z
   .object({
     id: slug,
     difference: z.string().min(1),
+    // P6-133 — forward-reference flag. Set `pending: true` when authoring
+    // a vsRelated entry that points to a component not yet in the canon
+    // (typical case: backlog plans `radio-group` reverse-ref from `checkbox`
+    // before `radio-group` has been authored). The bidirectional-lint
+    // skips pending pairs (no reverse-ref required) but the canon-auditor
+    // surfaces them as follow-ups so the back-edge gets authored when the
+    // target component lands. Once the target ships, drop `pending: true`
+    // and the bidir lint catches the missing reverse-ref naturally.
+    pending: z.boolean().optional(),
   })
   .strict();
 

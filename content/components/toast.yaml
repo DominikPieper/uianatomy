@@ -259,7 +259,7 @@ axes:
   properties:
     - name: position
       kind: enum
-      values: [top-start, top-end, bottom-start, bottom-end, top-center, bottom-center]
+      values: [block-start-start, block-start-end, block-start-center, block-end-start, block-end-end, block-end-center]
     - { name: dismissible, kind: primitive, of: boolean }
     - { name: hasAction, kind: primitive, of: boolean }
     - { name: hasIcon, kind: primitive, of: boolean }
@@ -457,7 +457,7 @@ mistakes:
 frameworkMap:
   webComponents:
     structureMechanism: A `<ui-toast-viewport>` host wrapping `<ui-toast>` children; viewport handles stacking and pause-on-hover; toast carries severity attribute reflected to role
-    variantMechanism: attributes (`severity="success"`, `position="bottom-end"`, `dismissible`, `auto-dismiss-ms="5000"`); `data-state="opening|open|paused|closing|closed"`
+    variantMechanism: attributes (`severity="success"`, `position="block-end-end"`, `dismissible`, `auto-dismiss-ms="5000"`); `data-state="opening|open|paused|closing|closed"`
   react:
     structureMechanism: Radix Toast (`Toast.Provider` / `Toast.Viewport` / `Toast.Root` / `Toast.Title` / `Toast.Description` / `Toast.Action`); React Aria `useToastRegion` plus `useToast`; or Sonner library which composes its own viewport
     variantMechanism: props with class-variance-authority for severity; `duration` prop for auto-dismiss; `position` on the viewport
@@ -645,9 +645,12 @@ propertyMap:
 i18n:
   rtl:
     mirroring: >-
-      Position values are logical: `start` and `end` follow inline
-      direction (top-end is visual top-right in LTR, top-left in
-      RTL). Dismiss button moves with the inline-end logical
+      Position values are fully logical: `block-start` / `block-end`
+      anchor the block edge (top / bottom in horizontal-tb mode);
+      `start` / `end` / `center` anchor the inline edge.
+      `block-start-end` is visual top-right in LTR, top-left in
+      RTL — both edges flip with writing direction. Dismiss button
+      moves with the inline-end logical
       anchor. Action button order is unchanged within the toast
       (single action by canon). Severity icons are
       direction-neutral. Slide-in animations use logical transform
