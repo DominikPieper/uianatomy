@@ -421,6 +421,7 @@ describe('cross-component consistency', () => {
       'accordion',
       'segmented-control',
       'popover',
+      'table',
     ];
 
     const failures: string[] = [];

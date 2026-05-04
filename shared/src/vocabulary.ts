@@ -189,6 +189,10 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
     name: 'GitHub Primer',
     url: 'https://primer.style/',
   },
+  tanstack: {
+    name: 'TanStack Table',
+    url: 'https://tanstack.com/table/latest',
+  },
 } as const;
 
 // P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
@@ -211,6 +215,7 @@ export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> =
   reach: ['Reach UI', 'Reach'],
   angularCdk: ['Angular CDK', 'Angular Material'],
   primer: ['GitHub Primer', 'Primer'],
+  tanstack: ['TanStack Table', 'TanStack'],
 } as const;
 
 // Spec/platform/standards bodies that legitimately appear as

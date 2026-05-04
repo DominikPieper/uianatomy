@@ -41,6 +41,18 @@ whenToUse:
         cooperates with sibling rows for keyboard navigation and
         selection semantics. `Card` is a standalone object with no
         implicit sibling relationship.
+    - id: table
+      difference: >-
+        A wall of `Card` reads as a feed of independent records,
+        each consumed as a standalone unit (a product, a profile);
+        `Table` presents the same records as scannable rows so
+        users compare attributes across many records. Use Table
+        for inventory / contacts / transactions where the
+        cross-row attribute comparison is the primary task; use
+        Card when each record is consumed on its own and the
+        comparison is incidental. The decision test: does the
+        user scan attributes across rows (Table) or consume
+        each record's hierarchy independently (Card)?
 
 anatomy:
   - id: media

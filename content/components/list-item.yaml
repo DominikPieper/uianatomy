@@ -837,6 +837,18 @@ whenToUse:
         Avatar Group suits inline density where the group is a
         single visual marker. The decision test: does each
         member need its own row of metadata?
+    - id: table
+      difference: >-
+        `Table` adds a second axis (column headers plus
+        column-level affordances like sort, select-all,
+        resize); `ListItem` is one-attribute-per-row inside
+        a 1D list. Choose Table when comparison across
+        attribute columns is the primary task (price vs date
+        vs status); choose ListItem when each row is a
+        discrete unit (notification, contact, settings entry)
+        consumed independently of its siblings. Both share
+        list-rhythm visual language; the second axis is the
+        deciding factor.
 contracts:
   nonNegotiable:
     - rule: >-
@@ -884,3 +896,4 @@ sources:
   - https://react-spectrum.adobe.com/react-aria/ListBox.html
 
 lastReviewed: '2026-05-04'
+

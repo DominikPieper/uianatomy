@@ -679,7 +679,7 @@ describe('whenToUse field', () => {
     expect(card.whenToUse?.use.length).toBeGreaterThan(0);
     expect(card.whenToUse?.avoid.length).toBeGreaterThan(0);
     const ids = card.whenToUse?.vsRelated?.map((v) => v.id) ?? [];
-    expect(ids).toEqual(['tile', 'list-item']);
+    expect(ids).toEqual(['tile', 'list-item', 'table']);
   });
 
   it('parses combobox whenToUse vsRelated entries (post P6-86 backfill)', async () => {

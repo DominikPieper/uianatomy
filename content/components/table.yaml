@@ -1,0 +1,1480 @@
+id: table
+name: Table
+description: >-
+  A two-dimensional data grid with column headers and rows of cells,
+  used for presenting tabular data where users scan and compare
+  attributes across many records — inventory, contacts, transactions,
+  search results with multiple sortable fields. Distinct from
+  ListItem (1D rows; one-attribute-per-row) by the second axis of
+  columns, and distinct from the APG `grid` pattern (interactive
+  cells with 2D arrow-key navigation) by treating cells as static
+  data unless explicitly escalated. Native HTML semantics — `<table>`,
+  `<caption>`, `<thead>`, `<tbody>`, `<th scope="col">`, `<td>` — are
+  the canonical baseline; ARIA roles only when the structural
+  elements are unavailable.
+
+intro: >-
+  Table presents records as rows and attributes as columns so users
+  can compare values across many items. The reference documents the
+  caption-as-accessible-name contract, the `<th scope>` rule that
+  programmatically associates each cell with its header, the
+  sort-button-not-clickable-icon discipline, the `aria-checked="mixed"`
+  bulk-selection state, and the focusable scrollable-region wrapper
+  required when the table overflows horizontally. Density is a
+  property (comfortable / compact); the structural variant axis
+  captures whether rows are selectable (leading checkbox column) or
+  not. Performance budgets cover virtualization threshold, sticky
+  header reflow cost, and sort-interaction latency.
+
+alternateNames:
+  - 'Data table'
+  - 'Data grid'
+
+whenToUse:
+  use: >-
+    For tabular data where users need to scan and compare attributes
+    across many records — inventory tables, transaction lists,
+    contact directories, search results with sortable columns,
+    spreadsheet-style data displays. Use when the second axis
+    (columns) carries meaning beyond a single-attribute-per-row
+    list. Pair with pagination or virtualization for large datasets;
+    pair with toolbar for filtering and bulk actions; pair with
+    breadcrumbs or sidebar-nav for navigation context.
+  avoid: >-
+    For one-dimensional collections of rows where each row is a
+    discrete unit — that is `ListItem`. For independent
+    record-objects without cross-record comparison — that is
+    `Card`. For interactive cells with editing, focus management,
+    and 2D arrow-key navigation — escalate to the APG `grid`
+    pattern (separate canonical entry, future). For hierarchical
+    tabular data with parent-child rows — escalate to the APG
+    `treegrid` pattern. For narrow viewports where the column
+    count exceeds available width — collapse to a stacked-card
+    layout per the responsive rules below; do not force horizontal
+    scroll without a scrollable-region wrapper.
+  vsRelated:
+    - id: list-item
+      difference: >-
+        `Table` adds a second axis (columns plus column headers)
+        and column-level affordances (sort, select-all, resize);
+        `ListItem` is one-attribute-per-row inside a 1D list.
+        Choose Table when comparison across attribute columns
+        matters (price vs date vs status); choose ListItem when
+        each row is a discrete unit (notification, contact,
+        settings entry) without cross-row attribute comparison.
+    - id: card
+      difference: >-
+        A wall of `Card` reads as a feed of independent records
+        each standing on its own (a product card, a profile
+        card); `Table` presents the same records as scannable
+        rows so users compare attributes across many records.
+        Use Table for inventory / contacts / transactions where
+        the comparison-across-rows is the primary task; use
+        Card when each record is consumed as a unit and the
+        cross-row comparison is incidental.
+    - id: grid-pattern
+      pending: true
+      difference: >-
+        `Grid` is the APG escalation for interactive cells —
+        2D arrow-key navigation, focus management on cells,
+        editable cells, single-tab-stop into the grid (roving
+        tabindex). `Table` keeps cells as static data and
+        relies on standard tab order through interactive
+        descendants (links, buttons, checkboxes). Escalate to
+        Grid when cell content is itself interactive or
+        editable; stay on Table for read-only data display.
+    - id: tree-grid
+      pending: true
+      difference: >-
+        `TreeGrid` adds hierarchical row semantics —
+        `aria-level`, `aria-expanded`, parent-child rows that
+        collapse / expand. `Table` is flat. Use TreeGrid for
+        org charts, file managers with column metadata, nested
+        budgets; use Table when rows are siblings without a
+        parent-child relationship.
+
+anatomy:
+  - id: scrollable-region
+    required: false
+    purpose: >-
+      Outer wrapper that establishes a horizontal-scroll boundary
+      when the table exceeds its inline container. Required when
+      horizontal scroll is possible — the wrapper carries
+      `role="region"`, `aria-labelledby` (or `aria-label`), and
+      `tabindex="0"` so keyboard users discover the scrollable
+      area and can scroll it via arrow keys. Optional when the
+      table fits within the viewport at all supported breakpoints.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Scroll-container frame; visible focus ring on tabindex; never collapsed by overflow:visible
+    code:
+      slot: scrollable-region
+      semantic: region-with-tabindex
+    a11y:
+      hint: >-
+        `<div role="region" aria-labelledby="table-caption-id"
+        tabindex="0">`. The region role plus accessible name lets
+        AT users locate the scrollable area via landmark
+        navigation; `tabindex="0"` makes it focusable so keyboard
+        users can scroll it via arrow keys. Never set
+        `overflow: visible` on this slot — the scroll boundary
+        IS the affordance. Visible focus ring on focus-visible.
+
+  - id: container
+    required: true
+    purpose: >-
+      The native `<table>` element. Carries the table semantics
+      and serves as the root for all rowgroups and rows. Lives
+      inside the scrollable-region wrapper when overflow is
+      possible. Width fills the parent; min-content sized to
+      column requirements.
+    slotKind: structural
+    layout:
+      parent: scrollable-region
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Table frame with auto-layout vertical for header / body / footer rowgroups
+    code:
+      slot: container
+      semantic: table
+    a11y:
+      hint: >-
+        Native `<table>` is canonical. ARIA `role="table"` is
+        only required when the structural element is unavailable
+        (CSS `display: grid` layouts that lose table semantics,
+        rare framework constraints). The element implies
+        `role="table"` automatically; AT picks up the structure
+        from the rowgroups and cells inside.
+
+  - id: caption
+    required: true
+    purpose: >-
+      Accessible name for the table — explains what the data
+      represents ("Quarterly revenue by region", "Open issues").
+      Visually present at the top of the table by default; may
+      be visually hidden via clip-path / sr-only when the
+      surrounding context already names the table. Distinct from
+      a heading above the table — `<caption>` is programmatically
+      associated with the `<table>`, a separate `<h2>` is not.
+    slotKind: content
+    layout:
+      parent: container
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Caption text style; positioned at the top of the table; visibility per "Visible Caption" property
+    code:
+      slot: caption
+      semantic: caption
+    a11y:
+      hint: >-
+        `<caption>` is the canonical accessible name for the
+        table. SR announces it on entering the table region.
+        For visually-hidden captions, use sr-only CSS — never
+        omit `<caption>` and rely on a sibling heading; the
+        heading-to-table association is implicit and not
+        machine-readable. `aria-labelledby` pointing to a
+        sibling heading is an acceptable fallback when
+        `<caption>` cannot be authored.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: thead
+    required: true
+    purpose: >-
+      Header rowgroup. Contains one row of `<th scope="col">`
+      cells naming each column. Required because the column
+      headers are what programmatic association attaches to —
+      every data cell announces its header on SR navigation.
+      Optional `position: sticky` when the table scrolls
+      vertically, so headers remain visible while scanning
+      rows.
+    slotKind: structural
+    layout:
+      parent: container
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Header rowgroup; sticky-position variant per "Sticky Header" property
+    code:
+      slot: thead
+      semantic: thead
+    a11y:
+      hint: >-
+        `<thead>` implies `role="rowgroup"`. SR distinguishes
+        header rowgroup from body rowgroup automatically — no
+        ARIA needed. Sticky header (CSS `position: sticky`) is
+        a presentation choice and does not affect AT semantics.
+    tokens:
+      color:
+        background: color.surface.sunken
+        border: color.border.subtle
+
+  - id: tbody
+    required: true
+    purpose: >-
+      Body rowgroup. Contains the data rows. Required for
+      semantic clarity even though the browser would imply it —
+      explicit `<tbody>` lets implementations target the body
+      separately for virtualization, sticky headers, and
+      empty-state swap. Multiple `<tbody>` elements are valid
+      for grouped sections (e.g., quarterly summaries) but the
+      canonical default is a single body.
+    slotKind: structural
+    layout:
+      parent: container
+      row: 3
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Body rowgroup with repeating row instances
+    code:
+      slot: tbody
+      semantic: tbody
+    a11y:
+      hint: >-
+        `<tbody>` implies `role="rowgroup"`. SR uses the
+        rowgroup boundary to announce body-row position
+        ("row 3 of 47") distinctly from header-row position.
+
+  - id: tr
+    required: true
+    purpose: >-
+      A single data row inside `<tbody>`. Repeats per record.
+      DOM order matches row-display order. For virtualization,
+      the canonical pattern adds `aria-rowindex` per visible
+      row plus `aria-rowcount` on the table so AT reports the
+      true total (not the rendered subset).
+    slotKind: structural
+    layout:
+      parent: tbody
+      row: 1
+      col: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Row instance; selected / hover / sorted-column states via component variants
+    code:
+      slot: tr
+      semantic: tr
+    a11y:
+      hint: >-
+        `<tr>` implies `role="row"`. For virtualized tables,
+        author `aria-rowindex` per row matching the true
+        index (1-based), and `aria-rowcount` on the
+        `<table>` matching the total record count. Without
+        the explicit indices, SR users perceive only the
+        rendered subset and lose the dataset's actual size.
+
+  - id: th-col
+    required: true
+    purpose: >-
+      Column header cell. Carries the column name and
+      `scope="col"` to programmatically associate every data
+      cell in the column with this header. Sortable columns
+      additionally carry `aria-sort` and contain a `<button>`
+      activator (the sort-button slot). Resizable columns
+      contain a resize-handle as a structural sub-affordance.
+    slotKind: structural
+    layout:
+      parent: thead
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Column header cell; sort-affordance / resize-handle variants
+    code:
+      slot: th-col
+      semantic: th-scope-col
+    a11y:
+      hint: >-
+        `<th scope="col">` is canonical. Without `scope="col"`
+        the header-to-cell association is ambiguous on
+        complex tables (multi-row headers, spanning columns).
+        Sortable columns add `aria-sort="ascending"`,
+        `"descending"`, or `"none"` (omit when not sortable).
+        Only one column at a time carries a non-`none`
+        `aria-sort` for single-sort tables; multi-sort
+        tables may carry multiple but sort-order semantics
+        are then implementation-defined.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: td
+    required: true
+    purpose: >-
+      Data cell inside a `<tr>`. Repeats per column. Carries
+      the cell value as text, number, or interactive
+      descendant (link, button, badge). Numeric cells
+      typically text-align logical-end; text cells
+      logical-start. Cells inherit cell-padding from the
+      density property.
+    slotKind: content
+    layout:
+      parent: tr
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Data cell instance; numeric / text / status-badge / actions variants
+    code:
+      slot: td
+      semantic: td
+    a11y:
+      hint: >-
+        `<td>` implies `role="cell"`. The cell's accessible
+        name is its text content; for cells containing only
+        an interactive element (icon-button, badge), the
+        button's accessible name carries the meaning. SR
+        announces the column header before the cell value
+        on cell-by-cell navigation, so the cell value
+        should be self-contained ("$1,200" not "1,200" if
+        the column header is "Amount" without a unit).
+    tokens:
+      typography:
+        size: text.sm
+
+  - id: sort-button
+    required: false
+    purpose: >-
+      Interactive sort control inside a sortable
+      `<th scope="col">`. Renders as `<button>` so keyboard
+      users can activate via Space / Enter and AT announces
+      it as a button. Carries the column-name as the
+      accessible name plus the current sort direction in
+      visible text or a sort-indicator icon. Activating
+      cycles through ascending → descending → none (or
+      ascending ↔ descending for two-state sorts).
+    slotKind: interactive
+    layout:
+      parent: th-col
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Button instance with column label plus sort-indicator icon; ascending / descending / none variants
+    code:
+      slot: sort-button
+      semantic: button
+    a11y:
+      hint: >-
+        `<button>` is canonical — never a `<span>` with
+        onClick. The button's accessible name is the
+        column name; the sort direction lives on the
+        parent `<th>`'s `aria-sort`. Activating fires the
+        sortChange event; the consumer updates the data
+        model and re-renders. Sort-indicator icon is
+        decorative (`aria-hidden="true"`) — the
+        `aria-sort` attribute carries the semantic
+        state.
+
+  - id: row-checkbox-cell
+    required: false
+    purpose: >-
+      Per-row selection control. Renders as a
+      `<td>` containing `<input type="checkbox">` in a
+      dedicated leading column. Reflects the row's
+      selection state. Activating toggles selection and
+      fires the selectionChange event. Present only when
+      the table variant is `selectable`.
+    slotKind: interactive
+    layout:
+      parent: tr
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Checkbox cell instance; checked / unchecked variants
+    code:
+      slot: row-checkbox-cell
+      semantic: td-with-checkbox
+    a11y:
+      hint: >-
+        Native `<input type="checkbox">` inside the cell
+        carries the correct semantics — checked / unchecked
+        / disabled — without ARIA. Pair with a
+        `<label>` (visible or sr-only) per row so AT
+        announces the row identifier ("Row 3, Order #1042,
+        not selected"). Avoid replacing the native checkbox
+        with a div-with-onClick; keyboard activation and
+        AT announcement break.
+
+  - id: row-checkbox-header
+    required: false
+    purpose: >-
+      Bulk-selection control in the header row. Toggles
+      all-rows-selected vs none-selected. Reflects the
+      indeterminate state (some rows selected, not all)
+      via `aria-checked="mixed"` plus the native
+      `indeterminate` DOM property. Present only when the
+      table variant is `selectable`.
+    slotKind: interactive
+    layout:
+      parent: thead
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Header checkbox instance; checked / unchecked / indeterminate variants
+    code:
+      slot: row-checkbox-header
+      semantic: th-with-checkbox-mixed
+    a11y:
+      hint: >-
+        `<input type="checkbox">` inside `<th>`. When
+        the selection state is mixed (some rows selected,
+        not all), set `element.indeterminate = true` AND
+        `aria-checked="mixed"`. SR announces "mixed"
+        explicitly; sighted users see the indeterminate
+        glyph. Without both, AT users hear "checked" or
+        "unchecked" — both wrong. Activating toggles
+        select-all (mixed → all-selected → none-selected
+        or mixed → none-selected per implementation
+        contract; canonical is mixed → all → none → all).
+
+  - id: empty-state
+    required: false
+    purpose: >-
+      Message rendered when the dataset is empty. Replaces
+      `<tbody>` content (rather than rendering zero rows)
+      so the empty state is visible and announced. Pattern:
+      a single full-width `<td colspan="all">` containing a
+      heading plus call-to-action ("No issues found. Try
+      adjusting your filter."). Distinct from loading —
+      empty is a terminal state, loading is transient.
+    slotKind: content
+    layout:
+      parent: tbody
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Empty-state instance with heading plus body plus optional action button
+    code:
+      slot: empty-state
+      semantic: td-colspan-full
+    a11y:
+      hint: >-
+        Render inside `<tbody>` as a single
+        `<tr><td colspan="N">...</td></tr>` so SR users
+        navigating the table find the message. Adding
+        `role="status"` or wrapping in an `aria-live`
+        region announces the transition from loading to
+        empty without forcing a re-focus. Heading inside
+        the cell uses `<h3>` or appropriate level matching
+        the surrounding outline.
+
+axes:
+  variants:
+    - default
+    - selectable
+  properties:
+    - name: density
+      kind: enum
+      values: [comfortable, compact]
+    - { name: stickyHeader, kind: primitive, of: boolean }
+    - { name: striped, kind: primitive, of: boolean }
+    - { name: bordered, kind: primitive, of: boolean }
+    - { name: hoverable, kind: primitive, of: boolean }
+    - { name: sortable, kind: primitive, of: boolean }
+    - { name: multiSort, kind: primitive, of: boolean }
+    - { name: resizable, kind: primitive, of: boolean }
+    - { name: virtualization, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+    data:
+      - default
+      - loading
+      - empty
+      - error
+      - hasSelection
+      - hasSorting
+    transitions:
+      - from: default
+        to: loading
+        trigger: User activates a filter / sort / pagination control that requires async data fetch
+      - from: loading
+        to: default
+        trigger: Async fetch resolves with rows
+      - from: loading
+        to: empty
+        trigger: Async fetch resolves with zero rows
+      - from: loading
+        to: error
+        trigger: Async fetch rejects
+      - from: default
+        to: hasSelection
+        trigger: User toggles a row checkbox or activates select-all
+      - from: default
+        to: hasSorting
+        trigger: User activates a sort-button on a column header
+
+mismatches:
+  - figma: Table title styled as a heading floating above the table frame
+    code: '`<caption>` element rendered inside `<table>` (programmatic accessible name)'
+    consequence: >-
+      Designers compose tables with a sibling `<h2>` or text
+      label above the table; developers move the label inside
+      `<table>` as `<caption>`. The two surfaces look identical
+      but the design file does not communicate the
+      programmatic-association contract — implementations may
+      ship a heading-above-table without `<caption>`, breaking
+      the AT name-of-table announcement and WCAG 1.3.1
+      Info-and-Relationships.
+    correct: >-
+      Document the caption as a structural slot inside
+      `<table>` in the anatomy. Figma carries the caption as a
+      child of the table component (not a sibling heading).
+      Code authors `<caption>` first child of `<table>`; for
+      visually-hidden captions, use sr-only CSS rather than
+      omitting the element.
+
+  - figma: Sort indicator drawn as a decorative arrow next to the column label
+    code: '`<button>` inside `<th>` with `aria-sort` on the parent header'
+    consequence: >-
+      Designers draw the sort affordance as a static arrow
+      icon next to the column name; developers ship a
+      `<button>` wrapper so the affordance is keyboard
+      accessible. Without explicit anatomy, the button states
+      (default / hover / focus-visible / active / pressed)
+      are missing from the design surface — implementations
+      ship the visual but lose focus rings, hover affordances,
+      and the keyboard activation contract.
+    correct: >-
+      Document the sort-button as an interactive slot
+      separate from the th-col structural slot. Figma carries
+      a Button instance variant for sortable columns with
+      explicit hover / focus-visible / pressed states. Code
+      ships `<button>` inside `<th>`; the parent `<th>`
+      carries `aria-sort`; the button's icon is decorative
+      (`aria-hidden`).
+
+  - figma: Header bulk-checkbox drawn with binary checked / unchecked states
+    code: 'Native `<input type="checkbox">` with `indeterminate` DOM property plus `aria-checked="mixed"`'
+    consequence: >-
+      Designers author the header checkbox as a two-state
+      component (checked / unchecked); developers add the
+      indeterminate state for partial selection. The third
+      state is invisible in the design file — designers
+      reviewing implementations may flag the indeterminate
+      glyph as a bug. Without canonical anatomy, the third
+      state slips out of the design system and AT users hear
+      "checked" or "unchecked" when the truth is "some
+      selected".
+    correct: >-
+      Document the row-checkbox-header as a three-state slot
+      (unchecked / mixed / checked) in the anatomy. Figma
+      Checkbox component carries an explicit indeterminate
+      variant (typically a horizontal-bar glyph). Code sets
+      `element.indeterminate = true` AND
+      `aria-checked="mixed"` when the selection is partial.
+
+  - figma: Horizontal scroll designed as silent overflow (no visible boundary)
+    code: '`<div role="region" tabindex="0" aria-labelledby>` wrapping `<table>`'
+    consequence: >-
+      Designers compose tables that visually overflow on
+      narrow viewports without indicating where the scroll
+      boundary is; developers wrap the table in a focusable
+      region so keyboard users can scroll via arrow keys.
+      Without explicit anatomy, the wrapper is invisible in
+      the design file — implementations may ship
+      `overflow-x: auto` on the table itself, losing the
+      keyboard-discoverable region role and the focus ring
+      that signals the scroll boundary.
+    correct: >-
+      Document the scrollable-region as a wrapper slot in
+      the anatomy. Figma carries the scroll-container as a
+      parent frame of the table with a visible focus-ring
+      treatment on focus-visible. Code ships
+      `<div role="region" aria-labelledby="caption-id"
+      tabindex="0">` around `<table>` whenever horizontal
+      overflow is possible.
+
+  - figma: Empty state drawn as a separate frame replacing the table on no-data
+    code: '`<tr><td colspan="N">` empty-state row inside `<tbody>`'
+    consequence: >-
+      Designers swap the entire table-frame for a separate
+      empty-state composition; developers keep the table
+      structure and render an empty-state row inside
+      `<tbody>`. The two surfaces shape the empty
+      transition differently — designer's swap loses the
+      caption / header context, developer's row preserves
+      it. Without canonical anatomy, the design surface
+      may communicate "no table here" while the code
+      announces "table with one informational row".
+    correct: >-
+      Document the empty-state as an in-table slot inside
+      `<tbody>`. Figma carries an "Empty" variant of the
+      table that retains caption and header rows but
+      replaces body content with the empty-state cell.
+      Code ships
+      `<tr><td colspan="${columnCount}" role="status">`
+      so the empty-message announces on data-empty
+      transition without re-focusing.
+
+mistakes:
+  - id: table-no-caption
+    severity: blocker
+    title: Table has no `<caption>` and no `aria-labelledby`
+    description: >-
+      The table ships without an accessible name. SR users
+      entering the table region hear "table, N rows, M columns"
+      but no semantic label — they cannot tell whether they
+      have entered the inventory table, the order-history
+      table, or some unrelated grid. Multi-table pages become
+      navigable only by trial and error.
+    fix: >-
+      Author `<caption>` as the first child of `<table>`. The
+      caption text names the table semantically ("Open
+      issues", "Quarterly revenue by region"). For visually-
+      hidden captions, use sr-only CSS — never omit the
+      element. Acceptable fallback: `aria-labelledby` on
+      `<table>` pointing to a sibling heading id, but
+      `<caption>` is canonical because it is part of the
+      table's structural model.
+
+  - id: table-th-no-scope
+    severity: blocker
+    title: Header cells use `<td>` or omit `scope="col"`
+    description: >-
+      Column headers are rendered as `<td>` cells styled to
+      look like headers, or as `<th>` without `scope="col"`.
+      The programmatic header-to-cell association breaks —
+      data cells announce their value but not the column
+      name. Users navigating cell-by-cell hear "1042, 2024-
+      03-15, paid" with no context for what each value
+      represents.
+    fix: >-
+      Use `<th scope="col">` for column headers and
+      `<th scope="row">` for row headers (when present).
+      Scope is canonical even on simple tables where the
+      browser could infer it — explicit scope is robust
+      against complex tables (multi-row headers, spanning
+      cells) where the implicit algorithm fails.
+
+  - id: table-sort-not-button
+    severity: blocker
+    title: Sort affordance is a clickable icon without `<button>`
+    description: >-
+      Sortable columns ship a click-handler on a `<span>` or
+      `<svg>` element. Keyboard users cannot activate the
+      sort — Tab does not land on the icon, Space and Enter
+      do nothing. AT users hear no button announcement; the
+      affordance is invisible to non-mouse users. WCAG
+      4.1.2 Name-Role-Value violation.
+    fix: >-
+      Wrap the column label plus sort indicator in
+      `<button>`. The button's accessible name is the
+      column name; the sort direction lives on the parent
+      `<th>`'s `aria-sort`. Activating the button fires
+      the sortChange event and updates `aria-sort`.
+      Default browser button styling can be overridden
+      while preserving the semantic.
+
+  - id: table-header-checkbox-no-mixed
+    severity: major
+    title: Bulk-selection header checkbox lacks the indeterminate state
+    description: >-
+      The select-all checkbox in the header row toggles only
+      between checked and unchecked. When the user selects
+      some rows individually, the header checkbox shows
+      "unchecked" or "checked" arbitrarily — sighted users
+      cannot tell whether activating it will deselect their
+      partial selection or extend it, and AT users hear the
+      wrong state.
+    fix: >-
+      Set `element.indeterminate = true` AND
+      `aria-checked="mixed"` whenever some rows are selected
+      and others are not. The native indeterminate glyph
+      (typically a horizontal bar) renders automatically;
+      AT announces "mixed". On activation, cycle
+      mixed → all-selected → none-selected per the
+      canonical contract, and clear indeterminate.
+
+  - id: table-scroll-region-not-focusable
+    severity: major
+    title: Horizontally-scrollable table is not keyboard-reachable
+    description: >-
+      The table overflows its inline container with
+      `overflow-x: auto` on the table itself or on a parent
+      with neither `tabindex` nor `role="region"`. Keyboard
+      users cannot scroll the table — Tab skips past it,
+      arrow keys do nothing. Sighted-mouse users scroll
+      fine; the affordance is invisible to keyboard and AT
+      users.
+    fix: >-
+      Wrap the table in `<div role="region"
+      aria-labelledby="caption-id" tabindex="0">` whenever
+      horizontal overflow is possible. The region role plus
+      accessible name lets AT users locate the area;
+      `tabindex="0"` makes it focusable so arrow keys scroll
+      it. Visible focus ring on focus-visible signals the
+      scrollable boundary.
+
+  - id: table-virtualization-without-rowcount-aria
+    severity: major
+    title: Virtualized table omits `aria-rowcount` and `aria-rowindex`
+    description: >-
+      The table renders only the rows in the viewport plus
+      a buffer (50 of 10000); without `aria-rowcount` on
+      `<table>` and `aria-rowindex` per `<tr>`, AT reports
+      "table, 50 rows" — the user cannot tell that the
+      dataset has 10000 records, and Page Down navigation
+      becomes unreliable because the virtualizer recycles
+      DOM nodes between renders.
+    fix: >-
+      On the `<table>` element set `aria-rowcount="10000"`
+      (true total). On each rendered `<tr>` set
+      `aria-rowindex` to the 1-based true index (not the
+      rendered offset). The virtualizer keeps these in sync
+      as it recycles rows. AT reports the real dataset
+      size and Page Down navigation works against the
+      logical structure.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-table>` host with `variant`, `density`, `sortable`,
+      `selectable`, `sticky-header` attributes; renders slotted
+      `<ui-th>` and `<ui-td>` children. The host wires
+      `aria-rowcount` for virtualized data and propagates
+      `aria-sort` from the activated sort-button up to its
+      parent `<th>` via attribute reflection. The wire-name
+      `ui-table` becomes `md-table`, `mat-table`, `pf-table`
+      under prefix substitution per design system; the
+      canonical wire-name stays `table`.
+    variantMechanism: >-
+      Attributes drive variants and properties (`variant="selectable"`,
+      `density="comfortable"`, `sortable`, `sticky-header`); CSS uses
+      logical properties for column-flow direction so RTL flips the
+      logical-end column. Form participation is host-level only
+      (table is not formAssociated); selection state is exposed via
+      a `selection-change` CustomEvent.
+  react:
+    structureMechanism: >-
+      Compound component (TanStack Table for headless logic, React
+      Aria Table for accessibility-first composition, Material
+      Table for opinionated styling). Declarative columns ([{ id,
+      header, accessor, sortable }]) plus rows (data: T[]) render
+      via render-props or compound children (`<Table.Header>`,
+      `<Table.Row>`, `<Table.Cell>`). Selection state hoists to a
+      controlled / uncontrolled boundary via `selectionState` /
+      `onSelectionChange`; sort state via `sortState` /
+      `onSortChange`.
+    variantMechanism: >-
+      Props with class-variance-authority for variant + density
+      classes; boolean props for sortable / selectable / striped
+      / bordered. Virtualization plugs in via composition
+      (`@tanstack/react-virtual` wrapping the rendered rows). React
+      Hook Form / Formik observe form state at the consumer level
+      — table itself is not form-bound.
+  angularSignals:
+    structureMechanism: >-
+      Angular component with `input<TableVariant>('variant')`,
+      `input<Density>('density')`, `input<Column[]>('columns')`,
+      `input<T[]>('rows')`. `MatTable` (Material) and Angular CDK
+      Table both surface column-definition directives
+      (`MatColumnDef` + `matCellDef` + `matHeaderCellDef`); the
+      canonical reference treats columns as data, not directives,
+      and lets implementations choose. Selection state via
+      two-way `model<Set<RowId>>('selection')`; sort state via
+      `model<SortState>('sort')`.
+    variantMechanism: >-
+      `[attr.role]="'table'"` (implicit via native element);
+      host-binding `[class.density-compact]` etc. Signal-driven
+      reactive sort and selection — `effect()` re-renders rows
+      when `sort()` changes. `aria-rowcount` bound via
+      `[attr.aria-rowcount]="totalRowCount()"`.
+  vue:
+    structureMechanism: >-
+      Single-file component with default slot for column
+      definitions and rows. PrimeVue DataTable, Naive UI
+      DataTable, Element Plus Table as third-party precedents.
+      `defineProps` exposes `columns`, `rows`, `selection`
+      (v-model), `sort` (v-model). Headers and cells render via
+      named slots so consumers customise per-column rendering
+      without prop-drilling.
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`density: 'comfortable' | 'compact'`); v-model:selection
+      and v-model:sort for two-way state binding. Virtualization
+      via composition (vue-virtual-scroller) wrapping the rendered
+      rows. CSS variables drive density spacing so consumers can
+      override per-instance.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    sortIndicator: motion.duration.fast
+    rowExpand: motion.duration.base
+    skeletonLoading: motion.duration.slow
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, the canonical pattern collapses
+        each row to a stacked-card layout — column headers
+        become per-card labels next to the cell value,
+        rows stack vertically. Polaris IndexTable's
+        condensed mobile mode is the precedent. Horizontal
+        scroll is the fallback when stacked-card is not
+        feasible (financial spreadsheets, dense
+        comparisons), but always wrapped in the
+        scrollable-region with focus ring.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the table renders with
+        full horizontal layout; sticky-first-column may
+        be authored for tables wider than the viewport
+        (the leading row-identity column stays visible
+        while other columns scroll horizontally). Sticky
+        header activates when row-count exceeds the
+        viewport vertically.
+    - at: breakpoint.lg
+      change: >-
+        At and above this width, the full table is
+        typically visible without horizontal scroll for
+        common column counts (5-12 columns). The
+        scrollable-region wrapper still ships defensively
+        in case the table widens via column-resize or
+        long content; the wrapper does not affect layout
+        when no overflow occurs.
+
+events:
+  - name: sortChange
+    payload: >-
+      `{ columnId: string, direction: 'asc' | 'desc' | 'none' }`
+      (single-sort) or `Array<{ columnId, direction }>`
+      (multi-sort). Fires when the user activates a
+      sort-button on a column header. Consumer updates the
+      data model and re-renders; the table reflects the
+      new `aria-sort` on the activated column header.
+    frameworkNotes:
+      webComponents: >-
+        `sortChange` CustomEvent with
+        `event.detail = { columnId, direction }`.
+      react: >-
+        `onSortChange(state)` callback (TanStack Table
+        idiom) or `onSortingChange(set)` (React Aria).
+      angularSignals: >-
+        `output<SortState>('sortChange')` plus two-way
+        `model<SortState>('sort')`.
+      vue: >-
+        `@update:sort` (v-model:sort) with payload
+        `SortState`.
+
+  - name: selectionChange
+    payload: >-
+      `{ selectedRowIds: Set<string>, isAllSelected:
+      boolean }`. Fires when the user toggles a row
+      checkbox, activates select-all, or selects via
+      keyboard. Distinguishes "all-rows-selected" from
+      "all-visible-rows-selected" — the former includes
+      virtualized off-screen rows.
+    frameworkNotes:
+      webComponents: >-
+        `selectionChange` CustomEvent with
+        `event.detail = { selectedRowIds, isAllSelected }`.
+      react: >-
+        `onSelectionChange(selection)` callback (React
+        Aria) or `onRowSelectionChange(state)` (TanStack
+        Table).
+      angularSignals: >-
+        `output<SelectionState>('selectionChange')` plus
+        two-way `model<Set<RowId>>('selection')`.
+      vue: >-
+        `@update:selection` (v-model:selection) with
+        payload `Set<RowId>`.
+
+  - name: rowClick
+    optional: true
+    payload: >-
+      `{ rowId: string, rowData: T, originalEvent:
+      MouseEvent | KeyboardEvent }`. Fires when the user
+      activates a row outside any interactive descendant
+      (link, button, checkbox). Only canonical when the
+      consumer treats rows as navigable — typical for
+      master-detail patterns where row click opens a
+      detail view. Tables without row-level navigation
+      do not observe this event.
+    frameworkNotes:
+      webComponents: >-
+        `rowClick` CustomEvent with
+        `event.detail = { rowId, rowData }`.
+      react: >-
+        `onRowClick(rowId, rowData, event)` callback;
+        consumer guards against clicks on interactive
+        descendants via `event.target` checks.
+      angularSignals: >-
+        `output<{ rowId: string; rowData: T }>('rowClick')`.
+      vue: >-
+        `@row-click` event with payload
+        `{ rowId, rowData }`.
+
+  - name: expandChange
+    optional: true
+    payload: >-
+      `{ rowId: string, isExpanded: boolean }`. Fires when
+      the user toggles a per-row expand chevron (for
+      tables with expandable rows showing nested detail).
+      Only canonical when the table variant authors
+      expandable rows; flat tables do not observe this
+      event.
+    frameworkNotes:
+      webComponents: >-
+        `expandChange` CustomEvent with
+        `event.detail = { rowId, isExpanded }`.
+      react: >-
+        `onExpandedChange(state)` callback (TanStack
+        Table) or per-row `onExpand(rowId, expanded)`.
+      angularSignals: >-
+        `output<{ rowId: string; isExpanded: boolean }>('expandChange')`.
+      vue: >-
+        `@update:expanded` event with payload
+        `{ rowId, isExpanded }`.
+
+  - name: columnResize
+    optional: true
+    payload: >-
+      `{ columnId: string, width: number }`. Fires when
+      the user finishes a column-resize drag. Debounce
+      mid-drag to avoid excessive layout work; emit on
+      drag-end for the canonical commit. Only canonical
+      when the resizable property is enabled.
+    frameworkNotes:
+      webComponents: >-
+        `columnResize` CustomEvent with
+        `event.detail = { columnId, width }`.
+      react: >-
+        `onColumnResize(columnId, width)` callback;
+        TanStack Table provides a sizing-state model
+        the consumer reads on commit.
+      angularSignals: >-
+        `output<{ columnId: string; width: number }>('columnResize')`.
+      vue: >-
+        `@column-resize` event with payload
+        `{ columnId, width }`.
+
+  - name: paginationChange
+    optional: true
+    payload: >-
+      `{ pageIndex: number, pageSize: number }`. Fires
+      when the user activates next / previous / page-
+      number controls. Page-index is 0-based by
+      canonical convention (zero-based DOM, one-based
+      display). Only canonical when pagination is
+      authored as part of the table — server-paginated
+      tables observe this to fetch the next page.
+    frameworkNotes:
+      webComponents: >-
+        `paginationChange` CustomEvent with
+        `event.detail = { pageIndex, pageSize }`.
+      react: >-
+        `onPaginationChange(state)` callback (TanStack
+        Table) or `onPageChange(pageIndex)` (Polaris).
+      angularSignals: >-
+        `output<{ pageIndex: number; pageSize: number }>('paginationChange')`.
+      vue: >-
+        `@update:page` event with payload
+        `{ pageIndex, pageSize }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves into the scrollable-region (if the
+        table overflows). Subsequent Tab moves through
+        each interactive descendant in DOM order —
+        sort-buttons in column headers, then row
+        checkboxes, then any in-cell links / buttons,
+        then pagination controls. The table cells
+        themselves are NOT in the tab order; only their
+        interactive contents are.
+    - keys: Shift+Tab
+      expected: >-
+        Reverse focus through the same interactive
+        descendants. Standard tab-order — no
+        table-specific behaviour.
+    - keys: Arrow keys (focus on scrollable-region)
+      expected: >-
+        Scroll the region horizontally / vertically. The
+        region's `tabindex="0"` plus implicit
+        keyboard-scroll behaviour drives this. Distinct
+        from the APG `grid` pattern where arrows
+        navigate cells; the canonical Table pattern
+        does not move focus between cells.
+    - keys: Space (focus on row-checkbox-cell)
+      expected: >-
+        Toggles the row's selection state. `selected`
+        flips on the checkbox; `selectedRowIds` updates;
+        selectionChange fires. The header checkbox's
+        indeterminate state recomputes based on the new
+        selection.
+    - keys: Space (focus on row-checkbox-header)
+      expected: >-
+        Toggles the bulk-selection state. Cycles
+        mixed → all-selected → none-selected per
+        canonical contract. selectionChange fires with
+        the new full selection set.
+    - keys: Enter / Space (focus on sort-button)
+      expected: >-
+        Cycles the column's sort direction
+        (none → ascending → descending → none, or
+        ascending ↔ descending for two-state sorts).
+        The parent `<th>`'s `aria-sort` updates;
+        sortChange fires.
+  announcements:
+    - trigger: SR enters the scrollable-region (when present)
+      expected: >-
+        SR announces "region, ${captionText}" so users
+        identify the scrollable area. Followed by the
+        table's own announcement on focus into a cell.
+    - trigger: SR enters the table
+      expected: >-
+        SR announces "table, ${captionText}, ${rowCount}
+        rows, ${columnCount} columns" using the
+        `<caption>` text plus the `aria-rowcount` and
+        column-derived counts. For virtualized tables,
+        `aria-rowcount` provides the true total.
+    - trigger: SR navigates to a data cell
+      expected: >-
+        SR announces "${columnHeader}, ${cellValue}, row
+        ${rowIndex} of ${rowCount}". Column header comes
+        from the `<th scope="col">` association; row
+        index from `aria-rowindex` or the implicit DOM
+        position.
+    - trigger: User activates a sort-button
+      expected: >-
+        SR announces the sort direction change
+        ("ascending" / "descending"). The activated
+        button's accessible name plus the `aria-sort`
+        update on the parent `<th>` produce the
+        announcement on focus return.
+    - trigger: User toggles row-checkbox-header
+      expected: >-
+        SR announces the new state ("checked", "not
+        checked", "mixed"). When transitioning
+        from mixed to all-selected, SR may announce
+        the count of newly-selected rows
+        ("47 rows selected") via an `aria-live`
+        region or the implicit checkbox-state
+        announcement.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - aria-valid-attr-value
+    - color-contrast
+    - scope-attr-valid
+    - td-headers-attr
+    - th-has-data-cells
+    - empty-table-header
+    - table-fake-caption
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps default / selectable. Selectable adds the leading checkbox column with mixed-state header.
+  - figma: Density
+    code: density
+    kind: enum
+    notes: comfortable / compact. Drives row-padding and font-size.
+  - figma: Sticky Header
+    code: stickyHeader
+    kind: boolean
+    notes: 'When true, `<thead>` uses `position: sticky` so header stays visible during vertical scroll.'
+  - figma: Striped
+    code: striped
+    kind: boolean
+    notes: Alternating row backgrounds for visual scannability of dense tables.
+  - figma: Bordered
+    code: bordered
+    kind: boolean
+    notes: Visible cell borders. Default is borderless with whitespace-only separation per Polaris / Material 3 convention.
+  - figma: Hoverable
+    code: hoverable
+    kind: boolean
+    notes: Row highlight on hover. Default true; disable for non-interactive presentational tables.
+  - figma: Sortable
+    code: sortable
+    kind: boolean
+    notes: Per-column sort-button affordance plus `aria-sort` on header cells. Multi-sort via the multiSort property.
+  - figma: Multi Sort
+    code: multiSort
+    kind: boolean
+    notes: When true, multiple columns can carry non-`none` `aria-sort` simultaneously; sort precedence is implementation-defined.
+  - figma: Resizable
+    code: resizable
+    kind: boolean
+    notes: Per-column resize-handle inside `<th>`; columnResize event fires on drag-end.
+  - figma: Virtualization
+    code: virtualization
+    kind: boolean
+    notes: Render only viewport-visible rows; requires `aria-rowcount` on `<table>` and `aria-rowindex` per rendered `<tr>`.
+  - figma: Caption
+    code: caption
+    kind: slot
+    notes: Accessible name for the table; visually hidden via sr-only when context already names it.
+  - figma: Empty State
+    code: emptyState
+    kind: slot
+    notes: Renders inside `<tbody>` as a colspan-full row when the dataset is empty.
+  - figma: Toolbar
+    code: toolbar
+    kind: slot
+    notes: Optional region above the table for filter / search / bulk-action controls; rendered as a sibling of `<table>` outside the scrollable-region.
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    Table is a container for tabular data, not a form control. The
+    `<table>` element has no `name` attribute and contributes
+    nothing to FormData directly. Selection state, sort state, and
+    pagination state are application-level concerns — they live in
+    component state or URL query parameters, not in the form
+    payload.
+  submittedValue: >-
+    Tables submit nothing on form-submission. Selection (a
+    `Set<rowId>`), sort (a `{ columnId, direction }`), and
+    pagination (a `{ pageIndex, pageSize }`) are commit-time inputs
+    to the next operation — bulk action ("delete these 3
+    rows"), URL update ("?sort=date&dir=desc"), server fetch — and
+    are propagated by application code, not by the table itself.
+  requiredAttr: false
+  formData: >-
+    The table contributes nothing to FormData. Inline-edit cells
+    (cell becomes `<input>` on focus) are an escalation that
+    requires the APG `grid` pattern plus an enclosing `<form>`;
+    that mode is out of scope for the canonical Table pattern and
+    documented as a future grid-pattern reference.
+  bridges:
+    react: >-
+      React Hook Form / Formik treat the table as application
+      state, not form state. Selection lives in component state
+      (`useState<Set<string>>` or library-state from TanStack
+      Table / React Aria); on commit, the action handler reads
+      the selection and constructs the next operation. For
+      inline-edit cells, escalate to the grid pattern with a
+      per-row `<form>` registered to the form library.
+    vue: >-
+      VeeValidate / FormKit do not bind to the table. Selection
+      is component state via v-model:selection on the table;
+      sort and pagination similarly. On commit (a "Delete
+      selected" button), the action handler reads the current
+      selection and dispatches the next operation. Inline-edit
+      cells require per-cell or per-row `<form>` composition.
+    angularSignals: >-
+      Reactive forms do not encompass the table; selection
+      lives as `model<Set<RowId>>('selection')` on the table
+      input. Action commit reads the model value and
+      dispatches. For inline-edit, wrap the editing-cell in a
+      `formGroup` with the field's `formControl` and submit
+      per-row.
+    webComponents: >-
+      The `<ui-table>` host is not formAssociated; it is a
+      container, not a control. Selection state is exposed via
+      a `selection-change` CustomEvent so consumers can
+      propagate to a sibling `<form>` or to URL state. For
+      inline-edit cells, the editing-input is form-associated
+      independently; the table itself stays out of the form
+      lifecycle.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Column flow follows logical direction — leading column
+      (typically row-identity) sits at the inline-start, which
+      flips between LTR and RTL. Sticky-first-column logic
+      uses `inset-inline-start: 0` rather than `left: 0`.
+      Numeric columns text-align the logical-end (numbers
+      align right in LTR, left in RTL); text columns
+      text-align the logical-start. Sort-indicator icons
+      (chevron-up / chevron-down) are direction-neutral —
+      vertical orientation does not flip under RTL. The
+      kebab-menu trigger (⋮) is direction-neutral. Column
+      headers and cell contents inherit document direction;
+      mixed-script cells (English IDs in Arabic interfaces)
+      handle bidi automatically when text-content carries
+      `dir="auto"` or the bidi algorithm sees neutral
+      digits.
+  textExpansion: >-
+    Column headers expand 30-50% under translation
+    (English "Status" → German "Bearbeitungsstatus" 130%
+    longer; French "État de traitement" 200% longer).
+    Long headers force wider columns and may push the
+    table past viewport width — the scrollable-region
+    wrapper absorbs this without breaking the layout.
+    Cell content expands similarly; density compact
+    risks crowding under expanded translations, so the
+    canonical guidance is to default to comfortable for
+    international audiences and let consumers escalate
+    to compact only when authored copy is known short.
+    Numeric cells are stable across languages
+    (number formatting via `Intl.NumberFormat` handles
+    locale-specific separators).
+
+performance:
+  - name: virtualizationThreshold
+    metric: row-count
+    threshold: 100
+    unit: rows
+    rationale: >-
+      Above ~100 simultaneously-rendered rows, the cumulative
+      DOM-layout cost exceeds the threshold where keeping all
+      rows in the tree is cheaper than virtualization
+      bookkeeping. Mature libraries (TanStack Virtual, Material
+      CDK Virtual Scroll, react-window) handle the row-recycling
+      and `aria-rowcount` / `aria-rowindex` propagation. Below
+      100 rows, virtualization adds complexity without
+      perceptible benefit.
+  - name: stickyHeaderReflowCost
+    metric: frame-budget
+    threshold: 16
+    unit: ms
+    rationale: >-
+      `position: sticky` on `<thead>` forces the browser to
+      recompute the header's painted position on every scroll
+      event. On a 60Hz display the per-frame budget is 16.67ms;
+      sticky-header reflow plus body-row paint must fit
+      together. Wide tables (many columns) and tall headers
+      (multi-row, long text) push toward the threshold. Use
+      `contain: layout` on the thead and avoid
+      dynamic-height header cells to stay within budget.
+  - name: sortInteractionLatency
+    metric: time-to-feedback
+    threshold: 200
+    unit: ms
+    rationale: >-
+      From sort-button activation to visible feedback (sort
+      indicator updated, rows re-ordered or loading-state
+      shown), the user perceives the table as responsive
+      under 200ms. Client-side sort on cached data lands
+      well under this; server-side sort exceeds it and
+      MUST show an immediate loading-state on activation
+      (within one frame, ~16ms) so the user knows the
+      activation registered. Without the immediate
+      loading-state, server-sorted tables feel broken on
+      slow connections.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The table has an accessible name — `<caption>` as the
+        first child of `<table>` is canonical, with
+        `aria-labelledby` pointing to a sibling heading id as
+        an acceptable fallback. Implementations that ship a
+        bare `<table>` without either lose the table's
+        semantic identity entirely.
+      source: wcag
+      sourceRef: 'WCAG 1.3.1 Info and Relationships'
+      consequence: >-
+        Without an accessible name, SR users entering the
+        table region hear "table, N rows, M columns" with no
+        semantic label. Multi-table pages become
+        unnavigable; the user cannot tell which table they
+        have entered. WCAG 1.3.1 violation;
+        axe-core flags `empty-table-header` and related
+        rules.
+    - rule: >-
+        Column headers use `<th scope="col">` and (when
+        present) row headers use `<th scope="row">`.
+        Implementations that ship `<td>` styled as headers
+        or `<th>` without scope break the
+        programmatic header-to-cell association.
+      source: html-spec
+      sourceRef: 'HTML standard — table model and scope attribute'
+      consequence: >-
+        Without explicit scope, complex tables (multi-row
+        headers, spanning cells) lose the implicit
+        association algorithm — AT users hear cell values
+        without column context. WCAG 1.3.1 violation; axe-
+        core flags `td-headers-attr` and
+        `th-has-data-cells`.
+    - rule: >-
+        Sort affordances are `<button>` elements (inside
+        `<th>`), not click-handlers on `<span>` / `<svg>` /
+        `<div>`. Sort direction is announced via the parent
+        `<th>`'s `aria-sort` attribute, not via visible-text
+        only.
+      source: wcag
+      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+      consequence: >-
+        Click-handlers on non-button elements are invisible
+        to keyboard and AT users — Tab does not focus them,
+        Space and Enter do nothing, AT announces no role.
+        WCAG 4.1.2 violation; axe-core flags `aria-allowed-
+        attr` and `aria-required-attr` when `aria-sort`
+        appears on non-button elements.
+    - rule: >-
+        Bulk-selection header checkbox uses
+        `aria-checked="mixed"` plus the native
+        `indeterminate` DOM property whenever the selection
+        state is partial.
+      source: wcag
+      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+      consequence: >-
+        Without `aria-checked="mixed"`, AT users hear
+        "checked" or "unchecked" when the truth is "some
+        selected" — the wrong state announcement leads to
+        accidental select-all or accidental deselect-all on
+        activation. WCAG 4.1.2 violation; axe-core flags
+        `aria-valid-attr-value` when the indeterminate state
+        is missing.
+    - rule: >-
+        Horizontally-scrollable tables wrap `<table>` in
+        `<div role="region" aria-labelledby="caption-id"
+        tabindex="0">`. The region role plus accessible
+        name plus `tabindex="0"` make the scrollable area
+        keyboard-discoverable and AT-discoverable.
+      source: apg
+      sourceRef: 'APG: Table pattern — scrollable region note'
+      consequence: >-
+        Without the wrapper, keyboard users cannot scroll
+        the table — Tab skips past it, arrow keys do
+        nothing. Sighted-mouse users scroll fine; the
+        affordance is invisible to keyboard and AT. WCAG
+        2.1.1 (Keyboard) violation.
+  vocabularyDrift:
+    - system: TanStack Table
+      theirTerm: ColumnDef + SortingState + RowSelectionState
+      note: >-
+        TanStack uses `columnDef.id` for the canonical column
+        identifier and `columnDef.header` (function or string)
+        for the rendered label. Sort state is
+        `Array<{ id, desc: boolean }>`; selection state is
+        `Record<rowId, boolean>`. Naming-only divergence —
+        `columnDef.id` maps to canonical `column.id`,
+        `desc: true` maps to `direction: 'desc'`.
+    - system: React Aria
+      theirTerm: Table + Column + Row + Cell
+      note: >-
+        React Aria uses Column with a `key` prop as the
+        column identifier; sort state surfaces via
+        `aria-sort` on the Column. Selection state uses
+        `useTableRowSelectionState` hook. The hook-based
+        selection-state shape matches the canonical
+        `selectionState: Set<RowId>` semantics under
+        different naming.
+    - system: Material 3
+      theirTerm: MatTable + MatColumnDef
+      note: >-
+        Angular Material uses `MatColumnDef` directives —
+        each column is a directive with `matCellDef` and
+        `matHeaderCellDef` templates. Density is
+        `density: 'standard' | 'comfortable' | 'compact'` on
+        the table; canonical Table normalises to
+        `comfortable | compact` (Material's "standard"
+        maps to canonical `comfortable`). Variant divergence
+        is naming-only.
+    - system: Atlassian Design System
+      theirTerm: DynamicTable
+      note: >-
+        Atlassian uses `isCompact: boolean` instead of a
+        density enum. Maps to canonical `density: 'compact'`
+        when true, `density: 'comfortable'` (default) when
+        false. `rows` and `head` are the data shape;
+        selection via `selectedRowIndex` array. Dynamic
+        column-resize is opt-in.
+    - system: Carbon
+      theirTerm: DataTable
+      note: >-
+        Carbon uses `size: 'compact' | 'short' | 'normal' |
+        'tall' | 'xl'` — five density values vs the
+        canonical two. `compact` and `short` collapse to
+        canonical `compact`; `normal` / `tall` / `xl`
+        collapse to canonical `comfortable`. `headers` and
+        `rows` are the data shape; selection via
+        `selectedIds` set.
+    - system: Shopify Polaris
+      theirTerm: IndexTable + DataTable
+      note: >-
+        Polaris ships two table patterns — IndexTable for
+        bulk-action collections (canonical `selectable`
+        variant), DataTable for read-only tabular data
+        (canonical `default` variant). `condensed: boolean`
+        maps to canonical `density: 'compact'`. Mobile
+        condensed mode collapses to the stacked-card
+        layout per the canonical responsive rules.
+    - system: GitHub Primer
+      theirTerm: DataTable
+      note: >-
+        Primer DataTable (experimental in @primer/react)
+        ships columns with `header`, `sortBy`, `align`,
+        `width`. Density via `cellPadding: 'condensed' |
+        'normal' | 'spacious'` — three values mapping to
+        canonical `compact | comfortable` (canonical drops
+        the third value). Naming-only divergence.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/table/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/caption
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/th
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://www.w3.org/WAI/tutorials/tables/
+  - https://inclusive-components.design/data-tables/
+  - https://tanstack.com/table/latest
+  - https://react-spectrum.adobe.com/react-aria/Table.html
+  - https://material.angular.io/components/table/overview
+  - https://m3.material.io/components/data-tables/overview
+  - https://atlassian.design/components/dynamic-table/examples
+  - https://carbondesignsystem.com/components/data-table/usage/
+  - https://polaris.shopify.com/components/lists/index-table
+  - https://primer.style/components/data-table
+
+notes: >-
+  Native `<table>` semantics are the canonical baseline; ARIA
+  roles only when the structural element cannot be authored.
+  Density is intentionally a two-value property (canonical
+  `comfortable | compact`) — Carbon's five-value scale and
+  Material's three-value scale collapse onto the canonical
+  axis with documented mappings in the vocabularyDrift block.
+  The `selectable` variant is structurally distinct from
+  `default` (extra leading column), justifying its place on
+  the variants axis rather than as a property. Future canon
+  expansion: the APG `grid` and `treegrid` patterns
+  (interactive-cells and hierarchical-rows escalations) are
+  forward-referenced via `pending: true` vsRelated entries
+  awaiting their own canonical files.
+
+lastReviewed: '2026-05-04'

@@ -248,7 +248,7 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.use.length).toBeGreaterThan(0);
     expect(parsed.avoid.length).toBeGreaterThan(0);
-    expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item']);
+    expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item', 'table']);
   });
 
   it('get_changelog returns null for components without versioning metadata', async () => {
