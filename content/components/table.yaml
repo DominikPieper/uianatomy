@@ -73,7 +73,6 @@ whenToUse:
         Card when each record is consumed as a unit and the
         cross-row comparison is incidental.
     - id: grid-pattern
-      pending: true
       difference: >-
         `Grid` is the APG escalation for interactive cells —
         2D arrow-key navigation, focus management on cells,

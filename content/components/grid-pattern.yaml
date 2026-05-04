@@ -1,0 +1,1510 @@
+id: grid-pattern
+name: Grid
+description: >-
+  An interactive 2D data structure where cells themselves are
+  focusable — the APG escalation from `Table` (read-only data
+  display) for surfaces where users navigate cell-by-cell, edit
+  in place, or select rectangular regions. Carries `role="grid"`
+  on the root, `role="row"` on rows, and `role="gridcell"` /
+  `role="columnheader"` / `role="rowheader"` on cells. Keyboard
+  model: roving-tabindex (one cell holds the tab stop), 2D arrow
+  navigation, Home/End/Ctrl+Home/Ctrl+End for boundary jumps,
+  F2 / Enter to enter edit-mode, Escape to cancel.
+
+intro: >-
+  Grid is the APG-canonical pattern for interactive tabular
+  data — spreadsheets, editable inventories, focus-cell-rich
+  data visualisations. Distinct from `Table` (the canonical
+  read-only data-display pattern with linear focus through
+  interactive descendants) and from `TreeGrid` (hierarchical
+  rows with `aria-expanded` per parent). The reference
+  documents the roving-tabindex contract (single tab-stop into
+  the grid; arrows move focus between cells), the F2 / Enter /
+  Escape edit-mode lifecycle, the `aria-rowcount` /
+  `aria-rowindex` / `aria-colcount` / `aria-colindex` rules
+  for virtualized grids, and the boundary with Table (escalate
+  from Table to Grid only when interactive cells justify the
+  steeper keyboard model).
+
+alternateNames:
+  - 'Data grid'
+  - 'Interactive grid'
+  - 'Editable grid'
+
+whenToUse:
+  use: >-
+    For tabular surfaces where cells are themselves the
+    interactive units — spreadsheets, in-line-editable
+    inventories, dense data-entry surfaces, focus-cell-driven
+    data visualisations (cohort heatmaps with cell-level
+    drilldown). Use the static variant when cells are
+    interactive but not editable (clickable cells that open
+    detail panels); use the editable variant when cells
+    transition to input-mode for value editing. Pair with
+    pagination or virtualization for large datasets;
+    canonical-grid implementations support both via the
+    `aria-rowcount` / `aria-colcount` attributes.
+  avoid: >-
+    For read-only tabular data where users scan and compare
+    attributes via standard tab order through interactive
+    descendants — that is `Table` (simpler keyboard model,
+    less authoring overhead). For hierarchical rows with
+    parent-child relationships and per-row expand /
+    collapse — that is `TreeGrid`. For form-style input
+    grids where each cell is a labeled form control — use
+    a real form with grouped inputs, not Grid; the grid
+    pattern is for cells-as-data, not cells-as-form-fields.
+    For non-tabular 2D layouts (image galleries, dashboards)
+    — those are CSS Grid layouts, not the WAI-ARIA grid
+    pattern.
+  vsRelated:
+    - id: table
+      difference: >-
+        `Table` is read-only data display with linear focus
+        through interactive descendants (links, buttons,
+        checkboxes inside cells); standard Tab order
+        navigates between focusables. `Grid` makes cells
+        themselves focusable with 2D arrow-navigation and
+        roving-tabindex (one tab-stop into the grid). Use
+        Table when the cell content is interactive but the
+        cells themselves are not (a "Delete" button per
+        row); use Grid when cells are the unit of
+        interaction (spreadsheet-style cell focus,
+        rectangular selection, in-place edit). The
+        escalation cost is real — Grid's keyboard model
+        requires roving-tabindex bookkeeping plus
+        F2 / Enter / Escape edit-lifecycle handling that
+        Table avoids.
+    - id: tree-grid
+      pending: true
+      difference: >-
+        `TreeGrid` adds hierarchical row semantics on top
+        of the Grid keyboard model — `aria-level` per row,
+        `aria-expanded` on parent rows, ArrowRight expands
+        a collapsed parent / moves into first child,
+        ArrowLeft collapses / moves to parent. Use TreeGrid
+        for org charts, file managers with column metadata,
+        nested budgets where rows have parent-child
+        relationships; use Grid for flat tabular data with
+        interactive cells.
+    - id: combobox
+      difference: >-
+        `Combobox` is a single-input affordance with a
+        listbox of selectable options (one-dimensional
+        linear list); `Grid` is a 2D structure with
+        cells in rows and columns (two-dimensional
+        spatial navigation). Combobox suits "pick one
+        from a list"; Grid suits "navigate cell-by-cell
+        through structured data". Their keyboard models
+        diverge — Combobox uses ArrowDown / ArrowUp
+        for list traversal, Grid uses all four arrows
+        for cell navigation.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The grid container element. Carries `role="grid"`
+      (or native `<table role="grid">`) plus
+      `aria-rowcount` / `aria-colcount` for virtualized
+      grids, plus `aria-multiselectable` when multi-cell
+      selection is supported. Roving-tabindex lives on
+      this element's descendant cells — only one cell
+      at a time has `tabindex="0"`; all other cells
+      have `tabindex="-1"`.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Grid frame; variant property switches between static and editable shapes
+    code:
+      slot: root
+      semantic: grid-or-table-with-role-grid
+    a11y:
+      hint: >-
+        `<table role="grid" aria-rowcount="..."
+        aria-colcount="..." aria-multiselectable="...">`.
+        Native `<table>` element retains the
+        structural HTML semantics (rowgroups, header
+        association) while the explicit `role="grid"`
+        signals the interactive keyboard model. For
+        non-tabular layouts where `<table>` is not
+        appropriate, `<div role="grid">` is the
+        canonical fallback. AT users hear "grid, N
+        rows, M columns" on entry.
+
+  - id: caption
+    required: true
+    purpose: >-
+      Accessible name for the grid — same contract as
+      `Table`'s caption slot. `<caption>` inside
+      `<table role="grid">` (or `aria-labelledby`
+      pointing to a sibling heading id when
+      `<table>` is not used). Visually present at
+      the top by default; sr-only when surrounding
+      context already names the grid.
+    slotKind: content
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Caption text style; positioned above the grid; visibility per "Visible Caption" property
+    code:
+      slot: caption
+      semantic: caption-or-aria-labelledby
+    a11y:
+      hint: >-
+        `<caption>` is the canonical accessible name
+        for grids using `<table role="grid">`. For
+        `<div role="grid">` implementations, use
+        `aria-labelledby` pointing to a sibling
+        heading id. SR announces the caption on grid
+        entry. Translate per locale.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: column-headers-row
+    required: true
+    purpose: >-
+      The header row containing `role="columnheader"`
+      cells. Sits above the data rows; programmatically
+      associates each data cell with its column
+      header. Sortable columns add `aria-sort` on the
+      relevant `columnheader` (single-sort: one
+      column at a time non-`none`; multi-sort:
+      multiple columns).
+    slotKind: structural
+    layout:
+      parent: root
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Header row container; sticky-position variant per "Sticky Header" property
+    code:
+      slot: column-headers-row
+      semantic: tr-or-row
+    a11y:
+      hint: >-
+        `<tr role="row">` containing `<th
+        role="columnheader" scope="col">` children
+        (or `<div role="row">` + `<div
+        role="columnheader">` for non-table grids).
+        The columnheader role plus `scope="col"`
+        carries the data-cell association.
+        Columnheaders are focusable in the grid
+        keyboard model — arrow keys navigate to
+        them like any other cell.
+
+  - id: column-header
+    required: true
+    purpose: >-
+      A single column header cell. `role="columnheader"`
+      with `aria-sort` when sortable. Focusable via
+      the grid's roving-tabindex. Activating
+      (Enter / Space) on a sortable columnheader
+      cycles the sort direction; activating on a
+      non-sortable columnheader is a no-op or scrolls
+      the column into view.
+    slotKind: interactive
+    layout:
+      parent: column-headers-row
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Column header cell instance with sort-affordance + resize-handle variants
+    code:
+      slot: column-header
+      semantic: th-with-role-columnheader
+    a11y:
+      hint: >-
+        `<th role="columnheader" scope="col"
+        tabindex="-1">` — `tabindex="-1"` for
+        non-active cells in the roving-tabindex
+        scheme; the active cell carries
+        `tabindex="0"`. `aria-sort="ascending"` /
+        `"descending"` / `"none"` when sortable.
+        The cell's accessible name is its text
+        content; sortable headers should embed
+        the column-name in a `<button>` or
+        announce the sort affordance via
+        `aria-describedby`.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: row
+    required: true
+    purpose: >-
+      A single data row inside the grid body.
+      `role="row"`. Carries `aria-rowindex` for
+      virtualized grids (1-based true index, not
+      rendered offset). Carries `aria-selected`
+      when row-level selection is supported (the
+      whole row toggles together).
+    slotKind: structural
+    layout:
+      parent: root
+      row: 3
+      col: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Row instance with selected / hover / focused-cell variants
+    code:
+      slot: row
+      semantic: tr-with-role-row
+    a11y:
+      hint: >-
+        `<tr role="row" aria-rowindex="3">` (or
+        `<div role="row">` for non-table grids).
+        `aria-rowindex` is required for virtualized
+        grids; for non-virtualized, the implicit
+        DOM position suffices. `aria-selected` on
+        the row when row-level selection is
+        active; row-level activation typically
+        comes from clicking a row-checkbox or
+        pressing Space on a focused row-header.
+
+  - id: row-header
+    required: false
+    purpose: >-
+      An optional row-header cell that names the
+      row (e.g., month name in a financial grid,
+      employee name in a roster grid).
+      `role="rowheader"` with `scope="row"`. Sits
+      as the leading cell in each row. Focusable
+      via roving-tabindex like any other cell.
+    slotKind: structural
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Row header cell instance; structural variant of cell with rowheader role
+    code:
+      slot: row-header
+      semantic: th-with-role-rowheader
+    a11y:
+      hint: >-
+        `<th role="rowheader" scope="row"
+        tabindex="-1">`. SR announces the row-header
+        on cell-by-cell navigation within the row,
+        providing row context the same way columnheader
+        provides column context. Optional —
+        spreadsheet-style grids without semantic row
+        identity (just numbered rows) omit this slot.
+
+  - id: cell
+    required: true
+    purpose: >-
+      A single data cell. `role="gridcell"`. Focusable
+      via the grid's roving-tabindex. Carries the
+      cell value as text content (static variant) or
+      transitions to the cell-editor on F2 / Enter
+      activation (editable variant). Carries
+      `aria-selected` when individual-cell selection
+      is supported, or `aria-readonly="true"` when
+      the cell is non-editable in an otherwise
+      editable grid.
+    slotKind: interactive
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Data cell instance with default / focused / selected / editing / readonly variants
+    code:
+      slot: cell
+      semantic: td-with-role-gridcell
+    a11y:
+      hint: >-
+        `<td role="gridcell" tabindex="-1">` for
+        non-active cells; the active cell has
+        `tabindex="0"`. Activating (F2 / Enter)
+        transitions to edit-mode in the editable
+        variant; activating in static variant
+        triggers the cell's onClick or no-op.
+        `aria-colindex` for virtualized grids
+        (1-based); `aria-selected` for
+        selection-state; `aria-readonly="true"`
+        for non-editable cells in editable grids.
+    tokens:
+      typography:
+        size: text.sm
+
+  - id: cell-editor
+    required: false
+    purpose: >-
+      The input element that replaces the cell's
+      static content when the cell enters
+      edit-mode. Typically a native `<input>`,
+      `<select>`, or `<textarea>`; framework-
+      specific cell editors (date pickers, color
+      pickers) are also canonical. Inherits the
+      cell's value on entry; on commit (Enter) or
+      cancel (Escape), the editor unmounts and
+      the static cell content returns. Editable
+      variant only.
+    slotKind: interactive
+    layout:
+      parent: cell
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Cell editor instance — input / select / textarea variants per cell-data-type
+    code:
+      slot: cell-editor
+      semantic: input-or-select-or-textarea
+    a11y:
+      hint: >-
+        Native `<input>` / `<select>` / `<textarea>`
+        carries the right keyboard model and AT
+        semantics without ARIA. On edit-mode entry,
+        focus moves to the editor (replacing the
+        cell's roving-tabindex slot). The editor's
+        `<label>` is the cell's accessible name —
+        canonically derived from the column header.
+        On Escape, focus returns to the cell with
+        the original value preserved. On Enter or
+        Tab-out, the new value commits and focus
+        returns to the cell (or the next cell on
+        Tab).
+
+  - id: selection-overlay
+    required: false
+    purpose: >-
+      Decorative visual treatment indicating focused
+      cell, selected cell, or selected rectangular
+      range. Renders as a CSS outline / background
+      treatment on the cell or as an absolutely-
+      positioned overlay frame for multi-cell
+      selection rectangles. `aria-hidden="true"` —
+      the AT semantic lives on the cell's
+      `aria-selected` and the row's `aria-selected`,
+      not on the visual overlay.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+      overlay: true
+    figma:
+      type: frame
+      hint: Decorative overlay rectangle; absolute-positioned over selected cell range
+    code:
+      slot: selection-overlay
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"`. The overlay is visual
+        scaffolding for sighted users; the AT
+        semantic lives on `aria-selected` per cell
+        and per row. Spreadsheet-style multi-cell
+        selection rectangles use this slot for the
+        visible bounding box; AT users hear "selected"
+        cell-by-cell as they navigate.
+
+axes:
+  variants:
+    - static
+    - editable
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: multiSelect, kind: primitive, of: boolean }
+    - { name: virtualized, kind: primitive, of: boolean }
+    - { name: stickyHeader, kind: primitive, of: boolean }
+    - { name: sortable, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+    data:
+      - idle
+      - editing
+      - hasSelection
+      - hasSorting
+      - loading
+    transitions:
+      - from: idle
+        to: editing
+        trigger: User presses F2 or Enter on a focused editable cell (editable variant only)
+      - from: editing
+        to: idle
+        trigger: User presses Enter (commit) or Escape (cancel) inside the cell-editor
+      - from: idle
+        to: hasSelection
+        trigger: User activates selection via Space (single-cell), Shift+Arrow (range), or Ctrl+Click (multi)
+      - from: idle
+        to: hasSorting
+        trigger: User activates a sortable columnheader via Enter / Space
+      - from: idle
+        to: loading
+        trigger: Async fetch begins (server-side sort, filter, or pagination)
+      - from: loading
+        to: idle
+        trigger: Async fetch resolves with new data
+
+mismatches:
+  - figma: Cells drawn as static text without focus-affordance
+    code: '`role="gridcell" tabindex="-1"` (or `tabindex="0"` for the active cell) plus 2D arrow-key handler'
+    consequence: >-
+      Designers compose grid cells as static text in a
+      tabular layout; developers must add the roving-
+      tabindex keyboard model so cells are focusable.
+      Without explicit anatomy, the focus-affordance is
+      invisible in the design file — implementations
+      may ship the visual without the keyboard model
+      and AT users get standard tab-through behaviour
+      that is not the canonical grid pattern. Sighted-
+      mouse users notice nothing; keyboard + AT users
+      lose the cell-by-cell navigation contract.
+    correct: >-
+      Document each cell as an interactive slot with
+      explicit focus-state (default / focused / selected
+      / editing). Figma carries a "focused" variant of
+      the cell instance with the canonical focus
+      outline + roving-tabindex semantic noted in the
+      anatomy. Code wires `tabindex="-1"` on inactive
+      cells, `tabindex="0"` on the active cell, and
+      arrow-key handlers that update which cell holds
+      the active tab-stop.
+
+  - figma: Edit-mode drawn as a separate frame replacing the cell
+    code: 'In-place input replacement — cell-editor slot mounts inside the cell, not in a separate region'
+    consequence: >-
+      Designers compose edit-mode as a modal-like
+      separate frame ("Edit Cell" panel beside or
+      below the grid); developers ship in-place input
+      replacement (the cell becomes an `<input>` in
+      the same DOM position). The two surfaces
+      diverge structurally — designer's separate
+      frame loses the spatial context of the cell,
+      developer's in-place edit preserves it. Without
+      explicit anatomy, the edit-mode pattern is
+      ambiguous and implementations may ship either.
+    correct: >-
+      Document the cell-editor slot as a child of
+      the cell, not a separate region. Figma carries
+      an "editing" variant of the cell instance
+      with the editor input mounted inside the
+      cell's bounding box. Code mounts `<input>` /
+      `<select>` inside the cell's `<td>` element on
+      edit-mode entry; the cell's role and ARIA
+      attributes shift to delegate-to-input
+      semantics. Modal-style edit panels are a
+      separate pattern (escalation to a Modal or
+      Drawer for bulk-edit); in-place is the
+      canonical Grid edit-mode shape.
+
+  - figma: Selection highlight drawn as solid background on selected cells
+    code: 'Visual treatment plus `aria-selected="true"` on the cell or row'
+    consequence: >-
+      Designers compose selection as a solid
+      background color on selected cells; developers
+      ship the same visual plus `aria-selected="true"`
+      so AT users hear "selected". Without explicit
+      anatomy, the AT-semantic may ship without
+      `aria-selected` and the visual works for
+      sighted users only. Multi-cell rectangular
+      selection in particular tends to ship as
+      visual-only because the multi-cell pattern is
+      complex.
+    correct: >-
+      Document selection-overlay as a decorative
+      slot AND `aria-selected` per cell / row as
+      a contract. Figma carries the selection
+      visual treatment as a state of the cell
+      instance; the design surface signals "this
+      visual reflects a programmatic state". Code
+      sets `aria-selected="true"` on every selected
+      cell or row alongside the visual treatment.
+      For multi-cell rectangular selection, every
+      cell in the rectangle carries
+      `aria-selected="true"`.
+
+  - figma: Header row drawn identically to data rows
+    code: '`role="columnheader"` / `role="rowheader"` semantics distinct from `role="gridcell"`'
+    consequence: >-
+      Designers compose grids with header rows
+      styled distinctly (bolder text, sunken
+      background) but no anatomy slot for the
+      header semantic; developers must wire
+      `role="columnheader"` / `role="rowheader"` so
+      AT users hear the header context. Without
+      explicit anatomy, headers may ship as plain
+      `gridcell` and the data-cell-to-header
+      association breaks programmatically.
+    correct: >-
+      Document column-header and row-header as
+      distinct interactive slots from cell. Figma
+      carries column-header and row-header as
+      separate component instances with their own
+      visual treatments; the design surface
+      signals the role-distinction. Code wires
+      `<th role="columnheader" scope="col">` for
+      column headers, `<th role="rowheader"
+      scope="row">` for row headers, and
+      `<td role="gridcell">` for data cells.
+
+  - figma: Grid drawn without explicit roving-tabindex documentation
+    code: 'Single tab-stop into grid; arrow keys move focus between cells'
+    consequence: >-
+      Designers compose grids as visual-only
+      tabular surfaces without surfacing the
+      roving-tabindex contract; developers must
+      implement the keyboard model (one
+      `tabindex="0"` cell at a time, arrow keys
+      shift it, Tab exits the grid). Without
+      explicit anatomy, implementations may ship
+      every cell as `tabindex="0"` (every cell is
+      a tab-stop, totally broken keyboard model)
+      or no cells as `tabindex="0"` (cells
+      unreachable via keyboard). The roving-
+      tabindex contract is the highest-load-bearing
+      design-vs-code translation.
+    correct: >-
+      Document the roving-tabindex contract as a
+      first-class anatomy slot property. Figma
+      carries the focused-cell variant explicitly
+      with annotations indicating the
+      tab-stop semantic. Code wires roving-
+      tabindex bookkeeping on every arrow-key
+      navigation — the cell receiving focus
+      gains `tabindex="0"`, the cell losing
+      focus drops to `tabindex="-1"`. Tab from
+      outside enters the grid at the active cell;
+      Tab inside the grid exits to the next
+      document focusable.
+
+mistakes:
+  - id: grid-no-roving-tabindex
+    severity: blocker
+    title: Every cell is `tabindex="0"` (or no cells are)
+    description: >-
+      The grid renders without roving-tabindex —
+      either every cell carries `tabindex="0"`
+      (creating N×M tab stops and breaking the
+      single-tab-into-grid contract) or no cells
+      carry `tabindex="0"` (cells unreachable via
+      keyboard). Both patterns violate the APG
+      grid keyboard model. Tab from outside should
+      enter the grid at exactly one active cell;
+      arrow keys should move focus between cells
+      without changing the tab-stop count.
+    fix: >-
+      Wire roving-tabindex: only the active cell
+      has `tabindex="0"`; all other cells have
+      `tabindex="-1"`. On arrow-key navigation,
+      shift the `tabindex="0"` from the leaving
+      cell to the entering cell. Tab from outside
+      enters the active cell; Tab inside the grid
+      exits to the next document focusable. Most
+      grid libraries (React Aria, AG Grid, Glide
+      DataGrid) implement this correctly out of
+      the box.
+
+  - id: grid-arrow-no-cell-focus
+    severity: blocker
+    title: Arrow keys do not move focus between cells
+    description: >-
+      The grid implements no arrow-key handler
+      (or implements scroll-only behaviour like
+      `Table`). Keyboard users cannot navigate
+      cell-by-cell — Tab through the grid jumps
+      between rows or exits the grid entirely;
+      arrow keys do nothing. The whole point of
+      the grid pattern is 2D arrow-navigation;
+      without it, the surface is a Table with
+      misleading `role="grid"`.
+    fix: >-
+      Implement arrow-key handlers — ArrowUp /
+      ArrowDown move focus to the cell in the
+      adjacent row, same column; ArrowLeft /
+      ArrowRight move to adjacent column, same
+      row. Home / End jump to the first / last
+      cell in the row; Ctrl+Home / Ctrl+End jump
+      to the first / last cell of the entire
+      grid. Page Up / Page Down move by a
+      viewport's worth of rows. The handlers
+      shift the roving-tabindex along with the
+      focus.
+
+  - id: grid-edit-mode-no-escape
+    severity: major
+    title: Escape does not cancel edit-mode
+    description: >-
+      In editable variant, the cell-editor enters
+      on F2 / Enter but Escape does not return
+      focus to the cell with the original value
+      preserved. Users get trapped in the editor
+      — Escape is the canonical "I changed my
+      mind, revert" gesture and its absence
+      forces users to either commit a tentative
+      edit or hunt for an alternative cancel
+      path.
+    fix: >-
+      Implement Escape inside the cell-editor:
+      revert the cell's value to its pre-edit
+      state, unmount the editor, return focus to
+      the cell, exit edit-mode. Enter inside the
+      editor commits the new value and exits;
+      Tab inside the editor commits AND moves
+      to the next cell. The three exits (Enter
+      commit, Tab commit-and-advance, Escape
+      cancel) are the canonical edit-mode
+      contract.
+
+  - id: grid-cell-not-gridcell-role
+    severity: major
+    title: Cells use `<td>` without `role="gridcell"` when root is `role="grid"`
+    description: >-
+      The root element carries `role="grid"` but
+      the cells are bare `<td>` elements without
+      `role="gridcell"`. AT announces the root as
+      a grid but the cells inside as plain table
+      cells — the role hierarchy is broken. SR
+      users hear inconsistent semantics on grid
+      entry vs cell navigation.
+    fix: >-
+      When the root is `role="grid"` (or
+      `<table role="grid">`), the cells inside
+      MUST carry `role="gridcell"` (data cells),
+      `role="columnheader"` (column header
+      cells), or `role="rowheader"` (row header
+      cells). For native `<th>` and `<td>`
+      elements, add `role="columnheader"` /
+      `role="gridcell"` explicitly — the implicit
+      table semantics do not propagate through
+      the explicit `role="grid"` override.
+
+  - id: grid-no-aria-rowcount-virtualized
+    severity: major
+    title: Virtualized grid omits `aria-rowcount` and `aria-rowindex`
+    description: >-
+      The grid renders only viewport-visible rows
+      plus a buffer (50 of 10,000); without
+      `aria-rowcount` on the root and
+      `aria-rowindex` per row, AT reports the
+      rendered count as the total. Page-Down
+      navigation becomes unreliable because the
+      virtualizer recycles DOM nodes between
+      renders. AT users perceive the dataset as
+      smaller than reality.
+    fix: >-
+      On the root set `aria-rowcount="10000"`
+      (true total) and `aria-colcount` similarly.
+      On each rendered row set `aria-rowindex`
+      to the 1-based true index (not the
+      rendered offset); on each cell set
+      `aria-colindex` to the 1-based true column
+      index. The virtualizer keeps these in sync
+      as it recycles rows; AT reports the real
+      dataset size.
+
+  - id: grid-when-table-suffices
+    severity: minor
+    title: Grid pattern used when Table would work
+    description: >-
+      The component ships with `role="grid"` and
+      roving-tabindex but the cells are not
+      themselves interactive — content is read-
+      only, no edit-mode, no cell-level
+      selection. The added keyboard-model
+      complexity (roving-tabindex bookkeeping,
+      arrow-key handlers, Page-Up / Page-Down
+      logic) buys nothing. Authors paid the
+      cost without gaining the affordance.
+    fix: >-
+      Use `Table` for read-only data display.
+      The cells can still contain interactive
+      descendants (links, buttons, checkboxes)
+      reachable via standard Tab order. Reserve
+      `Grid` for surfaces where cells themselves
+      are interactive units — editable cells,
+      cell-by-cell selection, focus-cell-driven
+      drilldown. The escalation cost should buy
+      a real keyboard-model improvement.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-grid>` host with `variant`, `size`,
+      `multi-select`, `virtualized`, `sticky-header`,
+      `sortable`, `editable` attributes. Renders
+      `role="grid"` shadow tree with slotted
+      `<ui-grid-row>` and `<ui-grid-cell>` children.
+      The host owns roving-tabindex bookkeeping (one
+      `tabindex="0"` cell at a time) and arrow-key
+      handlers; cells expose their value via
+      attributes. Wire-name `ui-grid` becomes
+      `md-grid` / `mat-grid` / `pf-grid` per design
+      system; canonical wire-name stays `grid`.
+    variantMechanism: >-
+      Attributes drive variant + properties;
+      `editable` activates the F2 / Enter / Escape
+      lifecycle plus cell-editor slot mounting.
+      Selection state surfaces via
+      `selection-change` CustomEvent; sort state
+      via `sort-change`; edit lifecycle via
+      `cell-edit-start` / `cell-edit-commit` /
+      `cell-edit-cancel`.
+
+  react:
+    structureMechanism: >-
+      AG Grid (most common production grid library)
+      handles roving-tabindex, virtualization, and
+      edit lifecycle out of the box. React Aria
+      ships `useGrid` + `useGridCell` + `useGridRow`
+      hooks for headless composition with
+      explicit ARIA wiring. Glide Data Grid is
+      canvas-based (different rendering model
+      entirely; AT support requires explicit
+      canvas-accessibility-tree). TanStack Table
+      provides headless logic (sorting,
+      filtering, virtualization) but does not
+      implement the grid keyboard model — pair
+      with React Aria hooks for canonical
+      grid-pattern compliance.
+    variantMechanism: >-
+      Props with class-variance-authority for
+      variant + size; `editable: boolean` toggles
+      cell-editor mounting; `multiSelect: boolean`
+      drives `aria-multiselectable` plus
+      `aria-selected` per cell. Cell renderers
+      (column.cell or column.editor function
+      props) customize per-cell rendering; the
+      grid library handles the keyboard model.
+
+  angularSignals:
+    structureMechanism: >-
+      Angular Material's CDK provides `cdk-table`
+      with `role="grid"` opt-in; AG Grid Angular
+      wraps the AG Grid core. `MatTable` does not
+      ship the grid keyboard model out of the box
+      — escalation to AG Grid is the canonical
+      Angular path for the Grid pattern. Signal-
+      driven cell editing via
+      `model<CellValue>('cellValue')` per cell.
+    variantMechanism: >-
+      `[attr.role]="'grid'"` plus
+      `[attr.aria-multiselectable]` reflective
+      bindings; signal-derived
+      `effect()` updates the roving-tabindex on
+      arrow-key events. CSS variables drive size
+      scaling; `prefers-reduced-motion` affects
+      cell-edit-transition animations.
+
+  vue:
+    structureMechanism: >-
+      AG Grid Vue, PrimeVue DataTable (with
+      grid-mode opt-in), Element Plus el-table
+      (with selectable + editable variants). No
+      first-class WAI-ARIA grid-pattern primitive
+      in the major Vue UI libraries — production
+      Vue grids tend to use AG Grid Vue or build
+      custom on top of `<table role="grid">` plus
+      a cell-keyboard-handler composable.
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`variant: 'static' | 'editable'`); v-model
+      for selection and per-cell value bindings.
+      Scoped CSS handles selection-overlay
+      visuals; the keyboard model is composable
+      via VueUse's focus-management primitives.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    cellFocusTransition: motion.duration.fast
+    editModeEnter: motion.duration.fast
+    selectionExpand: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, the grid keyboard model
+        becomes hard to use on touch (no arrow
+        keys on virtual keyboards, no F2 to
+        enter edit-mode). The canonical pattern
+        is to escalate to a Table read-only view
+        on narrow viewports — collapse cells to
+        stacked-card-per-row, lose the
+        cell-focus interaction. Editable grids
+        on mobile route through tap-to-edit
+        modal flows rather than in-place
+        edit-mode.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the full grid
+        keyboard model is active — arrow keys
+        navigate cells, F2 / Enter enter edit-
+        mode, Escape cancels. Sticky-header and
+        sticky-first-column activate when the
+        grid exceeds the viewport.
+
+events:
+  - name: selectionChange
+    payload: >-
+      `{ selectedCells: Set<{rowId, columnId}>,
+      selectedRows: Set<rowId>, isAllSelected:
+      boolean }`. Fires when selection state
+      changes via Space, Shift+Arrow, Ctrl+Click,
+      or programmatic selection. Distinguishes
+      cell-level from row-level selection so
+      consumers can react appropriately.
+    frameworkNotes:
+      webComponents: >-
+        `selectionChange` CustomEvent with
+        `event.detail = { selectedCells, selectedRows, isAllSelected }`.
+      react: >-
+        `onSelectionChange(selection)` callback
+        (React Aria) or
+        `onCellSelectionChange(state)` (AG Grid).
+      angularSignals: >-
+        `output<GridSelectionState>('selectionChange')`
+        plus two-way `model('selection')`.
+      vue: >-
+        `@update:selection` (v-model:selection).
+
+  - name: cellEditStart
+    optional: true
+    payload: >-
+      `{ rowId: string, columnId: string,
+      currentValue: unknown }`. Fires when the
+      user enters edit-mode on a cell via F2 or
+      Enter. Editable variant only.
+    frameworkNotes:
+      webComponents: >-
+        `cellEditStart` CustomEvent with
+        `event.detail = { rowId, columnId, currentValue }`.
+      react: >-
+        `onCellEditStart({ rowId, columnId, value })`
+        callback.
+      angularSignals: >-
+        `output<{ rowId: string; columnId: string; currentValue: unknown }>('cellEditStart')`.
+      vue: >-
+        `@cell-edit-start` event.
+
+  - name: cellEditCommit
+    optional: true
+    payload: >-
+      `{ rowId: string, columnId: string,
+      previousValue: unknown, newValue: unknown }`.
+      Fires when the user commits an edit via
+      Enter or Tab from inside the cell-editor.
+      Consumer updates the data model and the
+      grid re-renders the cell with the new
+      value.
+    frameworkNotes:
+      webComponents: >-
+        `cellEditCommit` CustomEvent with
+        `event.detail = { rowId, columnId, previousValue, newValue }`.
+      react: >-
+        `onCellEditCommit({ rowId, columnId, value })`
+        callback.
+      angularSignals: >-
+        `output<{ rowId: string; columnId: string; previousValue: unknown; newValue: unknown }>('cellEditCommit')`.
+      vue: >-
+        `@cell-edit-commit` event.
+
+  - name: cellEditCancel
+    optional: true
+    payload: >-
+      `{ rowId: string, columnId: string }`.
+      Fires when the user cancels an edit via
+      Escape from inside the cell-editor.
+      Editable variant only.
+    frameworkNotes:
+      webComponents: >-
+        `cellEditCancel` CustomEvent with
+        `event.detail = { rowId, columnId }`.
+      react: >-
+        `onCellEditCancel({ rowId, columnId })`
+        callback.
+      angularSignals: >-
+        `output<{ rowId: string; columnId: string }>('cellEditCancel')`.
+      vue: >-
+        `@cell-edit-cancel` event.
+
+  - name: sortChange
+    optional: true
+    payload: >-
+      `{ columnId: string, direction: 'asc' | 'desc' | 'none' }`
+      (single-sort) or `Array<{ columnId, direction }>`
+      (multi-sort). Same shape as Table's
+      sortChange event.
+    frameworkNotes:
+      webComponents: >-
+        `sortChange` CustomEvent with
+        `event.detail = sortState`.
+      react: >-
+        `onSortingChange(state)` (React Aria) or
+        `onSortChanged(event)` (AG Grid).
+      angularSignals: >-
+        `output<SortState>('sortChange')`.
+      vue: >-
+        `@update:sort` (v-model:sort).
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the grid at the active cell
+        (the one carrying `tabindex="0"`). On
+        first entry, the active cell is the
+        first data cell or the most-recently-
+        focused cell from the prior visit. Tab
+        again exits the grid to the next document
+        focusable — Tab does NOT navigate
+        between cells.
+    - keys: Shift+Tab
+      expected: >-
+        Reverse focus — Shift+Tab from inside the
+        grid exits to the previous document
+        focusable. Shift+Tab from outside the
+        grid enters at the active cell from the
+        end of the document.
+    - keys: ArrowUp / ArrowDown
+      expected: >-
+        Moves focus to the cell in the previous /
+        next row, same column. The roving-tabindex
+        shifts — the leaving cell drops to
+        `tabindex="-1"`, the entering cell gains
+        `tabindex="0"`. Wraps at boundaries per
+        APG (or stops; document the canonical
+        choice — wrapping is more common in
+        spreadsheet-style grids, stopping in
+        data-display grids).
+    - keys: ArrowLeft / ArrowRight
+      expected: >-
+        Moves focus to the previous / next cell
+        in the same row. Same roving-tabindex
+        shift as vertical navigation.
+    - keys: Home / End
+      expected: >-
+        Home moves focus to the first cell in
+        the current row; End to the last cell in
+        the current row. Standard APG grid
+        keyboard model.
+    - keys: Ctrl+Home / Ctrl+End
+      expected: >-
+        Ctrl+Home moves focus to the first cell
+        of the entire grid (typically row 1,
+        column 1); Ctrl+End to the last cell.
+        For virtualized grids, the virtualizer
+        scrolls the target into view before
+        focus lands.
+    - keys: Page Up / Page Down
+      expected: >-
+        Moves focus by a viewport's worth of
+        rows (the visible-row-count at the
+        current size). For virtualized grids,
+        the virtualizer scrolls accordingly.
+    - keys: F2 (focus on editable cell)
+      expected: >-
+        Editable variant only. Enters edit-mode
+        — the cell-editor mounts, focus moves
+        from the cell to the editor. Static
+        variant: F2 is a no-op (or focuses the
+        first interactive descendant if any).
+    - keys: Enter (focus on editable cell)
+      expected: >-
+        Same as F2 — enters edit-mode. From
+        inside the cell-editor, Enter commits
+        the new value and exits edit-mode;
+        focus returns to the cell with the
+        new value. From inside a `<textarea>`
+        cell-editor, Enter inserts a newline
+        instead — Ctrl+Enter or Tab commits.
+    - keys: Escape (focus inside cell-editor)
+      expected: >-
+        Cancels the edit. The cell's value
+        reverts to its pre-edit state; the
+        cell-editor unmounts; focus returns to
+        the cell.
+    - keys: Tab (focus inside cell-editor)
+      expected: >-
+        Commits the new value AND advances
+        focus to the next cell (or to the
+        next document focusable if the active
+        cell is the last in the grid). The
+        commit-on-Tab behaviour mirrors
+        spreadsheet-style edit lifecycle.
+    - keys: Space (focus on cell)
+      expected: >-
+        Toggles cell selection when
+        cell-level selection is supported.
+        For row-level selection grids, Space
+        on a focused cell toggles the row's
+        selection. `aria-selected` flips;
+        selectionChange fires.
+    - keys: Shift+Arrow (focus on cell)
+      expected: >-
+        Extends the selection rectangle in
+        the direction of the arrow. Multi-
+        cell rectangular selection semantic.
+        The selection-overlay visual updates;
+        every cell in the rectangle gets
+        `aria-selected="true"`.
+  announcements:
+    - trigger: SR enters the grid
+      expected: >-
+        SR announces "grid, ${captionText},
+        ${rowCount} rows, ${columnCount}
+        columns" using the caption text plus
+        `aria-rowcount` / `aria-colcount` for
+        virtualized grids. The user can navigate
+        from there.
+    - trigger: SR navigates to a cell
+      expected: >-
+        SR announces "${columnHeader}, ${rowHeader},
+        ${cellValue}, row ${rowIndex} of
+        ${rowCount}, column ${colIndex} of
+        ${colCount}". Header context comes from
+        `role="columnheader"` / `role="rowheader"`
+        association; the row / column index from
+        `aria-rowindex` / `aria-colindex`.
+    - trigger: User enters edit-mode (editable variant)
+      expected: >-
+        SR announces the cell-editor's role and
+        accessible name — "edit, text input,
+        Quantity, 12" (the editor is a `<input
+        type="number">` with the column-header-
+        derived label). Focus inside the editor;
+        SR continues with the editor's keyboard
+        model.
+    - trigger: User commits an edit (Enter or Tab from editor)
+      expected: >-
+        Edit-mode exits; focus returns to the
+        cell with the new value. SR announces
+        the cell's updated content via the
+        focus-change announcement. Some SR /
+        browser combinations also announce the
+        commit explicitly via the
+        cell-editor's `aria-live` confirmation
+        if authored.
+    - trigger: User cancels an edit (Escape)
+      expected: >-
+        Edit-mode exits; focus returns to the
+        cell with the original value preserved.
+        SR announces the cell's content (the
+        pre-edit value) via focus-change.
+    - trigger: User toggles cell selection (Space)
+      expected: >-
+        SR announces the new state — "selected"
+        or "not selected". `aria-selected` flips
+        on the cell or row; the visual
+        treatment updates.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - aria-valid-attr-value
+    - color-contrast
+    - scope-attr-valid
+    - td-headers-attr
+    - th-has-data-cells
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps static / editable. Editable activates F2/Enter/Escape edit-mode lifecycle and cell-editor slot mounting.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md.
+  - figma: Multi Select
+    code: multiSelect
+    kind: boolean
+    notes: When true, supports multi-cell selection via Shift+Arrow / Ctrl+Click; root carries `aria-multiselectable="true"`.
+  - figma: Virtualized
+    code: virtualized
+    kind: boolean
+    notes: When true, only viewport-visible rows render; requires `aria-rowcount` / `aria-colcount` on root and `aria-rowindex` / `aria-colindex` per rendered cell.
+  - figma: Sticky Header
+    code: stickyHeader
+    kind: boolean
+    notes: 'When true, column-headers-row uses `position: sticky` so headers stay visible during vertical scroll.'
+  - figma: Sortable
+    code: sortable
+    kind: boolean
+    notes: Per-column sort affordance plus `aria-sort` on column headers.
+  - figma: Row Count
+    code: rowCount
+    kind: number
+    notes: 'Total row count (for virtualized grids); reflects to `aria-rowcount`. Omitted for non-virtualized grids — implicit DOM count suffices.'
+  - figma: Column Count
+    code: colCount
+    kind: number
+    notes: 'Total column count (for virtualized grids); reflects to `aria-colcount`. Omitted for non-virtualized grids.'
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    Grid is application state, not a form control.
+    Even the editable variant treats cell-editor inputs
+    as transient affordances — the underlying data
+    model lives in component state or the consumer's
+    application store. Form submissions that depend on
+    grid data read the model at submit time, not via
+    grid-as-form-element.
+  submittedValue: >-
+    The grid contributes nothing to FormData. Selection
+    state, sort state, and edit state are application-
+    level — they live in component state or URL query
+    parameters, not in the form payload. For grids
+    embedded in forms (a quantity-grid inside a
+    purchase-order form), the form reads the grid's
+    underlying data model at submit time.
+  requiredAttr: false
+  bridges:
+    react: >-
+      React Hook Form / Formik treat grid as
+      application state. Selection and edit state live
+      in component state via React Aria's
+      `useTableSelectionState` / AG Grid's selection
+      model. On form-submit, the form handler reads
+      the grid's data model and constructs the
+      payload.
+    vue: >-
+      VeeValidate / FormKit do not bind to grid. Grid
+      data lives in component state via v-model on
+      the data array; selection state via
+      v-model:selection. Form-submit handlers read
+      the data model and build the payload.
+    angularSignals: >-
+      Reactive forms do not encompass grid. Grid
+      data lives as `signal<Row[]>('rows')`;
+      selection as `signal<Set<RowId>>('selection')`.
+      Form submissions read the signal values at
+      submit time.
+    webComponents: >-
+      The `<ui-grid>` host is not formAssociated.
+      Slotted form elements (e.g., a hidden
+      `<input>` per editable cell) participate
+      independently if needed, but the canonical
+      pattern keeps grid-as-application-state.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Column flow follows logical direction —
+      leading column (typically row-identity) sits
+      at the inline-start, which flips between LTR
+      and RTL. Arrow-key navigation flips
+      accordingly: ArrowRight under RTL moves to
+      the inline-end column (visually left); APG
+      explicitly recommends mapping arrow keys to
+      the visual direction so the keyboard model
+      stays intuitive in both writing systems.
+      Sticky-first-column logic uses
+      `inset-inline-start: 0`. Numeric cells
+      text-align logical-end; text cells
+      logical-start.
+  textExpansion: >-
+    Column headers expand 30-50% under translation
+    ("Quantity" → "Hoeveelheid" 100% longer in
+    Dutch). Long headers force wider columns and
+    may push the grid past viewport width — the
+    scrollable-region wrapper (inherited from the
+    Table contract) absorbs this. Cell content
+    expands similarly; cell-editor inputs need
+    flexible sizing so long values do not truncate
+    on edit-mode entry. Numeric cells stable
+    across locales via `Intl.NumberFormat`.
+
+performance:
+  - name: cellFocusLatency
+    metric: time-to-focus
+    threshold: 16
+    unit: ms
+    rationale: >-
+      Arrow-key navigation must update the active
+      cell within one frame (16.67ms on a 60Hz
+      display) for the keyboard model to feel
+      responsive. Above the threshold, users
+      perceive lag and over-press the arrow key
+      (skipping cells). The roving-tabindex
+      bookkeeping plus the focus-change DOM update
+      must fit within the budget. AG Grid and
+      React Aria both meet this on commodity
+      hardware; canvas-based grids (Glide Data
+      Grid) sub-frame consistently.
+  - name: virtualizationThreshold
+    metric: row-count
+    threshold: 100
+    unit: rows
+    rationale: >-
+      Above ~100 simultaneously-rendered rows,
+      the cumulative DOM-layout cost exceeds the
+      threshold where keeping all rows in the
+      tree is cheaper than virtualization
+      bookkeeping. Editable grids hit this
+      threshold faster than read-only grids
+      because each cell carries an event handler
+      and a roving-tabindex slot — DOM-cost per
+      cell is higher.
+  - name: cellEditTransitionLatency
+    metric: time-to-editor-mount
+    threshold: 100
+    unit: ms
+    rationale: >-
+      F2 / Enter activation to cell-editor mount
+      must complete within 100ms for the
+      edit-mode entry to feel responsive. Above
+      the threshold, users wonder whether the
+      activation registered and over-press the
+      key. The cell-editor library should pre-
+      mount or memoize editor components for
+      common cell types (text, number, select)
+      so the activation is a state flip, not a
+      mount.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The grid implements roving-tabindex —
+        only one cell carries `tabindex="0"` at a
+        time; all other cells carry
+        `tabindex="-1"`. Tab from outside enters
+        the grid at the active cell; Tab inside
+        the grid exits to the next document
+        focusable. Implementations that ship
+        every cell as `tabindex="0"` or no cells
+        as `tabindex="0"` violate the APG grid
+        keyboard model.
+      source: apg
+      sourceRef: 'APG: Grid pattern keyboard interaction'
+      consequence: >-
+        Without roving-tabindex, the grid is
+        either a Table-with-broken-tab-model
+        (every cell a tab stop, breaking the
+        single-tab-into-grid contract) or a
+        keyboard-trap (no cells reachable). The
+        APG grid pattern's whole point is the
+        roving-tabindex keyboard model; without
+        it, `role="grid"` is misleading.
+    - rule: >-
+        Arrow keys move focus between cells —
+        ArrowUp / ArrowDown navigate rows,
+        ArrowLeft / ArrowRight navigate columns.
+        Home / End jump within row;
+        Ctrl+Home / Ctrl+End jump to grid
+        boundaries; Page Up / Page Down move
+        by viewport-row-count.
+      source: apg
+      sourceRef: 'APG: Grid pattern keyboard interaction'
+      consequence: >-
+        Without 2D arrow-key navigation, the
+        grid pattern degrades to a Table with
+        misleading role. Keyboard users cannot
+        navigate cell-by-cell; the canonical
+        affordance disappears.
+    - rule: >-
+        Editable variant supports F2 / Enter to
+        enter edit-mode, Escape to cancel
+        (revert + exit), Enter to commit
+        (commit + exit), Tab to commit-and-
+        advance. The three exits are the
+        canonical edit-mode contract.
+      source: apg
+      sourceRef: 'APG: Grid pattern editable cells interaction'
+      consequence: >-
+        Without the three-exit contract, users
+        get trapped in the cell-editor (no
+        Escape) or commit changes accidentally
+        (no Tab-to-commit-and-advance) or
+        cannot enter edit-mode at all (no F2 /
+        Enter handler). The canonical edit-
+        lifecycle is the difference between
+        usable and unusable editable grids.
+    - rule: >-
+        Cells inside `role="grid"` carry
+        `role="gridcell"` (data cells),
+        `role="columnheader"` (column headers),
+        or `role="rowheader"` (row headers). The
+        role hierarchy is consistent — grid
+        contains rows, rows contain cells with
+        the canonical cell roles.
+      source: apg
+      sourceRef: 'WAI-ARIA grid role and required children'
+      consequence: >-
+        Without the role hierarchy, AT
+        announces inconsistent semantics — root
+        as grid but cells as plain table cells.
+        SR users hear "grid, 5 rows, 7 columns"
+        on entry but "cell, 12" without the
+        gridcell role on navigation. The role
+        mismatch breaks programmatic
+        relationships AT relies on.
+    - rule: >-
+        Virtualized grids declare `aria-rowcount`
+        and `aria-colcount` on the root and
+        `aria-rowindex` / `aria-colindex` per
+        rendered cell. The virtualizer keeps
+        these in sync as it recycles DOM nodes.
+      source: apg
+      sourceRef: 'APG: Grid pattern virtualization guidance'
+      consequence: >-
+        Without the explicit indices, AT users
+        perceive the dataset as the rendered
+        count (50 of 10,000); Page-Down
+        navigation becomes unreliable as the
+        virtualizer recycles nodes. The
+        virtualization-aware ARIA attributes are
+        the canonical bridge between the
+        rendered subset and the logical
+        structure.
+  vocabularyDrift:
+    - system: WAI-ARIA
+      theirTerm: 'role=grid + role=gridcell + role=row'
+      note: >-
+        Canonical ARIA pattern. WAI-ARIA
+        Authoring Practices Guide documents the
+        full keyboard model including roving-
+        tabindex, 2D arrow navigation,
+        F2 / Enter / Escape edit-mode lifecycle.
+        The canonical anatomy mirrors APG
+        directly.
+    - system: HTML
+      theirTerm: '<table role="grid">'
+      note: >-
+        Native HTML `<table>` plus explicit
+        `role="grid"` is the canonical hybrid —
+        retains the structural HTML semantics
+        while signaling the interactive
+        keyboard model. `<div role="grid">` is
+        the fallback for non-tabular layouts.
+    - system: AG Grid
+      theirTerm: AgGridReact / AgGridAngular / AgGridVue
+      note: >-
+        AG Grid is the most common production
+        grid library across React / Angular /
+        Vue. Implements roving-tabindex,
+        virtualization, edit-mode lifecycle,
+        cell renderers, and editor renderers
+        out of the box. Naming-only divergence
+        from canonical (`columnDefs` /
+        `rowData` props; `onCellEditingStarted`
+        / `onCellEditingStopped` events).
+    - system: React Aria
+      theirTerm: useGrid + useGridCell + useGridRow
+      note: >-
+        React Aria ships headless hooks for the
+        Grid pattern — consumers compose the
+        DOM and visual treatment, the hooks
+        wire the ARIA attributes plus
+        roving-tabindex. The grid keyboard
+        model is implemented inside the hooks;
+        consumers do not re-implement it.
+    - system: TanStack Table
+      theirTerm: 'createColumnHelper + useReactTable (read-only)'
+      note: >-
+        TanStack Table provides headless table
+        logic (sorting, filtering, virtualization)
+        but does not implement the grid keyboard
+        model. Pair TanStack Table with React
+        Aria's grid hooks for canonical
+        Grid-pattern compliance, or escalate to
+        AG Grid for full grid-pattern feature
+        coverage.
+    - system: Material 3
+      theirTerm: '— (no formal Grid pattern component)'
+      note: >-
+        Material 3 spec does not include the
+        Grid pattern. Material UI ships
+        `DataGrid` / `DataGridPro` (separate
+        library, paid tier) implementing the
+        canonical pattern. Angular Material's
+        `MatTable` does not ship the grid
+        keyboard model.
+    - system: Carbon
+      theirTerm: DataTable (with inline-edit pattern)
+      note: >-
+        Carbon ships `DataTable` covering the
+        Table pattern; for editable grids,
+        Carbon documents an inline-edit
+        pattern but does not ship a dedicated
+        Grid component. Production Carbon
+        applications tend to escalate to AG
+        Grid for editable use cases.
+    - system: Glide Data Grid
+      theirTerm: 'Canvas-based DataGrid (React)'
+      note: >-
+        Canvas-based grid implementation
+        (renders cells via `<canvas>` rather
+        than DOM). High performance for very
+        large grids (100k+ rows) but requires
+        explicit canvas-accessibility-tree
+        wiring for AT support. Canonical
+        WAI-ARIA grid-pattern compliance is
+        implementation-specific — Glide
+        documents an `accessibility` prop
+        that wires `aria-` attributes for the
+        focused cell.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
+  - https://www.w3.org/TR/wai-aria-1.2/#grid
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/grid_role
+  - https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://www.ag-grid.com/javascript-data-grid/accessibility/
+  - https://react-spectrum.adobe.com/react-aria/Table.html
+  - https://tanstack.com/table/latest
+
+notes: >-
+  Grid is the APG escalation from Table — applied only
+  when interactive cells justify the steeper keyboard
+  model (roving-tabindex, 2D arrow-nav, F2 / Enter /
+  Escape edit-mode lifecycle). The canonical decision
+  rule lives in the vsRelated entry to Table and in
+  the grid-when-table-suffices mistake. Production
+  React grids almost always escalate to AG Grid for
+  full feature coverage (virtualization, edit-mode,
+  cell renderers); React Aria provides the headless
+  alternative for design systems that want to retain
+  visual control. The roving-tabindex contract is the
+  single highest-load-bearing implementation detail —
+  most failed grid implementations fail this rule
+  first.
+
+lastReviewed: '2026-05-04'

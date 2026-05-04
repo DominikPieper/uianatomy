@@ -86,6 +86,19 @@ whenToUse:
         field. Use Combobox for structured single-value
         choice from a bounded set; Textarea for unstructured
         prose entry.
+    - id: grid-pattern
+      difference: >-
+        `Combobox` is a single-input affordance with a
+        listbox of selectable options (one-dimensional
+        linear list); `Grid` is a 2D structure with cells
+        in rows and columns (two-dimensional spatial
+        navigation with roving-tabindex + arrow-key cell
+        focus). Combobox suits "pick one from a list";
+        Grid suits "navigate cell-by-cell through
+        structured data". Their keyboard models diverge —
+        Combobox uses ArrowDown / ArrowUp for list
+        traversal, Grid uses all four arrows for cell
+        navigation.
 
 anatomy:
   - id: input

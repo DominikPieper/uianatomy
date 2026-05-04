@@ -201,6 +201,14 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
     name: 'Prism',
     url: 'https://prismjs.com/',
   },
+  agGrid: {
+    name: 'AG Grid',
+    url: 'https://www.ag-grid.com/',
+  },
+  glideDataGrid: {
+    name: 'Glide Data Grid',
+    url: 'https://github.com/glideapps/glide-data-grid',
+  },
 } as const;
 
 // P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
@@ -226,6 +234,8 @@ export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> =
   tanstack: ['TanStack Table', 'TanStack'],
   shiki: ['Shiki'],
   prism: ['Prism', 'Prism.js', 'PrismJS'],
+  agGrid: ['AG Grid', 'ag-Grid'],
+  glideDataGrid: ['Glide Data Grid', 'Glide DataGrid'],
 } as const;
 
 // Spec/platform/standards bodies that legitimately appear as

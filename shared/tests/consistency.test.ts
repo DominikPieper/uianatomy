@@ -422,6 +422,7 @@ describe('cross-component consistency', () => {
       'segmented-control',
       'popover',
       'table',
+      'grid-pattern',
     ];
 
     const failures: string[] = [];
