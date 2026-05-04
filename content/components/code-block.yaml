@@ -1,0 +1,1143 @@
+id: code-block
+name: Code Block
+description: >-
+  A monospace surface for presenting source code, terminal output, or
+  any verbatim technical content. The block variant carries chrome —
+  language label, copy button, optional line numbers — around the
+  `<code>` element; the inline variant renders bare `<code>` inside
+  flowing prose for short technical references. Syntax-highlighting
+  spans are decorative (`aria-hidden="true"`) so SR users hear the
+  raw code text; line numbers render via CSS `counter-increment` so
+  they never enter the clipboard; the copy button has an explicit
+  accessible name and announces success via an `aria-live` region.
+
+intro: >-
+  Code Block is the canonical surface for verbatim technical
+  content — source code in documentation, command output in
+  tutorials, configuration snippets in admin panels, AI-surface
+  responses with example code. The reference documents the
+  `<pre><code>` semantic, the syntax-highlight-as-decorative
+  contract, the line-numbers-not-in-clipboard rule (CSS counters),
+  the copy-button accessible-name + `aria-live` feedback contract,
+  and the boundary with `Tooltip` (which hosts inline-code-
+  explanations on hover but never replaces the code-block surface
+  itself).
+
+alternateNames:
+  - 'Code snippet'
+  - 'Code sample'
+  - 'Code'
+
+whenToUse:
+  use: >-
+    For verbatim technical content where character-by-character
+    accuracy matters — source code, terminal output, configuration
+    files, command-line invocations. Block variant for multi-line
+    snippets where users may copy the entire content; inline
+    variant for short technical references inside prose ("use
+    `npm install`" or "the `aria-label` attribute"). Pair block
+    variant with documentation surfaces (API references,
+    tutorials), AI-surfaces (LLM responses with example code),
+    admin panels (configuration display), and changelog
+    surfaces (showing diff snippets).
+  avoid: >-
+    For non-verbatim text styled to look like code — that is
+    typography work, not Code Block. For interactive code editors
+    (Monaco, CodeMirror, Sandpack) — those are dedicated editor
+    components with cursor / selection / autocomplete semantics
+    out of scope here. For inline-code-explanation hover hosts
+    — that is `Tooltip` anchored to inline `<code>`. For
+    diff-display with collapsible per-file sections — escalate
+    to a dedicated diff component, not a stretched Code Block.
+    For ASCII-art or pre-formatted text that is not code, use
+    `<pre>` directly without the chrome.
+  vsRelated:
+    - id: tooltip
+      difference: >-
+        `Tooltip` hosts a short on-hover / on-focus description
+        anchored to a trigger; `Code Block` is a standalone
+        surface displaying verbatim code. Tooltip on inline
+        `<code>` is the canonical pattern for explaining what
+        a code reference means without taking users out of the
+        flowing prose; Code Block is the surface where the
+        actual code lives. The two pair across documentation
+        contexts — Code Block carries the example, Tooltip
+        carries the per-token explanation when authored.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The wrapper element. Block variant renders as `<pre>`
+      (preserves whitespace + monospace font) holding the
+      `<code>` element; inline variant renders as bare
+      `<code>` inside flowing prose with no `<pre>` wrapper.
+      Required for both variants — the structural element
+      defines the variant's whitespace + flow handling.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Code-block frame; variant property switches between block (pre+chrome) and inline (bare code) shapes
+    code:
+      slot: root
+      semantic: pre-or-code
+    a11y:
+      hint: >-
+        Block variant: `<pre>` carries the preserved-whitespace
+        semantic and is announced as "preformatted text" or
+        "code block" by SR. Inline variant: `<code>` inside
+        prose flow is announced inline as "code text". Do not
+        substitute `<div>` with monospace styling for either —
+        `<pre>` and `<code>` carry semantics that AT relies on
+        for code-vs-prose distinction.
+
+  - id: code
+    required: true
+    purpose: >-
+      The `<code>` element holding the actual code text. For
+      block variant, sits inside `<pre>` and contains the
+      verbatim source; for inline variant, IS the root and
+      contains a short reference. The text content is what SR
+      reads — syntax-highlight spans inside are decorative
+      and `aria-hidden`.
+    slotKind: content
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Monospace text; preserved whitespace; tokens visualized via syntax-highlight palette
+    code:
+      slot: code
+      semantic: code
+    a11y:
+      hint: >-
+        Plain text content is the AT-readable surface — keep
+        the textContent matching the verbatim code that should
+        be copyable. Syntax-highlight wrappers (`<span>` per
+        token) wrap the same text but carry
+        `aria-hidden="true"` so SR users hear the raw code,
+        not "keyword, function, name, string". The `lang`
+        attribute (`<code lang="javascript">`) is optional but
+        helpful for mixed-language documentation.
+    tokens:
+      typography:
+        size: text.sm
+
+  - id: language-label
+    required: false
+    purpose: >-
+      Visible language identifier (TypeScript / Python /
+      Bash) sitting in the chrome above the code. Block
+      variant only. Aids sighted users in identifying the
+      language at a glance; SR users hear it via the visible
+      text or via `aria-label` on the copy-button when the
+      label is the language name.
+    slotKind: content
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: text
+      hint: Language label text style; uppercase or small-caps; positioned in the chrome bar
+    code:
+      slot: language-label
+      semantic: span-with-id
+    a11y:
+      hint: >-
+        Render as `<span id="code-block-N-language">` and let
+        SR users hear it via reading order. For block variants
+        without a visible label but where the language is
+        known, expose it via `aria-label` on the root or as
+        sr-only text inside the chrome. Avoid making the
+        label a focusable element — language identification
+        is metadata, not action.
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.medium
+        tracking: tracking.wide
+      color:
+        foreground: color.text.muted
+
+  - id: copy-button
+    required: false
+    purpose: >-
+      Interactive `<button>` that copies the code's
+      textContent to the clipboard via the
+      `navigator.clipboard.writeText` API. Sits in the
+      chrome — typically trailing the language-label. On
+      activation, transitions through copying → copied (or
+      error) states surfaced via the copy-button's visible
+      label / icon plus the status-announcement slot.
+      Block variant only.
+    slotKind: interactive
+    layout:
+      parent: root
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance with copy / copied / error icon variants; default / hover / focus-visible / pressed states
+    code:
+      slot: copy-button
+      semantic: button
+    a11y:
+      hint: >-
+        Accessible name "Copy code" or "Copy code to
+        clipboard" — never icon-only without `aria-label`.
+        On activation, the button's visible icon flips to
+        the copied state (checkmark) and the
+        status-announcement slot updates with "Copied to
+        clipboard". Some implementations replace the
+        button's accessible name temporarily ("Copied"); the
+        canonical pattern keeps the name stable and uses
+        the live-region for transient confirmation. Visible
+        focus ring per WCAG 2.4.7.
+
+  - id: line-numbers
+    required: false
+    purpose: >-
+      Per-line numerical gutter rendered via CSS
+      `counter-increment` (or as an `aria-hidden` sibling
+      gutter) so the numbers do NOT enter the clipboard
+      when users copy the code. Block variant only,
+      authored when `showLineNumbers` is true.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 2
+      col: 1
+      span: 1
+    figma:
+      type: frame
+      hint: Decorative numerical gutter; muted color; right-aligned within fixed-width column
+    code:
+      slot: line-numbers
+      semantic: presentational
+    a11y:
+      hint: >-
+        Render via CSS `counter-increment(line)` plus
+        `::before { content: counter(line) }` so the
+        numbers exist in style-side, not text-side. The
+        clipboard receives the code text only — line
+        numbers stay out. Alternative implementation: an
+        `aria-hidden="true"` `<span>` gutter where each
+        line number is text but the SR + clipboard skip
+        them. Prefer CSS counters because they are robust
+        to copy-via-keyboard-shortcut and copy-via-context-
+        menu equally.
+    tokens:
+      color:
+        foreground: color.text.muted
+      typography:
+        size: text.xs
+
+  - id: line
+    required: false
+    purpose: >-
+      Per-line wrapper inside `<code>` — typically a
+      `<span>` or `<div>` per line that line-numbering
+      and per-line highlighting (e.g., diff-add-line in
+      green, diff-remove-line in red) target. Decorative;
+      AT reads the underlying text content not the
+      wrapper. Block variant only when per-line styling
+      is needed.
+    slotKind: decorative
+    layout:
+      parent: code
+      row: 1
+      col: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Line container instance; default / highlighted / diff-add / diff-remove variants
+    code:
+      slot: line
+      semantic: presentational
+    a11y:
+      hint: >-
+        The wrapper itself is decorative; the line's text
+        content is what SR reads. For diff lines, encode
+        the add/remove semantic via visible text symbol
+        (+/-) at the start of the line so SR users hear
+        the change-direction, not just the styling. Color-
+        only diff signaling violates WCAG 1.4.1 Use of
+        Color.
+
+  - id: token
+    required: false
+    purpose: >-
+      Syntax-highlight span around individual code tokens
+      (keyword, identifier, string, number, comment) —
+      rendered by the highlighter library (Prism, Shiki,
+      hljs). Decorative wrappers carrying token-class
+      names that style-side CSS targets. AT reads the
+      underlying text, not the token role.
+    slotKind: decorative
+    layout:
+      parent: line
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: text
+      hint: Per-token span; color-coded per syntax-highlight palette
+    code:
+      slot: token
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"` on each token wrapper —
+        critical because SR users would otherwise hear
+        "keyword function, identifier myFunc, punctuation
+        open paren, ..." instead of the actual code.
+        Highlighter libraries that emit aria-hidden by
+        default (Shiki) are canonical; libraries that do
+        not (Prism unless configured) require an
+        author-side wrapper. The text content inside
+        tokens IS read; only the wrapper announcement is
+        suppressed.
+
+  - id: status-announcement
+    required: false
+    purpose: >-
+      Sr-only `aria-live="polite"` region for transient
+      copy-button feedback ("Copied to clipboard",
+      "Copy failed"). Authored when the copy-button is
+      present. The region's text content updates on
+      copy-button activation and the live-region
+      announces the change without stealing focus.
+    slotKind: content
+    layout:
+      overlay: true
+    figma:
+      type: text
+      hint: Visually-hidden text element for copy feedback
+    code:
+      slot: status-announcement
+      semantic: aria-live-polite
+    a11y:
+      hint: >-
+        `<span aria-live="polite" class="sr-only">` whose
+        text updates to "Copied to clipboard" on success
+        and "Copy failed" on error. Use `aria-live="polite"`
+        not "assertive" — the user just initiated the
+        copy; assertive interruption is rude. Clear the
+        text after ~3 seconds so the next copy
+        announcement is announced as a change.
+
+axes:
+  variants:
+    - block
+    - inline
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: showLineNumbers, kind: primitive, of: boolean }
+    - { name: showCopyButton, kind: primitive, of: boolean }
+    - { name: showLanguageLabel, kind: primitive, of: boolean }
+    - { name: wrap, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+    data:
+      - idle
+      - copying
+      - copied
+      - error
+    transitions:
+      - from: idle
+        to: copying
+        trigger: User activates the copy-button
+      - from: copying
+        to: copied
+        trigger: '`navigator.clipboard.writeText` resolves'
+      - from: copying
+        to: error
+        trigger: '`navigator.clipboard.writeText` rejects (permission denied, insecure context)'
+      - from: copied
+        to: idle
+        trigger: Auto-reset after ~2 seconds returns the copy-button to its default state
+
+mismatches:
+  - figma: Syntax highlighting drawn as colored text inline
+    code: '`<span aria-hidden="true">` wrappers around each token'
+    consequence: >-
+      Designers compose code blocks with inline color per
+      token (keywords red, strings green, comments grey);
+      developers wrap each token in `<span>` for the
+      coloring. Without explicit anatomy, the spans
+      may ship without `aria-hidden` and SR users hear
+      "keyword function, identifier myFunc, punctuation
+      open paren, parameter x, ..." instead of the actual
+      code. The visible result looks identical; the AT
+      result is unusable.
+    correct: >-
+      Document syntax-highlight spans as decorative slots
+      with `aria-hidden="true"`. Figma carries syntax-
+      highlight palette as design-tokens but the per-
+      token wrappers are noted as decorative — the
+      design surface signals "color is presentation
+      only". Code wraps tokens in
+      `<span class="token-keyword" aria-hidden="true">`
+      or uses a highlighter library (Shiki) that emits
+      aria-hidden by default.
+
+  - figma: Line numbers drawn as text in left gutter
+    code: 'CSS `counter-increment(line)` rendering numbers as `::before` content'
+    consequence: >-
+      Designers draw line numbers as inline text in a
+      left-side column; developers ship them as either
+      text-children (which enter the clipboard when
+      users copy the code) or as CSS counters (which
+      do not). Without explicit anatomy, the text-as-
+      children pattern is the default and users
+      copy-paste "1\\n2\\n3\\nconst x = 1;" instead of
+      "const x = 1;". Subtle regression — most users
+      never notice but technical users hit it
+      immediately.
+    correct: >-
+      Document line-numbers as a decorative slot
+      rendered via CSS `counter-increment` so the
+      numbers exist style-side and not text-side.
+      Figma carries the line-numbers as a frame-property
+      treatment (visual gutter) not as inline text.
+      Code uses `pre code { counter-reset: line }` plus
+      `pre code > .line::before { counter-increment: line; content: counter(line) }`
+      so the numbers render visually but never enter
+      the textContent.
+
+  - figma: Copy button drawn as icon-only without label
+    code: '`<button aria-label="Copy code">` plus `aria-live` feedback region'
+    consequence: >-
+      Designers ship the copy button as an icon-only
+      button (clipboard glyph) for visual cleanliness;
+      developers must add `aria-label` so SR users hear
+      what the button does. Without explicit anatomy,
+      the design file does not communicate the
+      label-required contract and implementations may
+      ship icon-only buttons without aria-label —
+      invisible to AT.
+    correct: >-
+      Document the copy-button slot with an explicit
+      accessible-name requirement. Figma carries an
+      "Aria Label" component property (e.g., default
+      "Copy code") so the design surface signals the
+      contract. Code wires `<button aria-label="Copy code">`
+      plus a sibling `<span aria-live="polite">` for
+      success / failure feedback. Build-time lint
+      enforces that all icon-only Code Block copy
+      buttons have aria-label set.
+
+  - figma: Language label drawn as a static visible badge
+    code: '`<span>` with optional `aria-hidden` based on language-name redundancy'
+    consequence: >-
+      Designers compose the language label as a visible
+      pill / badge in the chrome; developers ship it as
+      `<span>` with the language name. Without anatomy
+      guidance, the span may carry no `aria-hidden` —
+      SR users hear the language name in addition to
+      the code's textContent, which can be valuable
+      (multi-language documentation) or noisy (when the
+      language is obvious from context). The decision
+      is contextual; canonical anatomy documents both
+      patterns.
+    correct: >-
+      Document the language-label slot with two
+      patterns — visible-and-announced (default,
+      `<span>` without aria-hidden, useful for
+      multi-language docs) and visible-only
+      (`<span aria-hidden="true">`, useful when the
+      language is obvious). The `aria-hidden` is the
+      author's choice based on context; the anatomy
+      surfaces both as canonical.
+
+  - figma: Inline code drawn as styled text inside paragraph
+    code: '`<code>` element with monospace font and inline-flow display'
+    consequence: >-
+      Designers compose inline code references with a
+      monospace font run inside paragraph text;
+      developers ship `<code>` elements which SR
+      announces as "code, npm install, code" (entering
+      and exiting the code semantic). Without explicit
+      anatomy, the semantic boundary is invisible in
+      the design file — sighted users see styled
+      text, AT users hear the code-vs-prose
+      distinction. Both surfaces are correct but the
+      anatomy ensures developers ship `<code>` and not
+      a styled `<span>`.
+    correct: >-
+      Document inline as a structural variant of
+      Code Block with `<code>` as the root. Figma
+      carries an "inline" variant of the Code Block
+      component for use inside Text components. Code
+      ships `<code>` (not `<span>`) so SR users hear
+      the semantic boundary. The visual styling
+      (monospace font, subtle background pill) is
+      common to both surfaces; the semantic is what
+      the anatomy documents.
+
+mistakes:
+  - id: code-block-copy-no-label
+    severity: blocker
+    title: Copy button is icon-only without `aria-label`
+    description: >-
+      The copy-button ships as an icon-only `<button>`
+      (clipboard glyph) without an accessible name. SR
+      users hear "button" with no indication of what
+      activating it does — and after activation, no
+      indication that the copy succeeded. WCAG 4.1.2
+      Name-Role-Value violation.
+    fix: >-
+      Set `aria-label="Copy code"` (or the locale-
+      translated equivalent) on the button. For
+      success feedback, update an `aria-live="polite"`
+      sibling region with "Copied to clipboard"
+      (clear after ~3 seconds). Visible icon may
+      flip to a checkmark for sighted feedback; the
+      live-region carries the AT-equivalent.
+
+  - id: code-block-line-numbers-in-copy
+    severity: major
+    title: Line numbers enter the clipboard when users copy code
+    description: >-
+      Line numbers are rendered as text-children inside
+      the `<pre>` element rather than via CSS counters.
+      When users select-all + copy or use the copy-
+      button, the clipboard receives "1\\nconst x = 1;\\n2\\nconst y = 2;"
+      instead of "const x = 1;\\nconst y = 2;". Users
+      paste broken code into their editor and have to
+      manually strip the numbers. Functional regression
+      that erodes trust in the documentation.
+    fix: >-
+      Render line numbers via CSS `counter-increment`
+      so the numbers exist in style-side, not text-
+      side. The clipboard receives the code text only.
+      For copy-button implementations, copy
+      `code.textContent` (which excludes
+      `::before` pseudo-element content) explicitly
+      rather than `pre.textContent`.
+
+  - id: code-block-syntax-not-hidden
+    severity: major
+    title: Syntax-highlight spans expose token roles to AT
+    description: >-
+      Syntax highlighting wraps each token (keyword,
+      identifier, string, comment) in a `<span>` with
+      a class name; the spans ship without
+      `aria-hidden="true"`. SR users hear "keyword
+      function, identifier myFunc, punctuation open
+      paren, parameter x, ..." instead of the raw code
+      they are trying to learn. Common in Prism-based
+      implementations where the highlighter does not
+      emit aria-hidden by default.
+    fix: >-
+      Add `aria-hidden="true"` to each syntax-
+      highlight span, or wrap the highlighted code in
+      a parent `aria-hidden="true"` container with the
+      raw code text in a sr-only sibling that SR
+      reads. Highlighter libraries that emit aria-
+      hidden by default (Shiki, hljs with appropriate
+      config) are canonical baseline.
+
+  - id: code-block-copy-no-feedback
+    severity: major
+    title: Copy button activation produces no visible or AT feedback
+    description: >-
+      Activating the copy-button silently writes to
+      the clipboard with no visible state change and
+      no `aria-live` announcement. Users wonder
+      whether the copy succeeded (slow clipboard,
+      browser permission prompt, insecure context
+      rejection); they activate the button repeatedly
+      to "make sure", potentially overwriting clipboard
+      content they wanted. Trust regression.
+    fix: >-
+      On copy-success, transition the visible button
+      icon to a checkmark for ~2 seconds AND update
+      an `aria-live="polite"` region with "Copied to
+      clipboard". On copy-error (permission denied,
+      insecure context), transition to an error icon
+      AND announce "Copy failed". The dual-channel
+      feedback (visible + AT) is canonical.
+
+  - id: code-block-pre-overflow-not-focusable
+    severity: major
+    title: Long horizontal-overflowing code is not keyboard-scrollable
+    description: >-
+      Block variant ships with `overflow-x: auto` on
+      the `<pre>` but no `tabindex="0"` and no
+      `role="region"`. Sighted-mouse users scroll
+      fine; keyboard users cannot reach the scrolled
+      content — Tab skips past, arrow keys do
+      nothing. Long code lines (function signatures,
+      URL strings) become invisible to keyboard
+      users.
+    fix: >-
+      Add `tabindex="0"` plus `role="region"` plus
+      `aria-label="${language} code, scrollable"`
+      to the `<pre>` whenever horizontal overflow is
+      possible. Visible focus ring on focus-visible
+      signals the scrollable boundary. Alternative —
+      the `wrap` property wraps long lines so no
+      overflow occurs (canonical for prose-heavy
+      documentation; not for code where line breaks
+      change semantic).
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-code-block>` host with `variant`, `language`,
+      `show-line-numbers`, `show-copy-button`,
+      `show-language-label`, `wrap` attributes plus a
+      slotted `<code>` child carrying the verbatim text.
+      The host wires the chrome (language label, copy
+      button) around the slotted code; CSS counters
+      handle line numbers; clipboard API handles copy.
+      Wire-name `ui-code-block` becomes `md-code-block`
+      / `mat-code-block` / `pf-code-block` per design
+      system; canonical wire-name stays `code-block`.
+    variantMechanism: >-
+      Attributes drive variant + properties
+      (`variant="block"`, `language="javascript"`,
+      `show-line-numbers`, `wrap`). Inline variant
+      may render shadow-content as `<code>` directly
+      without `<pre>` wrapper — the variant attribute
+      switches the shadow tree. Copy-button activation
+      emits `copy` CustomEvent.
+
+  react:
+    structureMechanism: >-
+      Component with `variant`, `language`, `code`
+      string-prop (or children), `showLineNumbers`,
+      `showCopyButton`, `showLanguageLabel`, `wrap`
+      props. Third-party precedents include
+      `react-syntax-highlighter` (Prism / hljs),
+      `shiki-react`, MDX-rendered Code blocks via
+      remark / rehype plugins. Material UI does not
+      ship a Code Block primitive; Atlassian ships
+      `Code` component for inline; documentation-
+      site frameworks (Docusaurus, Nextra) ship
+      Code Block patterns.
+    variantMechanism: >-
+      Props with class-variance-authority for variant
+      classes; `language` drives the highlighter
+      invocation; `showLineNumbers` toggles the CSS
+      counter activation. Copy-button uses
+      `useCopyToClipboard` (custom hook or library)
+      and surfaces `copied` state via a callback or
+      controlled prop. Server-rendered code blocks
+      (Next.js App Router with MDX) pre-render the
+      syntax-highlight HTML; client-side copy stays
+      interactive.
+
+  angularSignals:
+    structureMechanism: >-
+      Angular component with
+      `input<CodeBlockVariant>('variant')`,
+      `input<string>('language')`,
+      `input<string>('code')`,
+      `input<boolean>('showLineNumbers')`,
+      `input<boolean>('showCopyButton')`,
+      `input<boolean>('wrap')`. No first-class Material
+      Code Block; documentation projects (Angular
+      docs, Material docs) compose custom code-block
+      components. Signal-driven copy-state via
+      `signal<CopyState>('copyState')`.
+    variantMechanism: >-
+      Host-binding `[class.variant-inline]` for
+      variant classes; `[attr.tabindex]="overflow ? 0 : null"`
+      for overflow-region focusability;
+      `[attr.aria-label]` for the scrollable region
+      label. Copy-button uses Angular's clipboard
+      service `Clipboard.copy()` plus a signal-
+      driven aria-live region for feedback.
+
+  vue:
+    structureMechanism: >-
+      Single-file component with default slot for the
+      code text plus named slots for language-label
+      / copy-button customisation. PrimeVue does not
+      ship a CodeBlock; documentation projects
+      (Vitepress, Nuxt Content) ship code-block
+      patterns via markdown-rendering. `defineProps`
+      exposes `variant`, `language`, `showLineNumbers`,
+      `showCopyButton`, `wrap`; default slot carries
+      the raw code string or a pre-highlighted
+      template.
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`variant: 'block' | 'inline'`); v-model
+      n/a (code-block is read-only). Scoped CSS
+      handles syntax-highlight palette and counter
+      reset for line numbers; copy-button uses
+      VueUse's `useClipboard` composable for
+      clipboard + status state.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    copyFeedback: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, block variant either
+        horizontally scrolls (default — wrap=false) or
+        wraps long lines (wrap=true). The language-
+        label and copy-button may stack into a single
+        compact chrome row or collapse the
+        language-label entirely on very narrow
+        viewports. Inline variant flows with
+        surrounding prose at its native size.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, block variant
+        renders with full chrome (language-label,
+        copy-button, optional line-numbers) and the
+        canonical horizontal padding. Long lines
+        scroll horizontally inside the focusable
+        region; wrap behaviour follows the `wrap`
+        property.
+
+events:
+  - name: copy
+    optional: true
+    payload: >-
+      `{ code: string, language: string | undefined,
+      success: boolean, error: Error | null }`. Fires
+      when the user activates the copy-button and the
+      clipboard write resolves or rejects. Consumer
+      typically observes for analytics ("copy rate
+      per snippet") or for non-canonical follow-up
+      (showing a contextual hint after the first
+      copy). The internal copy + feedback contract
+      runs without consumer involvement; the event
+      is observation-only.
+    frameworkNotes:
+      webComponents: >-
+        `copy` CustomEvent with
+        `event.detail = { code, language, success, error }`.
+      react: >-
+        `onCopy({ code, language, success, error })`
+        callback.
+      angularSignals: >-
+        `output<{ code: string; language?: string; success: boolean; error: Error | null }>('copy')`.
+      vue: >-
+        `@copy` event with payload
+        `{ code, language, success, error }`.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        For block variant with copy-button, Tab moves
+        focus to the copy-button; Tab again moves
+        focus past the code-block. For block variant
+        without copy-button but with horizontal-scroll
+        region, Tab moves into the focusable
+        scrollable-region; arrow keys scroll. For
+        inline variant, the code text is non-
+        focusable and Tab skips over it. Syntax-
+        highlight tokens never receive focus.
+    - keys: Enter / Space (focus on copy-button)
+      expected: >-
+        Activates the copy. Clipboard write begins;
+        `aria-busy="true"` on the button briefly
+        (or the visible icon transitions to a
+        loading state); on resolve, the visible
+        icon transitions to a checkmark and the
+        live-region announces "Copied to clipboard".
+        On rejection, the icon transitions to error
+        and the live-region announces "Copy failed".
+    - keys: Arrow keys (focus on scrollable-region of overflowing block)
+      expected: >-
+        Scrolls the overflow horizontally /
+        vertically. Standard browser behaviour for
+        focusable scroll-containers. The region's
+        `tabindex="0"` plus implicit
+        keyboard-scroll behaviour drives this.
+  announcements:
+    - trigger: SR encounters a block variant in reading order
+      expected: >-
+        SR announces "preformatted text" or "code
+        block" (the `<pre>` semantic). The code
+        text follows in reading order; syntax-
+        highlight wrappers are skipped per their
+        `aria-hidden`. After the code, the
+        copy-button announces as "Copy code,
+        button" and the live-region (initially
+        empty) announces nothing until activated.
+    - trigger: SR encounters an inline variant in flowing prose
+      expected: >-
+        SR announces "code" entering the inline
+        code semantic and "code" or silence
+        leaving it (varies by SR / browser).
+        The text content reads inline with the
+        surrounding prose; users hear the
+        code-vs-prose boundary.
+    - trigger: User activates the copy-button (success)
+      expected: >-
+        Live-region updates to "Copied to clipboard"
+        and SR announces it via `aria-live="polite"`.
+        The button's accessible name stays "Copy
+        code" (does not change) — the live-region
+        carries the transient confirmation. After
+        ~3 seconds, the live-region clears so the
+        next copy is announced fresh.
+    - trigger: User activates the copy-button (failure)
+      expected: >-
+        Live-region updates to "Copy failed" and
+        SR announces it. The button stays in its
+        canonical state; no visual lock-out.
+        Common failure modes: insecure context
+        (HTTP page), permission policy, browser
+        rejection of large clipboard payloads.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - button-name
+    - color-contrast
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps block / inline structural shapes.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md.
+  - figma: Language
+    code: language
+    kind: text
+    notes: 'Language identifier (e.g., javascript / typescript / python / bash). Drives highlighter invocation and language-label content.'
+  - figma: Show Line Numbers
+    code: showLineNumbers
+    kind: boolean
+    notes: Block variant only. Renders line-numbers slot via CSS counter-increment.
+  - figma: Show Copy Button
+    code: showCopyButton
+    kind: boolean
+    notes: Block variant only. Renders copy-button slot.
+  - figma: Show Language Label
+    code: showLanguageLabel
+    kind: boolean
+    notes: Block variant only. Renders language-label slot.
+  - figma: Wrap
+    code: wrap
+    kind: boolean
+    notes: When true, long lines wrap to next line. When false (default), long lines overflow horizontally and the root becomes a focusable scrollable-region.
+  - figma: Code
+    code: code
+    kind: slot
+    notes: The verbatim code text (slotted children for inline; string-prop or children for block).
+  - figma: Copy Label
+    code: copyLabel
+    kind: text
+    notes: 'Accessible name for the copy-button (default "Copy code"; translated per locale).'
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    Code Block is content presentation, not a form
+    control. Neither block nor inline variant has a
+    `name` attribute or contributes to FormData. Code
+    blocks inside form-edit surfaces (e.g., a code
+    editor showing a snippet) live in the editor
+    component, not in Code Block.
+  submittedValue: >-
+    Code Block submits nothing. The copy-button
+    interacts with the system clipboard via
+    `navigator.clipboard.writeText` — orthogonal to
+    form submission. Forms that need to capture
+    code as input use a `<textarea>` or a code-
+    editor component, not Code Block.
+  requiredAttr: false
+  bridges:
+    react: >-
+      Code Block is observation surface; React Hook
+      Form / Formik do not bind to it. For forms
+      that capture code, use `<textarea>` or a
+      code-editor component (Monaco, CodeMirror)
+      with the form library's controlled-input
+      pattern. Code Block coexists in the form's
+      surrounding context as documentation or
+      example reference.
+    vue: >-
+      VeeValidate / FormKit do not bind to Code
+      Block. Forms that capture code use
+      `<textarea>` or code-editor wrappers. Code
+      Block instances inside form-context surfaces
+      are reference content, not input.
+    angularSignals: >-
+      Reactive forms do not encompass Code Block.
+      `formControl` lives on `<textarea>` or
+      code-editor wrappers; Code Block is the
+      reference surface. For documentation forms
+      that submit a code snippet via copy-paste,
+      the user copies from the Code Block and
+      pastes into a form `<textarea>`.
+    webComponents: >-
+      The `<ui-code-block>` host is not
+      formAssociated — it is content presentation.
+      Slotted code remains text-content; the
+      clipboard interaction stays orthogonal to
+      form lifecycle.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Code text (the `<code>` element's content) is
+      always rendered LTR regardless of document
+      direction — code is a left-to-right writing
+      system universally (programming languages
+      use Latin script and ASCII operators). Set
+      `dir="ltr"` explicitly on the `<code>`
+      element when the surrounding document is
+      RTL, otherwise bidi may misalign mixed
+      content. The chrome (language-label,
+      copy-button) follows document direction —
+      copy-button sits at inline-end, language-
+      label at inline-start. Line-numbers gutter
+      stays at inline-start of the code text
+      (visually right of the code under RTL
+      context).
+  textExpansion: >-
+    Language label expands minimally under
+    translation — language names like
+    "JavaScript", "TypeScript", "Python" are
+    stable across locales. Copy-button
+    accessible name expands ("Copy code" →
+    "Code kopieren" 35% longer; "Copier le
+    code" 25% longer); reserve flexible inline-
+    size in the button. Live-region status
+    text expands similarly. Code text itself
+    is not translated — code is a universal
+    language.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The code's `textContent` matches the verbatim
+        code that should be copyable. Syntax-highlight
+        wrappers are decorative — `aria-hidden="true"`
+        — so SR users hear the raw code, not the
+        token roles. Implementations that ship without
+        aria-hidden on syntax spans pollute the AT
+        announcement.
+      source: wcag
+      sourceRef: 'WCAG 1.3.1 Info and Relationships'
+      consequence: >-
+        Without the rule, SR users hear "keyword
+        function, identifier myFunc, punctuation open
+        paren, parameter x, ..." instead of "function
+        myFunc(x)" and cannot follow the code. The
+        token-as-decoration semantic is the canonical
+        assistive-tech contract for syntax-
+        highlighted code.
+
+    - rule: >-
+        The copy-button has an explicit accessible
+        name (`aria-label="Copy code"` or visible
+        text label) AND surfaces success / failure
+        feedback via both visible icon transition
+        and an `aria-live="polite"` region.
+      source: wcag
+      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+      consequence: >-
+        Without the rule, icon-only copy-buttons
+        announce as "button" with no semantic;
+        clipboard writes occur silently and users
+        cannot tell whether the copy succeeded. AT
+        users + first-time users both lose trust in
+        the affordance.
+
+    - rule: >-
+        Line numbers render via CSS
+        `counter-increment` (or as an
+        `aria-hidden` sibling gutter) so they do
+        NOT enter the clipboard when users
+        copy the code. Implementations that ship
+        line numbers as text-children pollute
+        every paste.
+      source: canon
+      consequence: >-
+        Without the rule, users copy "1\\nconst x =
+        1;\\n2\\nconst y = 2;" instead of "const x = 1;\\nconst y = 2;"
+        and have to manually strip line numbers in
+        their editor. Functional regression that
+        erodes trust in the documentation surface.
+        The CSS-counter pattern is the canonical
+        clean-clipboard discipline.
+
+    - rule: >-
+        Block variant with horizontal overflow wraps
+        the code in a focusable scrollable region —
+        `tabindex="0"` plus `role="region"` plus
+        accessible name. Keyboard users discover
+        and scroll the area via arrow keys.
+      source: wcag
+      sourceRef: 'WCAG 2.1.1 Keyboard'
+      consequence: >-
+        Without the rule, long code lines (function
+        signatures, URL strings) become invisible to
+        keyboard users — Tab skips past, arrow keys
+        do nothing. Sighted-mouse users scroll fine;
+        the affordance is invisible to keyboard and
+        AT. WCAG 2.1.1 violation.
+
+    - rule: >-
+        Block variant uses `<pre>` and inline variant
+        uses `<code>` — the canonical HTML semantics
+        for preformatted-text and inline-code.
+        Implementations that ship `<div>` with
+        monospace styling lose the AT-announced
+        boundary between code and prose.
+      source: html-spec
+      sourceRef: 'HTML standard — pre and code element semantics'
+      consequence: >-
+        Without the rule, SR users navigating prose
+        do not hear the code-vs-prose boundary —
+        inline code references blend into surrounding
+        text with no semantic signal. Block code
+        ships without the preformatted-text
+        announcement. The HTML semantics are
+        canonical and free; substituting them for
+        styled `<div>`s is regression.
+
+  vocabularyDrift:
+    - system: HTML
+      theirTerm: '<pre> + <code>'
+      note: >-
+        Native HTML elements. `<pre>` for block-
+        level preformatted text (preserves
+        whitespace + monospace); `<code>` for
+        inline code references. The canonical
+        anatomy mirrors this baseline.
+    - system: WAI-ARIA
+      theirTerm: '— (no formal Code role)'
+      note: >-
+        WAI-ARIA does not ship a Code role
+        because `<pre>` and `<code>` carry
+        sufficient native semantics. The canonical
+        anatomy uses the HTML elements directly;
+        ARIA roles are only required when the
+        structural elements cannot be authored
+        (rare).
+    - system: Material 3
+      theirTerm: '— (no formal Code Block component)'
+      note: >-
+        Material 3 spec does not include Code
+        Block. Material UI ships no Code Block
+        primitive. Material-based documentation
+        sites compose custom Code Block
+        components from the highlighter library
+        (Prism, Shiki) of choice. Explicit
+        absence is canonical for Material.
+    - system: Carbon
+      theirTerm: 'CodeSnippet (single + multi + inline + terminal)'
+      note: >-
+        Carbon ships `CodeSnippet` with four
+        variants — single-line, multi-line, inline,
+        terminal. The canonical block / inline
+        variants cover Carbon's single + multi +
+        inline; Carbon's terminal variant adds
+        prompt-symbol prefix handling, which the
+        canonical anatomy does not promote to a
+        first-class variant (terminal is a
+        styling concern, not structural).
+    - system: Atlassian
+      theirTerm: 'Code (block) + Code (inline)'
+      note: >-
+        Atlassian ships block and inline variants
+        as separate components named `Code` (with
+        a `language` prop for block). Naming-only
+        divergence; the canonical single-component-
+        with-variants matches Atlassian's
+        functional surface.
+    - system: GitHub Primer
+      theirTerm: 'CodeBlock (Markdown-rendered)'
+      note: >-
+        Primer renders code blocks via the GitHub-
+        Markdown pipeline — `<pre><code>` with
+        per-token `<span>` syntax-highlight
+        wrappers (server-rendered via Linguist).
+        Inline `<code>` is bare. The canonical
+        anatomy mirrors this approach;
+        clipboard-and-language-label chrome is
+        added on top for documentation surfaces.
+    - system: Shiki
+      theirTerm: 'Server-rendered HTML via Shiki highlighter'
+      note: >-
+        Shiki is the modern canonical choice for
+        SSR syntax highlighting (used by
+        Vitepress, Astro, Docusaurus). Emits
+        `aria-hidden="true"` on syntax-highlight
+        spans by default — canonical-compliant
+        out of the box. Token wrappers carry
+        inline styles directly so the rendered
+        HTML is portable across themes.
+    - system: Prism
+      theirTerm: 'Client-side highlighter library'
+      note: >-
+        Prism does not emit `aria-hidden` on
+        token wrappers by default. Implementations
+        using Prism must add the `aria-hidden`
+        wrapper themselves OR migrate to Shiki
+        for canonical-compliant output. Prism
+        remains common in older React-based
+        documentation sites; the canonical
+        contract requires the author-side
+        wrapper.
+
+sources:
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html
+  - https://carbondesignsystem.com/components/code-snippet/usage/
+  - https://atlassian.design/components/code/examples
+  - https://primer.style/components/code-block
+  - https://shiki.style/
+  - https://prismjs.com/
+
+notes: >-
+  Code Block is read-only content presentation —
+  events are limited to the optional copy
+  observation. The block-vs-inline variant split
+  reflects the structural HTML choice (`<pre>`
+  wrapping `<code>` versus bare `<code>`) and is
+  more meaningful than treating inline as a
+  styling-only variation. Syntax-highlighting is
+  decorative-by-default per WCAG 1.3.1; the
+  Shiki-emits-aria-hidden vs Prism-does-not
+  divergence in vocabularyDrift is the
+  most-consequential implementation choice
+  authors face. The line-numbers-via-CSS-counter
+  pattern is the canonical clipboard-clean
+  discipline; text-side line numbers are a
+  recurring regression.
+
+lastReviewed: '2026-05-04'

@@ -553,6 +553,19 @@ whenToUse:
         above content; `Tooltip` is user-pulled description
         anchored to a trigger. Toast appears without a hover or
         focus event; tooltip never appears unsolicited.
+    - id: code-block
+      difference: >-
+        `Code Block` is the standalone surface displaying
+        verbatim code (block or inline `<code>`); `Tooltip`
+        is the on-hover / on-focus description anchored to
+        an inline `<code>` reference. Tooltip on inline
+        `<code>` is the canonical pattern for explaining
+        what a code reference means without taking users
+        out of flowing prose; Code Block is the surface
+        where the actual code lives. They pair across
+        documentation contexts — Code Block carries the
+        example, Tooltip carries per-token explanations
+        when authored.
 
 contracts:
   nonNegotiable:

@@ -193,6 +193,14 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
     name: 'TanStack Table',
     url: 'https://tanstack.com/table/latest',
   },
+  shiki: {
+    name: 'Shiki',
+    url: 'https://shiki.style/',
+  },
+  prism: {
+    name: 'Prism',
+    url: 'https://prismjs.com/',
+  },
 } as const;
 
 // P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
@@ -216,6 +224,8 @@ export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> =
   angularCdk: ['Angular CDK', 'Angular Material'],
   primer: ['GitHub Primer', 'Primer'],
   tanstack: ['TanStack Table', 'TanStack'],
+  shiki: ['Shiki'],
+  prism: ['Prism', 'Prism.js', 'PrismJS'],
 } as const;
 
 // Spec/platform/standards bodies that legitimately appear as
