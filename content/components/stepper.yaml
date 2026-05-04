@@ -734,6 +734,16 @@ whenToUse:
         location semantics; Stepper has progress semantics
         (steps before are completed, steps after are
         pending). Never use breadcrumbs for a flow.
+    - id: pagination
+      difference: >-
+        `Pagination` traverses pages of one logical list
+        without sequence semantics — page 3 of 12 is just
+        a window, not a step. `Stepper` represents an
+        ordered sequence with state carried between steps
+        (cart → address → payment → review). Pagination
+        navigates a dataset; Stepper navigates a flow.
+        Never use pagination for a workflow where step-N
+        depends on step-N-1.
 
 contracts:
   nonNegotiable:

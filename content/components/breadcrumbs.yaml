@@ -70,6 +70,18 @@ whenToUse:
         semantics (steps before are completed, steps after are
         pending); breadcrumbs has only location semantics. Never
         use breadcrumbs for a flow.
+    - id: pagination
+      difference: >-
+        `Pagination` orients users within one list's
+        page-window (results 1-20 / 21-40); `Breadcrumbs`
+        orients users within site hierarchy (Home →
+        Settings → Account). Pagination stays in one site
+        context (URL query changes, not the path);
+        breadcrumbs cross site contexts (URL path
+        changes). They commonly co-occur — breadcrumbs at
+        the top of the page locate the current section,
+        pagination below the data navigates pages within
+        that section.
 
 anatomy:
   - id: root

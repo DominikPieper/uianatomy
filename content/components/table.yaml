@@ -92,6 +92,18 @@ whenToUse:
         org charts, file managers with column metadata, nested
         budgets; use Table when rows are siblings without a
         parent-child relationship.
+    - id: pagination
+      difference: >-
+        `Pagination` partners with `Table` to chunk large
+        datasets — pagination is the navigation control that
+        sits adjacent to the table; `Table` is the data
+        surface. Use both together for paginated tables; use
+        Table alone when all rows fit in a single viewport
+        (or when virtualization replaces pagination as the
+        size-handling strategy). The decision is structural
+        not stylistic: do users navigate between bounded
+        windows of the dataset (Pagination) or scroll a
+        continuous virtualized list (Table-only)?
 
 anatomy:
   - id: scrollable-region

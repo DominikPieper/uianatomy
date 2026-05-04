@@ -1,0 +1,1313 @@
+id: pagination
+name: Pagination
+description: >-
+  A navigation component for moving between discrete pages of a
+  larger dataset — search results, table rows, document indices.
+  Wrapped in a `<nav>` landmark with a specific `aria-label`
+  ("Pagination"); current page marked with `aria-current="page"`;
+  disabled previous / next controls retain DOM presence with
+  `aria-disabled="true"` so the tab-order stays stable as users
+  page through. Three structural variants — numbered (the page
+  list), prev-next-only (single previous + next plus a "Page X
+  of N" context), and load-more (single button that appends the
+  next page below the current data).
+
+intro: >-
+  Pagination decomposes a large list into bounded pages so users
+  scan in chunks rather than scrolling indefinitely. The reference
+  documents the nav-landmark contract, the `aria-current="page"`
+  rule on the current-page item (rendered as static or as a non-
+  navigating link, never as a self-link to the current URL), the
+  ellipsis-as-decorative discipline, and the disabled-not-removed
+  contract that keeps tab-order stable across page transitions.
+  Truncation uses Material's siblingCount + boundaryCount API as
+  the canonical configuration. Distinct from Tabs (in-page section
+  switching) and Stepper (linear progress) — pagination is
+  navigation across page boundaries within one logical content
+  surface.
+
+alternateNames:
+  - 'Pager'
+  - 'Page navigation'
+
+whenToUse:
+  use: >-
+    For datasets larger than a single viewport where users move
+    between bounded pages — search results, table rows, document
+    indices, blog archives. Use the numbered variant when the
+    total page count is bounded and known (typically 1–50 pages)
+    so users see absolute position. Use prev-next-only when the
+    total is large or unknown (server logs, infinite-feeling
+    feeds with checkpoints). Use load-more when the workflow
+    favours append-style discovery (image galleries, social
+    feeds) where users build up a longer continuous list rather
+    than navigating discrete pages.
+  avoid: >-
+    For switching between sibling sections of one page — that
+    is `Tabs`. For sequential workflows where step-N depends
+    on step-N-1 — that is `Stepper`. For traversing site
+    hierarchy — that is `Breadcrumbs`. For purely
+    presentational page-of-N labels without navigation — render
+    static text, not pagination. For client-side pagination
+    over already-loaded data smaller than a screen — render the
+    full list and use grouping or filtering instead.
+  vsRelated:
+    - id: table
+      difference: >-
+        `Pagination` partners with `Table` to chunk large
+        datasets — pagination is the navigation control that
+        sits adjacent to the table; the table is the data
+        surface. They appear together but are distinct
+        components: pagination handles "which page" while the
+        table handles "how the data renders". Use both
+        together for paginated tables; use Table alone when
+        all rows fit (or when virtualization replaces
+        pagination as the size-handling strategy).
+    - id: tabs
+      difference: >-
+        `Tabs` switches between sibling sections of the same
+        logical page (overview / activity / files for one
+        project); `Pagination` traverses pages of one logical
+        list (results 1-20 / 21-40 / 41-60). Tabs surface
+        different content under the same heading; pagination
+        moves the same content's window across the dataset.
+        The decision test: do the surfaces present different
+        kinds of content (Tabs) or different windows on the
+        same content (Pagination)?
+    - id: stepper
+      difference: >-
+        `Stepper` represents a linear sequence with state
+        carried between steps (cart → address → payment);
+        `Pagination` lets users move freely between pages of
+        a list without sequence semantics. Stepper has
+        progress meaning (steps before are completed, steps
+        after are pending); pagination has only location
+        meaning (page 3 of 12, no progress). Never use
+        pagination for a flow.
+    - id: breadcrumbs
+      difference: >-
+        `Breadcrumbs` orients users within a site hierarchy
+        (Home → Settings → Account); `Pagination` orients
+        users within a single list's page-window. Breadcrumbs
+        cross site contexts; pagination stays in one context.
+        They often appear together — breadcrumbs at the top
+        of the page, pagination below the data.
+
+anatomy:
+  - id: nav-root
+    required: true
+    purpose: >-
+      The navigation landmark wrapping the pagination
+      controls. Carries `<nav aria-label="Pagination">` (or
+      the locale-translated equivalent) so AT users can
+      locate the pagination via landmark navigation. The
+      label must be specific — pages with a primary nav, in-
+      page TOC, and pagination need each landmark labeled
+      distinctly so SR users disambiguate.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; navigation landmark variant property
+    code:
+      slot: nav-root
+      semantic: nav-with-aria-label
+    a11y:
+      hint: >-
+        `<nav aria-label="Pagination">` is canonical. Do not
+        omit the label — a page may carry multiple nav
+        landmarks (primary nav, breadcrumbs, in-page TOC,
+        pagination). Translate the label per locale
+        ("Paginierung" for German, "Pagination" for French)
+        so SR announces it naturally.
+
+  - id: items-list
+    required: false
+    purpose: >-
+      The ordered list (`<ul>`) containing the previous-
+      button, page-buttons (with current-marker), ellipses,
+      and next-button. Required for the numbered variant;
+      not authored for prev-next-only (renders prev / next
+      directly under nav-root) and not present at all for
+      load-more.
+    slotKind: structural
+    layout:
+      parent: nav-root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Horizontal auto-layout list; gap small; reset list-marker
+    code:
+      slot: items-list
+      semantic: ul
+    a11y:
+      hint: >-
+        `<ul>` reset to no markers and no indent. Each
+        previous / page / ellipsis / next item is wrapped in
+        `<li>`. Some implementations omit the list and
+        render flat anchors — this works visually but loses
+        the "list of N items" announcement that helps SR
+        users orient.
+
+  - id: previous-button
+    required: false
+    purpose: >-
+      Navigates to the prior page. Renders as `<a href>`
+      (server-render canonical, supports right-click + open-
+      in-new-tab) or `<button>` (SPA-only, no URL change).
+      When already on page 1, retains DOM presence with
+      `aria-disabled="true"` plus visually-disabled
+      treatment — never removed from the document, because
+      removal shifts the tab-order between pages. Authored
+      for numbered + prev-next-only variants; not present
+      for load-more.
+    slotKind: interactive
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance with leading chevron-left icon plus optional "Previous" label
+    code:
+      slot: previous-button
+      semantic: a-or-button
+    a11y:
+      hint: >-
+        Accessible name: "Previous" or "Go to previous page"
+        (icon-only buttons require `aria-label` because the
+        chevron alone is not a name). When disabled, set
+        `aria-disabled="true"` AND keep the element in the
+        DOM with `tabindex="0"` (or default for `<button>`)
+        so the tab-order is stable. Disabled controls
+        announce "Previous, dimmed" / "unavailable"; users
+        learn the pattern stays put across page transitions.
+
+  - id: next-button
+    required: false
+    purpose: >-
+      Navigates to the following page. Mirrors previous-
+      button structure and rules — `<a href>` or `<button>`,
+      `aria-disabled="true"` when on the last page, never
+      removed from DOM. Authored for numbered + prev-next-
+      only variants; not present for load-more (the
+      load-more-button replaces it).
+    slotKind: interactive
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance with trailing chevron-right icon plus optional "Next" label
+    code:
+      slot: next-button
+      semantic: a-or-button
+    a11y:
+      hint: >-
+        Mirrors previous-button. Accessible name "Next" or
+        "Go to next page". When on the last page,
+        `aria-disabled="true"` plus visually-disabled
+        treatment; element stays in the DOM. Some libraries
+        add `aria-hidden` on disabled state — never do this
+        because the user loses the announcement that there
+        is no next page.
+
+  - id: page-button
+    required: false
+    purpose: >-
+      A single page-number link inside the items-list.
+      Repeats per visible page (truncated by siblingCount +
+      boundaryCount per Material UI's canonical API).
+      Renders as `<a href="?page=N">N</a>` (server-render)
+      or `<button onClick>` (SPA). The visible label is the
+      page number; the accessible name names the
+      destination ("Page 3"). Authored for numbered variant
+      only.
+    slotKind: interactive
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Page-number button instance with default / hover / focus-visible / current variants
+    code:
+      slot: page-button
+      semantic: a-or-button
+    a11y:
+      hint: >-
+        Accessible name "Page N" (or "Go to page N") not
+        just "N" — SR users hear isolated numbers without
+        context otherwise. The current page is rendered via
+        the current-marker slot (separate, with
+        `aria-current="page"`); page-buttons are non-current
+        and never carry `aria-current`. Visible focus ring
+        per WCAG 2.4.7.
+
+  - id: current-marker
+    required: false
+    purpose: >-
+      The current-page representation. Renders as `<a
+      aria-current="page">` (without href, or with href
+      pointing to the current URL but the
+      `preventDefault`-on-click contract — canonical is
+      without href so the element is not a link target).
+      Visually distinguished (filled background, bolder
+      weight, accent color) so sighted users see "I am
+      here". Authored for numbered + prev-next-only
+      variants (prev-next-only renders it as the page-
+      context-text, see that slot).
+    slotKind: content
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Current-page button variant; non-link styling; aria-current state
+    code:
+      slot: current-marker
+      semantic: a-with-aria-current
+    a11y:
+      hint: >-
+        `aria-current="page"` is canonical. The element
+        SHOULD NOT be `<a href="?page=3">` when already on
+        page 3 — `aria-current` plus a self-link creates a
+        useless tab stop and the page-reload-on-click is
+        hostile. Render as `<a aria-current="page">`
+        without `href`, or as `<span aria-current="page">`.
+        SR announces "current page, Page 3".
+    tokens:
+      typography:
+        weight: weight.semibold
+
+  - id: ellipsis
+    required: false
+    purpose: >-
+      Decorative visual separator indicating omitted page-
+      numbers in truncated runs (e.g., 1 … 7 8 9 … 25). NOT
+      a button, NOT a tab stop, NOT focusable. Sits between
+      boundary pages and sibling pages per the
+      siblingCount + boundaryCount truncation algorithm.
+      Authored for numbered variant only.
+    slotKind: decorative
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: text
+      hint: Decorative ellipsis ("…") character; not a button instance
+    code:
+      slot: ellipsis
+      semantic: span-aria-hidden
+    a11y:
+      hint: >-
+        `<span aria-hidden="true">…</span>` or render via
+        CSS pseudo-element. Never make ellipsis interactive
+        in canonical pagination — Material UI's
+        "ellipsis-becomes-button-on-click-to-jump" is a
+        non-canonical extension that confuses keyboard
+        users (extra tab stops with unclear behaviour).
+        SR users hear the boundary pages and current
+        page; ellipsis is visual scaffolding only.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: first-button
+    required: false
+    purpose: >-
+      Optional boundary-jump button to page 1. Sits before
+      the previous-button when authored. Carries
+      `aria-disabled="true"` on page 1 (mirrors previous-
+      button pattern). Common in long-pagination contexts
+      (50+ pages) where users need to escape from deep
+      pages quickly. Driven by the showFirstLast property.
+    slotKind: interactive
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance with double-chevron-left icon
+    code:
+      slot: first-button
+      semantic: a-or-button
+    a11y:
+      hint: >-
+        Accessible name "Go to first page" — the double-
+        chevron icon needs an explicit `aria-label`. Same
+        disabled-not-removed contract as previous-button;
+        AT users hear "first page, dimmed" on page 1.
+
+  - id: last-button
+    required: false
+    purpose: >-
+      Mirror of first-button — boundary-jump to the last
+      page. Sits after next-button when authored. Carries
+      `aria-disabled="true"` on the last page. Driven by
+      the showFirstLast property.
+    slotKind: interactive
+    layout:
+      parent: items-list
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance with double-chevron-right icon
+    code:
+      slot: last-button
+      semantic: a-or-button
+    a11y:
+      hint: >-
+        Accessible name "Go to last page". Mirrors first-
+        button rules. Total page-count is required input
+        for this affordance — do not author last-button
+        when total is unknown (open-ended feeds).
+
+  - id: page-context-text
+    required: false
+    purpose: >-
+      Visible "Page X of N" or "Showing 21–40 of 1,237"
+      text. Required for prev-next-only variant (which
+      omits page-buttons and relies on this text for
+      position). Optional for numbered variant where page-
+      buttons already convey position. Live-region
+      announced on page change so SR users hear the
+      transition.
+    slotKind: content
+    layout:
+      parent: nav-root
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: text
+      hint: Inline text "Page X of N" or "Showing N-M of T"; static text style
+    code:
+      slot: page-context-text
+      semantic: span-or-aria-live
+    a11y:
+      hint: >-
+        For prev-next-only variant, wrap in `<span
+        aria-live="polite">` so SR announces page changes
+        without forcing focus. Number formatting follows
+        locale (`Intl.NumberFormat`). The text serves as
+        an `aria-labelledby` target for prev / next buttons
+        in some implementations (e.g., next button labelled
+        "Next page, currently on page 3 of 12").
+
+  - id: load-more-button
+    required: false
+    purpose: >-
+      Single button that appends the next page's records
+      to the existing list rather than replacing them.
+      Replaces the items-list + previous + next anatomy
+      for the load-more variant. Renders as `<button>`
+      (not `<a>` because no URL change). Activates a fetch
+      that appends rows; the new rows must be focused or
+      announced via `aria-live` so SR users find the
+      append point.
+    slotKind: interactive
+    layout:
+      parent: nav-root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Button instance with optional "Loading..." state and progress indicator
+    code:
+      slot: load-more-button
+      semantic: button
+    a11y:
+      hint: >-
+        `<button>` with accessible name "Load more" or
+        "Show more results". On activation, loading state
+        sets `aria-busy="true"` until fetch resolves; on
+        resolve, focus moves to the first newly-appended
+        row OR an `aria-live` region announces the row
+        count delta ("20 more results loaded, 60 total").
+        Without one of these signals, SR users are
+        stranded — they activate the button but cannot
+        find the new content.
+
+  - id: page-size-selector
+    required: false
+    purpose: >-
+      Optional `<select>` letting users choose
+      page-size (10 / 25 / 50 / 100 rows per page).
+      Sits adjacent to the pagination controls within
+      nav-root. Pairs with the pageSizeChange event.
+      Common in data-heavy table contexts; rare in
+      content-feed pagination.
+    slotKind: interactive
+    layout:
+      parent: nav-root
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Select instance with page-size options
+    code:
+      slot: page-size-selector
+      semantic: select
+    a11y:
+      hint: >-
+        Accessible name "Rows per page" via `<label>`
+        association. Native `<select>` carries the right
+        keyboard model and AT semantics without ARIA.
+        Activating fires the pageSizeChange event;
+        consumer typically resets to page 1 on change to
+        avoid showing an empty page.
+
+axes:
+  variants:
+    - numbered
+    - prev-next-only
+    - load-more
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: showFirstLast, kind: primitive, of: boolean }
+    - { name: disabled, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+      - disabled
+    data:
+      - idle
+      - loading
+      - atFirst
+      - atLast
+      - singlePage
+    transitions:
+      - from: idle
+        to: loading
+        trigger: User activates a page-button / previous / next / load-more on a server-paginated dataset
+      - from: loading
+        to: idle
+        trigger: Async fetch resolves with new page data
+      - from: idle
+        to: atFirst
+        trigger: User navigates to page 1 (previous-button + first-button become aria-disabled)
+      - from: idle
+        to: atLast
+        trigger: User navigates to the last page (next-button + last-button become aria-disabled)
+
+mismatches:
+  - figma: Disabled previous / next drawn as removed or hidden from layout
+    code: '`aria-disabled="true"` plus visually-disabled treatment, element stays in DOM'
+    consequence: >-
+      Designers compose pagination by hiding the previous
+      button on page 1 and the next button on the last
+      page; developers keep the buttons in the DOM with
+      visually-disabled styling. The two surfaces shape
+      tab-order differently — designer's hide shifts the
+      tab-order between pages (focus jumps land in
+      different places), developer's keep preserves a
+      stable tab-order. Without explicit anatomy, the
+      disabled-not-removed contract is invisible in the
+      design file and implementations may ship the wrong
+      pattern.
+    correct: >-
+      Document the disabled state as a structural slot
+      property in the anatomy. Figma carries an
+      "atFirst" and "atLast" state of the previous /
+      next buttons with visually-disabled styling.
+      Code ships `aria-disabled="true"` plus the
+      disabled visual treatment without removing the
+      element. Tab-order stays stable across page
+      transitions.
+
+  - figma: Page-numbers drawn as styled text without explicit link affordance
+    code: '`<a href="?page=N">` (server-render canonical) or `<button>` (SPA)'
+    consequence: >-
+      Designers author page-numbers as inline text styled
+      to look clickable; developers wrap them as `<a>`
+      (server-render) or `<button>` (SPA). The two
+      surfaces diverge on URL semantics — anchor preserves
+      right-click + open-in-new-tab + share-link, button
+      breaks all three. Without explicit anatomy, the
+      design file does not communicate the URL contract
+      and implementations may ship buttons-everywhere by
+      default.
+    correct: >-
+      Document the page-button as `<a href>` for
+      server-paginated tables (the canonical default) and
+      `<button>` only for SPA-only contexts where URL
+      change is undesirable. Figma carries the link
+      affordance in the page-button instance — hover-
+      underline, accent color, visible focus ring on
+      focus-visible. Code ships `<a href="?page=N">`
+      whenever the page can be deep-linked.
+
+  - figma: Ellipsis drawn as decorative dots
+    code: '`<span aria-hidden="true">…</span>`, not a tab stop'
+    consequence: >-
+      Designers draw "…" as static text between page
+      boundaries; developers ship it as either a non-
+      interactive span (canonical) or as a clickable
+      jump-button (Material UI's non-canonical
+      extension). The two implementations diverge on
+      keyboard behaviour — span has no tab stop, button
+      does. Without canonical anatomy, the design surface
+      cannot disambiguate and implementations may ship
+      the ellipsis-as-button pattern that confuses
+      keyboard users.
+    correct: >-
+      Document the ellipsis as a decorative slot with
+      `aria-hidden="true"` and no tab stop. Figma carries
+      the ellipsis as a static text element, not a button
+      instance. Code ships `<span aria-hidden="true">`
+      or a CSS pseudo-element. Implementations that want
+      jump-to-page behaviour should add a separate
+      visible "Jump to page" input, not overload the
+      ellipsis.
+
+  - figma: Current-page styled identically to other page-numbers
+    code: '`<a aria-current="page">` with distinct visual treatment'
+    consequence: >-
+      Designers draw the current page with the same hover-
+      style as other page-numbers; developers add
+      `aria-current="page"` and a distinct visual
+      treatment (filled background, bolder weight). The
+      two surfaces visually under-communicate the current
+      state — sighted users may not see "I am here" if
+      the design file does not carry an explicit current
+      variant.
+    correct: >-
+      Document the current-marker as a distinct slot
+      with explicit visual treatment (filled background,
+      bolder weight, accent color) AND `aria-current="page"`
+      semantic. Figma carries a "current" variant of the
+      page-button instance with non-link styling and the
+      current-state visual treatment. Code wires
+      `aria-current="page"` and removes the href so the
+      element is not a self-link.
+
+  - figma: Load-more variant drawn identically to numbered pagination
+    code: 'Distinct anatomy — single button replaces items-list, previous, next entirely'
+    consequence: >-
+      Designers compose load-more pagination as a
+      number-list with a "Load more" button at the end;
+      developers ship it as a single button with no
+      number-list. The two surfaces diverge structurally
+      — load-more's data model is append (rows
+      accumulate), numbered's is replace (rows swap per
+      page). Without explicit variant anatomy, the
+      design surface cannot communicate which model the
+      implementation should use.
+    correct: >-
+      Document load-more as a distinct variant with
+      load-more-button as the canonical interactive
+      affordance and result-summary / page-context-text
+      replacing the items-list. Figma carries a
+      "Load more" variant of the pagination component
+      with its own composition. Code ships
+      `<button>Load more</button>` plus an `aria-live`
+      region announcing the row-count delta on append.
+
+mistakes:
+  - id: pagination-no-nav-landmark
+    severity: blocker
+    title: Pagination is not wrapped in `<nav>` with `aria-label`
+    description: >-
+      The pagination renders as a bare `<ul>` or a
+      sequence of inline buttons without an enclosing
+      landmark. SR users navigating by landmark cannot
+      locate the pagination; the affordance is invisible
+      to AT until users read every page-button by accident.
+    fix: >-
+      Wrap the pagination in `<nav aria-label="Pagination">`
+      (or the locale-translated equivalent). The label
+      must be specific — generic "Navigation" collides
+      with the primary nav landmark on the page. AT users
+      jump to "navigation, Pagination" via landmark
+      shortcuts.
+
+  - id: pagination-current-no-aria-current
+    severity: blocker
+    title: Current page is not marked with `aria-current="page"`
+    description: >-
+      The current page is visually distinguished
+      (filled background, bolder weight) but the
+      programmatic state is missing — no
+      `aria-current="page"` attribute. SR users hear
+      "Page 3, button" on every page-button without any
+      indication of which page they are currently
+      viewing. WCAG 4.1.2 Name-Role-Value violation.
+    fix: >-
+      Set `aria-current="page"` on the current page-
+      button. The element should be a non-navigating
+      anchor (`<a aria-current="page">` without href) or
+      a static span — never `<a href="?page=3">` when
+      already on page 3. SR announces "current page,
+      Page 3"; sighted users see the current visual
+      treatment.
+
+  - id: pagination-ellipsis-focusable
+    severity: major
+    title: Ellipsis is a tab stop or interactive element
+    description: >-
+      The ellipsis between boundary pages is rendered as
+      a button or as a focusable element with `tabindex`
+      — Tab lands on it, SR announces it as "ellipsis,
+      button". The behaviour is unclear (does activating
+      jump to a specific page? open a menu?) and
+      inconsistent across implementations.
+    fix: >-
+      Render the ellipsis as a non-interactive
+      decorative element — `<span aria-hidden="true">…</span>`
+      or a CSS pseudo-element. Remove any `tabindex`,
+      `role="button"`, or click handler. Keyboard users
+      navigate from boundary pages to sibling pages
+      directly without an intermediate stop.
+
+  - id: pagination-disabled-removed-from-tab-order
+    severity: major
+    title: Disabled previous / next is removed from the DOM or hidden
+    description: >-
+      On page 1 the previous-button is removed from the
+      DOM (or styled `display: none`); on the last page
+      the next-button is removed. The pagination's tab-
+      order shifts between pages — focus lands on the
+      first page-number on page 1 but on the previous-
+      button on page 2. Users learn one keyboard pattern
+      then have it broken on page transitions.
+    fix: >-
+      Keep disabled previous / next buttons in the DOM
+      with `aria-disabled="true"` plus visually-disabled
+      styling. The element retains its tab-stop position
+      and AT announces "previous, dimmed" / "unavailable".
+      Tab-order stays stable across page transitions.
+      Same rule applies to optional first / last
+      boundary-jump buttons.
+
+  - id: pagination-not-link
+    severity: major
+    title: Page-numbers are `<button>` even when URLs are deep-linkable
+    description: >-
+      Server-rendered pagination ships page-numbers as
+      `<button>` elements with onClick navigation handlers.
+      Right-click → "Open in new tab" does nothing;
+      hovering shows no URL preview; share-link copies
+      the current page URL not the target page. The
+      affordance functions for keyboard / click
+      activation but loses every URL-based interaction
+      pattern users expect from page navigation.
+    fix: >-
+      Render page-numbers as `<a href="?page=N">` for
+      server-rendered or URL-deep-linkable pagination.
+      Reserve `<button>` for SPA-only contexts where
+      URL change is undesirable (in-app modals,
+      ephemeral views). For SPA frameworks with client-
+      side routing, use the framework's `<Link>` /
+      `<a>` component (Next Link, React Router Link) so
+      the rendered DOM remains an anchor.
+
+  - id: pagination-no-page-context
+    severity: major
+    title: Pagination provides no SR context for current position
+    description: >-
+      The pagination renders only icon-based previous /
+      next buttons (no text labels, no aria-label, no
+      "Page X of N" text). SR users hear only "previous"
+      / "next" with no indication of where they are or
+      where they are going. Common in icon-only
+      minimalist designs that prioritize visual
+      cleanliness over information density.
+    fix: >-
+      Add `aria-label` to icon-only buttons ("Go to
+      previous page", "Go to next page") and provide
+      page-context-text either visibly ("Page 3 of
+      12") or via sr-only span. For prev-next-only
+      variant, the page-context-text is required, not
+      optional. The text wraps in `<span aria-live="polite">`
+      so page changes announce on transition without
+      stealing focus.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-pagination>` host with `variant`, `size`,
+      `current-page`, `total-pages`, `sibling-count`,
+      `boundary-count`, `show-first-last`, `disabled`
+      attributes; renders the navigation landmark plus
+      the items-list with computed page-buttons +
+      ellipses based on the truncation algorithm. The
+      wire-name `ui-pagination` becomes `md-pagination`
+      / `mat-paginator` / `pf-pagination` per design
+      system; the canonical wire-name stays `pagination`.
+      Slotted `previous-label`, `next-label`,
+      `page-label-template` for i18n customisation.
+    variantMechanism: >-
+      Attributes drive variant + properties
+      (`variant="numbered"`, `size="md"`,
+      `show-first-last`, `disabled`); `current-page`
+      and `total-pages` reflect to attributes for
+      declarative state. CSS uses logical properties
+      so RTL flips chevron direction.
+      Page-change emits `page-change` CustomEvent.
+
+  react:
+    structureMechanism: >-
+      Compound component (Material UI Pagination,
+      Atlassian Pagination, Carbon Pagination, Polaris
+      Pagination as third-party precedents). React Aria
+      ships no Pagination primitive — consumers compose
+      `<a>` / `<button>` per page using the underlying
+      `useFocusRing` and `usePress` hooks. Material UI
+      exposes `count`, `page`, `siblingCount`,
+      `boundaryCount`, `showFirstButton`,
+      `showLastButton`, `onChange(event, page)` as the
+      canonical API surface. The compound shape
+      (`<Pagination.Previous>`, `<Pagination.Item>`)
+      exists in HeroUI / Mantine.
+    variantMechanism: >-
+      Props with class-variance-authority for variant +
+      size classes; `siblingCount` + `boundaryCount`
+      drive the truncation algorithm. `getItemAriaLabel`
+      callback for i18n of "Go to page N" labels.
+      Server-side rendering pairs with framework
+      `<Link>` (Next.js, React Router) so the rendered
+      DOM is `<a href>` not `<button>`.
+
+  angularSignals:
+    structureMechanism: >-
+      Angular component with `input<PaginationVariant>('variant')`,
+      `input<number>('currentPage')`,
+      `input<number>('totalPages')`,
+      `input<number>('siblingCount')`,
+      `input<number>('boundaryCount')`,
+      `input<boolean>('showFirstLast')`,
+      `input<boolean>('disabled')`. Angular Material
+      ships `MatPaginator` with the same surface plus
+      `pageSize` / `pageSizeOptions` for the page-size-
+      selector slot. Page-change via
+      `output<{ pageIndex: number, pageSize: number }>('pageChange')`
+      plus optional two-way `model<number>('currentPage')`.
+    variantMechanism: >-
+      Host-binding `[attr.role]="'navigation'"` plus
+      `[attr.aria-label]`; signal-driven reactive
+      truncation — `computed()` derives the visible
+      page-numbers from `currentPage()`, `totalPages()`,
+      `siblingCount()`, `boundaryCount()`. CSS variables
+      drive size scaling so consumers override
+      per-instance.
+
+  vue:
+    structureMechanism: >-
+      Single-file component with default + named slots
+      for previous-label / next-label / item-template /
+      ellipsis customisation. PrimeVue Paginator,
+      Element Plus Pagination, Naive UI Pagination as
+      third-party precedents. `defineProps` exposes
+      `currentPage` (v-model), `totalPages`,
+      `siblingCount`, `boundaryCount`, `showFirstLast`,
+      `disabled`. Page-change via
+      `@update:current-page` (v-model:currentPage).
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`variant: 'numbered' | 'prev-next-only' | 'load-more'`);
+      v-model:currentPage and v-model:pageSize for
+      two-way state binding. Slot-based item-template
+      lets consumers override per-page-button rendering
+      without prop-drilling.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    pageTransition: motion.duration.fast
+    loadMoreAppend: motion.duration.base
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, the canonical pattern collapses
+        the numbered variant to prev-next-only —
+        page-buttons hide, only previous + page-context-
+        text + next remain. Polaris Pagination's mobile
+        mode is the precedent. The variant change is
+        progressive enhancement rather than authored
+        breakpoint-state — the same `<nav>` renders
+        differently per viewport via CSS or via per-
+        breakpoint variant choice.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the numbered variant
+        renders with the full visible page-button range
+        per `siblingCount + boundaryCount`. Boundary-
+        jump buttons (first / last) appear when
+        `showFirstLast` is true and total page-count
+        exceeds the visible range.
+
+events:
+  - name: pageChange
+    payload: >-
+      `{ page: number, originalEvent: MouseEvent |
+      KeyboardEvent }`. Fires when the user activates a
+      page-button, previous, next, first, or last
+      button. The `page` value is the 1-based page index
+      the user navigated to. Consumer updates the data
+      model and re-renders; the pagination reflects
+      the new `aria-current="page"` on the activated
+      page-button.
+    frameworkNotes:
+      webComponents: >-
+        `pageChange` CustomEvent on the host with
+        `event.detail = { page, originalEvent }`.
+      react: >-
+        `onChange(event, page)` callback (Material UI
+        idiom) or `onPageChange(page)` (Polaris).
+      angularSignals: >-
+        `output<number>('pageChange')` plus two-way
+        `model<number>('currentPage')`.
+      vue: >-
+        `@update:current-page` (v-model:currentPage)
+        with payload `number`.
+
+  - name: pageSizeChange
+    optional: true
+    payload: >-
+      `{ pageSize: number, page: number }`. Fires when
+      the user changes the page-size selector.
+      Canonical convention: reset `page` to 1 on size
+      change so the user does not land on an empty
+      page (page 5 at size 50 may not exist at size
+      100).
+    frameworkNotes:
+      webComponents: >-
+        `pageSizeChange` CustomEvent with
+        `event.detail = { pageSize, page }`.
+      react: >-
+        `onPageSizeChange(size)` callback or
+        `onChange({ pageSize })` (Material UI's
+        TablePagination idiom).
+      angularSignals: >-
+        `output<{ pageSize: number; page: number }>('pageSizeChange')`
+        on the MatPaginator (Angular Material).
+      vue: >-
+        `@update:page-size` (v-model:pageSize) plus
+        `@update:current-page` reset to 1.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus moves through the pagination items in DOM
+        order — first-button (if present), previous-
+        button, page-buttons (with current-marker
+        included as a tab-stop unless rendered as
+        non-interactive span), next-button, last-button
+        (if present), page-size-selector (if present).
+        Disabled buttons retain their tab-stop position;
+        focus lands on them and SR announces "dimmed".
+    - keys: Shift+Tab
+      expected: >-
+        Reverse focus through the same items. Standard
+        tab-order — no pagination-specific behaviour.
+    - keys: Enter / Space (focus on page-button / previous / next)
+      expected: >-
+        Activates the button. For `<a href>` page-
+        buttons, Enter navigates (Space does nothing —
+        anchors do not respond to Space by spec).
+        For `<button>`, both Enter and Space activate.
+        pageChange fires.
+    - keys: Enter / Space (focus on disabled button)
+      expected: >-
+        No-op. The element is in DOM with
+        `aria-disabled="true"` so AT announces
+        "unavailable"; activation is suppressed via
+        `event.preventDefault` in the handler. Tab-order
+        remains stable.
+    - keys: Enter / Space (focus on load-more-button, load-more variant)
+      expected: >-
+        Activates the load-more action.
+        `aria-busy="true"` while fetching; on resolve,
+        focus moves to the first newly-appended row OR
+        an `aria-live` region announces the delta.
+        Without one of these signals, keyboard users
+        are stranded.
+  announcements:
+    - trigger: SR enters the pagination landmark
+      expected: >-
+        SR announces "navigation, Pagination" (the
+        landmark plus its label). For the numbered
+        variant, the announcement continues with "list,
+        N items" (the items-list) and the user can
+        navigate from there.
+    - trigger: SR encounters the current-marker
+      expected: >-
+        SR announces "current page, Page 3" — the
+        `aria-current="page"` semantic plus the
+        accessible name. Distinct from page-buttons
+        which announce "Page 4, link".
+    - trigger: SR encounters a disabled previous / next
+      expected: >-
+        SR announces "Previous, dimmed" or
+        "unavailable". The element retains its position
+        in the announcement stream so users learn the
+        pattern stays put.
+    - trigger: User activates a page-button (server-paginated)
+      expected: >-
+        Server fetch begins. `aria-busy="true"` on the
+        nav-root or on the data surface; SR may
+        announce "loading" via the live-region. On
+        resolve, the new page renders and `aria-current="page"`
+        moves to the activated button. Focus stays on
+        the activated button so users can continue
+        navigation without re-finding their place.
+    - trigger: User activates load-more-button (load-more variant)
+      expected: >-
+        SR announces "loading" (via aria-busy or live-
+        region). On resolve, an aria-live region
+        announces the row-count delta ("20 more
+        results loaded, 60 total"). Focus moves to the
+        first newly-appended row OR stays on the
+        load-more button (per the implementation's
+        chosen pattern; both are canonical, document
+        the choice).
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - landmark-unique
+    - link-name
+    - button-name
+    - color-contrast
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps numbered / prev-next-only / load-more.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md.
+  - figma: Current Page
+    code: currentPage
+    kind: number
+    notes: 1-based current page index. Drives `aria-current="page"` placement and atFirst / atLast state.
+  - figma: Total Pages
+    code: totalPages
+    kind: number
+    notes: 1-based total page count. Drives the visible page-button range and atLast state.
+  - figma: Sibling Count
+    code: siblingCount
+    kind: number
+    notes: Number of page-buttons shown adjacent to the current page (default 1; Material UI convention).
+  - figma: Boundary Count
+    code: boundaryCount
+    kind: number
+    notes: Number of page-buttons shown at the start / end of the range before ellipses appear (default 1; Material UI convention).
+  - figma: Show First Last
+    code: showFirstLast
+    kind: boolean
+    notes: When true, first / last boundary-jump buttons render at the extremes of the items-list.
+  - figma: Disabled
+    code: disabled
+    kind: boolean
+    notes: Whole pagination is non-interactive; all buttons render with `aria-disabled="true"`.
+  - figma: Page Size
+    code: pageSize
+    kind: number
+    notes: Items-per-page when the page-size-selector slot is authored. Pairs with pageSizeChange event.
+  - figma: Get Item Aria Label
+    code: getItemAriaLabel
+    kind: text
+    notes: i18n callback that returns the accessible name for each item ("Go to page N", "Previous page", etc.).
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    Pagination is a navigation component, not a form
+    control. The `<nav>` element has no `name`
+    attribute and contributes nothing to FormData.
+    Page state lives in the URL query (server-rendered
+    canonical) or in component state (SPA fallback) —
+    not in the form payload.
+  submittedValue: >-
+    Pagination submits nothing on form submission.
+    Current page is part of the URL or component state;
+    form submissions that depend on the current
+    page-context (filter forms that submit the current
+    page) read the page state at submit time and
+    include it explicitly as a hidden form field or
+    URL parameter.
+  requiredAttr: false
+  bridges:
+    react: >-
+      React Hook Form / Formik treat pagination as
+      navigation state, not form state. For server-
+      rendered pagination, the page is in the URL
+      (`useSearchParams` / Next router); for SPA, the
+      page is in component state. Forms that depend
+      on the current page include it as a hidden field
+      or read it from the URL at submit time.
+    vue: >-
+      VeeValidate / FormKit do not bind to pagination.
+      Page state lives in `useRoute` (Vue Router) or
+      in component state; forms read the page at
+      submit time. v-model:currentPage on the
+      pagination component is for two-way binding
+      with parent state, not form state.
+    angularSignals: >-
+      Reactive forms do not encompass pagination.
+      Page state lives as `model<number>('currentPage')`
+      on the pagination input or in router-state; form
+      submissions read the page from the consumer
+      component at submit time.
+    webComponents: >-
+      The `<ui-pagination>` host is not formAssociated
+      — it is a navigation control, not a data
+      control. Page state is exposed via the
+      `current-page` attribute and the `page-change`
+      CustomEvent so consumers can propagate to URL
+      state or to a sibling form.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Chevron icons (chevron-left for previous,
+      chevron-right for next, double-chevron for
+      first / last) flip direction under RTL — visual
+      previous becomes right-pointing in Arabic /
+      Hebrew. Implementation via CSS logical
+      properties (`inset-inline-start`) or via
+      icon components that mirror via the `direction`
+      cascade. Page-numbers do not flip (digits read
+      left-to-right even in RTL contexts via bidi).
+      Items-list flow direction follows document
+      direction so the leading item (typically
+      previous-button) sits at the inline-start.
+      Nav-landmark `aria-label` translates per locale.
+  textExpansion: >-
+    Page-button labels expand under translation only
+    when text labels are authored ("Previous" →
+    "Précédent" → "السابق") — icon-only buttons are
+    stable. "Page X of N" expands 30-50%
+    ("Seite 3 von 12", "Page 3 sur 12"); reserve
+    flexible space in the page-context-text slot.
+    Number formatting via `Intl.NumberFormat` handles
+    locale-specific thousand-separators (1,000 → 1.000
+    in German). For very long total-page-counts
+    (10,000+ pages), the prev-next-only variant
+    avoids visual crowding regardless of language.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Pagination is wrapped in `<nav>` with a specific
+        `aria-label` ("Pagination" or the locale-
+        translated equivalent). The label distinguishes
+        the pagination from other navigation landmarks
+        on the page.
+      source: wcag
+      sourceRef: 'WCAG 1.3.1 Info and Relationships'
+      consequence: >-
+        Without the landmark, SR users cannot jump to
+        the pagination via landmark navigation — the
+        affordance becomes invisible to AT until users
+        encounter it by accident in linear reading
+        order. WCAG 1.3.1 violation.
+
+    - rule: >-
+        The current page carries `aria-current="page"`
+        and is rendered as static text or as a non-
+        navigating anchor — never as `<a href>` to the
+        current URL. Implementations that ship a self-
+        link create a useless tab stop and the
+        page-reload-on-click is hostile.
+      source: wcag
+      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+      consequence: >-
+        Without `aria-current="page"`, SR users hear
+        "Page 3, link" on every page-button without
+        any indication of which page they are
+        currently viewing. Self-link to current page
+        wastes user effort and breaks the navigation
+        model.
+
+    - rule: >-
+        Disabled previous / next / first / last buttons
+        retain DOM presence with `aria-disabled="true"`
+        — never removed via `display: none` or omitted
+        from rendering on boundary pages.
+      source: canon
+      consequence: >-
+        Without the rule, the pagination's tab-order
+        shifts between pages — users learn one keyboard
+        pattern then have it broken on transitions.
+        AT users hear different element-counts in the
+        landmark across page boundaries. The
+        disabled-not-removed contract is canonical.
+
+    - rule: >-
+        Ellipses are decorative — `aria-hidden="true"`
+        and not in the tab-order. Implementations that
+        ship ellipsis-as-button (Material UI's
+        non-canonical extension) confuse keyboard users
+        with extra tab stops and unclear behaviour.
+      source: canon
+      consequence: >-
+        Without the rule, keyboard users encounter
+        intermediate tab stops between boundary pages
+        and sibling pages with no clear semantic. AT
+        users hear "ellipsis, button" with no affordance
+        contract. The decorative-ellipsis discipline is
+        canonical.
+
+    - rule: >-
+        Page-numbers are `<a href>` for server-paginated
+        or URL-deep-linkable contexts; `<button>` only
+        for SPA-only contexts where URL change is
+        undesirable. SPA framework `<Link>` components
+        (Next Link, React Router Link) render as
+        anchors and satisfy the rule.
+      source: html-spec
+      sourceRef: 'HTML standard — anchor element semantics for navigation'
+      consequence: >-
+        Without the rule, right-click → "Open in new
+        tab" does nothing; hover shows no URL preview;
+        share-link copies the wrong URL. The
+        affordance functions for keyboard / click but
+        loses every URL-based interaction users expect
+        from page navigation.
+
+  vocabularyDrift:
+    - system: WAI-ARIA
+      theirTerm: 'aria-current="page" + nav-landmark'
+      note: >-
+        WAI-ARIA does not ship a formal Pagination APG
+        pattern — pagination composes from the nav
+        landmark (`role="navigation"`) plus
+        `aria-current="page"` on the current page. The
+        canonical anatomy follows this composition
+        rather than inventing pagination-specific
+        ARIA roles.
+    - system: Material 3
+      theirTerm: Pagination (Material UI extension)
+      note: >-
+        Material 3 spec does not include Pagination as
+        a first-class component — it ships as a
+        Material UI extension. The canonical
+        siblingCount + boundaryCount truncation API
+        derives from Material UI's
+        `Pagination` component
+        (`count` / `siblingCount` /
+        `boundaryCount` / `showFirstButton` /
+        `showLastButton`). Mobile-first Material
+        guidance favours infinite-scroll over
+        pagination for content feeds.
+    - system: Carbon
+      theirTerm: Pagination
+      note: >-
+        Carbon ships Pagination with `page` /
+        `pageSize` / `pageSizes` (array of page-size
+        options) / `totalItems` API. Pairs natively
+        with Carbon DataTable. Adds explicit
+        page-size-selector + result-summary as
+        first-class anatomy (canonical optional
+        slots).
+    - system: Atlassian
+      theirTerm: Pagination
+      note: >-
+        Atlassian ships Pagination with `pages`
+        (array of pages) + `selectedIndex` +
+        `onChange(event, newSelectedPage)` API.
+        Naming-only divergence from Material's
+        page-as-number convention.
+    - system: Polaris
+      theirTerm: Pagination
+      note: >-
+        Polaris ships Pagination with
+        `hasPrevious` / `hasNext` / `onPrevious` /
+        `onNext` API — prev-next-only by design,
+        not numbered. The canonical prev-next-only
+        variant captures this Polaris-style as a
+        first-class axis.
+    - system: GitHub Primer
+      theirTerm: Pagination
+      note: >-
+        Primer ships Pagination with `pageCount` /
+        `currentPage` / `onPageChange` API plus
+        `marginPageCount` (Primer's name for
+        boundaryCount) and `surroundingPageCount`
+        (Primer's name for siblingCount). Naming-
+        only divergence; surfaces map to canonical
+        boundaryCount + siblingCount.
+    - system: GOV.UK
+      theirTerm: Pagination
+      note: >-
+        GOV.UK ships Pagination with the numbered
+        variant plus explicit "Previous page" /
+        "Next page" labels (text not icon-only).
+        Block-level pattern with previous + next
+        as separate large blocks; canonical
+        nav-root + items-list + previous / next
+        composition matches.
+    - system: React Aria
+      theirTerm: '— (no Pagination primitive)'
+      note: >-
+        React Aria ships no Pagination component.
+        Consumers compose pagination from `<a>` /
+        `<button>` plus `useFocusRing` + `usePress`
+        hooks. The explicit absence is itself
+        canonical — pagination is a composition
+        over standard navigation elements, not a
+        new ARIA pattern.
+
+sources:
+  - https://www.w3.org/TR/wai-aria-1.2/#aria-current
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nav
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/bypass-blocks.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://mui.com/material-ui/react-pagination/
+  - https://carbondesignsystem.com/components/pagination/usage/
+  - https://atlassian.design/components/pagination/examples
+  - https://polaris.shopify.com/components/navigation/pagination
+  - https://primer.style/components/pagination/react
+  - https://design-system.service.gov.uk/components/pagination/
+
+notes: >-
+  Pagination has no formal APG pattern — it composes
+  from `nav` landmark plus `aria-current="page"`. The
+  canonical truncation API (siblingCount +
+  boundaryCount) derives from Material UI; alternate
+  library naming (Primer's marginPageCount /
+  surroundingPageCount, Atlassian's pages-with-
+  selectedIndex) maps onto the canonical surface in
+  the vocabularyDrift block. The disabled-not-removed
+  contract is the most-overlooked failure mode in
+  implementations — designers compose with hidden
+  prev/next on boundaries by default; the canonical
+  rule preserves tab-order stability instead.
+
+lastReviewed: '2026-05-04'
