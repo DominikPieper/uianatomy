@@ -1,0 +1,1126 @@
+id: progress
+name: Progress
+description: >-
+  A non-interactive indicator showing the completion status of an
+  ongoing task — uploads, downloads, multi-step server operations,
+  long form submissions. Carries `role="progressbar"` plus an
+  accessible name; determinate progress reports
+  `aria-valuemin` / `aria-valuemax` / `aria-valuenow` so AT users
+  hear the percentage; indeterminate progress omits
+  `aria-valuenow` per APG and announces a busy state. Two
+  structural variants (linear bar, circular ring) cover the
+  canonical visual shapes; native HTML `<progress>` is an
+  acceptable alternative implementation when no styling
+  control is needed.
+
+intro: >-
+  Progress communicates "this is working" plus, when known, "this
+  is how far along". The reference documents the
+  `role="progressbar"` contract, the accessible-name requirement
+  (`aria-label` or `aria-labelledby` — never unlabeled), the
+  determinate-vs-indeterminate split (omit `aria-valuenow` for
+  indeterminate per APG), the `prefers-reduced-motion` fallback
+  for indeterminate animation (WCAG 2.3.3), and the boundary
+  with `Skeleton` (use Skeleton when the eventual layout is
+  preserved and progress is unmeasurable; use Progress when
+  there is a measurable percentage or a busy state to surface).
+
+alternateNames:
+  - 'Progress bar'
+  - 'Progress indicator'
+  - 'Loader'
+
+whenToUse:
+  use: >-
+    For tasks with a measurable completion fraction (file
+    upload showing 0-100%, multi-step server-side operation
+    reporting step N of M) — render the determinate variant
+    with `aria-valuenow` reporting the percentage. For tasks
+    with no measurable fraction but where the user must know
+    the system is working (server fetch with unknown latency,
+    background sync) — render the indeterminate variant with
+    a reduced-motion fallback. Linear variant for in-page
+    progress that has horizontal space; circular variant for
+    button-adjacent or compact contexts.
+  avoid: >-
+    For loading states where the eventual layout is known —
+    that is `Skeleton` (preserves layout, no progress
+    meaning). For transient post-completion notifications —
+    that is `Toast` (system-pushed signal). For static
+    completion messages once a task is done — that is
+    `role="status"` or `<output>`, not `progressbar`. For
+    multi-step user-driven workflows with state carried
+    between steps — that is `Stepper`. For purely decorative
+    spinning visuals not tied to a real task — render no
+    progress affordance; loaders without backing operations
+    confuse AT users about whether the system is working.
+  vsRelated:
+    - id: skeleton
+      difference: >-
+        `Skeleton` reserves layout while the eventual content
+        is fetched — placeholder shapes mirror the final
+        layout, no percentage. `Progress` reports the
+        completion fraction (or busy state) of an ongoing
+        task — no layout preservation, just status. Choose
+        Skeleton when the layout is the message ("the page
+        will look like this"); choose Progress when the
+        completion is the message ("we are 60% through"). A
+        single load may use both — Skeleton in the data
+        region, Progress in a header showing overall
+        completion across multiple loads.
+    - id: toast
+      difference: >-
+        `Toast` is a transient post-completion notification
+        ("Upload complete"); `Progress` is the during-task
+        indicator that the toast typically follows.
+        Skeleton-during-load → Progress-while-working → Toast-
+        on-complete is a canonical pairing across a long-
+        running operation. Toast carries notification
+        semantics (`role="status"` or `aria-live="polite"`);
+        Progress carries progress semantics
+        (`role="progressbar"` plus `aria-valuenow`).
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The progressbar element — the wrapper carrying
+      `role="progressbar"` plus the ARIA value attributes
+      and the accessible name. Renders as `<div
+      role="progressbar">` (canonical when styled control
+      is required) or as native `<progress>` (when
+      browser-default styling is acceptable). Required for
+      both linear and circular variants; the visual shape
+      lives in the track and fill slots inside.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Progressbar frame; variant property switches between linear and circular shapes
+    code:
+      slot: root
+      semantic: progressbar
+    a11y:
+      hint: >-
+        `<div role="progressbar" aria-valuemin="0"
+        aria-valuemax="100" aria-valuenow="60"
+        aria-label="Upload progress">` (determinate) or
+        `<div role="progressbar" aria-label="Loading">`
+        without `aria-valuenow` (indeterminate). Accessible
+        name is REQUIRED — `aria-label` or
+        `aria-labelledby` pointing to a sibling label
+        element. Native `<progress value="60" max="100">`
+        is the alternate-implementation; both surfaces are
+        canonical, the choice is implementation discretion.
+
+  - id: track
+    required: true
+    purpose: >-
+      The background path of the progress shape. Linear
+      variant renders as a horizontal bar background;
+      circular variant renders as the full ring (the
+      arc the fill sits within). Decorative —
+      `aria-hidden="true"` because the progress semantic
+      lives on the root. The track defines the visual
+      span the fill animates within.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Track shape — bar (linear) or ring (circular); muted color
+    code:
+      slot: track
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"` is canonical. Track is visual
+        scaffolding only; AT reads the progressbar's
+        `aria-valuenow` via the root, not the SVG / DOM
+        shapes. SVG implementations should mark inner
+        `<circle>` / `<rect>` shapes with `aria-hidden`
+        explicitly to prevent SR drift on raw shape
+        announcements.
+    tokens:
+      color:
+        background: color.surface.sunken
+
+  - id: fill
+    required: true
+    purpose: >-
+      The progress portion of the shape — the filled bar
+      (linear) or the progress arc (circular). Animates
+      from 0 to the current value for determinate
+      progress; cycles continuously for indeterminate
+      under the motion-reduced-fallback contract.
+      Decorative for AT — the value lives on the root's
+      `aria-valuenow`.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Fill shape — bar (linear) or arc (circular); accent color; animation per variant
+    code:
+      slot: fill
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"`. The fill is the visible
+        progress; the AT semantic lives on the root.
+        Indeterminate fill animates continuously when
+        `prefers-reduced-motion` is `no-preference`; under
+        `reduce`, the fill renders as a static busy
+        indicator (e.g., a pulsing-once or a stripe-
+        pattern) without continuous motion.
+    tokens:
+      color:
+        background: color.accent.bg
+
+  - id: label
+    required: false
+    purpose: >-
+      Visible label text naming what the progress is
+      reporting ("Uploading file 3 of 7", "Saving"). Sits
+      above or beside the root depending on layout.
+      Required for sighted users when the surrounding
+      context does not name the task; `aria-labelledby`
+      on the root points to this slot's id when present.
+      May be omitted when an `aria-label` covers
+      naming on the root directly.
+    slotKind: content
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Label text style; positioned above or beside the progress shape
+    code:
+      slot: label
+      semantic: text-with-id
+    a11y:
+      hint: >-
+        Render as `<span id="progress-label">` and wire
+        `<div role="progressbar" aria-labelledby="progress-label">`.
+        The label and value-display together compose the
+        SR announcement ("Uploading file 3 of 7,
+        progressbar, 43 percent"). Avoid duplicating the
+        label as both `aria-labelledby` and visible text
+        (works) versus only `aria-label` (works but
+        sighted users see no label) — pick one canonical
+        pattern per design system.
+    tokens:
+      typography:
+        size: text.sm
+
+  - id: value-display
+    required: false
+    purpose: >-
+      Visible percentage or step text ("43%", "3 of 7").
+      Sits adjacent to the progress shape — typically
+      trailing in linear variant, centered inside the
+      ring for circular variant. Driven by the
+      `showValue` property; omitted when the visual
+      progress alone is sufficient. Pairs with
+      `aria-valuetext` on the root when the displayed
+      text differs from the raw percentage (e.g.,
+      "Step 3 of 7" while `aria-valuenow="42"`).
+    slotKind: content
+    layout:
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: text
+      hint: Numeric value text; aligned trailing (linear) or centered (circular)
+    code:
+      slot: value-display
+      semantic: text
+    a11y:
+      hint: >-
+        Decorative for AT (`aria-hidden="true"`) when the
+        root's `aria-valuenow` reports the same number;
+        the SR otherwise announces the value twice. When
+        the visible text differs from the numeric value
+        (e.g., "Step 3 of 7"), set the root's
+        `aria-valuetext` to the same string and keep the
+        slot decorative — `aria-valuetext` overrides
+        `aria-valuenow` in the SR announcement.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+
+  - id: status-icon
+    required: false
+    purpose: >-
+      Glyph indicating the terminal state — checkmark for
+      complete, x or alert-triangle for error. Sits in
+      place of the fill on completion (or adjacent to the
+      track). Decorative — the `aria-valuetext` on the
+      root carries the semantic ("Complete" /
+      "Failed"). Authored only when the progress
+      component itself surfaces completion; otherwise the
+      consumer transitions to a Toast or status message.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon instance — checkmark (complete) or x (error); aria-hidden
+    code:
+      slot: status-icon
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"`. The icon is visual
+        confirmation of the terminal state; the AT
+        semantic lives on the root via
+        `aria-valuetext="Complete"` (or "Failed"). Do not
+        give the icon its own role or accessible name —
+        this duplicates the announcement and produces
+        "Complete, image, complete" patterns on some SR
+        / browser combinations.
+
+  - id: helper-text
+    required: false
+    purpose: >-
+      Secondary descriptive text below the progress —
+      additional context the visible label and
+      value-display do not cover ("Estimated 2 minutes
+      remaining", "Do not close this tab"). Optional;
+      authored only when the additional context aids
+      users.
+    slotKind: content
+    layout:
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Helper text style; muted color; positioned below progress shape
+    code:
+      slot: helper-text
+      semantic: text-with-aria-describedby
+    a11y:
+      hint: >-
+        Render as `<span id="progress-helper">` and wire
+        `<div role="progressbar" aria-describedby="progress-helper">`
+        so SR users hear the helper text alongside the
+        value announcement. Avoid time-based predictions
+        the user cannot verify ("2 minutes remaining"
+        when the actual ETA fluctuates wildly is more
+        confusing than no estimate).
+    tokens:
+      color:
+        foreground: color.text.muted
+      typography:
+        size: text.sm
+
+  - id: announcement
+    required: false
+    purpose: >-
+      Sr-only `aria-live="polite"` region announcing
+      milestone progress at coarse intervals (25% /
+      50% / 75% / 100% — or per task-specific
+      milestones) without spamming SR users on every
+      single percent change. Distinct from
+      `aria-valuenow` updates which some SR-browser
+      combinations announce on every change and
+      others announce only on focus. The announcement
+      slot is the canonical opt-in for milestone-only
+      announcements.
+    slotKind: content
+    layout:
+      overlay: true
+    figma:
+      type: text
+      hint: Visually-hidden text element for milestone announcements
+    code:
+      slot: announcement
+      semantic: aria-live-polite
+    a11y:
+      hint: >-
+        `<span aria-live="polite" class="sr-only">` whose
+        text content updates at canonical milestones
+        ("25 percent complete", "50 percent complete",
+        ...). Use `aria-live="polite"` not "assertive" —
+        progress is non-urgent; assertive interrupts
+        SR users in mid-sentence. Long-running operations
+        benefit from milestone announcements; short
+        operations (under 5 seconds) usually do not.
+
+axes:
+  variants:
+    - linear
+    - circular
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md, lg]
+    - { name: determinate, kind: primitive, of: boolean }
+    - { name: showValue, kind: primitive, of: boolean }
+  states:
+    interactive: []
+    data:
+      - pending
+      - inProgress
+      - complete
+      - error
+      - indeterminate
+    transitions:
+      - from: pending
+        to: inProgress
+        trigger: Consumer increments value above 0
+      - from: inProgress
+        to: complete
+        trigger: Value reaches max (100%)
+      - from: inProgress
+        to: error
+        trigger: Underlying task fails; consumer sets the error data state
+      - from: inProgress
+        to: indeterminate
+        trigger: Consumer flips `determinate` from true to false (e.g., total size unknown mid-fetch)
+
+mismatches:
+  - figma: Inline "75%" text drawn as standalone label next to the bar
+    code: '`aria-valuenow="75"` on the root plus optional `<value-display>` slot'
+    consequence: >-
+      Designers compose progress with a percentage label
+      drawn next to the bar; developers wire the same
+      number as `aria-valuenow` on the root and may
+      double-render it as visible text. The two surfaces
+      diverge on AT — designer's standalone text is
+      invisible to the progressbar's accessible value;
+      developer's `aria-valuenow` is the canonical
+      signal. Without explicit anatomy, the
+      visible-versus-AT split is unclear and
+      implementations may ship the visible text alone
+      without setting `aria-valuenow`.
+    correct: >-
+      Document the value-display slot as a visible
+      mirror of the root's `aria-valuenow`. Figma
+      carries the value text as a child of the
+      progress instance, not a sibling. Code wires
+      `aria-valuenow` on the root AND renders the
+      value-display slot with `aria-hidden="true"` so
+      the SR does not announce it twice.
+
+  - figma: Indeterminate drawn as decorative spinner without progress semantic
+    code: '`role="progressbar"` without `aria-valuenow` plus reduced-motion fallback'
+    consequence: >-
+      Designers compose indeterminate progress as a
+      generic spinner-loading-icon that may map to
+      Skeleton, Toast, or a bare decorative SVG;
+      developers ship `role="progressbar"` so AT
+      announces "progressbar, busy". The two
+      surfaces diverge on what the system actually
+      means — designer's "loading icon" reads as
+      decorative, developer's "busy progressbar"
+      reads as a real task. Without explicit
+      anatomy, indeterminate progress may ship
+      without the role at all and AT users hear no
+      busy signal.
+    correct: >-
+      Document indeterminate as a property of the
+      progress component, not a separate decorative
+      pattern. Figma carries an "indeterminate"
+      variant of progress with the canonical animation
+      and the `prefers-reduced-motion` fallback shape.
+      Code ships `role="progressbar"` plus
+      `aria-label`; omits `aria-valuenow` per APG;
+      respects reduced-motion via CSS media query.
+
+  - figma: Circular ring drawn as decorative-only loading icon
+    code: '`role="progressbar"` plus accessible name plus aria-valuetext for non-percent contexts'
+    consequence: >-
+      Designers ship circular progress as an icon
+      called "Loader" or "Spinner" with no progress
+      semantic in the design surface; developers
+      wire it as `role="progressbar"` because the
+      operation has measurable progress. The two
+      surfaces diverge on whether the affordance is
+      progress or decoration — invisible distinction
+      in the design file lets implementations ship
+      either pattern, and AT users get the wrong
+      announcement.
+    correct: >-
+      Document circular as a structural variant of
+      progress with the same role + accessible-name
+      contract as linear. Figma carries Progress as
+      one component with linear / circular variant
+      property; "Spinner" components for purely
+      decorative non-progress visuals are documented
+      as a distinct pattern (or removed from the
+      design system entirely if no real spinner-
+      without-progress use-case exists).
+
+  - figma: Multi-step progress drawn as filled segments
+    code: 'Single progressbar with `aria-valuetext: "Step 3 of 7"` (or escalation to Stepper)'
+    consequence: >-
+      Designers compose multi-step progress as a row of
+      segments where each filled segment represents one
+      completed step (e.g., 3 of 7 segments filled);
+      developers ship either a single progressbar with
+      `aria-valuetext` reporting the step or a Stepper
+      component. The two patterns have different
+      semantics — progressbar is continuous, stepper is
+      sequential with state. Without explicit anatomy,
+      design files may communicate progressbar visual
+      while developers ship Stepper anatomy (or vice
+      versa).
+    correct: >-
+      Document the canonical decision rule — segments
+      with no per-step state are progressbar with
+      `aria-valuetext`; segments with per-step state
+      (clickable, navigable, completed-vs-pending
+      distinction) are Stepper. Figma carries two
+      separate components and the design surface
+      signals which semantic the implementation should
+      adopt.
+
+  - figma: Progress drawn without label or value
+    code: '`aria-label="Upload progress"` (or `aria-labelledby`) required on root'
+    consequence: >-
+      Designers ship icon-only progress (compact bar
+      with no surrounding text) for visual cleanliness;
+      developers must add `aria-label` so AT users hear
+      what the progress represents. The two surfaces
+      diverge on accessibility — sighted users see a
+      bar with no context (still bad UX), AT users
+      hear nothing at all without the label.
+    correct: >-
+      Document the accessible-name requirement as a
+      non-negotiable contract. Figma carries an
+      explicit label slot or documents the
+      `aria-label` value as a component property
+      (e.g., "Aria Label" property). Code rejects
+      progress instances without `aria-label` or
+      `aria-labelledby` — a build-time lint enforces
+      the requirement.
+
+mistakes:
+  - id: progress-no-label
+    severity: blocker
+    title: Progress has no `aria-label` or `aria-labelledby`
+    description: >-
+      The progressbar ships without an accessible name.
+      SR users hear "progressbar, 43 percent" with no
+      indication of what is at 43 percent — upload?
+      download? form save? The percentage alone
+      communicates nothing semantically. WCAG 4.1.2
+      Name-Role-Value violation.
+    fix: >-
+      Set `aria-label="Upload progress"` (or the
+      task-specific name) on the root, or
+      `aria-labelledby` pointing to a sibling label
+      element's id. The label must name what is in
+      progress — "Loading", "Working", or generic names
+      pass the lint but fail the user. Translate the
+      label per locale.
+
+  - id: progress-indeterminate-with-valuenow
+    severity: blocker
+    title: Indeterminate progress carries `aria-valuenow`
+    description: >-
+      Indeterminate progress (no measurable percentage)
+      ships with a stale `aria-valuenow` (often `0` or
+      the last known value before the fetch became
+      indeterminate). SR users hear "progressbar, 0
+      percent" or "43 percent" while the actual state
+      is "we don't know". APG explicit rule violation.
+    fix: >-
+      Remove `aria-valuenow` entirely when
+      `determinate=false`. Keep `aria-valuemin`,
+      `aria-valuemax`, and the accessible name. SR
+      announces "progressbar, busy" — the canonical
+      indeterminate signal. Set or unset
+      `aria-valuenow` on the same element as
+      `determinate` flips; do not let the attribute
+      lag.
+
+  - id: progress-no-reduced-motion
+    severity: major
+    title: Indeterminate animation does not honor `prefers-reduced-motion`
+    description: >-
+      Indeterminate progress animates continuously
+      (rotating ring, sliding bar, pulsing fill) under
+      `prefers-reduced-motion: reduce`. Users with
+      vestibular sensitivity or who fatigue from
+      animation experience visual stress; on long
+      operations the unstoppable motion becomes a real
+      barrier. WCAG 2.3.3 Animation from Interactions
+      violation.
+    fix: >-
+      Wrap the indeterminate animation in
+      `@media (prefers-reduced-motion: reduce)` and
+      fall back to a non-animated busy indicator —
+      a static stripe pattern, a single-frame pulse,
+      or simply the progress shape with
+      `aria-valuetext="Working"` and no continuous
+      motion. The fallback must still communicate
+      "in progress" visually for sighted users.
+
+  - id: progress-as-status-message
+    severity: major
+    title: Progress component used for completion notification
+    description: >-
+      The progress shape stays on screen after the
+      task completes, sometimes with a checkmark
+      replacing the fill, as a "complete" status
+      message. SR users continue hearing
+      "progressbar" semantics for what is now a
+      static state — the role contradicts the
+      meaning. Common in implementations that reuse
+      the Progress component for both during-task
+      and post-task surfaces.
+    fix: >-
+      On task completion, transition the surface to
+      a different component — Toast for transient
+      notification, `role="status"` text for inline
+      confirmation, or `<output>` for form-result
+      announcements. The Progress component's
+      lifetime is during-task only; it unmounts or
+      transitions out on completion. Implementations
+      that show a "complete" checkmark inside
+      progress for one second before transitioning
+      are acceptable as long as the role-vs-meaning
+      contradiction is brief.
+
+  - id: progress-not-progressbar-role
+    severity: major
+    title: Visual progress without `role="progressbar"`
+    description: >-
+      The component renders a visible progress bar (or
+      ring) but the underlying DOM is a plain `<div>`
+      with no role. AT users hear nothing — no
+      progressbar role, no value, no busy state. The
+      affordance functions visually for sighted users
+      and is invisible to everyone else.
+    fix: >-
+      Add `role="progressbar"` (or use native
+      `<progress>`) plus `aria-valuemin`,
+      `aria-valuemax`, `aria-valuenow` (determinate),
+      `aria-label` or `aria-labelledby`. The canonical
+      anatomy carries the role on the root slot;
+      implementations must wire it.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-progress>` host with `variant`, `size`,
+      `value`, `max`, `determinate`, `show-value`,
+      `label` attributes. Renders the
+      `role="progressbar"` shadow tree with internal
+      track + fill SVG shapes (linear) or stroked
+      circle (circular). The wire-name `ui-progress`
+      becomes `md-progress` / `mat-progress-bar` /
+      `pf-progress` per design system; canonical wire-
+      name stays `progress`. CSS uses
+      `prefers-reduced-motion` media query for the
+      indeterminate animation fallback.
+    variantMechanism: >-
+      Attributes drive variant + properties
+      (`variant="linear"`, `size="md"`, `determinate`,
+      `value="60"`); `value` reflects to
+      `aria-valuenow`, `max` to `aria-valuemax`. The
+      indeterminate state activates when
+      `determinate="false"` (or attribute absent) —
+      the host omits `aria-valuenow` automatically.
+
+  react:
+    structureMechanism: >-
+      Component with `variant`, `size`, `value`,
+      `max`, `isIndeterminate`, `aria-label`,
+      `aria-labelledby` props. React Aria ProgressBar
+      is the headless precedent (`useProgressBar`
+      hook); Material UI ships
+      `LinearProgress` + `CircularProgress` as
+      separate components. The compound shape
+      (`<Progress.Track>`, `<Progress.Fill>`) exists
+      in HeroUI / Mantine for slotted customisation.
+    variantMechanism: >-
+      Props with class-variance-authority for variant
+      + size classes; `isIndeterminate` boolean
+      drives both the visual animation and the
+      omit-`aria-valuenow` rule. `valueLabel` callback
+      for `aria-valuetext` customisation
+      ("Step 3 of 7"). CSS modules or styled-
+      components for `prefers-reduced-motion` media
+      query.
+
+  angularSignals:
+    structureMechanism: >-
+      Angular component with
+      `input<ProgressVariant>('variant')`,
+      `input<Size>('size')`, `input<number>('value')`,
+      `input<number>('max')`,
+      `input<boolean>('determinate')`,
+      `input<boolean>('showValue')`,
+      `input<string>('ariaLabel')`. Angular Material
+      ships `MatProgressBar` and `MatProgressSpinner`
+      as separate components mirroring the variants.
+      Signal-driven reactive value updates
+      (`effect()` triggers attribute reflection on
+      `aria-valuenow` per change).
+    variantMechanism: >-
+      `[attr.role]="'progressbar'"` plus
+      `[attr.aria-valuenow]="determinate() ? value() : null"`
+      so the attribute disappears in indeterminate
+      mode. Host-binding `[class.size-sm]` etc. for
+      size classes. CSS variables drive size scaling
+      and the `prefers-reduced-motion` fallback so
+      consumers override per-instance.
+
+  vue:
+    structureMechanism: >-
+      Single-file component with default + named
+      slots for label / value-display / helper-text
+      customisation. PrimeVue ProgressBar /
+      ProgressSpinner, Element Plus Progress, Naive
+      UI Progress as third-party precedents.
+      `defineProps` exposes `variant`, `size`,
+      `modelValue` (v-model for the value), `max`,
+      `determinate`, `showValue`, `ariaLabel`.
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`variant: 'linear' | 'circular'`); v-model on
+      the value for two-way binding. Computed
+      properties derive the visible percentage and
+      the `aria-valuenow` attribute (omitted when
+      `determinate` is false). Scoped CSS handles
+      the `prefers-reduced-motion` fallback.
+
+motion:
+  reducedMotionFallback: reduced
+  durations:
+    valueTransition: motion.duration.fast
+    indeterminateLoop: motion.duration.slower
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, the linear variant collapses
+        to full-inline-width (loses any authored max-
+        width); the circular variant scales to the
+        container's `block-size`. Helper-text and
+        value-display may stack below the progress
+        shape rather than sitting beside it.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, both variants render
+        at the authored size with helper-text and
+        value-display in the canonical adjacent
+        positions (linear: trailing; circular:
+        centered inside the ring).
+
+eventsRationale: >-
+  Progress is state-reflective — the consumer drives the value via
+  inputs / props and observes progress through application state.
+  Synthetic DOM events from the progress component would re-emit
+  state already owned by the consumer (anti-pattern: progress
+  fires onValueChange with the value the consumer just set). The
+  canonical contract is one-directional: consumer → progress, no
+  return path.
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Progress is non-interactive — the root has no
+        `tabindex`, Tab skips past it. The progress
+        shape stays out of the tab order regardless of
+        variant or state. Adjacent interactive
+        elements (cancel buttons, retry actions) are
+        siblings of progress, not descendants, and
+        carry their own tab stops.
+  announcements:
+    - trigger: SR encounters a determinate progress in reading order
+      expected: >-
+        SR announces the accessible name, role, and
+        value — "Upload progress, progressbar, 43
+        percent". The value comes from
+        `aria-valuenow`; the percentage formatting is
+        SR-implementation-specific (some announce raw
+        number, some announce "percent").
+    - trigger: SR encounters an indeterminate progress
+      expected: >-
+        SR announces the accessible name, role, and
+        busy state — "Loading, progressbar, busy" or
+        "Loading, progressbar, indeterminate". The
+        absence of `aria-valuenow` is the canonical
+        signal. Announcement varies by SR /
+        browser combination.
+    - trigger: Determinate value advances
+      expected: >-
+        Some SR / browser combinations announce on
+        every `aria-valuenow` change ("44 percent, 45
+        percent, ..."), others announce only on focus
+        or only at coarse milestones. The canonical
+        anatomy supports both via the announcement
+        slot — milestone-only opt-in via
+        `aria-live="polite"` text updates at canonical
+        thresholds (25 / 50 / 75 / 100).
+    - trigger: Progress completes (value reaches max)
+      expected: >-
+        SR announces the final value or, when
+        `aria-valuetext="Complete"` is set, the
+        terminal state ("Upload progress, progressbar,
+        complete"). On transition out (component
+        unmounts or replaces with Toast), the
+        progressbar announcement disappears and the
+        post-completion surface takes over.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-valid-attr-value
+    - aria-progressbar-name
+    - color-contrast
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps linear / circular structural shapes.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md / lg.
+  - figma: Determinate
+    code: determinate
+    kind: boolean
+    notes: 'Positive-default boolean; true reports `aria-valuenow`, false omits it (indeterminate mode).'
+  - figma: Show Value
+    code: showValue
+    kind: boolean
+    notes: Controls visibility of the value-display slot. AT announcement uses aria-valuenow regardless.
+  - figma: Value
+    code: value
+    kind: number
+    notes: '0..max; reflects to `aria-valuenow`. Required when determinate; ignored when indeterminate.'
+  - figma: Max
+    code: max
+    kind: number
+    notes: 'Defaults to 100. Reflects to `aria-valuemax`. Custom max with `aria-valuetext` for non-percent contexts (steps, bytes).'
+  - figma: Aria Label
+    code: ariaLabel
+    kind: text
+    notes: Accessible name. One of ariaLabel / ariaLabelledby is required.
+  - figma: Aria Valuetext
+    code: ariaValuetext
+    kind: text
+    notes: 'Optional human-readable value override for non-percent contexts ("Step 3 of 7", "2 MB of 5 MB").'
+  - figma: Status
+    code: status
+    kind: enum
+    notes: pending / inProgress / complete / error / indeterminate. Drives status-icon visibility and aria-valuetext.
+  - figma: Label
+    code: label
+    kind: slot
+    notes: Visible label slot; alternative to ariaLabel attribute.
+  - figma: Helper Text
+    code: helperText
+    kind: slot
+    notes: Optional secondary descriptive text below the progress shape.
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    Progress is a state indicator, not a form control. The
+    `role="progressbar"` element has no `name` attribute and
+    contributes nothing to FormData. Form submissions that
+    depend on a progress value (e.g., upload-must-complete-
+    before-submit) read the underlying upload state from
+    application code, not from the progress component.
+  submittedValue: >-
+    Progress submits nothing. The native HTML `<progress>`
+    element is similarly form-irrelevant — it has no
+    `name` attribute and is excluded from FormData by spec.
+    Implementations choosing native `<progress>` over
+    `role="progressbar"` make a styling-vs-AT trade-off,
+    not a form-integration trade-off.
+  requiredAttr: false
+  bridges:
+    react: >-
+      React Hook Form / Formik treat progress as
+      observation state — the form library does not bind
+      to the progress value. Forms with file-upload
+      progress observe upload state via the consumer's
+      upload library (FilePond, react-dropzone, custom)
+      and pass the value to the progress component as a
+      controlled prop. On upload complete, the form-
+      submit button becomes enabled; the progress
+      component unmounts or transitions to a complete
+      state.
+    vue: >-
+      VeeValidate / FormKit similarly do not bind to
+      progress. The upload composable owns the value;
+      v-model:value on progress is for two-way binding
+      with the parent's upload-state, not form state.
+      Progress unmounts or transitions on upload-
+      complete; the form's submit-state updates
+      independently.
+    angularSignals: >-
+      Reactive forms do not encompass progress. Upload
+      state lives as `signal<number>('uploadValue')` in
+      the consumer component; the progress component
+      reads it via `input<number>('value')`. Form
+      submission reads upload-complete state from the
+      consumer signal, not from the progress component.
+    webComponents: >-
+      The `<ui-progress>` host is not formAssociated
+      — it is an observation surface, not a control.
+      Upload state is exposed via `value` /
+      `determinate` attributes; consumers update them
+      from upload-library callbacks. Native
+      `<progress>` is similarly form-irrelevant
+      despite being a real form-associated element
+      type — the spec excludes it from FormData.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Linear variant's fill direction follows the
+      logical inline direction — fill grows from
+      inline-start toward inline-end, which means
+      visually right-to-left under RTL. CSS uses
+      `inset-inline-start: 0` plus `inline-size: 60%`
+      for the fill rather than `left: 0; width: 60%`.
+      Circular variant's stroke direction is
+      conventionally clockwise in LTR cultures;
+      RTL implementations may keep clockwise (visually
+      neutral, reads as "advancing") or flip to
+      counterclockwise per locale convention. Document
+      the chosen direction. Value-display
+      number-formatting follows locale via
+      `Intl.NumberFormat` (12.5% renders as 12,5 % in
+      German). Accessible-name `aria-label` translates
+      per locale.
+  textExpansion: >-
+    Visible labels expand 30-50% under translation
+    ("Loading" → "Wird geladen" 50% longer). Helper
+    text expands similarly; reserve flexible inline-
+    size in the helper-text slot. Value-display is
+    stable across locales for percent values; non-
+    percent contexts ("Step 3 of 7") expand
+    ("Schritt 3 von 7" 30% longer) and may force the
+    value-display below the bar at narrow widths.
+    Long-running operations under expanded
+    translations should favour the milestone-only
+    announcement pattern over per-percent SR
+    announcements.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        The progressbar element carries an accessible
+        name via `aria-label` or `aria-labelledby`.
+        Implementations that ship unlabeled
+        progressbars violate WCAG 4.1.2 — AT users
+        hear the percentage with no semantic context.
+      source: wcag
+      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+      consequence: >-
+        Without a label, SR users hear
+        "progressbar, 43 percent" with no indication
+        of what is at 43 percent. The percentage
+        alone communicates nothing — uploads,
+        downloads, syncs, and form-saves all sound
+        identical. The user cannot tell which task is
+        progressing or whether multiple progressbars
+        are reporting different operations.
+    - rule: >-
+        Determinate progress reports
+        `aria-valuemin`, `aria-valuemax`, and
+        `aria-valuenow`. Indeterminate progress
+        OMITS `aria-valuenow` entirely (does not set
+        it to 0 or the last known value).
+      source: apg
+      sourceRef: 'WAI-ARIA progressbar role + aria-valuenow guidance'
+      consequence: >-
+        Without the omit-rule, indeterminate progress
+        announces a stale value ("0 percent" or "43
+        percent") while the actual state is "we
+        don't know". SR users mistrust the value or
+        misread the operation as stuck. The omit
+        rule is what canonical APG-compliant
+        progressbars do; the absence of
+        `aria-valuenow` is the busy-state signal.
+    - rule: >-
+        Indeterminate animation respects
+        `prefers-reduced-motion: reduce` — the
+        canonical fallback is a static busy
+        indicator (stripe pattern, single-frame
+        pulse, or non-animated shape with
+        `aria-valuetext="Working"`).
+      source: wcag
+      sourceRef: 'WCAG 2.3.3 Animation from Interactions'
+      consequence: >-
+        Without the fallback, users with vestibular
+        sensitivity or animation-fatigue experience
+        sustained discomfort during long operations.
+        WCAG 2.3.3 is AAA but the canonical
+        contract treats it as required because the
+        cost of compliance is one CSS media query.
+    - rule: >-
+        The progressbar element is non-interactive —
+        no `tabindex`, no role conflicts. The
+        component does not participate in tab-order
+        and does not respond to keyboard or pointer
+        activation.
+      source: html-spec
+      sourceRef: 'HTML standard — progress element semantics'
+      consequence: >-
+        Without the rule, implementations may add
+        `tabindex="0"` to draw focus on completion
+        or `onClick` to act as cancel-buttons.
+        Both patterns confuse keyboard users who
+        encounter unexpected tab stops on what
+        should be observation-only surfaces. Cancel
+        affordances live as sibling elements, not
+        on the progressbar itself.
+    - rule: >-
+        Native `<progress>` is an acceptable
+        alternative implementation when no styling
+        control is required. It carries the role +
+        value semantics natively and respects
+        `prefers-reduced-motion` automatically in
+        browsers that animate the indeterminate
+        state. Custom-styled `role="progressbar"`
+        is preferred when the design system needs
+        explicit control over the visual shape.
+      source: html-spec
+      sourceRef: 'HTML standard — progress element semantics'
+      consequence: >-
+        Without documenting the alternative,
+        implementations may unnecessarily reinvent
+        the role-driven pattern when native
+        `<progress>` would suffice. Native
+        `<progress>` styling is limited
+        (browser-specific pseudo-elements: `::-webkit-progress-bar`,
+        `::-moz-progress-bar`); design systems with
+        bespoke progress visuals choose
+        `role="progressbar"`.
+  vocabularyDrift:
+    - system: WAI-ARIA
+      theirTerm: 'role=progressbar + aria-valuemin/max/now'
+      note: >-
+        Canonical ARIA pattern. WAI-ARIA Authoring
+        Practices Guide documents the omit-
+        `aria-valuenow`-for-indeterminate rule
+        explicitly; the canonical anatomy mirrors
+        this discipline.
+    - system: HTML
+      theirTerm: '<progress>'
+      note: >-
+        Native HTML element with `value` and `max`
+        attributes; implies `role="progressbar"`.
+        No native circular variant — design
+        systems implement circular via SVG +
+        `role="progressbar"`. Native `<progress>`
+        animation for indeterminate state is
+        browser-specific.
+    - system: Material 3
+      theirTerm: 'LinearProgressIndicator + CircularProgressIndicator'
+      note: >-
+        Material 3 ships linear and circular as
+        separate components rather than a single
+        component with variants. Both carry the
+        progressbar semantic; the canonical
+        single-component-with-variants reflects the
+        ARIA pattern more directly than the
+        Material split.
+    - system: Carbon
+      theirTerm: 'ProgressBar + InlineLoading + Loading'
+      note: >-
+        Carbon ships three patterns —
+        `ProgressBar` (determinate linear),
+        `InlineLoading` (status-text-with-spinner
+        for inline contexts), `Loading` (full-page
+        circular spinner). The canonical
+        single-component covers all three via
+        variant + status property.
+    - system: Atlassian
+      theirTerm: 'ProgressBar + Spinner'
+      note: >-
+        Atlassian splits into ProgressBar
+        (determinate linear) and Spinner
+        (indeterminate circular). The canonical
+        single-component with linear / circular
+        variants plus determinate boolean covers
+        both.
+    - system: Polaris
+      theirTerm: 'ProgressBar + Spinner'
+      note: >-
+        Polaris similarly splits. ProgressBar is
+        determinate linear; Spinner is
+        indeterminate circular. Mobile-first
+        Polaris guidance favours Spinner over
+        ProgressBar for short operations and
+        ProgressBar for long determinate ones.
+    - system: React Aria
+      theirTerm: ProgressBar (with isIndeterminate)
+      note: >-
+        React Aria ships a single ProgressBar
+        primitive with `isIndeterminate` prop,
+        matching the canonical single-component
+        shape. Headless — consumers compose the
+        visual track + fill themselves via the
+        `useProgressBar` hook.
+    - system: GitHub Primer
+      theirTerm: ProgressBar
+      note: >-
+        Primer ships a linear-only ProgressBar
+        with `progress` (0-100), `bg`, `barSize`
+        props. No circular variant; Primer
+        recommends external spinner libraries
+        for indeterminate circular contexts.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/meter/
+  - https://www.w3.org/TR/wai-aria-1.2/#progressbar
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/progressbar_role
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://m3.material.io/components/progress-indicators/overview
+  - https://carbondesignsystem.com/components/progress-bar/usage/
+  - https://atlassian.design/components/progress-bar/examples
+  - https://polaris.shopify.com/components/feedback-indicators/progress-bar
+  - https://react-spectrum.adobe.com/react-aria/ProgressBar.html
+  - https://primer.style/components/progress-bar
+
+notes: >-
+  Determinate boolean follows the positive-default-polarity
+  convention (P6-119) — `determinate: true` is the canonical
+  default, `determinate: false` activates indeterminate mode
+  with the `aria-valuenow`-omitted rule. The native HTML
+  `<progress>` element is canonically equivalent to a
+  custom `role="progressbar"` element for AT and is the
+  recommended baseline when no bespoke styling is needed;
+  the canonical anatomy uses `role="progressbar"` to
+  document the styled-control case explicitly. The boundary
+  with Skeleton (layout-preserving placeholder) and Toast
+  (post-completion notification) is the most-overlooked
+  failure mode — designers reach for "loading icon" without
+  distinguishing the three patterns; the vsRelated entries
+  document the canonical decision rule.
+
+lastReviewed: '2026-05-04'

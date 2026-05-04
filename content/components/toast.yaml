@@ -734,6 +734,20 @@ whenToUse:
         completes. The two often pair across a load lifecycle —
         Skeleton during the wait, optional Toast as the success
         / failure confirmation when the load resolves.
+    - id: progress
+      difference: >-
+        `Progress` is the during-task indicator with
+        `role="progressbar"` plus optional `aria-valuenow`;
+        `Toast` is the post-completion transient
+        notification ("Upload complete"). Skeleton-during-
+        load → Progress-while-working → Toast-on-complete
+        is the canonical pairing across a long-running
+        operation. Toast carries notification semantics
+        (`role="status"` or `aria-live="polite"`); Progress
+        carries progress semantics. Implementations that
+        keep a Progress component on screen as a
+        completion message instead of transitioning to
+        Toast violate the role-vs-meaning contract.
 
 contracts:
   nonNegotiable:

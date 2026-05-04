@@ -47,6 +47,19 @@ whenToUse:
         complete; `Skeleton` reserves space during the wait.
         Skeletons disappear on load; toasts may follow as
         completion confirmations.
+    - id: progress
+      difference: >-
+        `Progress` reports the completion fraction (or busy
+        state) of an ongoing task — measurable percentage
+        via `aria-valuenow`. `Skeleton` reserves layout
+        while content fetches — placeholder shapes mirror
+        the final layout, no percentage. Choose Skeleton
+        when the layout is the message ("the page will
+        look like this"); choose Progress when the
+        completion is the message ("we are 60% through").
+        A single load may use both — Skeleton in the data
+        region, Progress in a header showing overall
+        completion across multiple loads.
 
 anatomy:
   - id: container
