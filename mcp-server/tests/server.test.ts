@@ -374,10 +374,10 @@ describe('mcp server', () => {
       arguments: { libraryId: 'radix' },
     });
     const radixRows = parseJson(radixRes as any);
-    expect(radixRows.length).toBe(3);
+    expect(radixRows.length).toBe(4);
     expect(radixRows.every((r: any) => r.libraryId === 'radix')).toBe(true);
     const componentIds = radixRows.map((r: any) => r.componentId).sort();
-    expect(componentIds).toEqual(['accordion', 'modal', 'tabs']);
+    expect(componentIds).toEqual(['accordion', 'combobox', 'modal', 'tabs']);
   });
 
   it('get_implementations(modal) returns all three library audits', async () => {

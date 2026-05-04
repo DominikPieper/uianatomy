@@ -1,0 +1,285 @@
+componentId: combobox
+libraryId: cdk
+componentName: MatAutocomplete / MatAutocompleteTrigger (from @angular/material/autocomplete)
+
+exampleCode: |
+  // app.component.ts
+  import { Component, signal, computed } from '@angular/core';
+  import { FormControl, ReactiveFormsModule } from '@angular/forms';
+  import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+  import { MatInputModule } from '@angular/material/input';
+  import { MatFormFieldModule } from '@angular/material/form-field';
+
+  @Component({
+    selector: 'app-demo',
+    standalone: true,
+    imports: [ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule],
+    template: `
+      <mat-form-field>
+        <mat-label>Country</mat-label>
+        <input
+          matInput
+          [matAutocomplete]="auto"
+          [formControl]="searchCtrl"
+          placeholder="Start typing…"
+        />
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          [displayWith]="displayFn"
+          [requireSelection]="true"
+          [autoActiveFirstOption]="true"
+          (optionSelected)="onSelected($event)"
+          (opened)="onOpened()"
+          (closed)="onClosed()"
+        >
+          @for (option of filteredOptions(); track option.id) {
+            <mat-option [value]="option">{{ option.label }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    `,
+  })
+  export class AppDemoComponent {
+    private readonly allOptions = [
+      { id: 'de', label: 'Germany' },
+      { id: 'fr', label: 'France' },
+      { id: 'us', label: 'United States' },
+    ];
+
+    searchCtrl = new FormControl<{ id: string; label: string } | string>('');
+
+    filteredOptions = computed(() => {
+      const raw = this.searchCtrl.value;
+      const q = typeof raw === 'string' ? raw.toLowerCase() : (raw?.label ?? '').toLowerCase();
+      return this.allOptions.filter(o => o.label.toLowerCase().includes(q));
+    });
+
+    displayFn(option: { id: string; label: string } | string | null): string {
+      return option && typeof option !== 'string' ? option.label : (option as string) ?? '';
+    }
+
+    onSelected(event: MatAutocompleteSelectedEvent): void {
+      // event.option.value is the full object bound via [value]
+    }
+
+    onOpened(): void {}
+    onClosed(): void {}
+  }
+
+divergence:
+  # ── Naming: top-level identity ───────────────────────────────────────────────
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      Two-directive split: a plain `<input matInput [matAutocomplete]="ref">` is
+      the text field; `MatAutocompleteTrigger` is the directive applied to that
+      input that wires ARIA (`role="combobox"`, `aria-expanded`,
+      `aria-autocomplete="list"`, `aria-controls`, `aria-activedescendant`,
+      `aria-haspopup="listbox"`) and manages the overlay lifecycle. There is no
+      single "combobox input" element — the native input and the trigger directive
+      are separate tokens. Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete-trigger.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `input` is a single slot carrying both the editable surface and
+      the combobox ARIA role. Angular Material separates the DOM element (native
+      `<input>`) from the behaviour layer (MatAutocompleteTrigger directive) so
+      that any existing input — including one inside a MatFormField — can be
+      progressively enhanced into a combobox without replacing it. This makes
+      integration with mat-form-field validation and label animation seamless
+      but means the ARIA contract is spread across two tokens rather than one.
+
+  - from: anatomy[listbox]
+    type: renamed
+    to: >-
+      `<mat-autocomplete>` element with `#ref="matAutocomplete"` (template
+      reference); renders a panel with `role="listbox"` via an Angular CDK
+      Overlay. The panel host element is portalled to the overlay container
+      (`<div class="cdk-overlay-container">`) at the root of the document.
+      Panel ID is wired into the trigger's `aria-controls`. Source:
+      github.com/angular/components blob src/material/autocomplete/autocomplete.ts
+      and autocomplete.html (fetched 2026-05-04).
+    rationale: >-
+      Material calls the popup element "autocomplete" — its library name for the
+      canonical combobox pattern. The panel carries `role="listbox"`, matching
+      the canonical semantic, but consumers author it as `<mat-autocomplete>`
+      rather than a generic listbox container. The overlay portal model matches
+      the canonical description of the listbox as floating above adjacent content
+      positioned relative to the input.
+
+  - from: anatomy[option]
+    type: extended
+    addition: >-
+      `<mat-option>` supports a `multiple` mode (driven by the parent panel
+      context) that renders a `MatPseudoCheckbox` inside each option for
+      multi-select visual feedback. The shared `MatOption` class is also used
+      by `MatSelect`, `MatChipListbox`, and CDK Listbox — it is not
+      autocomplete-specific. Source: github.com/angular/components blob
+      src/material/core/option/option.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `option` anatomy describes the single-select case (aria-selected,
+      highlighted state). Material extends it with a pseudo-checkbox for
+      multi-select without a separate `multi-option` slot — the same element
+      adapts based on the panel's multiple state. The shared-class design also
+      means MatOption carries `onSelectionChange` Output (not just role="option"),
+      enabling the trigger to subscribe to selection events reactively.
+
+  - from: anatomy[clear-button]
+    type: omitted
+    rationale: >-
+      MatAutocomplete does not ship a built-in clear affordance. Consumers must
+      author their own clear button (typically a `<button matSuffix>` inside
+      MatFormField) and imperatively reset the FormControl. The canonical
+      clear-button slot — a trailing "×" that appears conditionally — has no
+      Material equivalent in the autocomplete component. Source:
+      github.com/angular/components blob src/material/autocomplete/autocomplete.ts
+      (fetched 2026-05-04); no `clearable` or `showClearButton` input exists.
+
+  - from: anatomy[trigger-button]
+    type: omitted
+    rationale: >-
+      There is no built-in disclosure chevron or toggle button. The canonical
+      trigger-button (chevron at the trailing edge opening the listbox without
+      typing) is absent. MatAutocomplete opens exclusively via the input's focus
+      or keystroke events wired by MatAutocompleteTrigger — there is no
+      click-to-toggle-open button. Consumers wanting a toggle button must author
+      one themselves and call `trigger.openPanel()` / `trigger.closePanel()`
+      imperatively. Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete-trigger.ts (fetched 2026-05-04).
+
+  - from: anatomy[empty-state]
+    type: omitted
+    rationale: >-
+      The `<mat-autocomplete>` panel has no empty-state slot or no-results
+      projection point. When the consumer's filtered option list is empty, the
+      panel opens with zero items and no affordance. Consumers must handle the
+      empty case themselves — either conditionally closing the panel or projecting
+      a non-option element into `<mat-autocomplete>`. The template (autocomplete.html,
+      18 lines, plain `<ng-content>`) has no reserved slot for empty-state content.
+      Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete.html (fetched 2026-05-04).
+
+  # ── Axes / Properties ────────────────────────────────────────────────────────
+
+  - from: axes.properties[filterMode]
+    type: omitted
+    rationale: >-
+      Canonical `filterMode` (startsWith / contains / fuzzy / none) is a
+      component-level property. MatAutocomplete performs no filtering itself —
+      the consumer is responsible for producing the option list passed to the
+      panel (via `@for`, `*ngFor`, or an async pipe). There is no `filterMode`
+      input and no built-in filter function. The `displayWith` input (type:
+      `(value: T) => string | null`) maps a selection object to a display string
+      for the input field after selection, but does not drive filtering. Source:
+      github.com/angular/components blob src/material/autocomplete/autocomplete.ts
+      (fetched 2026-05-04).
+
+  - from: axes.variants
+    type: omitted
+    rationale: >-
+      Canonical variants are single-select / multi-select / creatable.
+      MatAutocomplete has no `variant` input. Multi-select is achievable by
+      passing a FormControl<T[]> and keeping the panel open after selection
+      (consumer-managed), but there is no first-class `multiple` input on
+      `<mat-autocomplete>` itself. Creatable (free-text commit) is approximated
+      by omitting `requireSelection` (default), but no explicit `creatable`
+      mode exists. Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete.ts (fetched 2026-05-04);
+      no `variant` or `multiple` input present.
+
+  - from: axes.properties[strict]
+    type: renamed
+    to: >-
+      `requireSelection: boolean` on `<mat-autocomplete>` (default: from
+      `MAT_AUTOCOMPLETE_DEFAULT_OPTIONS`, typically false). When true, if the
+      user blurs without selecting an option the input value is restored to the
+      last valid selection (or cleared if none). Source:
+      github.com/angular/components blob src/material/autocomplete/autocomplete.ts
+      (fetched 2026-05-04).
+    rationale: >-
+      Canonical `strict: boolean` enforces that the committed value must come
+      from the option list. Material's `requireSelection` is the direct
+      equivalent — same semantics, different name. The revert-on-blur behaviour
+      matches the canonical invalid-to-closed transition (value is cleared or
+      snapped). The name change reflects Material's preference for
+      positive-polarity "require" over the canonical negative-polarity "strict"
+      (which implies rejection).
+
+  # ── Events ───────────────────────────────────────────────────────────────────
+
+  - from: events[selectionChange]
+    type: renamed
+    to: >-
+      `optionSelected: EventEmitter<MatAutocompleteSelectedEvent>` on
+      `<mat-autocomplete>`. Payload shape: `{ source: MatAutocomplete,
+      option: MatOption }` — carries the full option reference rather than
+      a plain value. Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `selectionChange` emits the selected value (T | T[] | null).
+      Material's `optionSelected` emits a `MatAutocompleteSelectedEvent` object
+      carrying both the panel reference and the `MatOption` instance. Consumers
+      access the value via `event.option.value`, not directly as the payload.
+      This richer payload enables consumers to inspect disabled state, selection
+      state, and label text on the option object, but diverges from the flat
+      canonical payload shape.
+
+  - from: events[openChange]
+    type: reshaped
+    to: >-
+      Two separate outputs on `<mat-autocomplete>`: `opened: EventEmitter<void>`
+      fires when the panel opens; `closed: EventEmitter<void>` fires when the
+      panel closes. Neither carries a boolean payload. Source:
+      github.com/angular/components blob src/material/autocomplete/autocomplete.ts
+      (fetched 2026-05-04).
+    rationale: >-
+      Canonical `openChange` is a single boolean output (true = open, false =
+      closed) matching the `aria-expanded` flip. Material splits the two edges
+      into `opened` (void) and `closed` (void), requiring consumers who need
+      a unified boolean state to maintain it themselves. The split also matches
+      Material's event-naming convention for open/close lifecycle hooks (the same
+      pattern appears in MatDrawer's openedChange design).
+
+  - from: events[inputChange]
+    type: omitted
+    rationale: >-
+      MatAutocompleteTrigger does not emit an `inputChange` or
+      `inputValueChange` output. Consumers subscribe to input changes via the
+      native input's `(input)` event or via `FormControl.valueChanges` observable.
+      There is no library-level canonical event surface for the typed string.
+      Source: github.com/angular/components blob
+      src/material/autocomplete/autocomplete-trigger.ts (fetched 2026-05-04);
+      no output matching `inputChange` exists.
+
+rationale: |
+  Angular Material calls this pattern "Autocomplete" — its library name for the
+  canonical Combobox (documented as an alternateName in the canonical). The four
+  most significant divergences:
+
+  1. Two-directive architecture — the text input and the ARIA/overlay wiring are
+     separate tokens (native <input> + MatAutocompleteTrigger directive +
+     <mat-autocomplete> panel). The canonical models a single input slot carrying
+     both the editable surface and the combobox role.
+
+  2. No built-in filtering — MatAutocomplete delegates all filter logic to the
+     consumer. The canonical filterMode property (startsWith / contains / fuzzy)
+     has no Material equivalent; the consumer owns the filtered option array.
+
+  3. No clear-button or trigger-button — both optional canonical anatomy slots are
+     absent. Material's philosophy is full content-projection — consumers author
+     these affordances as MatFormField suffixes or standalone buttons.
+
+  4. No empty-state slot — the panel has no built-in no-results affordance; the
+     consumer must handle the zero-option case in their template.
+
+  Material strengths relative to canonical:
+  1. requireSelection (strict mode) reverts cleanly on blur with no consumer code.
+  2. displayWith maps object values to display strings automatically — essential
+     for object-valued FormControls where the input must show a label.
+  3. autoSelectActiveOption completes selection on blur without Enter, reducing
+     required keystrokes for power users.
+  4. MAT_AUTOCOMPLETE_DEFAULT_OPTIONS DI token enables app-wide defaults for
+     requireSelection, autoActiveFirstOption, and panelWidth without per-instance
+     wiring.
+
+lastReviewed: '2026-05-04'

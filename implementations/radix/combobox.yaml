@@ -1,0 +1,204 @@
+componentId: combobox
+libraryId: radix
+componentName: Combobox
+
+exampleCode: |
+  // Radix ships no Combobox primitive. The idiomatic ecosystem pattern
+  // composes Popover + cmdk (command-menu library that uses Radix Dialog
+  // internally for its dialog variant).
+  import * as Popover from '@radix-ui/react-popover';
+  import { Command } from 'cmdk';
+
+  function Combobox({ options, value, onChange }) {
+    const [open, setOpen] = React.useState(false);
+    const [query, setQuery] = React.useState('');
+
+    return (
+      <Popover.Root open={open} onOpenChange={setOpen}>
+        <Popover.Trigger asChild>
+          <input
+            role="combobox"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search…"
+          />
+        </Popover.Trigger>
+
+        <Popover.Portal>
+          <Popover.Content asChild align="start" sideOffset={4}>
+            <Command>
+              <Command.List role="listbox">
+                <Command.Empty>No results.</Command.Empty>
+                {options.map((opt) => (
+                  <Command.Item
+                    key={opt.value}
+                    value={opt.label}
+                    onSelect={() => { onChange(opt.value); setOpen(false); }}
+                  >
+                    {opt.label}
+                  </Command.Item>
+                ))}
+              </Command.List>
+            </Command>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    );
+  }
+
+divergence:
+  # ── No primitive — all anatomy slots are absent at the primitive level ────
+
+  - from: anatomy[input]
+    type: omitted
+    rationale: >-
+      Radix ships no Combobox primitive; there is no managed input sub-component.
+      The Popover-composition pattern requires consumers to render a bare `<input>`
+      (or a styled wrapper) and manually wire `role="combobox"`, `aria-expanded`,
+      `aria-haspopup`, and `aria-controls` themselves. None of these ARIA
+      attributes are applied automatically by any Radix primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover (verified
+      2026-05-04; no combobox docs exist — https://www.radix-ui.com/primitives/docs/components/combobox
+      returns 404).
+
+  - from: anatomy[listbox]
+    type: reshaped
+    to: >-
+      Popover.Content (via Popover.Portal) + Command.List from cmdk. The floating
+      container is Popover.Content; the item-list semantic is delegated to
+      Command.List, which does not set role="listbox" by default — it renders a
+      plain <div> whose role is left to the consumer.
+    rationale: >-
+      The canonical listbox slot is a single semantic unit (`role="listbox"`)
+      floating above the input. The Radix/cmdk composition splits this into two
+      layers: Popover.Content handles the portal and positioning (using
+      floating-ui internally), while cmdk's Command.List handles item rendering
+      and filtering. The `role="listbox"` must be applied by the consumer on
+      Command.List; cmdk does not set it automatically. The `aria-controls`
+      link from the input to the listbox id must also be wired by hand.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-04); https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  - from: anatomy[option]
+    type: renamed
+    to: Command.Item (cmdk) — renders with data-selected attribute, not role="option"
+    rationale: >-
+      cmdk's `Command.Item` is the closest analog to the canonical option slot.
+      However, cmdk does not set `role="option"` on items — it manages its own
+      internal selection model via data attributes (`[data-selected]`,
+      `[data-disabled]`). For a standards-compliant combobox the consumer must
+      add `role="option"` and unique `id` props to each Command.Item and set
+      `aria-activedescendant` on the input manually. cmdk's built-in keyboard
+      navigation moves an internal highlight that does not update
+      `aria-activedescendant` on the external input.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  - from: anatomy[clear-button]
+    type: omitted
+    rationale: >-
+      Neither Radix Popover nor cmdk ship a managed clear-button sub-component.
+      The canonical clear slot (an × affordance tied to input value state) is
+      entirely a consumer responsibility in the composition pattern. Consumers
+      must render, position, show/hide, and keyboard-wire the clear action
+      themselves (typically binding Escape-when-closed to clear value).
+      Source: https://www.radix-ui.com/primitives/docs/components/popover (verified
+      2026-05-04); no clear-button primitive exists in Radix.
+
+  - from: anatomy[trigger-button]
+    type: omitted
+    rationale: >-
+      Radix Popover.Trigger exists as a toggle button but it is not scoped to the
+      trailing-chevron disclosure affordance described in the canonical
+      trigger-button slot. Using Popover.Trigger as the combobox's text input (via
+      asChild) is the typical pattern — but then the canonical trigger-button (a
+      separate chevron icon button with `tabindex="-1"`) is not represented; the
+      consumer must add it manually. The disclosure affordance and input are
+      conflated into one element in the composition pattern.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#trigger
+      (verified 2026-05-04).
+
+  - from: anatomy[empty-state]
+    type: renamed
+    to: Command.Empty (cmdk)
+    rationale: >-
+      cmdk ships `Command.Empty` which renders when no items match the current
+      search query — a direct functional match for the canonical empty-state slot.
+      However, cmdk does not add `role="status"` or `aria-live="polite"` to
+      Command.Empty automatically; the "no results" state is not announced to
+      assistive technology unless the consumer wraps the element in a live region.
+      The canonical slot specifies `role="status"` for polite SR announcement.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  # ── Axes ─────────────────────────────────────────────────────────────────
+
+  - from: axes.properties[filterMode]
+    type: omitted
+    rationale: >-
+      Neither Radix Popover nor cmdk expose a `filterMode` prop with the canonical
+      enum (startsWith / contains / fuzzy / none). cmdk performs its own
+      internal fuzzy-ranking filter on item values; the algorithm is not
+      configurable via a prop. Consumers who need startsWith or exact-match
+      filtering must disable cmdk's built-in filter (`filter={false}`) and
+      implement the predicate themselves.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  - from: axes.variants[multi-select]
+    type: omitted
+    rationale: >-
+      cmdk has no built-in multi-select mode and Radix Popover has no selection
+      concept at all. The canonical multi-select variant (accumulating an array
+      of selected values, rendering chips, emitting `selectionChange` with
+      `value: T[]`) is entirely absent. Consumers must build multi-select state
+      management, chip rendering, and the chip-wrapping re-layout behaviour
+      entirely from scratch.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  - from: axes.variants[creatable]
+    type: omitted
+    rationale: >-
+      Neither Radix Popover nor cmdk ship a creatable variant that allows the user
+      to commit a free-text value not present in the option list. Implementing
+      creatable requires the consumer to detect a "no match" state and render a
+      synthetic "Create '<value>'" option, handle its selection as a new-value
+      commit, and surface it correctly to assistive tech — all outside the scope
+      of both primitives.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+  - from: axes.properties[async]
+    type: omitted
+    rationale: >-
+      There is no async lifecycle primitive in either Radix Popover or cmdk.
+      cmdk ships `Command.Loading` as a slot for displaying a loading indicator,
+      but it manages no request state, debounce logic, or `aria-busy` lifecycle.
+      The canonical `busy` data state with its `aria-live` announcement on result
+      return is entirely a consumer responsibility.
+      Source: https://github.com/pacocoursey/cmdk (verified 2026-05-04).
+
+rationale: |
+  Radix Primitives ships no Combobox component. The URL
+  https://www.radix-ui.com/primitives/docs/components/combobox returns 404
+  (verified 2026-05-04). The recommended Radix-ecosystem pattern for
+  combobox behaviour is to compose Popover (for the floating portal and
+  positioning layer) with either a hand-rolled listbox or the `cmdk` library
+  (https://github.com/pacocoursey/cmdk), which is an accessible command-menu
+  component that doubles as a combobox and internally uses Radix Dialog for
+  its dialog variant.
+
+  This composition pattern covers the mechanical skeleton — a positioned
+  floating container, a filterable item list, and an empty state — but it
+  leaves nearly every ARIA responsibility to the consumer: `role="combobox"`
+  on the input, `aria-expanded`, `aria-controls`, `aria-activedescendant`,
+  `role="listbox"` on the list, `role="option"` and unique ids on items.
+  cmdk's own keyboard model does not update `aria-activedescendant` on an
+  external input, making a fully spec-compliant combobox non-trivial to
+  assemble.
+
+  All anatomy divergences are therefore wholesale omissions or reshapings at
+  the primitive level, not stylistic choices. Higher-level libraries in the
+  Radix ecosystem (e.g. shadcn/ui's Combobox, which layers cmdk + Popover
+  with manual ARIA wiring) fill this gap but are outside Radix Primitives
+  itself.
+
+lastReviewed: '2026-05-04'

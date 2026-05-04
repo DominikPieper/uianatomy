@@ -1,0 +1,270 @@
+componentId: combobox
+libraryId: headlessui
+componentName: Combobox / ComboboxInput / ComboboxButton / ComboboxOptions / ComboboxOption
+
+exampleCode: |
+  import { useState } from 'react';
+  import {
+    Combobox, ComboboxInput, ComboboxButton,
+    ComboboxOptions, ComboboxOption,
+  } from '@headlessui/react';
+
+  const people = [
+    { id: 1, name: 'Alice' },
+    { id: 2, name: 'Bob' },
+    { id: 3, name: 'Carol' },
+  ];
+
+  export function PeopleCombobox() {
+    const [selected, setSelected] = useState(null);
+    const [query, setQuery] = useState('');
+
+    const filtered = query === ''
+      ? people
+      : people.filter((p) =>
+          p.name.toLowerCase().includes(query.toLowerCase())
+        );
+
+    return (
+      <Combobox value={selected} onChange={setSelected} onClose={() => setQuery('')}>
+        <div className="relative">
+          <ComboboxInput
+            displayValue={(person) => person?.name ?? ''}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full border rounded px-3 py-2 pr-8 data-focus:ring-2"
+          />
+          <ComboboxButton className="absolute inset-y-0 right-0 px-2">
+            <span aria-hidden="true">&#8964;</span>
+          </ComboboxButton>
+        </div>
+        <ComboboxOptions
+          anchor="bottom"
+          className="w-[var(--input-width)] rounded shadow-lg bg-white empty:hidden"
+        >
+          {filtered.map((person) => (
+            <ComboboxOption
+              key={person.id}
+              value={person}
+              className="px-3 py-2 cursor-default data-focus:bg-blue-100 data-selected:font-semibold"
+            >
+              {person.name}
+            </ComboboxOption>
+          ))}
+        </ComboboxOptions>
+      </Combobox>
+    );
+  }
+
+divergence:
+  # ── Anatomy ─────────────────────────────────────────────────────────────────
+
+  - from: anatomy[clear-button]
+    type: omitted
+    rationale: >-
+      Headless UI ships no clear-button primitive. The canonical `clear`
+      slot is an × affordance that appears when the input has a value and
+      clears it on click. Headless UI exposes no such component; consumers
+      must author a plain `<button>` inside the `Combobox` render scope,
+      wire `onClick` to reset the controlled value, and manage its
+      visibility themselves. The `onClose` callback on `Combobox` is the
+      nearest affordance but it fires on dropdown close, not on value clear.
+      Source: https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+
+  - from: anatomy[listbox]
+    type: renamed
+    to: ComboboxOptions (renders a div, not a role="listbox" element by default)
+    rationale: >-
+      Canonical `listbox` slot maps to `role="listbox"`. Headless UI's
+      `ComboboxOptions` renders a `<div>` by default and injects the
+      correct ARIA roles internally — but the component name is
+      `ComboboxOptions`, not `ComboboxListbox`. Consumers who read the
+      rendered HTML will find `role="listbox"` present; the divergence is
+      purely at the API naming layer. Source:
+      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+
+  - from: anatomy[option]
+    type: renamed
+    to: ComboboxOption (renders a div, not a role="option" element by default)
+    rationale: >-
+      Canonical `option` slot expects `role="option"`. `ComboboxOption`
+      renders a `<div>` by default and applies ARIA option role internally.
+      The rename is API-level; the ARIA contract is honoured. Source:
+      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+
+  - from: anatomy[empty-state]
+    type: omitted
+    rationale: >-
+      No built-in empty-state slot. The canonical `empty` slot renders an
+      accessible `role="status"` message when no options match. Headless UI
+      provides no such component; the `empty:hidden` CSS utility on
+      `ComboboxOptions` hides the dropdown when there are no
+      `ComboboxOption` children, but there is no fallback content API and
+      no live-region announcement. Consumers must author their own
+      conditional render inside `ComboboxOptions` and manage the
+      `aria-live` announcement themselves. Source:
+      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+
+  # ── API reshape: input change ────────────────────────────────────────────────
+
+  - from: events[inputChange]
+    type: reshaped
+    to: "onChange on ComboboxInput delivers a native React ChangeEvent<HTMLInputElement>, not a plain string"
+    rationale: >-
+      Canonical `inputChange` payload is a plain string (the typed value).
+      Headless UI's `ComboboxInput.onChange` receives the raw DOM
+      `ChangeEvent<HTMLInputElement>` — consumers must call
+      `event.target.value` to extract the string. This matches standard
+      React `<input onChange>` convention but diverges from the canonical
+      abstracted payload. Source: https://headlessui.com/react/combobox
+      (ComboboxInput props, 2026-05-04).
+
+  # ── API reshape: selection change ───────────────────────────────────────────
+
+  - from: events[selectionChange]
+    type: renamed
+    to: onChange on Combobox root
+    rationale: >-
+      Canonical `selectionChange` lives on the combobox host element.
+      Headless UI places `onChange` on the root `Combobox` component (not
+      on `ComboboxInput`). In multi-select mode `onChange` receives `T[]`;
+      in single-select it receives `T | null`. The payload shape matches
+      canonical intent but the event name and attachment point differ.
+      Source: https://headlessui.com/react/combobox (Combobox props —
+      onChange, 2026-05-04).
+
+  # ── API reshape: open change ─────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: onClose callback on Combobox root (no open-path callback)
+    rationale: >-
+      Canonical `openChange` fires on both edges — open (`true`) and close
+      (`false`). Headless UI only surfaces `onClose`, which fires when the
+      dropdown closes. There is no `onOpen` callback; consumers who need
+      to detect the open edge must read the `open` render prop from the
+      `Combobox` children or use a `useEffect` on controlled state. Source:
+      https://headlessui.com/react/combobox (Combobox props — onClose,
+      2026-05-04).
+
+  # ── Axes / variants ──────────────────────────────────────────────────────────
+
+  - from: axes.variants[creatable]
+    type: omitted
+    rationale: >-
+      Headless UI Combobox has no `creatable` variant. The canonical
+      `creatable` variant allows users to type a value not present in the
+      option list and commit it as a new entry. Headless UI's `by` prop
+      enables object comparison, and `nullable` allows clearing, but there
+      is no API to accept a typed string as a new value without it
+      appearing in `ComboboxOptions`. Consumers must author the
+      "create option" row manually inside `ComboboxOptions` and handle the
+      new-value path in `onChange`. Source: https://headlessui.com/react/combobox
+      (Combobox props, 2026-05-04).
+
+  # ── Extended: virtual scrolling ─────────────────────────────────────────────
+
+  - from: axes.properties[virtualised]
+    type: reshaped
+    to: "virtual={{ options, disabled }} prop on Combobox root"
+    rationale: >-
+      Canonical `virtualised` is a boolean flag; virtualisation strategy is
+      implementation-defined. Headless UI ships a first-class virtual
+      scrolling API via a `virtual` prop object on the root `Combobox`
+      component — `{ options: T[], disabled?: (item: T) => boolean }`. When
+      `virtual` is set, `ComboboxOptions` renders via a render-function
+      child `{ option }` rather than mapping `ComboboxOption` children
+      directly. This is more structured than the canonical boolean but
+      requires a different child API, breaking the non-virtual composition
+      pattern. Source: https://headlessui.com/react/combobox
+      (Combobox — virtual prop, 2026-05-04).
+
+  # ── Extended: displayValue ───────────────────────────────────────────────────
+
+  - from: anatomy[input]
+    type: extended
+    addition: >-
+      `displayValue: (item: T) => string` prop on `ComboboxInput`. When a
+      structured object is selected, `displayValue` converts it to the
+      human-readable label shown in the `<input>`. The canonical anatomy
+      has no equivalent — it assumes the committed value is already a
+      string. This prop is required when `value` is an object; omitting it
+      causes the input to display `[object Object]`.
+    rationale: >-
+      The canonical anatomy deals exclusively with string values. Headless
+      UI's generic type parameter `T` allows any object as the combobox
+      value, so a projection function from `T` to string is necessary to
+      populate the input's text content. Source:
+      https://headlessui.com/react/combobox (ComboboxInput props —
+      displayValue, 2026-05-04).
+
+  # ── Extended: anchor-based positioning ──────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: extended
+    addition: >-
+      `anchor` prop on `ComboboxOptions` drives built-in floating
+      positioning (`top`, `bottom`, `left`, `right`, with optional
+      `start`/`end` modifiers). When `anchor` is set, `portal` is
+      auto-enabled and the options panel is rendered in a portal. CSS
+      custom properties `--input-width`, `--button-width`, `--anchor-gap`,
+      `--anchor-offset`, and `--anchor-padding` are injected for
+      consumer sizing.
+    rationale: >-
+      The canonical anatomy documents floating/portal behaviour as a
+      Figma–code mismatch concern but prescribes no specific library prop.
+      Headless UI ships a first-party positioning API (backed by Floating
+      UI) to remove the need for consumers to wire a third-party
+      positioning library manually. Source: https://headlessui.com/react/combobox
+      (ComboboxOptions props — anchor, portal, 2026-05-04).
+
+  # ── Extended: immediate ──────────────────────────────────────────────────────
+
+  - from: axes.properties[filterMode]
+    type: extended
+    addition: >-
+      `immediate: boolean` prop on `Combobox` root. When `true`, the
+      options dropdown opens as soon as `ComboboxInput` receives focus,
+      before any characters are typed. The canonical `filterMode` axis has
+      no equivalent open-on-focus trigger — canonical open triggers are
+      typing a printable character, pressing Down/Up arrow, or clicking the
+      trigger button.
+    rationale: >-
+      `immediate` addresses the "show all options on focus, then filter"
+      UX pattern common in command palettes. Canonical open triggers
+      (typing, arrow keys, trigger button) do not cover this focus-driven
+      open path, making `immediate` a meaningful extension beyond the
+      canonical property axis. Source: https://headlessui.com/react/combobox
+      (Combobox props — immediate, 2026-05-04).
+
+rationale: |
+  Headless UI React v2.1 Combobox is an unstyled, accessibility-focused
+  primitive that honours the APG combobox role contract but diverges from
+  the canonical anatomy in predictable ways consistent with the library's
+  design philosophy.
+
+  The divergences cluster into four groups:
+
+  1. Missing consumer-visible slots — no clear-button primitive, no
+     empty-state slot with live-region support. Consumers must author
+     both from scratch, including the aria-live announcement for no-results.
+
+  2. Event model reshaping — `onChange` on ComboboxInput delivers a raw
+     DOM ChangeEvent rather than a plain string; `onClose` exists but
+     there is no `onOpen` equivalent. Consumers who need the open edge
+     must derive it from render-prop `open` state.
+
+  3. Extended API beyond the canonical — `displayValue` on ComboboxInput
+     handles object-to-string conversion; `virtual` prop ships a
+     first-class virtualisation API; `immediate` adds open-on-focus
+     behaviour; `anchor` on ComboboxOptions provides built-in floating
+     positioning with CSS custom-property hooks.
+
+  4. Variant gaps — no `creatable` variant API; `virtualised` is not a
+     boolean flag but a structured object config that changes the child
+     composition pattern entirely.
+
+  The ARIA contract (role="combobox" on input, aria-activedescendant for
+  highlighted option, focus staying on the input throughout) is correctly
+  implemented by the library and matches canonical requirements.
+
+lastReviewed: '2026-05-04'
