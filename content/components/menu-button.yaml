@@ -704,6 +704,18 @@ whenToUse:
         A common confusion is a "user menu" that mixes both —
         canon: render the trigger as a `MenuButton`, render
         the navigation entries inside as `Link` children.
+    - id: menu
+      difference: >-
+        `MenuButton` combines a trigger button with a menu —
+        the button activates the menu, the menu hosts the
+        commands. `Menu` is the menu surface alone, composable
+        independently of any specific trigger (right-click
+        context menus, embedded action lists, sub-menus of a
+        parent menu). MenuButton internally renders a Menu;
+        Menu canonicalises the list-of-commands pattern for
+        the cases where the trigger is not a button (right-
+        click contextmenu, embedded permanent menu, programmatic
+        opening from a non-button trigger).
 
 contracts:
   nonNegotiable:

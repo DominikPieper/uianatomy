@@ -737,6 +737,17 @@ whenToUse:
         arbitrary interactive content. The aria-haspopup value
         differentiates: "menu" for MenuButton, "dialog" for
         Popover.
+    - id: menu
+      difference: >-
+        `Menu` is a `role="menu"` surface hosting a list of
+        commands with the APG menu keyboard model (arrow keys,
+        typeahead, roving-tabindex; Tab closes / exits).
+        `Popover` is a `role="dialog"` surface hosting
+        arbitrary interactive content (the user may Tab through
+        controls). The role-distinction drives the keyboard
+        contract; choose Popover for content panels (forms,
+        rich descriptions, multi-element compositions) and
+        Menu for command lists (single-action picks).
 
 contracts:
   nonNegotiable:

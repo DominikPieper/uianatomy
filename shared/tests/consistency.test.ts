@@ -424,6 +424,7 @@ describe('cross-component consistency', () => {
       'table',
       'grid-pattern',
       'tree-grid',
+      'menu',
     ];
 
     const failures: string[] = [];
