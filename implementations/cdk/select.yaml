@@ -1,0 +1,343 @@
+componentId: select
+libraryId: cdk
+componentName: MatSelect / MatOption / MatOptgroup / MatSelectTrigger (from @angular/material/select)
+
+exampleCode: |
+  // app.component.ts
+  import { Component, signal } from '@angular/core';
+  import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+  import { MatSelectModule, MatSelectChange } from '@angular/material/select';
+  import { MatFormFieldModule } from '@angular/material/form-field';
+  import { MatInputModule } from '@angular/material/input';
+
+  @Component({
+    selector: 'app-demo',
+    standalone: true,
+    imports: [ReactiveFormsModule, MatSelectModule, MatFormFieldModule, MatInputModule],
+    template: `
+      <mat-form-field appearance="outline">
+        <mat-label>Priority</mat-label>
+        <mat-select
+          [formControl]="priorityCtrl"
+          [multiple]="false"
+          [hideSingleSelectionIndicator]="false"
+          [disableOptionCentering]="true"
+          panelClass="demo-select-panel"
+          (selectionChange)="onSelectionChange($event)"
+          (openedChange)="onOpenedChange($event)"
+        >
+          <mat-select-trigger>
+            {{ priorityCtrl.value?.label ?? 'Choose…' }}
+          </mat-select-trigger>
+          <mat-optgroup label="Active">
+            <mat-option [value]="{ id: 'high', label: 'High' }">High</mat-option>
+            <mat-option [value]="{ id: 'med', label: 'Medium' }">Medium</mat-option>
+          </mat-optgroup>
+          <mat-optgroup label="Archived" [disabled]="true">
+            <mat-option [value]="{ id: 'low', label: 'Low' }">Low</mat-option>
+          </mat-optgroup>
+        </mat-select>
+        <mat-error>Priority is required.</mat-error>
+      </mat-form-field>
+    `,
+  })
+  export class AppDemoComponent {
+    priorityCtrl = new FormControl<{ id: string; label: string } | null>(
+      null,
+      Validators.required,
+    );
+
+    onSelectionChange(event: MatSelectChange): void {
+      // event.value is the raw [value] binding; event.source is the MatSelect instance
+    }
+
+    onOpenedChange(isOpen: boolean): void {
+      // true = panel opened, false = panel closed
+    }
+  }
+
+divergence:
+  # ── Anatomy: trigger ─────────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: >-
+      The trigger surface is a `<div role="combobox">` rendered internally by
+      MatSelect — not a `<button>`. MatSelect sets `aria-haspopup="listbox"`,
+      `aria-expanded`, `aria-controls` (referencing the panel id), and
+      `aria-activedescendant` (referencing the highlighted option id) directly on
+      this host element. `tabindex` is applied so the div is keyboard-reachable.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical trigger is described as a "button-like surface" and assigns
+      `role="combobox"` to it. MatSelect uses a `<div role="combobox">` rather
+      than a native `<button>` because the select trigger must be an inline-flex
+      container hosting both the value display and the arrow icon without the
+      default button UA styling. The ARIA contract (role, aria-expanded,
+      aria-controls, aria-activedescendant) is fully present; the host element
+      type alone differs.
+
+  # ── Anatomy: value-display ───────────────────────────────────────────────────
+
+  - from: anatomy[value-display]
+    type: extended
+    addition: >-
+      `<mat-select-trigger>` directive (selector: `[matSelectTrigger]`) — when
+      projected inside `<mat-select>`, completely replaces the default value
+      display with arbitrary consumer-authored content. Without this directive,
+      MatSelect renders the selected option's `viewValue` as the trigger text
+      and, in multiple mode, a comma-separated list of `viewValue`s. With
+      `<mat-select-trigger>`, the consumer controls the full trigger inner content
+      including icons, badges, or truncation logic.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts and select.html (fetched 2026-05-04).
+    rationale: >-
+      Canonical `value-display` is a text slot showing the current selection;
+      the canonical `caret` property mentions an icon swap but no full-content
+      override. MatSelectTrigger goes further — it is a full content-projection
+      escape hatch for consumers who need rich trigger content (e.g. colour
+      swatches, user avatars, multi-chip display). This is a genuine extension
+      beyond the canonical anatomy.
+
+  # ── Anatomy: caret ───────────────────────────────────────────────────────────
+
+  - from: anatomy[caret]
+    type: reshaped
+    to: >-
+      The arrow indicator is rendered as an internal SVG `<mat-select-arrow>`
+      element inside the trigger host. It is not a composable consumer slot;
+      there is no `[caretIcon]` input or ng-content projection point for it.
+      The arrow rotates 180° via CSS class when the panel is open. The element
+      is `aria-hidden="true"`.
+      Source: github.com/angular/components blob
+      src/material/select/select.html (fetched 2026-05-04).
+    rationale: >-
+      Canonical `caret` is described as a swappable icon slot (`code.slot: caret`,
+      `semantic: presentational`). MatSelect bakes the arrow as an internal
+      implementation detail with no consumer override point. Consumers who need
+      a custom indicator must use `<mat-select-trigger>` and reproduce the arrow
+      themselves, surrendering the built-in value-display text in exchange for
+      full content control.
+
+  # ── Anatomy: listbox panel ───────────────────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: reshaped
+    to: >-
+      The popup panel is not a separately authored element. MatSelect creates it
+      internally via a CDK Overlay (`OverlayRef`) and a template reference; the
+      panel element carries `role="listbox"` and is portalled into
+      `.cdk-overlay-container` at the document root. Consumers do not author
+      the listbox element; they project `<mat-option>` and `<mat-optgroup>`
+      children into `<mat-select>` and MatSelect routes them into the panel.
+      `panelClass: string | string[]` input applies additional CSS classes to
+      the overlay panel for consumer styling.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `listbox` is described as a composable structural slot that the
+      consumer authors (analogous to Headless UI `<ListboxOptions>` or Radix
+      `<Select.Content>`). MatSelect instead auto-creates the panel, keeping the
+      consumer surface minimal. The trade-off is that consumers cannot customise
+      the panel's DOM structure beyond CSS classes and projected option content —
+      but they gain automatic overlay positioning, scroll management, and
+      keyboard focus without any consumer wiring.
+
+  # ── Anatomy: option ──────────────────────────────────────────────────────────
+
+  - from: anatomy[option]
+    type: extended
+    addition: >-
+      `<mat-option>` renders a `MatPseudoCheckbox` inside each option when the
+      parent `<mat-select>` has `[multiple]="true"`. The pseudo-checkbox provides
+      visual multi-select feedback (checked / unchecked state) without a native
+      `<input type="checkbox">` — it is an `aria-hidden` decorative element;
+      the selection state is communicated via `aria-selected` on the
+      `role="option"` host. `MatOption` is a shared class reused across
+      MatSelect, MatAutocomplete, and MatChipListbox. It also exposes
+      `hideSingleSelectionIndicator` (propagated from MatSelect) to suppress
+      the selection checkmark in single-select mode.
+      Source: github.com/angular/components blob
+      src/material/core/option/option.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `option` anatomy describes the common case without a
+      library-specific checkmark decoration. MatOption extends this with
+      first-class multi-select visual feedback (MatPseudoCheckbox) and a
+      single-select checkmark that is shown by default and suppressible via
+      `hideSingleSelectionIndicator`. The shared-class design also couples
+      MatOption's lifecycle to `MatSelect` via an injection token, rather than
+      having the option be a standalone composable primitive.
+
+  # ── Anatomy: option-group ────────────────────────────────────────────────────
+
+  - from: anatomy[option-group]
+    type: renamed
+    to: >-
+      `<mat-optgroup>` with `label: string` input and optional `disabled: boolean`
+      input. When `disabled="true"` the entire group and all its child
+      `<mat-option>` elements are disabled. The group label is rendered as a
+      non-selectable `<span>` styled by Material typography. Role: the `<mat-optgroup>`
+      host element carries no ARIA role itself; child `<mat-option>` elements each
+      carry `role="option"` and the listbox carries `role="listbox"` — the group
+      is semantically invisible to AT in current Material output.
+      Source: github.com/angular/components blob
+      src/material/core/option/optgroup.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `option-group` maps to `<div role="group" aria-labelledby="...">`.
+      `<mat-optgroup>` does not emit `role="group"` on the host — it relies on
+      the visually styled label text and the `<mat-option>` children having
+      `role="option"` to convey grouping. This is a known a11y gap: screen readers
+      do not announce the group name when navigating options because the grouping
+      role and aria-labelledby are absent. The canonical recommends
+      `role="group"` + `aria-labelledby`; Material diverges here for legacy
+      rendering reasons.
+
+  # ── Axes: native property ────────────────────────────────────────────────────
+
+  - from: axes.properties[native]
+    type: omitted
+    rationale: >-
+      MatSelect has no `native` input and does not offer a native `<select>`
+      fallback. It is always a custom listbox. Angular applications targeting
+      mobile are expected to rely on the custom implementation — there is no
+      automatic switch to the platform picker at small viewports. Consumers who
+      want a native `<select>` must use a plain HTML element with MatFormField's
+      `matNativeControl` directive (`<select matNativeControl>`), which is a
+      separate directive family not part of MatSelect.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04); no `native` input exists.
+
+  # ── Axes: size property ──────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      MatSelect has no `size` input (sm / md / lg). Visual density and field
+      height are governed by `MatFormField`'s `appearance` input
+      (`'fill' | 'outline'`) and the global `MAT_FORM_FIELD_DEFAULT_OPTIONS`
+      density setting. Consumers set density at the theme level
+      (`density: -1 | -2 | -3` in the Angular Material theme) rather than
+      per-instance. This is a design-system-level concern in Material, not a
+      component prop.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04); no `size` or `density`
+      input on MatSelect.
+
+  # ── Axes: variants ───────────────────────────────────────────────────────────
+
+  - from: axes.variants
+    type: reshaped
+    to: >-
+      No `variant` input on `<mat-select>`. The canonical `default` and `inline`
+      variants are handled by the parent `<mat-form-field appearance="fill|outline">`.
+      MatFormField's `appearance` input controls the field chrome (label animation,
+      border style, background fill) and is independent of MatSelect. There is no
+      inline (no-form-field) variant in the sense of a bare trigger without a
+      MatFormField wrapper — though consumers can use `<mat-select>` without
+      MatFormField, the component is designed and themed assuming MatFormField
+      as the layout host.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04); no `variant` input.
+    rationale: >-
+      Canonical variants (`default` / `inline`) are select-level properties.
+      Material delegates visual variant control to `MatFormField`, separating
+      field-chrome concerns from the select component. This layering keeps
+      MatSelect focused on selection behaviour while MatFormField handles
+      label, error, hint, and prefix/suffix layout. The result is that consumers
+      must know about two cooperating components to achieve the canonical default
+      variant, rather than setting a single `variant` prop.
+
+  # ── Events: openChange ───────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: >-
+      Three outputs on `<mat-select>`:
+      `openedChange: EventEmitter<boolean>` — fires after the panel animation
+      completes (true = opened, false = closed), matching the canonical boolean
+      contract.
+      `opened: Observable<void>` — fires when the panel opens (void payload).
+      `closed: Observable<void>` — fires when the panel closes (void payload).
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `openChange` is one boolean output. MatSelect ships three outputs:
+      `openedChange` matches the canonical payload (boolean, post-animation) but
+      uses a different name; `opened` and `closed` are split void-payload edges
+      for consumers who want fine-grained lifecycle hooks without maintaining a
+      boolean themselves. This mirrors the same split in MatDrawer.
+
+  # ── Events: selectionChange ──────────────────────────────────────────────────
+
+  - from: events[selectionChange]
+    type: reshaped
+    to: >-
+      `selectionChange: EventEmitter<MatSelectChange>` where
+      `MatSelectChange = { source: MatSelect; value: any }`.
+      Consumers access the committed value via `event.value`; the `source`
+      reference provides access to the full MatSelect instance (current
+      `options`, `selected`, etc.). A companion `valueChange: EventEmitter<any>`
+      emits only the raw value without the source reference.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04).
+    rationale: >-
+      Canonical `selectionChange` emits the flat selected value (T | T[] | null).
+      MatSelect wraps it in `MatSelectChange`, a rich object carrying the source
+      reference — the same pattern as MatAutocomplete's `optionSelected`. The
+      richer payload is useful when multiple select instances share a handler
+      and the consumer needs to identify the source. `valueChange` provides the
+      flat payload as a convenience but is not the primary output name.
+
+  # ── Events: invalidChange ────────────────────────────────────────────────────
+
+  - from: events[invalidChange]
+    type: omitted
+    rationale: >-
+      No `invalidChange` output exists on MatSelect. Validation error state is
+      managed by `MatFormField` via Angular's `ErrorStateMatcher` interface —
+      the field's error display is driven by the associated `FormControl`'s
+      `invalid` + `touched` status. MatSelect exposes `errorStateMatcher` as a
+      per-instance override, but the invalid state is not surfaced as an output
+      event. Consumers who need to react to validity changes subscribe to
+      `FormControl.statusChanges` observable directly.
+      Source: github.com/angular/components blob
+      src/material/select/select.ts (fetched 2026-05-04); no `invalidChange`
+      output declared.
+
+rationale: |
+  Angular Material MatSelect is a purpose-built custom-listbox select that differs
+  from the canonical in four primary ways:
+
+  1. Trigger element is a <div role="combobox">, not a <button>. The full ARIA
+     contract (aria-expanded, aria-controls, aria-activedescendant, aria-haspopup)
+     is present; the host element type alone diverges.
+
+  2. Panel is auto-created, not consumer-authored. Consumers project <mat-option>
+     and <mat-optgroup> children; MatSelect routes them into an internal CDK Overlay
+     panel. Consumer control over panel structure is limited to panelClass CSS
+     and the projected option/group content.
+
+  3. No native fallback. MatSelect is always a custom listbox; native <select>
+     rendering is a separate matNativeControl directive path. The canonical native
+     property and the responsive breakpoint.sm switch-to-native behaviour are
+     both absent.
+
+  4. variant and size are out-of-scope for MatSelect — both are delegated to
+     MatFormField (appearance) and the Angular Material theming layer (density),
+     requiring consumers to configure two cooperating components.
+
+  Material strengths relative to canonical:
+  1. MatSelectTrigger enables full-content trigger override without losing the
+     CDK Overlay and keyboard contract — a genuine extension beyond canonical
+     value-display.
+  2. MatPseudoCheckbox gives multi-select a first-class visual affordance without
+     native checkbox semantics polluting the listbox.
+  3. hideSingleSelectionIndicator and disableOptionCentering are production-grade
+     ergonomic controls absent from the canonical.
+  4. compareWith input handles object-valued options correctly without consumer
+     serialisation — essential for FormControl<T> where T is not a primitive.
+  5. canSelectNullableOptions allows null/undefined values in the option list,
+     covering the "clear selection" affordance inline without a separate trigger.
+
+lastReviewed: '2026-05-04'

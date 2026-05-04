@@ -1,0 +1,259 @@
+componentId: select
+libraryId: headlessui
+componentName: Listbox / ListboxButton / ListboxOptions / ListboxOption / ListboxSelectedOption
+
+exampleCode: |
+  import { useState } from 'react';
+  import {
+    Listbox, ListboxButton,
+    ListboxOptions, ListboxOption,
+  } from '@headlessui/react';
+
+  const statuses = [
+    { id: 'draft',     label: 'Draft' },
+    { id: 'review',    label: 'In Review' },
+    { id: 'published', label: 'Published' },
+    { id: 'archived',  label: 'Archived' },
+  ];
+
+  export function StatusSelect() {
+    const [selected, setSelected] = useState(statuses[0]);
+
+    return (
+      <Listbox value={selected} onChange={setSelected} name="status">
+        <ListboxButton className="w-full flex items-center justify-between border rounded px-3 py-2 data-open:ring-2">
+          {selected.label}
+          <span aria-hidden="true">&#8964;</span>
+        </ListboxButton>
+        <ListboxOptions
+          anchor="bottom start"
+          className="w-[var(--button-width)] rounded shadow-lg bg-white empty:hidden"
+        >
+          {statuses.map((s) => (
+            <ListboxOption
+              key={s.id}
+              value={s}
+              className="px-3 py-2 cursor-default data-focus:bg-blue-100 data-selected:font-semibold"
+            >
+              {s.label}
+            </ListboxOption>
+          ))}
+        </ListboxOptions>
+      </Listbox>
+    );
+  }
+
+divergence:
+  # ── Two-primitive split ───────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: >-
+      Headless UI ships TWO primitives for the canonical select pattern:
+      `Listbox` (custom-styled, arbitrary option content, full APG keyboard
+      contract) and `Select` (thin wrapper around native `<select>` with
+      accessibility state attributes but no custom popup). The canonical
+      `select` unifies both paths via the `native: boolean` property;
+      Headless UI separates them as entirely distinct components with
+      incompatible APIs.
+    rationale: >-
+      The canonical `native` property is a runtime toggle on a single
+      component — one API surface, two rendering paths. Headless UI instead
+      ships `Listbox` and `Select` as separate component families with no
+      shared root. Consumers who want the mobile-native fallback must
+      maintain two completely separate component trees or author their own
+      abstraction layer. The split reflects Headless UI's philosophy of
+      minimal surface per primitive over unified component APIs.
+      Source: https://headlessui.com/react/listbox and
+      https://headlessui.com/react/select (v2.1, 2026-05-04).
+
+  # ── Anatomy: value-display slot ──────────────────────────────────────────────
+
+  - from: anatomy[value-display]
+    type: reshaped
+    to: >-
+      Render prop `value` on `ListboxButton` children, or the dedicated
+      `ListboxSelectedOption` component for a "buttonless" composition pattern
+    rationale: >-
+      The canonical `value-display` is a discrete named slot that renders the
+      current selection text. Headless UI exposes the selected value via a
+      render prop (`value`) on `ListboxButton` children, leaving the consumer
+      to place the text node. `ListboxSelectedOption` is a separate component
+      that exposes a `selectedOption` render prop for more complex display
+      scenarios. There is no discrete `value-display` component — the display
+      is composed by the consumer inside `ListboxButton`. Source:
+      https://headlessui.com/react/listbox (ListboxButton render props +
+      ListboxSelectedOption, v2.1, 2026-05-04).
+
+  # ── Anatomy: caret slot ───────────────────────────────────────────────────────
+
+  - from: anatomy[caret]
+    type: omitted
+    rationale: >-
+      Headless UI ships no caret component. The canonical `caret` slot is a
+      decorative chevron inside the trigger that rotates on open state.
+      Headless UI exposes the `data-open` / `data-closed` state attribute on
+      `ListboxButton` for consumer CSS (e.g. `data-open:rotate-180`) but
+      provides no chevron element — consumers must author their own icon node
+      inside `ListboxButton` children and bind rotation via CSS or the `open`
+      render prop. Source: https://headlessui.com/react/listbox (ListboxButton
+      data attributes, v2.1, 2026-05-04).
+
+  # ── Anatomy: listbox slot ─────────────────────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: renamed
+    to: ListboxOptions
+    rationale: >-
+      Canonical `listbox` slot maps to `role="listbox"`. Headless UI names the
+      component `ListboxOptions`; it renders as a `<div>` by default and
+      injects `role="listbox"` internally. The divergence is at API naming;
+      the ARIA contract is honoured. Source: https://headlessui.com/react/listbox
+      (ListboxOptions props, v2.1, 2026-05-04).
+
+  # ── Anatomy: option slot ──────────────────────────────────────────────────────
+
+  - from: anatomy[option]
+    type: renamed
+    to: ListboxOption
+    rationale: >-
+      Canonical `option` slot expects `role="option"`. `ListboxOption` renders
+      as a `<div>` by default and applies `role="option"` plus a unique `id`
+      internally. `aria-selected` is managed automatically. The rename is
+      API-level; the ARIA contract matches canonical. Source:
+      https://headlessui.com/react/listbox (ListboxOption props, v2.1,
+      2026-05-04).
+
+  # ── Anatomy: option-group slot ────────────────────────────────────────────────
+
+  - from: anatomy[option-group]
+    type: omitted
+    rationale: >-
+      Headless UI ships no `ListboxOptionGroup` component. The canonical
+      `option-group` slot maps to `role="group"` with `aria-labelledby`.
+      Consumers who need option groups must author a plain `<div
+      role="group">` with a label inside `ListboxOptions` — there is no
+      first-class grouping primitive. Source: https://headlessui.com/react/listbox
+      (v2.1, 2026-05-04).
+
+  # ── Axes: native variant ──────────────────────────────────────────────────────
+
+  - from: axes.properties[native]
+    type: omitted
+    rationale: >-
+      The canonical `native` boolean toggles native `<select>` rendering
+      within a single component. In Headless UI this path is a separate
+      component entirely (`Select`, not `Listbox`) with an incompatible API.
+      There is no `native` prop on `Listbox`. Consumers wanting native
+      rendering at `breakpoint.sm` must conditionally render `<Select>` or
+      a raw `<select>` — the canonical responsive fallback cannot be achieved
+      within one component tree. Source: https://headlessui.com/react/select
+      (v2.1, 2026-05-04).
+
+  # ── Axes: inline variant ──────────────────────────────────────────────────────
+
+  - from: axes.variants[inline]
+    type: omitted
+    rationale: >-
+      Headless UI ships no `inline` variant (a select that renders its options
+      inline rather than in a floating popup). The library is unstyled and
+      layout-agnostic; no variant axis is exposed. Consumers who need an
+      inline list pattern must compose it from `Listbox` with `static` on
+      `ListboxOptions` (which skips portal/floating positioning), but no
+      variant prop exists. Source: https://headlessui.com/react/listbox
+      (ListboxOptions — static prop, v2.1, 2026-05-04).
+
+  # ── API: onChange vs selectionChange ─────────────────────────────────────────
+
+  - from: events[selectionChange]
+    type: renamed
+    to: onChange on Listbox root
+    rationale: >-
+      Canonical `selectionChange` event. Headless UI places `onChange` on the
+      `Listbox` root. In single-select mode it receives `T`; in multi-select
+      (`multiple` prop) it receives `T[]`. The payload matches canonical intent
+      but the event name differs. Source: https://headlessui.com/react/listbox
+      (Listbox props — onChange, v2.1, 2026-05-04).
+
+  # ── API: openChange / onClose ─────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: No open/close event callback; open state available via render prop `open` on ListboxButton children
+    rationale: >-
+      Canonical `openChange` fires on both edges (open → true, close →
+      false). Headless UI exposes no open/close event callback on `Listbox`.
+      Consumers who need to react to the open/close transition must read the
+      `open` render prop from `ListboxButton` children or drive their own
+      controlled state. Source: https://headlessui.com/react/listbox (Listbox
+      props, v2.1, 2026-05-04).
+
+  # ── Extended: `by` comparator ─────────────────────────────────────────────────
+
+  - from: axes.properties[multi]
+    type: extended
+    addition: >-
+      `by` prop on `Listbox` root accepts a string field name or a
+      `(a: T, b: T) => boolean` comparator function. When `value` is a
+      structured object rather than a primitive, `by` controls how selected
+      state is determined across renders. The canonical anatomy assumes
+      primitive (string/number) values and has no equivalent comparator
+      concept.
+    rationale: >-
+      The canonical `multi` property covers multi-select toggle behaviour but
+      assumes primitive values for identity comparison. Headless UI's generic
+      type parameter `T` allows any object as list values, requiring an
+      explicit comparator to avoid false-negative identity checks when objects
+      are re-created across renders. This is an extension beyond canonical
+      scope. Source: https://headlessui.com/react/listbox (Listbox props —
+      by, v2.1, 2026-05-04).
+
+  # ── Extended: anchor-based positioning ───────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: extended
+    addition: >-
+      `anchor` prop on `ListboxOptions` drives built-in floating positioning
+      (`"bottom start"`, `"top end"`, etc.). When `anchor` is set, the panel
+      is rendered into a portal automatically. CSS custom properties
+      `--button-width`, `--anchor-gap`, `--anchor-offset`, and
+      `--anchor-padding` are injected for consumer sizing.
+    rationale: >-
+      The canonical anatomy documents portal-mounting as a requirement but
+      prescribes no specific positioning API. Headless UI ships a first-party
+      positioning system (backed by Floating UI) to remove the need for
+      consumers to wire a third-party library. This is an extension beyond
+      canonical scope. Source: https://headlessui.com/react/listbox
+      (ListboxOptions props — anchor, portal, v2.1, 2026-05-04).
+
+rationale: |
+  Headless UI React v2.1 does not ship a single "Select" primitive. The
+  canonical select pattern is covered by two components with incompatible
+  APIs: `Listbox` (custom-styled, full APG keyboard contract, arbitrary
+  option content) and `Select` (thin native `<select>` wrapper with data
+  attributes for styling). This audit covers `Listbox` as the primary
+  match for the canonical anatomy; `Select` is documented as a divergence.
+
+  Divergences cluster into three groups:
+
+  1. Two-primitive split — the canonical `native: boolean` toggle is not a
+     prop; it requires switching to an entirely different component family.
+     The canonical responsive fallback at breakpoint.sm (switch to native)
+     cannot be achieved within one component tree.
+
+  2. Missing slots — no caret component, no option-group primitive, no
+     value-display component. All three require consumer-authored DOM
+     inside Listbox primitives. Consumers carry the authoring burden for
+     these common sub-parts.
+
+  3. API naming/shape differences — `onChange` instead of `selectionChange`;
+     no `openChange` event (open state is a render prop); `ListboxOptions`
+     and `ListboxOption` instead of `listbox` and `option` slot names.
+
+  The ARIA contract (role="listbox", role="option", aria-selected,
+  aria-expanded, aria-haspopup, focus staying on the button via
+  aria-activedescendant) is correctly implemented and matches canonical
+  requirements. Typeahead by first letter (A–Z keyboard navigation) is
+  documented and implemented.
+
+lastReviewed: '2026-05-04'

@@ -1,0 +1,240 @@
+componentId: select
+libraryId: radix
+componentName: Select
+
+exampleCode: |
+  import * as Select from '@radix-ui/react-select';
+  import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+
+  function MySelect({ value, onChange }) {
+    return (
+      <Select.Root value={value} onValueChange={onChange} name="status">
+        <Select.Trigger aria-label="Select status">
+          <Select.Value placeholder="Choose a status…" />
+          <Select.Icon>
+            <ChevronDown />
+          </Select.Icon>
+        </Select.Trigger>
+
+        <Select.Portal>
+          <Select.Content position="popper" sideOffset={4}>
+            <Select.ScrollUpButton>
+              <ChevronUp />
+            </Select.ScrollUpButton>
+
+            <Select.Viewport>
+              <Select.Group>
+                <Select.Label>Active</Select.Label>
+                <Select.Item value="draft">
+                  <Select.ItemText>Draft</Select.ItemText>
+                  <Select.ItemIndicator>
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+                <Select.Item value="published">
+                  <Select.ItemText>Published</Select.ItemText>
+                  <Select.ItemIndicator>
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+                <Select.Separator />
+                <Select.Item value="archived" disabled>
+                  <Select.ItemText>Archived</Select.ItemText>
+                  <Select.ItemIndicator>
+                    <Check />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              </Select.Group>
+            </Select.Viewport>
+
+            <Select.ScrollDownButton>
+              <ChevronDown />
+            </Select.ScrollDownButton>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+    );
+  }
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[value-display]
+    type: renamed
+    to: Select.Value
+    rationale: >-
+      Functional match for the canonical value-display slot. Radix names it
+      "Value" following its own sub-component vocabulary. It accepts a
+      `placeholder` prop (ReactNode) that is shown when no item is selected,
+      matching the canonical fallback contract. Renders the selected item's
+      text content automatically from the active Item's ItemText child.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#value
+      (verified 2026-05-04)
+
+  - from: anatomy[caret]
+    type: renamed
+    to: Select.Icon
+    rationale: >-
+      Radix exposes a dedicated `Select.Icon` sub-component as the wrapper for
+      the trigger's chevron glyph. It adds `aria-hidden="true"` automatically,
+      matching the canonical decorative contract. The glyph itself (SVG or icon
+      component) is passed as a child — Radix ships a default ChevronDown via
+      the Icon sub-component when no children are provided.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#icon
+      (verified 2026-05-04)
+
+  - from: anatomy[listbox]
+    type: reshaped
+    to: >-
+      Select.Portal > Select.Content > Select.Viewport. The canonical listbox
+      is a single floating semantic unit. Radix splits it into three nested
+      layers: Portal handles document-root mounting, Content handles
+      positioning and focus management, and Viewport is the scroll window that
+      carries `role="listbox"`.
+    rationale: >-
+      Radix separates portal mounting (Portal), positioning + event handling
+      (Content), and the scroll-capable item-list surface (Viewport) for
+      independent composability. The canonical listbox role ends up on
+      Viewport, not Content. This is the structural split that enables the
+      ScrollUpButton / ScrollDownButton affordances to live adjacent to
+      Viewport inside Content without disrupting the listbox semantic boundary.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#content
+      and #viewport (verified 2026-05-04)
+
+  - from: anatomy[option]
+    type: renamed
+    to: Select.Item (with Select.ItemText child for the label surface)
+    rationale: >-
+      Radix names the selectable unit "Item" rather than "Option". Item sets
+      `role="option"` on its root element and applies `data-state="checked"`
+      (not `aria-selected`) for the selected item. The visible label text must
+      be placed inside a `Select.ItemText` child — this indirection lets Radix
+      extract the text for the Value display and for typeahead without
+      duplicating DOM content. Omitting ItemText causes the Value display to
+      show nothing.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#item
+      (verified 2026-05-04)
+
+  - from: anatomy[option-group]
+    type: renamed
+    to: Select.Group (with Select.Label sibling for the group heading)
+    rationale: >-
+      One-to-one functional match. Radix names it "Group" and requires a
+      sibling `Select.Label` for the non-selectable heading text (rather than
+      an aria-labelledby wiring the consumer must supply). Radix auto-connects
+      the Label to the Group via an internal `aria-labelledby` id pair,
+      matching the canonical `role="group"` + `aria-labelledby` contract
+      without manual id management.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#group
+      (verified 2026-05-04)
+
+  # ── Radix-specific extensions ─────────────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: extended
+    addition: >-
+      Select.ScrollUpButton and Select.ScrollDownButton — decorative scroll
+      affordance buttons rendered above and below the Viewport when the item
+      list overflows the Content height. They auto-show/hide based on scroll
+      position and scroll the Viewport on pointer-down. No canonical anatomy
+      slot exists for this pattern.
+    rationale: >-
+      Radix's item-aligned positioning mode constrains the Content height to
+      avoid viewport overflow rather than letting the Viewport scroll freely.
+      The ScrollUpButton / ScrollDownButton pattern provides a discoverable
+      scroll affordance in this constrained space — a UX detail required when
+      the item list is taller than the viewport permits. The canonical listbox
+      slot assumes unrestricted height or standard browser scrollbar; Radix
+      uniquely needs this extension for its default item-aligned mode.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#scrollupbutton
+      (verified 2026-05-04)
+
+  - from: anatomy[option]
+    type: extended
+    addition: >-
+      Select.ItemIndicator — a sub-component that renders only when the parent
+      Item is selected (`data-state="checked"`). Used for the selected-state
+      checkmark glyph. Canonical anatomy has no named slot for this affordance
+      (the option slot description notes a "visual check" for multi-select but
+      does not define a dedicated sub-component).
+    rationale: >-
+      Radix isolates the selected-state indicator into a controlled sub-component
+      so that consumers do not need to read `data-state` themselves to
+      conditionally render a checkmark. This is a Radix composition idiom
+      (mirrors Dialog.Close / Popover.Close pattern) that has no canonical
+      equivalent slot.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#itemindicator
+      (verified 2026-05-04)
+
+  # ── Axes ─────────────────────────────────────────────────────────────────
+
+  - from: axes.properties[multi]
+    type: omitted
+    rationale: >-
+      Radix Select is single-select only. There is no `multiple` prop on
+      Select.Root, no multi-selection keyboard contract, and no mechanism for
+      accumulating an array of selected values. The canonical `multi: boolean`
+      property and its associated `aria-multiselectable` and value-array payload
+      are entirely absent. Consumers requiring multi-select must reach for a
+      different primitive (e.g. a hand-rolled listbox or a third-party library).
+      Source: https://www.radix-ui.com/primitives/docs/components/select#root
+      (verified 2026-05-04; no `multiple` prop documented)
+
+  - from: axes.properties[native]
+    type: omitted
+    rationale: >-
+      Radix Select is always a fully custom listbox implementation; there is no
+      `native` prop to fall back to a platform `<select>` picker. Radix renders
+      a hidden `<select>` when the `name` prop is supplied (for form
+      participation), but this is invisible — the visible UI is always the
+      custom component. The canonical `native: boolean` axis (which switches
+      the visible rendering to the OS picker on mobile / breakpoint.sm) does
+      not exist.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#root
+      (verified 2026-05-04; no `native` prop documented)
+
+  # ── Positioning model ─────────────────────────────────────────────────────
+
+  - from: anatomy[listbox]
+    type: extended
+    addition: >-
+      Select.Content `position` prop: `'item-aligned'` (default) positions the
+      Content so the active item overlaps the trigger button — replicating
+      native OS select behaviour; `'popper'` positions the Content like a
+      Popover, below (or above) the trigger with configurable `side`,
+      `sideOffset`, `align`, and `alignOffset` props plus CSS custom properties
+      (`--radix-select-trigger-width`, `--radix-select-content-available-height`).
+    rationale: >-
+      The canonical listbox slot specifies a single positioning model (floating
+      below the trigger, anchored to its inline-start edge). Radix ships two
+      models as a first-class enum to serve both the OS-style dropdown pattern
+      (item-aligned) and the design-system dropdown pattern (popper). The
+      item-aligned default is unusual among headless libraries and has no
+      canonical equivalent — consumers often switch to `position="popper"` to
+      match the canonical positioning contract.
+      Source: https://www.radix-ui.com/primitives/docs/components/select#content
+      (verified 2026-05-04)
+
+rationale: |
+  Radix Select (`@radix-ui/react-select`) is a first-class, fully-implemented
+  primitive — unlike Radix's absent Combobox. It correctly covers the APG
+  Select-Only Combobox / Listbox pattern: `role="combobox"` on the trigger,
+  `role="listbox"` on the Viewport, `role="option"` on each Item, typeahead
+  by first-letter, and full keyboard navigation (Space/Enter/Arrow/Escape/Home/End).
+  Form participation is handled via a hidden native `<select>` rendered when
+  the `name` prop is supplied, matching the canonical form-submission contract
+  for single-select without the consumer needing to wire ElementInternals.
+
+  The primary structural divergence is the three-layer listbox split
+  (Portal / Content / Viewport) versus the canonical single listbox slot,
+  driven by Radix's need to separate portal mounting, positioning, and the
+  scroll-window. The two supplementary extensions — ScrollUpButton/ScrollDownButton
+  and ItemIndicator — are Radix-specific UX additions with no canonical equivalents.
+
+  The two significant omissions are multi-select (Radix is single-select only)
+  and the native-select fallback (canonical `native: boolean` axis). Both are
+  intentional scope decisions by the Radix authors: multi-select requires a
+  different ARIA pattern (Listbox rather than Select-Only Combobox) and Radix
+  has chosen not to ship it under the Select primitive.
+
+lastReviewed: '2026-05-04'
