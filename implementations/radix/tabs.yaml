@@ -1,0 +1,164 @@
+componentId: tabs
+libraryId: radix
+componentName: Tabs
+
+exampleCode: |
+  import * as Tabs from '@radix-ui/react-tabs';
+
+  <Tabs.Root defaultValue="account" orientation="horizontal" activationMode="automatic">
+    <Tabs.List aria-label="Manage your account">
+      <Tabs.Trigger value="account">Account</Tabs.Trigger>
+      <Tabs.Trigger value="notifications">Notifications</Tabs.Trigger>
+      <Tabs.Trigger value="billing" disabled>Billing</Tabs.Trigger>
+    </Tabs.List>
+
+    <Tabs.Content value="account">
+      <p>Account settings panel content.</p>
+    </Tabs.Content>
+    <Tabs.Content value="notifications">
+      <p>Notification preferences panel content.</p>
+    </Tabs.Content>
+    <Tabs.Content value="billing" forceMount>
+      <p>Billing details panel content.</p>
+    </Tabs.Content>
+  </Tabs.Root>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+  - from: anatomy[tablist]
+    type: renamed
+    to: Tabs.List
+    rationale: >-
+      Same role and semantic (`role="tablist"`). Radix uses the compound-
+      component name "List" rather than the ARIA term "tablist". The
+      `aria-orientation` attribute is set automatically from the root's
+      `orientation` prop, matching the canonical contract exactly.
+
+  - from: anatomy[tab]
+    type: renamed
+    to: Tabs.Trigger
+    rationale: >-
+      Same interactive role (`role="tab"`). Radix names the sub-component
+      "Trigger" to align with its own primitives vocabulary (Toggle, Select,
+      Popover all use "Trigger"). The canonical term "tab" follows ARIA;
+      Radix diverges for internal naming consistency.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#trigger
+
+  - from: anatomy[indicator]
+    type: omitted
+    rationale: >-
+      Radix ships no indicator sub-component. The active trigger carries
+      `data-state="active"` and consumers apply CSS (e.g. a pseudo-element
+      underline) targeting that attribute. The canonical indicator slot is a
+      presentational element derived from selected-tab geometry; Radix
+      intentionally leaves its implementation to the consumer CSS layer, not
+      the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#trigger
+
+  - from: anatomy[tabpanel]
+    type: renamed
+    to: Tabs.Content
+    rationale: >-
+      Same structural role (`role="tabpanel"`). Radix uses "Content" for
+      consistency with its Dialog.Content / Popover.Content naming pattern.
+      Radix auto-wires `aria-labelledby` to its corresponding Trigger, matching
+      the canonical bidirectional ARIA relationship contract.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#content
+
+  # ── Axes — properties ────────────────────────────────────────────────────
+  - from: axes.properties[activation]
+    type: renamed
+    to: "activationMode — prop on Tabs.Root; values: automatic | manual"
+    rationale: >-
+      Canonical names the axis `activation` with values `automatic` and
+      `manual`. Radix names it `activationMode` and uses the same two values.
+      The behavioural contract (automatic: arrow-key focus activates; manual:
+      Enter/Space required) is identical.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#root
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      Radix is an unstyled primitive and ships no density prop. Spacing,
+      padding, and typographic scale for tabs are entirely consumer-controlled
+      via CSS classNames on Tabs.List and Tabs.Trigger. The canonical
+      `comfortable | compact` axis is a design-system convention layered
+      above the primitive.
+
+  - from: axes.variants[line]
+    type: omitted
+    rationale: >-
+      Radix ships no visual variant system (line / contained / pill). Radix.Tabs
+      is unstyled; variant appearance is achieved through consumer CSS applied to
+      the `data-state` and `data-orientation` attributes. All three canonical
+      variants are implementable but are not bundled.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs
+
+  # ── Events ───────────────────────────────────────────────────────────────
+  - from: events[selectedChange]
+    type: renamed
+    to: "onValueChange (prop on Tabs.Root; signature: value: string => void)"
+    rationale: >-
+      One-to-one match in semantics. Canonical names it `selectedChange` for
+      framework-neutral consistency; Radix uses `onValueChange` following React
+      convention for controlled-value callbacks. The payload (string id of the
+      newly selected tab) and firing edges (automatic: on focus; manual: on
+      Enter/Space) match the canonical contract.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#root
+
+  - from: events[tabActivate]
+    type: omitted
+    rationale: >-
+      Radix does not expose a separate activate-only event distinct from
+      `onValueChange`. In manual mode, `onValueChange` fires only on Enter/Space
+      (the activation edge), which collapses the canonical distinction between
+      "focus-move" (tabActivate omitted) and "selection-commit" (onValueChange).
+      Consumers that need to distinguish navigation from activation in manual
+      mode must track focus themselves; Radix provides no separate callback for
+      the `tabActivate` edge.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#root
+
+  # ── States ───────────────────────────────────────────────────────────────
+  - from: axes.states.data[busy]
+    type: omitted
+    rationale: >-
+      Radix has no built-in busy/loading state for async panel content. The
+      `forceMount` prop on Tabs.Content keeps the panel in the DOM regardless
+      of selection, but no `aria-busy` lifecycle is managed by the library.
+      Consumers must set `aria-busy="true"` on the Content element themselves
+      during in-flight fetches. The canonical `busy` state and its associated
+      `aria-busy` contract are unimplemented at the Radix layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/tabs#content
+
+  # ── Contracts ────────────────────────────────────────────────────────────
+  - from: contracts.nonNegotiable[disabled-tabs-use-aria-disabled]
+    type: reshaped
+    to: "Tabs.Trigger disabled prop sets native HTML disabled on the underlying button element, plus a data-disabled styling hook"
+    rationale: >-
+      The canonical non-negotiable contract requires `aria-disabled="true"` so
+      disabled tabs remain in the focus order and are keyboard-reachable.
+      Radix uses the native HTML `disabled` attribute, which removes the button
+      from the focus order entirely — arrow-key navigation skips disabled
+      triggers. This contradicts APG "Managing disabled tabs" guidance. The
+      `data-disabled` attribute Radix adds is a styling hook only; it does not
+      restore keyboard reachability. Consumers who need the canonical behaviour
+      must avoid the `disabled` prop and implement `aria-disabled` + no-op
+      activation manually.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/tabs/src/tabs.tsx
+      (verified: HTML `disabled={disabled}` on button element, no aria-disabled)
+
+rationale: |
+  Radix Tabs is a low-level unstyled primitive that correctly implements the
+  ARIA tablist/tab/tabpanel triad, roving-tabindex keyboard model, and the
+  automatic/manual activation modes. Most anatomy divergences are renames
+  following Radix's own primitives vocabulary (List, Trigger, Content). The
+  significant gaps relative to the canonical anatomy are: (1) no indicator
+  sub-component — consumers must CSS their own; (2) no visual variant system
+  — the canonical line/contained/pill axis is a design-system layer above
+  Radix; (3) no async panel lifecycle (busy/lazy/error states) — Radix
+  provides `forceMount` and `data-state` but no `aria-busy` management; and
+  (4) the disabled-tab contract is broken — Radix uses HTML `disabled` which
+  removes triggers from the focus order, contradicting the APG requirement
+  that disabled tabs remain keyboard-reachable via `aria-disabled`.
+
+lastReviewed: '2026-05-04'

@@ -1,0 +1,241 @@
+componentId: tabs
+libraryId: cdk
+componentName: MatTabGroup / MatTab (from @angular/material/tabs)
+
+exampleCode: |
+  // app.component.ts
+  import { Component, signal } from '@angular/core';
+  import { MatTabsModule } from '@angular/material/tabs';
+  import { MatTabChangeEvent } from '@angular/material/tabs';
+
+  @Component({
+    selector: 'app-demo',
+    standalone: true,
+    imports: [MatTabsModule],
+    template: `
+      <mat-tab-group
+        [selectedIndex]="selectedIndex()"
+        (selectedTabChange)="onTabChange($event)"
+        (focusChange)="onFocusChange($event)"
+        headerPosition="above"
+        [animationDuration]="{ body: '300ms', header: '200ms' }"
+        [preserveContent]="false"
+        [stretchTabs]="false"
+        ariaLabel="Project sections"
+      >
+        <mat-tab label="Overview">
+          <p>Project overview content.</p>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template matTabLabel>
+            <mat-icon>notifications</mat-icon> Activity
+          </ng-template>
+          <ng-template matTabContent>
+            <!-- lazy-loaded: mounted only when tab is first selected -->
+            <p>Activity feed content.</p>
+          </ng-template>
+        </mat-tab>
+
+        <mat-tab label="Settings" [disabled]="true">
+          <p>Settings content.</p>
+        </mat-tab>
+      </mat-tab-group>
+    `,
+  })
+  export class AppDemoComponent {
+    selectedIndex = signal(0);
+
+    onTabChange(event: MatTabChangeEvent): void {
+      this.selectedIndex.set(event.index);
+    }
+
+    onFocusChange(event: MatTabChangeEvent): void {
+      // fires on arrow-key navigation without committing selection
+    }
+  }
+
+divergence:
+  # ── Anatomy ────────────────────────────────────────────────────────────────
+
+  - from: anatomy[tablist]
+    type: reshaped
+    to: >-
+      Monolithic <mat-tab-group> compound component — no separately composed
+      tablist element. The tablist role is rendered internally by
+      MatPaginatedTabHeader; consumers have no direct access to it for slot
+      composition.
+    rationale: >-
+      Angular Material ships a batteries-included compound component
+      (<mat-tab-group> wrapping a managed MatTabHeader internally) rather
+      than the canonical primitive-per-slot decomposition. Consumers project
+      tab definitions as <mat-tab> children; the library emits the tablist
+      markup. This collapses the canonical "compose tablist yourself" model
+      into a single host element, trading composition flexibility for
+      reduced boilerplate. Source: github.com/angular/components blob
+      src/material/tabs/tab-group.ts (fetched 2026-05-04).
+
+  - from: anatomy[tab]
+    type: renamed
+    to: >-
+      <mat-tab> directive — label projected via string `label` @Input() or
+      <ng-template matTabLabel> for rich content; body content via default
+      ng-content or <ng-template matTabContent> for lazy mounting
+    rationale: >-
+      Canonical `tab` slot is a trigger element carrying role="tab". Material
+      splits label from content within the same <mat-tab> declaration —
+      matTabLabel provides the trigger label, default ng-content provides
+      eager body, matTabContent provides lazy body. The trigger itself is
+      rendered by the internal MatTabHeader; consumers never author an
+      explicit role="tab" element. Source: github.com/angular/components blob
+      src/material/tabs/tab.ts (fetched 2026-05-04).
+
+  - from: anatomy[indicator]
+    type: renamed
+    to: >-
+      Ink-bar (internal MatInkBar); configured via `fitInkBarToContent`
+      @Input() on MatTabGroup (boolean, default false — full-width bar;
+      true — bar width matches label text width)
+    rationale: >-
+      Canonical `indicator` slot is decorative and author-accessible.
+      Material's ink-bar is fully internal — consumers cannot replace it or
+      compose it independently. The only control surface is
+      `fitInkBarToContent` on the group. Position is computed by
+      `_alignInkBarToSelectedTab()` which calls `_inkBar.alignToElement()`
+      on the selected label wrapper. Source: github.com/angular/components
+      blob src/material/tabs/paginated-tab-header.ts (fetched 2026-05-04).
+
+  - from: anatomy[tabpanel]
+    type: extended
+    addition: >-
+      `preserveContent: boolean` @Input() on MatTabGroup — when true, all
+      tab panels remain in the DOM (hidden via CSS display:none) rather than
+      being destroyed on deselection; enables instant re-activation without
+      re-mount cost
+    rationale: >-
+      The canonical anatomy does not model an always-in-DOM mode for panels.
+      Material ships `preserveContent` as an explicit performance trade-off
+      knob — lazy-unmount (default) vs keep-all-alive. This maps to the
+      canonical `lazyPanelRender` performance threshold but is controlled at
+      the component level rather than per-panel. Source:
+      github.com/angular/components blob src/material/tabs/tab-group.ts
+      (fetched 2026-05-04).
+
+  # ── Axes / Variants ────────────────────────────────────────────────────────
+
+  - from: axes.variants
+    type: omitted
+    rationale: >-
+      Canonical variants are `line | contained | pill`. MatTabGroup ships
+      only the Material Design line-tab visual style. There is no `variant`
+      input — consumers wanting contained or pill appearances must layer CSS
+      overrides or use a higher-level design-system component. The M3
+      Material spec defines Primary Tabs and Secondary Tabs as the two
+      variants; these differ visually from `contained` and `pill` in the
+      canonical. Source: github.com/angular/components blob
+      src/material/tabs/tab-group.ts (fetched 2026-05-04).
+
+  - from: axes.properties[orientation]
+    type: reshaped
+    to: >-
+      `headerPosition: 'above' | 'below'` @Input() on MatTabGroup — controls
+      whether the tab header renders above or below the panel. True
+      horizontal vs vertical tab orientation (side-by-side tablist + panel)
+      is not natively supported.
+    rationale: >-
+      Canonical `orientation: horizontal | vertical` switches the tablist
+      axis and arrow-key direction. Material's `headerPosition` only controls
+      the vertical position of the header band (above or below the content
+      area); it does not produce a left-rail vertical tabs layout. Vertical
+      orientation as a first-class prop is absent — consumers who need it
+      must compose via MatTabNav + custom layout. Source:
+      github.com/angular/components blob src/material/tabs/tab-group.ts
+      (fetched 2026-05-04).
+
+  - from: axes.properties[activation]
+    type: omitted
+    rationale: >-
+      Canonical `activation: automatic | manual` controls whether arrow-key
+      focus immediately selects a tab or requires Enter/Space to commit.
+      MatTabGroup has no such input. The internal FocusKeyManager + internal
+      `selectFocusedIndex` EventEmitter effectively implement only the manual
+      path (arrow keys move focus; Enter/Space trigger `_keyManager`-driven
+      selection via `selectFocusedIndex`). There is no API surface to switch
+      to automatic activation. Source: github.com/angular/components blob
+      src/material/tabs/paginated-tab-header.ts (fetched 2026-05-04).
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      Canonical `density: comfortable | compact` property. MatTabGroup has
+      no density input. Density in Angular Material is handled at the global
+      theme level via the Material Design density system (SCSS
+      `mat.tab-group-density($scale)` mixin), not as a per-instance prop.
+      Per-instance density control is absent from the component API. Source:
+      github.com/angular/components blob src/material/tabs/tab-group.ts
+      (fetched 2026-05-04).
+
+  # ── Events ─────────────────────────────────────────────────────────────────
+
+  - from: events[selectedChange]
+    type: renamed
+    to: >-
+      `selectedTabChange` @Output() EventEmitter<MatTabChangeEvent> (carries
+      { index: number, tab: MatTab }) and `selectedIndexChange`
+      @Output() EventEmitter<number> (index only, for [(selectedIndex)]
+      two-way binding)
+    rationale: >-
+      Canonical `selectedChange` emits the tab id string. Material splits the
+      concept into two outputs: `selectedTabChange` carries the full
+      MatTabChangeEvent (index + tab reference), and `selectedIndexChange`
+      carries only the numeric index for two-way binding ergonomics. Payload
+      is index-based (number), not id-based (string) — consumers who model
+      tabs by string id must map through their own tab definitions. Source:
+      github.com/angular/components blob src/material/tabs/tab-group.ts
+      (fetched 2026-05-04).
+
+  - from: events[tabActivate]
+    type: reshaped
+    to: >-
+      `focusChange` @Output() EventEmitter<MatTabChangeEvent> — fires when
+      keyboard focus moves to a different tab (arrow-key navigation), not
+      only on Enter/Space activation
+    rationale: >-
+      Canonical `tabActivate` is defined only for `activation: manual` and
+      fires exclusively when the user presses Enter or Space to commit a
+      focused tab. Material's `focusChange` fires on every focus movement
+      including arrow-key traversal, and it fires regardless of whether
+      selection changes. It cannot be used as a direct substitute for
+      canonical `tabActivate` because (a) Material has no manual-activation
+      mode and (b) `focusChange` includes non-activating focus events.
+      Source: github.com/angular/components blob src/material/tabs/tab-group.ts
+      (fetched 2026-05-04).
+
+rationale: |
+  Angular Material Tabs is a high-level, batteries-included compound
+  component rather than the primitive-per-slot decomposition the canonical
+  anatomy describes. The most significant divergences:
+
+  1. No variant system — Material ships only the line-tab visual style;
+     contained and pill are out of scope for the library.
+  2. No orientation: vertical — headerPosition above/below is not a true
+     side-rail layout. Vertical tabs require MatTabNav.
+  3. No activation-mode control — the keyboard model is fixed at manual
+     (arrow focus + Enter/Space select). Automatic activation is not
+     configurable.
+  4. Monolithic compound component — the tablist, tab triggers, ink-bar, and
+     pagination controls are all managed internally; only the declarative
+     <mat-tab> children are consumer-authored.
+
+  Notable Material strengths relative to the canonical:
+  1. Built-in overflow pagination — arrow buttons appear automatically when
+     tabs overflow, without consumer wiring.
+  2. preserveContent input — explicit keep-all-alive knob covering the
+     canonical lazy-panel performance threshold with one boolean.
+  3. animationDuration input — granular body/header timing control without
+     wiring Angular animations manually.
+  4. fitInkBarToContent — canonical indicator is described as presentational
+     and geometry-driven; Material ships exactly that with a size-to-label
+     option the canonical does not model.
+
+lastReviewed: '2026-05-04'

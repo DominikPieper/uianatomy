@@ -1,0 +1,182 @@
+componentId: tabs
+libraryId: headlessui
+componentName: Tab.Group / Tab.List / Tab / Tab.Panels / Tab.Panel
+
+exampleCode: |
+  import {
+    TabGroup, TabList, Tab, TabPanels, TabPanel,
+  } from '@headlessui/react';
+
+  function ProfileTabs() {
+    return (
+      <TabGroup defaultIndex={0} onChange={(index) => console.log('tab changed', index)}>
+        <TabList className="flex gap-1 border-b">
+          <Tab className="px-4 py-2 data-[selected]:border-b-2 data-[selected]:border-blue-600">
+            Account
+          </Tab>
+          <Tab className="px-4 py-2 data-[selected]:border-b-2 data-[selected]:border-blue-600">
+            Notifications
+          </Tab>
+          <Tab
+            className="px-4 py-2 data-[selected]:border-b-2 data-[selected]:border-blue-600"
+            disabled
+          >
+            Billing
+          </Tab>
+        </TabList>
+        <TabPanels className="mt-4">
+          <TabPanel>Account settings content</TabPanel>
+          <TabPanel>Notification preferences</TabPanel>
+          <TabPanel>Billing (unavailable)</TabPanel>
+        </TabPanels>
+      </TabGroup>
+    );
+  }
+
+divergence:
+  # Anatomy
+
+  - from: anatomy[indicator]
+    type: omitted
+    rationale: >-
+      Headless UI ships no indicator primitive. The canonical decorative
+      underline/pill that tracks the selected tab is entirely consumer-
+      implemented — a positioned element whose offset must be computed
+      from the selected Tab's bounding box and animated manually.
+      Headless UI exposes `data-selected` on each `Tab` so consumers can
+      derive indicator position via refs, but no library component
+      participates in the motion.
+
+  - from: anatomy[tabpanel]
+    type: reshaped
+    to: TabPanels (wrapper div) + TabPanel (individual panel)
+    rationale: >-
+      Canonical anatomy has a single `tabpanel` slot that maps to one
+      rendered element per tab. Headless UI inserts an additional
+      `TabPanels` wrapper component (renders a `div` by default) that
+      encapsulates all panels. This extra layer is not part of the ARIA
+      tabpanel pattern and has no semantic role; it exists as a pairing
+      mechanism so `TabPanel` components can discover their index via
+      React context. Consumers using `as={Fragment}` on `TabPanels` can
+      suppress the wrapper element entirely.
+
+  # Axes — variants
+
+  - from: axes.variants[line]
+    type: omitted
+    rationale: >-
+      Headless UI is intentionally unstyled; it ships no variant tokens
+      or CSS for line, contained, or pill tab appearances. All visual
+      styling is consumer-applied via className or a CSS-in-JS solution.
+      The `data-selected` and `data-hover` / `data-focus` / `data-active`
+      attributes on `Tab` are the styling hooks.
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      No density prop. Padding and spacing between tabs are consumer
+      CSS. Headless UI stops at the accessibility primitive and provides
+      no design-system density scale.
+
+  # Axes — properties reshaped to boolean flags
+
+  - from: axes.properties[orientation]
+    type: reshaped
+    to: vertical prop (boolean) on TabGroup
+    rationale: >-
+      Canonical defines `orientation` as an enum (`horizontal` |
+      `vertical`). Headless UI collapses this to a single boolean
+      `vertical` (default `false`) on `TabGroup`. The prop drives
+      `aria-orientation="vertical"` on the tablist and switches arrow-
+      key navigation from Left/Right to Up/Down. The two-value enum and
+      the boolean are informationally equivalent, but the boolean API
+      does not extend to future orientations (e.g. a hypothetical
+      `radial` layout). Source: https://headlessui.com/react/tabs
+      (TabGroup props table, "vertical").
+
+  - from: axes.properties[activation]
+    type: reshaped
+    to: manual prop (boolean) on TabGroup
+    rationale: >-
+      Canonical defines `activation` as an enum (`automatic` | `manual`).
+      Headless UI collapses this to a boolean `manual` (default `false`,
+      i.e. automatic). When `manual={true}`, arrow keys move focus but do
+      not change the selected tab; Enter or Space commits selection.
+      Source: https://headlessui.com/react/tabs (TabGroup props, "manual").
+
+  # Events
+
+  - from: events[selectedChange]
+    type: reshaped
+    to: "onChange(index: number) on TabGroup"
+    rationale: >-
+      Canonical `selectedChange` carries the id of the newly selected tab
+      as a string. Headless UI's `onChange` delivers a zero-based integer
+      index instead. Consumers that need string identity must maintain an
+      external index-to-id mapping. In controlled usage `selectedIndex`
+      (Number) is paired with `onChange`; there is no string-keyed API.
+      Source: https://headlessui.com/react/tabs (TabGroup — onChange).
+
+  - from: events[tabActivate]
+    type: omitted
+    rationale: >-
+      Canonical `tabActivate` is a discrete event emitted only in manual
+      activation mode when the user presses Enter/Space on a focused but
+      not-yet-selected tab. Headless UI collapses navigation and
+      activation into a single `onChange(index)` callback — in automatic
+      mode it fires on every focus shift; in manual mode it fires on
+      Enter/Space commit. There is no separate "focus moved but not yet
+      activated" event; consumers needing to distinguish hover-focus from
+      activation must instrument individual `Tab` render props (`focus`,
+      `selected`) themselves.
+
+  # Async-panel states
+
+  - from: axes.states.data[busy]
+    type: omitted
+    rationale: >-
+      Headless UI has no built-in `aria-busy` management for lazily-
+      loaded panels. The `unmount` prop on `TabPanel` controls whether
+      inactive panels are removed from the DOM (default `true`) or kept
+      hidden (`static={true}` skips unmount logic entirely). Neither
+      mechanism signals `aria-busy`; consumers must set it manually when
+      panel content is in-flight.
+
+  - from: axes.states.data[lazy]
+    type: omitted
+    rationale: >-
+      There is no `lazy` registration API on `TabPanel`. The closest
+      affordance is the `unmount` prop (default `true`), which defers
+      rendering of inactive panels until first selection. However,
+      `unmount` does not coordinate async data-fetching or emit lifecycle
+      hooks; it is purely a DOM mount/unmount toggle. Consumers implement
+      deferred data loading independently of the Headless UI component.
+
+rationale: |
+  Headless UI React's Tab primitives are unstyled, accessibility-
+  focused, and intentionally minimal — consistent with the same
+  library's Dialog audit. The divergences from the canonical Tabs
+  cluster into three groups:
+
+  1. No visual layer. Canonical variants (line / contained / pill) and
+     density are entirely consumer-applied. Headless UI provides
+     data-selected / data-hover / data-focus / data-active attributes on
+     Tab as styling hooks; no CSS ships with the library.
+
+  2. Boolean API compression. Both `orientation` (enum) and `activation`
+     (enum) are collapsed to single boolean props (`vertical`, `manual`)
+     on TabGroup. This is simpler to use but loses forward-extensibility.
+
+  3. Index-based selection. `onChange` delivers a numeric index, not a
+     string id. This is the most consequential divergence for consumers
+     building controlled, url-driven, or keyboard-accessible tab sets
+     that refer to tabs by stable identity.
+
+  The extra `TabPanels` wrapper (not present in canonical) is a context-
+  propagation artefact; it can be suppressed with `as={Fragment}`.
+
+  No async-panel lifecycle (busy / lazy / error states) is shipped;
+  these are consumer responsibilities, unlike the canonical contract
+  which specifies `aria-busy` coordination.
+
+lastReviewed: '2026-05-04'
