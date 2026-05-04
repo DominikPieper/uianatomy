@@ -209,6 +209,10 @@ export const LIBRARY_VERSIONS: Readonly<Record<string, LibraryVersionEntry>> = {
     name: 'Glide Data Grid',
     url: 'https://github.com/glideapps/glide-data-grid',
   },
+  primevue: {
+    name: 'PrimeVue',
+    url: 'https://primevue.org/',
+  },
 } as const;
 
 // P5-35 / ADR-028 phase-3: prose-form aliases per library key. The
@@ -236,6 +240,7 @@ export const LIBRARY_NAME_ALIASES: Readonly<Record<string, readonly string[]>> =
   prism: ['Prism', 'Prism.js', 'PrismJS'],
   agGrid: ['AG Grid', 'ag-Grid'],
   glideDataGrid: ['Glide Data Grid', 'Glide DataGrid'],
+  primevue: ['PrimeVue'],
 } as const;
 
 // Spec/platform/standards bodies that legitimately appear as

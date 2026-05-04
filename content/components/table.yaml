@@ -83,7 +83,6 @@ whenToUse:
         Grid when cell content is itself interactive or
         editable; stay on Table for read-only data display.
     - id: tree-grid
-      pending: true
       difference: >-
         `TreeGrid` adds hierarchical row semantics —
         `aria-level`, `aria-expanded`, parent-child rows that

@@ -76,7 +76,6 @@ whenToUse:
         F2 / Enter / Escape edit-lifecycle handling that
         Table avoids.
     - id: tree-grid
-      pending: true
       difference: >-
         `TreeGrid` adds hierarchical row semantics on top
         of the Grid keyboard model — `aria-level` per row,

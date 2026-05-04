@@ -1,0 +1,1507 @@
+id: tree-grid
+name: Tree Grid
+description: >-
+  An interactive 2D data structure with hierarchical rows — the
+  APG escalation from `Grid` for surfaces where rows have parent-
+  child relationships and per-row expand / collapse semantics.
+  Carries `role="treegrid"` on the root, `role="row"` with
+  `aria-level` plus `aria-expanded` (on parent rows) per row.
+  Inherits the grid keyboard model (roving-tabindex, 2D arrow
+  navigation, F2 / Enter / Escape edit-mode lifecycle) and adds
+  ArrowRight / ArrowLeft for tree-navigation: ArrowRight expands
+  a collapsed parent or moves to first child; ArrowLeft collapses
+  an expanded parent or moves to parent.
+
+intro: >-
+  Tree Grid is the APG-canonical pattern for interactive
+  hierarchical tabular data — file managers with column metadata,
+  org charts, nested budgets, project breakdown structures with
+  cost columns. Distinct from `Grid` (flat 2D cells, no
+  hierarchy) and from a single-column `Tree` (hierarchical rows
+  without tabular columns). The reference documents the
+  `aria-level` / `aria-expanded` / `aria-setsize` / `aria-posinset`
+  contract that makes the hierarchy programmatic, the
+  ArrowRight / ArrowLeft tree-navigation that extends the grid
+  keyboard model, and the visual-indent-driven-by-aria-level
+  pattern that keeps the design surface and the AT semantic
+  in sync.
+
+alternateNames:
+  - 'Tree table'
+  - 'Hierarchical grid'
+  - 'Expandable data grid'
+
+whenToUse:
+  use: >-
+    For tabular data where rows have parent-child relationships
+    AND multiple attribute columns matter — file managers showing
+    name + size + modified-date with folder-nesting, org charts
+    with role + manager + headcount per row, project breakdown
+    structures with task + assignee + status per node, nested
+    budgets with category + amount per row. Use the static
+    variant when cells are interactive but not editable; the
+    editable variant when cells transition to input-mode for
+    in-place editing.
+  avoid: >-
+    For flat tabular data without hierarchy — that is `Grid`
+    (interactive cells without parent-child) or `Table` (read-
+    only data display). For hierarchical single-column data
+    without tabular metadata — that is the APG Tree pattern
+    (separate canonical entry, future). For non-tabular
+    hierarchical layouts (sidebar trees, file-only trees) — use
+    a tree pattern, not a tree grid; the column overhead is
+    pure cost without benefit. For deeply-nested hierarchies
+    where users primarily drill down (5+ levels) — consider
+    breadcrumb-driven navigation between flat lists rather
+    than expanding a single deep tree.
+  vsRelated:
+    - id: grid-pattern
+      difference: >-
+        `Grid` is the flat 2D structure with cells in rows and
+        columns; `TreeGrid` adds hierarchical row semantics —
+        `aria-level` per row, `aria-expanded` on parent rows,
+        ArrowRight / ArrowLeft for tree-navigation. Use Grid
+        when rows are siblings without parent-child
+        relationships; use TreeGrid when rows nest. The
+        keyboard models share the roving-tabindex and 2D
+        arrow-navigation foundation; TreeGrid extends with
+        the expand-collapse semantics on top.
+    - id: table
+      difference: >-
+        `Table` is read-only flat data display with linear
+        focus through interactive descendants; `TreeGrid`
+        is interactive 2D structure with hierarchical rows
+        and per-row expand-collapse. Use Table when the
+        data is flat and read-only; use TreeGrid when the
+        data is hierarchical AND requires interactive cells
+        (selection, edit, focus-cell-driven drilldown).
+        The escalation cost is significant — TreeGrid's
+        keyboard model (roving-tabindex + arrow-navigation
+        + tree-expand) is the steepest authoring overhead
+        in the canonical canon; reach for it only when the
+        affordances justify the cost.
+
+anatomy:
+  - id: root
+    required: true
+    purpose: >-
+      The treegrid container element. Carries
+      `role="treegrid"` (or native `<table role="treegrid">`)
+      plus `aria-rowcount` / `aria-colcount` for virtualized
+      treegrids, plus `aria-multiselectable` when multi-cell
+      selection is supported. Roving-tabindex lives on
+      descendant cells (one cell at a time has
+      `tabindex="0"`); the row-expander affordance shifts
+      focus on activation per the tree-navigation contract.
+    slotKind: structural
+    layout:
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: TreeGrid frame; variant property switches between static and editable shapes
+    code:
+      slot: root
+      semantic: table-with-role-treegrid
+    a11y:
+      hint: >-
+        `<table role="treegrid" aria-rowcount="..."
+        aria-colcount="..." aria-multiselectable="...">`.
+        Native `<table>` plus `role="treegrid"` is the
+        canonical hybrid — retains structural HTML
+        semantics while signaling the interactive
+        hierarchical keyboard model. AT users hear
+        "tree grid, N rows, M columns" on entry.
+
+  - id: caption
+    required: true
+    purpose: >-
+      Accessible name for the treegrid — same contract as
+      `Grid`'s caption slot. `<caption>` inside
+      `<table role="treegrid">` (or `aria-labelledby`
+      pointing to a sibling heading id when `<table>` is
+      not used). Visually present at the top by default;
+      sr-only when surrounding context already names the
+      treegrid.
+    slotKind: content
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Caption text style; positioned above the treegrid; visibility per "Visible Caption" property
+    code:
+      slot: caption
+      semantic: caption-or-aria-labelledby
+    a11y:
+      hint: >-
+        `<caption>` inside `<table role="treegrid">` is
+        canonical. SR announces the caption on treegrid
+        entry. Translate per locale.
+    tokens:
+      typography:
+        size: text.md
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: column-headers-row
+    required: true
+    purpose: >-
+      The header row containing `role="columnheader"`
+      cells. Sits above the data rows; programmatically
+      associates each data cell with its column header.
+      Sortable columns add `aria-sort` on the relevant
+      `columnheader`. Inherits the column-headers-row
+      semantic from `Grid`.
+    slotKind: structural
+    layout:
+      parent: root
+      row: 2
+      col: 1
+      span: full
+    figma:
+      type: frame
+      hint: Header row container; sticky-position variant per "Sticky Header" property
+    code:
+      slot: column-headers-row
+      semantic: tr-with-role-row
+    a11y:
+      hint: >-
+        `<tr role="row">` containing `<th
+        role="columnheader" scope="col">` children.
+        Columnheaders are focusable in the treegrid
+        keyboard model — arrow keys navigate to them
+        like any other cell.
+
+  - id: column-header
+    required: true
+    purpose: >-
+      A single column header cell. `role="columnheader"`
+      with `aria-sort` when sortable. Focusable via
+      roving-tabindex. Same contract as `Grid`'s
+      column-header slot.
+    slotKind: interactive
+    layout:
+      parent: column-headers-row
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Column header cell instance with sort-affordance variants
+    code:
+      slot: column-header
+      semantic: th-with-role-columnheader
+    a11y:
+      hint: >-
+        `<th role="columnheader" scope="col"
+        tabindex="-1">`. `aria-sort="ascending"` /
+        `"descending"` / `"none"` when sortable. Same
+        roving-tabindex bookkeeping as Grid.
+    tokens:
+      typography:
+        size: text.sm
+        weight: weight.semibold
+      color:
+        foreground: color.text.primary
+
+  - id: row
+    required: true
+    purpose: >-
+      A single data row inside the treegrid body.
+      `role="row"` PLUS `aria-level` (1-based depth, 1 is
+      a top-level row), PLUS `aria-expanded` on parent
+      rows (rows with descendants — true if expanded,
+      false if collapsed; absent on leaf rows), PLUS
+      optional `aria-setsize` and `aria-posinset` for
+      sibling-position context. Carries `aria-rowindex`
+      for virtualized treegrids.
+    slotKind: structural
+    layout:
+      parent: root
+      row: 3
+      col: 1
+      span: full
+      repeats: 4
+    figma:
+      type: instance
+      hint: Row instance with level / expanded / collapsed / focused / selected variants
+    code:
+      slot: row
+      semantic: tr-with-role-row-aria-level-aria-expanded
+    a11y:
+      hint: >-
+        `<tr role="row" aria-level="1" aria-expanded="true"
+        aria-setsize="5" aria-posinset="2">` (parent row
+        at depth 1, second of five siblings, currently
+        expanded). For leaf rows omit `aria-expanded`
+        entirely (the absence is the canonical signal
+        that the row has no children). For deep nesting
+        the level-driven indent is the visual surface;
+        the AT semantic comes from `aria-level`. SR
+        announces "row, level 1, expanded, 2 of 5,
+        ${cellValues}".
+
+  - id: row-expander
+    required: false
+    purpose: >-
+      Visual chevron / disclosure-icon indicating expansion
+      state on parent rows. Renders inside the leading
+      cell (typically the first column or the row-header
+      column). May be authored as a `<button>` with its
+      own accessible name ("Expand Folder X") OR as a
+      decorative `aria-hidden` icon — the canonical
+      pattern is decorative because the expansion state
+      lives on `aria-expanded` on the row itself, not
+      on the icon. Activating the row-expander OR
+      pressing ArrowRight / ArrowLeft on a parent row
+      toggles expansion.
+    slotKind: decorative
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Expander icon instance; chevron-right (collapsed) / chevron-down (expanded) variants
+    code:
+      slot: row-expander
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"` is the canonical default —
+        the expansion semantic lives on the parent
+        row's `aria-expanded`, not on the icon. SR
+        users hear "expanded" / "collapsed" via the
+        row-level `aria-expanded`, not via the icon's
+        accessible name. Implementations that wrap the
+        icon in `<button>` for mouse-click activation
+        should still mark the inner icon
+        `aria-hidden="true"` and rely on the row-
+        level `aria-expanded` for AT announcement.
+    tokens:
+      color:
+        foreground: color.text.muted
+
+  - id: row-indent
+    required: false
+    purpose: >-
+      Visual indentation per nesting level. Computed via
+      CSS `padding-inline-start: calc(var(--level) *
+      ${indentStep})` driven by `aria-level`, OR by an
+      `aria-hidden="true"` indent-spacer element with
+      width derived from the level. Decorative — the
+      hierarchical semantic lives on `aria-level`, not
+      on the visual indent.
+    slotKind: decorative
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: frame
+      hint: Decorative indent spacer; width = aria-level × indent-step
+    code:
+      slot: row-indent
+      semantic: presentational
+    a11y:
+      hint: >-
+        Render via CSS or as `aria-hidden` spacer. SR
+        users do not hear the indent; they hear the
+        `aria-level` value ("level 3"). Implementations
+        that compute indent from anything other than
+        `aria-level` risk visual-vs-AT divergence —
+        always derive indent from the same value AT
+        reads.
+
+  - id: cell
+    required: true
+    purpose: >-
+      A single data cell. `role="gridcell"`. Focusable
+      via the treegrid's roving-tabindex. Same contract
+      as `Grid`'s cell slot — carries the cell value as
+      text content (static variant) or transitions to
+      the cell-editor on F2 / Enter activation
+      (editable variant). The leading cell of a parent
+      row typically contains the row-expander +
+      row-indent; cells in non-leading columns are
+      standard data cells.
+    slotKind: interactive
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+      repeats: 4
+    figma:
+      type: instance
+      hint: Data cell instance with default / focused / selected / editing / readonly variants
+    code:
+      slot: cell
+      semantic: td-with-role-gridcell
+    a11y:
+      hint: >-
+        `<td role="gridcell" tabindex="-1">` for
+        non-active cells; the active cell has
+        `tabindex="0"`. Same roving-tabindex
+        bookkeeping as Grid. `aria-colindex` for
+        virtualized treegrids. Cells in the leading
+        column of parent rows wrap the row-expander
+        + row-indent + cell value; cells in
+        non-leading columns are standard data
+        content.
+    tokens:
+      typography:
+        size: text.sm
+
+  - id: row-header
+    required: false
+    purpose: >-
+      An optional row-header cell that names the row
+      (e.g., file/folder name in a file manager).
+      `role="rowheader"` with `scope="row"`. Sits as
+      the leading cell in each row. Same contract as
+      `Grid`'s row-header slot. For treegrids, the
+      row-header cell typically also carries the
+      row-expander + row-indent for parent rows.
+    slotKind: structural
+    layout:
+      parent: row
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Row header cell instance; hosts row-expander + row-indent for parent rows
+    code:
+      slot: row-header
+      semantic: th-with-role-rowheader
+    a11y:
+      hint: >-
+        `<th role="rowheader" scope="row"
+        tabindex="-1">`. SR announces the row-header
+        on cell-by-cell navigation, providing row
+        context the same way columnheader provides
+        column context. For treegrids, the row-header
+        is conventionally the column that carries the
+        row's hierarchical identity (file name, task
+        name, account category).
+
+  - id: cell-editor
+    required: false
+    purpose: >-
+      The input element that replaces the cell's
+      static content when the cell enters edit-mode.
+      Same contract as `Grid`'s cell-editor slot —
+      native `<input>` / `<select>` / `<textarea>`
+      with focus management and Enter / Escape /
+      Tab edit-lifecycle. Editable variant only.
+    slotKind: interactive
+    layout:
+      parent: cell
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: instance
+      hint: Cell editor instance — input / select / textarea variants per cell-data-type
+    code:
+      slot: cell-editor
+      semantic: input-or-select-or-textarea
+    a11y:
+      hint: >-
+        Native `<input>` / `<select>` / `<textarea>`
+        carries the right keyboard model and AT
+        semantics. On edit-mode entry, focus moves
+        to the editor; on Enter / Tab commit, focus
+        returns to the cell; on Escape, the value
+        reverts and focus returns to the cell.
+        Same edit-lifecycle as Grid.
+
+  - id: selection-overlay
+    required: false
+    purpose: >-
+      Decorative visual treatment indicating focused
+      cell, selected cell, or selected rectangular
+      range. Same contract as `Grid`'s selection-
+      overlay slot — `aria-hidden="true"` because
+      the AT semantic lives on `aria-selected` per
+      cell and per row.
+    slotKind: decorative
+    layout:
+      parent: root
+      row: 1
+      col: 1
+      span: full
+      overlay: true
+    figma:
+      type: frame
+      hint: Decorative overlay rectangle; absolute-positioned over selected cell range
+    code:
+      slot: selection-overlay
+      semantic: presentational
+    a11y:
+      hint: >-
+        `aria-hidden="true"`. The overlay is visual
+        scaffolding; AT semantic lives on
+        `aria-selected` per cell and per row.
+
+axes:
+  variants:
+    - static
+    - editable
+  properties:
+    - name: size
+      kind: enum
+      values: [sm, md]
+    - { name: multiSelect, kind: primitive, of: boolean }
+    - { name: virtualized, kind: primitive, of: boolean }
+    - { name: stickyHeader, kind: primitive, of: boolean }
+    - { name: sortable, kind: primitive, of: boolean }
+  states:
+    interactive:
+      - hover
+      - focus-visible
+      - active
+    data:
+      - idle
+      - editing
+      - hasSelection
+      - hasSorting
+      - hasExpansion
+      - loading
+    transitions:
+      - from: idle
+        to: hasExpansion
+        trigger: User activates a row-expander or presses ArrowRight on a collapsed parent row
+      - from: hasExpansion
+        to: idle
+        trigger: User collapses every previously-expanded row (ArrowLeft on expanded parent)
+      - from: idle
+        to: editing
+        trigger: User presses F2 or Enter on a focused editable cell (editable variant only)
+      - from: editing
+        to: idle
+        trigger: User presses Enter (commit) or Escape (cancel) inside the cell-editor
+      - from: idle
+        to: hasSelection
+        trigger: User activates selection via Space, Shift+Arrow, or Ctrl+Click
+      - from: idle
+        to: hasSorting
+        trigger: User activates a sortable columnheader via Enter / Space
+      - from: idle
+        to: loading
+        trigger: Async fetch begins (lazy-load child rows on parent expansion, server-side sort, or filter)
+      - from: loading
+        to: idle
+        trigger: Async fetch resolves with new data
+
+mismatches:
+  - figma: Indent drawn as fixed-pixel inline padding per row variant
+    code: 'CSS `padding-inline-start: calc(var(--level) * indentStep)` driven by `aria-level`'
+    consequence: >-
+      Designers compose treegrid rows with explicit
+      indent values per nesting level (level-1: 0px,
+      level-2: 24px, level-3: 48px); developers must
+      compute the indent from `aria-level` so the
+      visual surface and the AT semantic stay in sync.
+      Without explicit anatomy, implementations may
+      ship visual-only indents (sighted users see
+      hierarchy, AT users hear flat row-list) or
+      AT-only `aria-level` (sighted users see no
+      hierarchy, AT users hear levels).
+    correct: >-
+      Document the row-indent slot as decorative AND
+      explicitly derived from `aria-level`. Figma
+      carries row variants per level with the indent
+      pre-computed; the design surface signals the
+      `aria-level` value as the source-of-truth.
+      Code wires CSS `padding-inline-start: calc(var(--level)
+      * 24px)` where `--level` reflects `aria-level`,
+      OR uses an `aria-hidden` spacer with width
+      computed from level. Visual and AT stay in
+      sync by construction.
+
+  - figma: Expander drawn as decorative chevron with no interaction model
+    code: 'Activation via row-click + ArrowRight/Left + (optionally) `<button>` wrapper around chevron'
+    consequence: >-
+      Designers ship the expander chevron as a static
+      icon with no documented interaction; developers
+      must wire activation via row-click, keyboard
+      ArrowRight / ArrowLeft, AND optionally a button
+      wrapper for icon-click activation. Without
+      explicit anatomy, the activation model is
+      ambiguous and implementations may ship one
+      pattern (mouse-click chevron only) without the
+      keyboard model (ArrowRight / ArrowLeft on
+      parent row), breaking keyboard accessibility.
+    correct: >-
+      Document the row-expander as decorative
+      `aria-hidden="true"` AND document the
+      activation contract as a row-level keyboard
+      handler (ArrowRight / ArrowLeft) plus
+      optional `<button>` wrapper for sighted-mouse
+      users. Figma carries the chevron in two
+      states (collapsed / expanded) plus annotation
+      indicating the keyboard activation. Code
+      wires the row-level keyboard handler; the
+      icon stays decorative because `aria-expanded`
+      on the row is the canonical AT signal.
+
+  - figma: Hierarchy drawn as visual nesting only
+    code: '`aria-level` plus `aria-expanded` programmatic semantics on each row'
+    consequence: >-
+      Designers compose treegrid hierarchy as visual
+      indent + chevron-direction; developers must add
+      `aria-level` per row and `aria-expanded` on
+      parent rows for the AT semantic. Without
+      explicit anatomy, the hierarchy may ship as
+      visual-only — sighted users see nesting, AT
+      users hear a flat row-list. The most common
+      treegrid implementation failure.
+    correct: >-
+      Document `aria-level` and `aria-expanded` as
+      first-class row attributes in the row slot's
+      a11y hint. Figma carries the level as a row
+      property (Level 1 / 2 / 3 variants) and the
+      expansion state as a separate property
+      (Collapsed / Expanded). Code wires
+      `aria-level="${depth}"` plus `aria-expanded="${isExpanded}"`
+      (omitted on leaf rows); the visual indent
+      and chevron read from the same source.
+
+  - figma: Expanded / collapsed states drawn as separate row arrangements
+    code: 'Single row with state-driven children visibility — children DOM-mounted only when expanded'
+    consequence: >-
+      Designers compose collapsed treegrid as one
+      arrangement (parent rows visible) and expanded
+      treegrid as another (parent + child rows
+      visible); developers ship a single composition
+      where child rows mount / unmount per parent
+      `aria-expanded` state. The two surfaces
+      diverge structurally — designer's separate
+      arrangements lose the per-row state
+      bookkeeping, developer's single composition
+      preserves it. Without explicit anatomy, the
+      state-driven mounting may ship as separate
+      virtual-DOM trees (expansion swaps the whole
+      tree, breaking focus + selection state).
+    correct: >-
+      Document expansion as a per-row state, not a
+      tree-wide variant. Figma carries the row in
+      collapsed / expanded states; child rows are
+      conditionally-visible siblings of the parent
+      row, not a separate composition. Code mounts
+      child rows under parent rows in DOM order;
+      `aria-expanded="false"` plus `display: none`
+      hides them visually while keeping the DOM
+      structure stable for focus + selection.
+
+  - figma: Drag-and-drop reorder drawn as separate user flow
+    code: 'In-grid keyboard model + drag-handle slot for mouse / touch reordering'
+    consequence: >-
+      Designers compose tree reordering as a separate
+      "edit hierarchy" mode with explicit reorder
+      controls; developers may ship in-grid drag-and-
+      drop OR keyboard-driven reorder (Alt+ArrowUp /
+      Alt+ArrowDown to move row up / down within
+      siblings). The two surfaces diverge — designer's
+      separate-mode keeps reordering rare, developer's
+      in-grid pattern makes it ambient. Without
+      explicit anatomy, implementations may ship
+      mouse-only drag without keyboard equivalent
+      (WCAG 2.1.1 Keyboard violation for
+      reordering-as-affordance).
+    correct: >-
+      Document reordering as out-of-canonical-scope
+      OR document the keyboard model explicitly
+      (Alt+ArrowUp / Alt+ArrowDown for sibling-
+      reorder, Alt+ArrowRight / Alt+ArrowLeft for
+      level-change). Reordering is a heavyweight
+      affordance — most production treegrids do
+      not ship it; when they do, the keyboard
+      model must match the mouse drag model for
+      WCAG 2.1.1 compliance.
+
+mistakes:
+  - id: treegrid-no-aria-level
+    severity: blocker
+    title: Rows lack `aria-level` (hierarchy invisible to AT)
+    description: >-
+      Rows render with visual indent but no
+      `aria-level` attribute. AT users hear a flat
+      list of rows with no hierarchy semantic —
+      "row 1, row 2, row 3" — when the visual
+      surface shows "Folder A > File 1 > Subfile 1".
+      The hierarchy is invisible to AT entirely.
+      The most common treegrid implementation
+      failure.
+    fix: >-
+      Set `aria-level="${depth}"` on every row
+      (1-based, 1 is a top-level row). The level
+      drives both the visual indent (via CSS
+      `padding-inline-start: calc(var(--level) *
+      indentStep)`) and the AT announcement ("row,
+      level 2, ${cellValues}"). The single source-
+      of-truth keeps visual and AT in sync.
+
+  - id: treegrid-no-aria-expanded
+    severity: blocker
+    title: Parent rows lack `aria-expanded` (expansion state invisible to AT)
+    description: >-
+      Parent rows render with chevron-right /
+      chevron-down icons but no `aria-expanded`
+      attribute. AT users hear no expansion state
+      and cannot tell which parent rows have
+      visible children. ArrowRight / ArrowLeft
+      navigation has no programmatic state to
+      observe — the expansion-toggle gesture has
+      no AT effect. APG explicit rule violation.
+    fix: >-
+      Set `aria-expanded="true"` on parent rows
+      whose children are visible; set
+      `aria-expanded="false"` on collapsed parent
+      rows; OMIT `aria-expanded` on leaf rows
+      (the absence is the canonical signal that
+      the row has no descendants). The visual
+      chevron icon and the `aria-expanded`
+      attribute share the same source-of-truth.
+
+  - id: treegrid-arrow-not-tree-keyboard-model
+    severity: major
+    title: ArrowRight / ArrowLeft do not expand / collapse parent rows
+    description: >-
+      The treegrid implements the grid keyboard
+      model (cell-by-cell navigation) but
+      ArrowRight / ArrowLeft do not extend it
+      with the tree-navigation semantic — on a
+      collapsed parent, ArrowRight should expand
+      it; on an expanded parent, ArrowRight
+      should move to the first child;
+      ArrowLeft should collapse expanded parents
+      or move to the parent of leaf rows.
+      Keyboard users cannot expand / collapse
+      via keyboard — they must mouse-click
+      the chevron, breaking keyboard
+      accessibility.
+    fix: >-
+      Implement the tree-keyboard handlers on
+      top of the grid keyboard model:
+      ArrowRight on a collapsed parent expands;
+      ArrowRight on an expanded parent moves
+      to the first child; ArrowLeft on an
+      expanded parent collapses; ArrowLeft on
+      a child row (or leaf) moves focus to
+      the parent row. Asterisk (*) expands
+      all sibling parent rows. The handlers
+      shift the roving-tabindex along with
+      the focus; the row's `aria-expanded`
+      flips on toggle.
+
+  - id: treegrid-cell-not-gridcell-role
+    severity: major
+    title: Cells use `<td>` without `role="gridcell"` when root is `role="treegrid"`
+    description: >-
+      The root carries `role="treegrid"` but cells
+      are bare `<td>` without `role="gridcell"`.
+      AT announces the root as a tree grid but
+      cells as plain table cells — role hierarchy
+      broken. SR users hear inconsistent semantics
+      on entry vs cell navigation. Inherits the
+      grid-cell-not-gridcell-role mistake from
+      `Grid`.
+    fix: >-
+      When the root is `role="treegrid"`, the
+      cells inside MUST carry `role="gridcell"`,
+      `role="columnheader"`, or `role="rowheader"`.
+      For native `<th>` and `<td>` elements, add
+      the explicit role — implicit table semantics
+      do not propagate through the explicit
+      `role="treegrid"` override.
+
+  - id: treegrid-no-aria-rowcount-virtualized
+    severity: major
+    title: Virtualized treegrid omits `aria-rowcount` and `aria-rowindex`
+    description: >-
+      The treegrid renders only viewport-visible
+      rows plus a buffer; without `aria-rowcount`
+      on the root and `aria-rowindex` per row, AT
+      reports the rendered count as the total. For
+      treegrids the situation is worse than for
+      flat grids because the rendered count
+      depends on which parent rows are expanded —
+      AT users perceive different row-counts at
+      different expansion states with no
+      indication of the underlying truth.
+    fix: >-
+      Set `aria-rowcount="${trueTotal}"` on the
+      root, where `trueTotal` is the count of
+      rows visible at the current expansion state
+      (NOT the count of all rows including
+      collapsed children). `aria-rowindex` per
+      row is the 1-based index within the
+      currently-visible set. Update both as
+      expansion state changes.
+
+  - id: treegrid-when-tree-suffices
+    severity: minor
+    title: TreeGrid pattern used when single-column Tree would work
+    description: >-
+      The component ships with `role="treegrid"`
+      and full tabular columns but the cells have
+      no useful column data — only the row-name
+      column carries content; other columns are
+      empty or carry redundant metadata. The
+      tabular complexity buys nothing; a single-
+      column Tree pattern would suffice.
+    fix: >-
+      Use the APG Tree pattern (single-column
+      hierarchical structure, separate canonical
+      pattern) when only one column carries
+      meaningful data. Reserve TreeGrid for
+      surfaces where multiple columns matter (file
+      managers with name + size + date columns,
+      org charts with role + manager + headcount
+      columns). The escalation cost should match
+      the affordance value.
+
+frameworkMap:
+  webComponents:
+    structureMechanism: >-
+      A `<ui-tree-grid>` host with `variant`, `size`,
+      `multi-select`, `virtualized`, `sticky-header`,
+      `sortable`, `editable`, `expanded-paths`
+      attributes. Renders `role="treegrid"` shadow
+      tree with slotted `<ui-tree-grid-row>` and
+      `<ui-tree-grid-cell>` children. The host owns
+      roving-tabindex bookkeeping plus the
+      tree-keyboard handlers (ArrowRight / ArrowLeft
+      on parent rows). Wire-name `ui-tree-grid`
+      becomes `md-tree-grid` / `mat-tree-grid` /
+      `pf-tree-grid` per design system; canonical
+      wire-name stays `tree-grid`.
+    variantMechanism: >-
+      Attributes drive variant + properties;
+      `editable` activates edit-mode lifecycle;
+      `expanded-paths` is a JSON array of row-paths
+      currently expanded (`["root", "root/folder-a"]`).
+      The host emits `expand-change` CustomEvent on
+      every expansion toggle so consumers can
+      persist expansion state.
+
+  react:
+    structureMechanism: >-
+      AG Grid Tree Data is the dominant production
+      pattern — `treeData={true}` plus
+      `getDataPath(row) => string[]` plus
+      `autoGroupColumnDef` for the leading
+      hierarchical column. React Aria ships
+      `Table` with tree-mode opt-in via
+      `expandedKeys` + `onExpandedChange`. Material
+      UI ships `<TreeView>` (single-column tree,
+      not treegrid). For canonical APG-compliant
+      treegrid, AG Grid + React Aria are the
+      dominant choices.
+    variantMechanism: >-
+      Props with class-variance-authority for
+      variant + size; `expandedKeys: Set<string>`
+      drives expansion state; `onExpandedChange`
+      callback fires on toggle. Tree data
+      structure is row-array with `parentId` /
+      `childIds` references OR row-array with
+      `path: string[]` per row; AG Grid uses
+      path, React Aria uses parent-child
+      references. Lazy-loading children on parent
+      expansion is canonical (the
+      `onLoadChildren(parent)` callback).
+
+  angularSignals:
+    structureMechanism: >-
+      Angular Material's CDK provides `cdk-tree`
+      (single-column tree, not treegrid). AG Grid
+      Angular wraps AG Grid core for treegrid
+      pattern. `<mat-table>` plus `cdk-tree-control`
+      hybrid composition is non-canonical and
+      complex; production Angular treegrids
+      escalate to AG Grid for full feature
+      coverage. Signal-driven expansion state via
+      `signal<Set<string>>('expandedRowIds')`.
+    variantMechanism: >-
+      `[attr.role]="'treegrid'"` plus
+      `[attr.aria-rowcount]` reflective bindings;
+      signal-derived
+      `[attr.aria-level]="row().level"` per row;
+      `effect()` updates roving-tabindex on
+      arrow-key + tree-key events.
+
+  vue:
+    structureMechanism: >-
+      AG Grid Vue, PrimeVue TreeTable (with
+      tabular columns), Element Plus el-tree
+      (single-column tree, not treegrid). PrimeVue
+      TreeTable is the closest first-class Vue
+      treegrid primitive. `defineProps` exposes
+      `nodes` (tree data structure with `data` +
+      `children` per node), `expandedKeys`
+      (v-model:expandedKeys), `selectedKeys`
+      (v-model:selectedKeys).
+    variantMechanism: >-
+      `defineProps` with literal-union types
+      (`variant: 'static' | 'editable'`); v-model
+      for selection + expansion + per-cell value
+      bindings. Slot-based per-cell rendering
+      (`<template #body="{ node, column }">`).
+      Lazy-loading via `loadChildren` async
+      callback on parent expansion.
+
+motion:
+  reducedMotionFallback: instant
+  durations:
+    expandCollapse: motion.duration.fast
+    cellFocusTransition: motion.duration.fast
+    editModeEnter: motion.duration.fast
+  easing: motion.easing.standard
+
+responsive:
+  breakpoints:
+    - at: breakpoint.sm
+      change: >-
+        Below this width, the treegrid keyboard
+        model is hard to use on touch (no arrow
+        keys, no F2 to enter edit-mode, no
+        ArrowRight / ArrowLeft to expand /
+        collapse). The canonical pattern is to
+        escalate to a single-column Tree or to
+        a stacked-card per-row layout on narrow
+        viewports. Editable treegrids on mobile
+        route through tap-to-edit modal flows
+        rather than in-place edit-mode.
+    - at: breakpoint.md
+      change: >-
+        At and above this width, the full
+        treegrid keyboard model is active —
+        roving-tabindex, 2D arrow-navigation,
+        ArrowRight / ArrowLeft tree-navigation,
+        F2 / Enter / Escape edit-mode lifecycle.
+        Sticky-header and sticky-first-column
+        activate when the treegrid exceeds the
+        viewport.
+
+events:
+  - name: expandChange
+    payload: >-
+      `{ rowId: string, isExpanded: boolean }`.
+      Fires when the user toggles a parent row's
+      expansion via ArrowRight / ArrowLeft on the
+      row, click on the row-expander, or
+      programmatic toggle. Consumer updates the
+      expansion state model and the treegrid
+      re-renders with the new `aria-expanded`
+      value.
+    frameworkNotes:
+      webComponents: >-
+        `expandChange` CustomEvent with
+        `event.detail = { rowId, isExpanded }`.
+      react: >-
+        `onExpandedChange(set: Set<string>)`
+        (React Aria) or `onRowGroupOpened(event)`
+        (AG Grid).
+      angularSignals: >-
+        `output<{ rowId: string; isExpanded: boolean }>('expandChange')`
+        plus two-way `model<Set<string>>('expandedRowIds')`.
+      vue: >-
+        `@update:expanded-keys` (v-model:expandedKeys).
+
+  - name: selectionChange
+    payload: >-
+      `{ selectedCells: Set<{rowId, columnId}>,
+      selectedRows: Set<rowId>, isAllSelected:
+      boolean }`. Same shape as Grid's
+      selectionChange event.
+    frameworkNotes:
+      webComponents: >-
+        `selectionChange` CustomEvent with
+        `event.detail = { selectedCells, selectedRows, isAllSelected }`.
+      react: >-
+        `onSelectionChange(selection)` callback.
+      angularSignals: >-
+        `output<TreeGridSelectionState>('selectionChange')`.
+      vue: >-
+        `@update:selection` (v-model:selection).
+
+  - name: cellEditCommit
+    optional: true
+    payload: >-
+      `{ rowId: string, columnId: string,
+      previousValue: unknown, newValue: unknown }`.
+      Fires when the user commits an edit. Same
+      contract as Grid's cellEditCommit. Editable
+      variant only.
+    frameworkNotes:
+      webComponents: >-
+        `cellEditCommit` CustomEvent with
+        `event.detail = { rowId, columnId, previousValue, newValue }`.
+      react: >-
+        `onCellEditCommit({ rowId, columnId, value })`
+        callback.
+      angularSignals: >-
+        `output<{ rowId: string; columnId: string; previousValue: unknown; newValue: unknown }>('cellEditCommit')`.
+      vue: >-
+        `@cell-edit-commit` event.
+
+  - name: sortChange
+    optional: true
+    payload: >-
+      `{ columnId: string, direction: 'asc' | 'desc' | 'none' }`
+      (single-sort) or `Array<{ columnId, direction }>`
+      (multi-sort). Same shape as Grid's sortChange.
+    frameworkNotes:
+      webComponents: >-
+        `sortChange` CustomEvent with
+        `event.detail = sortState`.
+      react: >-
+        `onSortingChange(state)` callback.
+      angularSignals: >-
+        `output<SortState>('sortChange')`.
+      vue: >-
+        `@update:sort` (v-model:sort).
+
+a11yAcceptance:
+  keyboardWalk:
+    - keys: Tab
+      expected: >-
+        Focus enters the treegrid at the active
+        cell (the one carrying `tabindex="0"`).
+        Inherits Grid's Tab behaviour. Tab
+        again exits the treegrid to the next
+        document focusable.
+    - keys: ArrowUp / ArrowDown
+      expected: >-
+        Moves focus to the cell in the previous
+        / next row, same column. Skips collapsed
+        children — the navigation respects the
+        currently-visible row set, not the
+        underlying total. The roving-tabindex
+        shifts.
+    - keys: ArrowLeft (focus on cell in expanded parent row)
+      expected: >-
+        Collapses the parent row.
+        `aria-expanded` flips to false; child
+        rows hide (display:none or DOM-unmount
+        per implementation); focus stays on the
+        same cell. expandChange fires.
+    - keys: ArrowLeft (focus on cell in collapsed parent row OR leaf row)
+      expected: >-
+        For collapsed parent or leaf row at
+        depth ≥ 2, moves focus to the parent
+        row's same column. The treegrid's
+        ancestor-traversal contract. For root-
+        level rows (depth 1), no-op.
+    - keys: ArrowRight (focus on cell in collapsed parent row)
+      expected: >-
+        Expands the parent row.
+        `aria-expanded` flips to true; child
+        rows render; focus stays on the same
+        cell. expandChange fires.
+    - keys: ArrowRight (focus on cell in expanded parent row)
+      expected: >-
+        Moves focus to the first child row's
+        same column. The expansion is
+        already-true; ArrowRight advances into
+        the children. Roving-tabindex shifts.
+    - keys: ArrowRight (focus on cell in leaf row)
+      expected: >-
+        For leaf rows or rows where ArrowRight
+        is not directionally meaningful, no-op
+        OR moves to the next column (per
+        implementation choice — APG documents
+        both as acceptable).
+    - keys: '* (asterisk, focus on row)'
+      expected: >-
+        Expands all sibling parent rows at
+        the current row's level. Useful for
+        tree-wide expansion in deeply-nested
+        structures. APG canonical shortcut.
+    - keys: Home / End
+      expected: >-
+        Home moves focus to the first cell in
+        the current row; End to the last cell.
+        Inherits Grid's Home / End.
+    - keys: Ctrl+Home / Ctrl+End
+      expected: >-
+        Ctrl+Home moves focus to the first
+        cell of the entire treegrid (typically
+        first column of root-level row 1);
+        Ctrl+End to the last cell of the
+        currently-expanded row set.
+    - keys: F2 (focus on editable cell)
+      expected: >-
+        Editable variant only. Enters
+        edit-mode — the cell-editor mounts,
+        focus moves from the cell to the
+        editor. Inherits Grid's edit-mode
+        lifecycle.
+    - keys: Enter / Escape (focus inside cell-editor)
+      expected: >-
+        Enter commits + exits edit-mode;
+        Escape cancels + reverts. Inherits
+        Grid's edit-mode contract.
+    - keys: Space (focus on cell)
+      expected: >-
+        Toggles cell or row selection per
+        the multiSelect property. Inherits
+        Grid's selection contract.
+  announcements:
+    - trigger: SR enters the treegrid
+      expected: >-
+        SR announces "tree grid, ${captionText},
+        ${rowCount} rows, ${columnCount}
+        columns" using the caption text plus
+        `aria-rowcount` for virtualized
+        treegrids. Some SR / browser
+        combinations announce "treegrid"
+        explicitly, others announce "grid"
+        (older AT). Both are acceptable per
+        APG.
+    - trigger: SR navigates to a row
+      expected: >-
+        SR announces "row, level ${level},
+        ${expansionState if applicable},
+        ${posinset} of ${setsize},
+        ${cellValues}" — level from
+        `aria-level`, expansion from
+        `aria-expanded` (omitted on leaf
+        rows), set position from
+        `aria-setsize` / `aria-posinset`.
+    - trigger: User expands a row (ArrowRight or click)
+      expected: >-
+        SR announces "expanded" via the
+        `aria-expanded` change. Some SR /
+        browser combinations also announce
+        the count of newly-visible child
+        rows ("3 rows added") via implicit
+        live-region behaviour or explicit
+        `aria-live` authoring.
+    - trigger: User collapses a row (ArrowLeft)
+      expected: >-
+        SR announces "collapsed" via the
+        `aria-expanded` change. The previously-
+        visible children hide; the next row
+        in the navigation order is the
+        sibling-or-parent of the collapsed
+        row.
+    - trigger: User commits an edit (Enter or Tab from editor)
+      expected: >-
+        Edit-mode exits; focus returns to the
+        cell with the new value. SR announces
+        the cell's updated content via focus-
+        change. Inherits Grid's commit
+        announcement.
+  axeCoreVersion: '4.10.2'
+  axeRules:
+    - aria-allowed-attr
+    - aria-required-attr
+    - aria-required-children
+    - aria-required-parent
+    - aria-valid-attr-value
+    - color-contrast
+    - scope-attr-valid
+    - td-headers-attr
+    - th-has-data-cells
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: Maps static / editable. Editable activates F2/Enter/Escape edit-mode lifecycle and cell-editor slot mounting.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md.
+  - figma: Multi Select
+    code: multiSelect
+    kind: boolean
+    notes: When true, supports multi-cell selection via Shift+Arrow / Ctrl+Click; root carries `aria-multiselectable="true"`.
+  - figma: Virtualized
+    code: virtualized
+    kind: boolean
+    notes: When true, only viewport-visible rows render; requires `aria-rowcount` on root and `aria-rowindex` per rendered row, recomputed as expansion state changes.
+  - figma: Sticky Header
+    code: stickyHeader
+    kind: boolean
+    notes: 'When true, column-headers-row uses `position: sticky` so headers stay visible during vertical scroll.'
+  - figma: Sortable
+    code: sortable
+    kind: boolean
+    notes: Per-column sort affordance plus `aria-sort` on column headers.
+  - figma: Expanded Keys
+    code: expandedKeys
+    kind: text
+    notes: 'Set of row IDs currently expanded. Pairs with expandChange event for two-way binding. JSON serialization for URL persistence.'
+  - figma: Lazy Load Children
+    code: lazyLoadChildren
+    kind: boolean
+    notes: When true, child rows are fetched on parent expansion via async callback; aria-busy="true" on the parent row during fetch.
+  - figma: Indent Step
+    code: indentStep
+    kind: number
+    notes: 'Per-level indent in pixels. Drives row-indent slot via CSS `padding-inline-start: calc(var(--level) * indentStep)`. Default 24.'
+  - figma: Row Count
+    code: rowCount
+    kind: number
+    notes: 'Total currently-visible row count (for virtualized treegrids); reflects to `aria-rowcount`. Recomputes as expansion state changes.'
+
+formIntegration:
+  nativeElement: none
+  name: >-
+    TreeGrid is application state, not a form
+    control. Inherits Grid's nativeElement:none
+    contract. Even editable variants treat cell-
+    editor inputs as transient affordances; the
+    underlying tree-data model lives in component
+    state or the consumer's application store.
+  submittedValue: >-
+    The treegrid contributes nothing to FormData.
+    Selection, sort, expansion, and edit state are
+    application-level — they live in component
+    state or URL query parameters, not in the
+    form payload. For treegrids embedded in forms
+    (a hierarchical category-picker inside a
+    product form), the form reads the treegrid's
+    underlying selection at submit time.
+  requiredAttr: false
+  bridges:
+    react: >-
+      React Hook Form / Formik treat treegrid as
+      application state. Selection, expansion,
+      and edit state live in component state via
+      AG Grid's row-grouping model or React
+      Aria's `expandedKeys` / `selectedKeys`. On
+      form-submit, the form handler reads the
+      current selection and expansion state and
+      constructs the payload.
+    vue: >-
+      VeeValidate / FormKit do not bind to
+      treegrid. Tree data lives in component
+      state via v-model on the data array;
+      expansion via v-model:expandedKeys.
+      Form-submit handlers read the current
+      tree-state and build the payload.
+    angularSignals: >-
+      Reactive forms do not encompass treegrid.
+      Tree data lives as
+      `signal<TreeNode[]>('tree')`; expansion as
+      `signal<Set<RowId>>('expandedRowIds')`;
+      selection as
+      `signal<Set<RowId>>('selection')`. Form
+      submissions read the signal values at
+      submit time.
+    webComponents: >-
+      The `<ui-tree-grid>` host is not
+      formAssociated. Slotted form elements (e.g.,
+      a hidden `<input>` per editable cell)
+      participate independently if needed; the
+      canonical pattern keeps treegrid-as-
+      application-state.
+
+i18n:
+  rtl:
+    mirroring: >-
+      Column flow follows logical direction —
+      same as Grid. Row-indent uses
+      `padding-inline-start` so the indent flips
+      under RTL: visually right-side under
+      Arabic / Hebrew. Row-expander chevron
+      icons (chevron-right when collapsed,
+      chevron-down when expanded) flip
+      direction under RTL — visually
+      collapsed-state chevron points left in RTL.
+      ArrowRight / ArrowLeft tree-navigation
+      maps to visual direction per APG
+      recommendation; under RTL, ArrowRight
+      collapses (visually moving toward parent
+      at the right) and ArrowLeft expands.
+  textExpansion: >-
+    Column headers and row content expand
+    30-50% under translation (file names and
+    folder names typically don't translate but
+    column headers do — "Name" → "Nome",
+    "Modified" → "Geändert" 100% longer).
+    Long row-content forces wider columns and
+    may push the treegrid past viewport
+    width — the scrollable-region wrapper
+    absorbs this. Cell-editor inputs need
+    flexible sizing for translated values.
+    Indent steps stay constant across
+    locales.
+
+performance:
+  - name: cellFocusLatency
+    metric: time-to-focus
+    threshold: 16
+    unit: ms
+    rationale: >-
+      Inherits Grid's cellFocusLatency budget —
+      arrow-key navigation must update the
+      active cell within one frame. For
+      treegrids the budget is even tighter
+      because tree-navigation (ArrowRight on
+      expanded parent moves to first child)
+      may cross expansion-state boundaries
+      within the same key event.
+  - name: expandCollapseLatency
+    metric: time-to-toggle
+    threshold: 100
+    unit: ms
+    rationale: >-
+      ArrowRight on a collapsed parent row to
+      the visual + AT expansion (child rows
+      visible, `aria-expanded="true"` reflected)
+      must complete within 100ms for the
+      tree-navigation to feel responsive. Above
+      the threshold, users press ArrowRight
+      multiple times (skipping multiple
+      expansions). Lazy-loaded children defer
+      this — the canonical pattern shows
+      `aria-busy="true"` on the parent row
+      immediately and resolves the children
+      asynchronously.
+  - name: virtualizationThreshold
+    metric: row-count
+    threshold: 100
+    unit: rows
+    rationale: >-
+      Above ~100 simultaneously-rendered rows
+      (across all visible expansion states),
+      virtualization is canonical. For
+      treegrids, expansion state determines
+      the visible-row count — a single root-
+      level expansion can multiply rendered-
+      row count tenfold. Virtualization is
+      required for production treegrids with
+      large datasets; the threshold is
+      conservative.
+
+contracts:
+  nonNegotiable:
+    - rule: >-
+        Every row carries `aria-level` (1-based
+        depth, 1 is a top-level row). The level
+        drives both the visual indent and the AT
+        announcement. Implementations that ship
+        visual indent without `aria-level`
+        violate WCAG 1.3.1 — sighted users see
+        hierarchy, AT users hear flat row-list.
+      source: apg
+      sourceRef: 'APG: TreeGrid pattern aria-level requirement'
+      consequence: >-
+        Without `aria-level`, the entire
+        hierarchical semantic is invisible to AT.
+        SR users hear "row 1, row 2, row 3" with
+        no indication of which rows are children
+        of which parents. The treegrid degrades
+        to a flat grid with misleading
+        `role="treegrid"`.
+
+    - rule: >-
+        Parent rows (rows with descendants) carry
+        `aria-expanded` reflecting the current
+        expansion state — `true` when children
+        are visible, `false` when collapsed. Leaf
+        rows OMIT `aria-expanded` (the absence is
+        the canonical signal that the row has no
+        descendants).
+      source: apg
+      sourceRef: 'APG: TreeGrid pattern aria-expanded requirement'
+      consequence: >-
+        Without `aria-expanded` on parent rows,
+        AT users cannot tell which rows are
+        expandable or whether a row is currently
+        expanded. ArrowRight / ArrowLeft
+        navigation has no programmatic state to
+        observe. The expansion-toggle gesture
+        becomes invisible to AT.
+
+    - rule: >-
+        ArrowRight / ArrowLeft implement tree-
+        navigation on top of the grid keyboard
+        model — ArrowRight expands collapsed
+        parents OR moves to first child of
+        expanded parents; ArrowLeft collapses
+        expanded parents OR moves to parent of
+        leaf rows.
+      source: apg
+      sourceRef: 'APG: TreeGrid pattern keyboard interaction'
+      consequence: >-
+        Without the tree-keyboard handlers,
+        keyboard users cannot expand / collapse
+        rows via keyboard — they must mouse-
+        click the chevron, breaking keyboard
+        accessibility. The defining tree-
+        navigation affordance is gone.
+
+    - rule: >-
+        Inherits Grid's contracts: roving-
+        tabindex (one cell at a time carries
+        `tabindex="0"`), 2D arrow-key
+        navigation, F2 / Enter / Escape edit-
+        mode lifecycle, role-hierarchy
+        consistency (cells inside
+        `role="treegrid"` carry `role="gridcell"`
+        / `role="columnheader"` /
+        `role="rowheader"`), virtualized-aware
+        ARIA attributes (`aria-rowcount` /
+        `aria-rowindex`).
+      source: apg
+      sourceRef: 'APG: TreeGrid extends Grid pattern'
+      consequence: >-
+        Without inheriting Grid's contracts,
+        the treegrid loses the foundation
+        keyboard model that the tree-navigation
+        extends. The full APG-canonical
+        keyboard model is the union of Grid's
+        plus the tree-extension; partial
+        implementations fail one or both.
+
+    - rule: >-
+        Visual indent per row derives from
+        `aria-level` (single source-of-truth) —
+        `padding-inline-start: calc(var(--level)
+        * indentStep)` or equivalent. Visual and
+        AT cannot diverge; both read from the
+        same value.
+      source: canon
+      consequence: >-
+        Without the single-source-of-truth
+        rule, implementations may compute
+        indent from a separate state value
+        (e.g., the row's array-position) and
+        the visual hierarchy diverges from
+        the `aria-level` AT semantic. The
+        canonical discipline keeps them in
+        sync by construction — change the
+        level, the indent updates; AT users
+        and sighted users see the same
+        structure.
+  vocabularyDrift:
+    - system: WAI-ARIA
+      theirTerm: 'role=treegrid + aria-level + aria-expanded'
+      note: >-
+        Canonical ARIA pattern. WAI-ARIA
+        Authoring Practices Guide documents
+        the full keyboard model — inherits
+        Grid's foundation plus the
+        ArrowRight / ArrowLeft tree-navigation.
+        The canonical anatomy mirrors APG
+        directly.
+    - system: HTML
+      theirTerm: '<table role="treegrid">'
+      note: >-
+        Native HTML `<table>` plus explicit
+        `role="treegrid"` is the canonical
+        hybrid. `<div role="treegrid">` is
+        the fallback for non-tabular layouts
+        (rare for treegrid because tabular
+        columns are the differentiator from
+        Tree).
+    - system: AG Grid
+      theirTerm: 'AgGridReact with treeData'
+      note: >-
+        AG Grid Tree Data is the dominant
+        production treegrid library. Implements
+        the full APG keyboard model, lazy-
+        loading children on expansion,
+        virtualization, edit-mode lifecycle.
+        `getDataPath(row) => string[]` is the
+        canonical tree-shape API; AG Grid
+        derives `aria-level` from path depth.
+    - system: React Aria
+      theirTerm: 'Table with expandedKeys (tree mode)'
+      note: >-
+        React Aria's `Table` ships tree-mode
+        opt-in via `expandedKeys` +
+        `onExpandedChange`. Headless — consumers
+        compose the DOM and visual treatment;
+        React Aria wires `aria-level` /
+        `aria-expanded` plus the keyboard
+        model. The single-component-with-mode-
+        prop reflects the canonical "treegrid
+        extends grid" relationship.
+    - system: PrimeVue
+      theirTerm: TreeTable
+      note: >-
+        PrimeVue ships `TreeTable` as a first-
+        class Vue treegrid primitive with
+        `nodes` (tree-shaped data),
+        `expandedKeys` v-model, `selectionKeys`
+        v-model. Tabular columns are first-
+        class. The naming-only divergence
+        ("TreeTable" vs canonical "TreeGrid")
+        does not affect the API surface.
+    - system: Material 3
+      theirTerm: '— (no formal TreeGrid pattern)'
+      note: >-
+        Material 3 spec does not include the
+        TreeGrid pattern. Material UI ships
+        `<TreeView>` (single-column tree, not
+        treegrid). For canonical APG-compliant
+        treegrid, Material projects escalate
+        to AG Grid.
+    - system: Carbon
+      theirTerm: '— (no formal TreeGrid pattern)'
+      note: >-
+        Carbon ships `DataTable` (flat tabular
+        data, Table pattern) and `TreeView`
+        (single-column tree). For canonical
+        treegrid, Carbon projects escalate to
+        AG Grid or build custom on top of
+        DataTable + manual `aria-level` /
+        `aria-expanded` wiring.
+    - system: Atlassian
+      theirTerm: '— (no formal TreeGrid pattern)'
+      note: >-
+        Atlassian ships `DynamicTable`
+        (Table pattern, flat). No first-class
+        treegrid primitive in @atlaskit. For
+        treegrid use cases, Atlassian projects
+        escalate to AG Grid or build custom.
+
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/
+  - https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/examples/treegrid-1/
+  - https://www.w3.org/TR/wai-aria-1.2/#treegrid
+  - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
+  - https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
+  - https://www.ag-grid.com/javascript-data-grid/tree-data/
+  - https://react-spectrum.adobe.com/react-aria/Table.html
+
+notes: >-
+  TreeGrid is the steepest authoring overhead in the
+  canonical canon — it inherits the full Grid keyboard
+  model (roving-tabindex, 2D arrow-navigation, F2 /
+  Enter / Escape edit-lifecycle) AND adds tree-
+  navigation (ArrowRight / ArrowLeft expand /
+  collapse / traverse). Reach for it only when the
+  hierarchical-tabular affordance justifies the cost;
+  the grid-when-tree-suffices and tree-when-treegrid-
+  suffices mistakes document the down-escalation
+  paths. Production React / Angular / Vue treegrids
+  almost always escalate to AG Grid; canonical APG-
+  compliant headless treegrids are rare in the
+  ecosystem outside React Aria. The
+  aria-level-drives-visual-indent contract is the
+  single highest-load-bearing implementation
+  detail — most failed treegrid implementations
+  ship visual hierarchy without programmatic
+  hierarchy.
+
+lastReviewed: '2026-05-04'
