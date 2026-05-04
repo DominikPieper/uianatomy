@@ -1,0 +1,225 @@
+componentId: accordion
+libraryId: cdk
+componentName: MatAccordion / MatExpansionPanel (from @angular/material/expansion)
+
+exampleCode: |
+  // app.component.ts
+  import { Component, signal } from '@angular/core';
+  import { MatExpansionModule } from '@angular/material/expansion';
+
+  @Component({
+    selector: 'app-demo',
+    standalone: true,
+    imports: [MatExpansionModule],
+    template: `
+      <mat-accordion
+        [multi]="false"
+        displayMode="default"
+        togglePosition="after"
+        [hideToggle]="false"
+      >
+        <mat-expansion-panel
+          [expanded]="openIndex() === 0"
+          (opened)="openIndex.set(0)"
+          (closed)="onClose(0)"
+        >
+          <mat-expansion-panel-header
+            collapsedHeight="48px"
+            expandedHeight="64px"
+          >
+            <mat-panel-title>Shipping policy</mat-panel-title>
+            <mat-panel-description>Free over $50</mat-panel-description>
+          </mat-expansion-panel-header>
+          <p>We ship within 2 business days.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel
+          [expanded]="openIndex() === 1"
+          (opened)="openIndex.set(1)"
+        >
+          <mat-expansion-panel-header>
+            <mat-panel-title>Returns</mat-panel-title>
+          </mat-expansion-panel-header>
+          <ng-template matExpansionPanelContent>
+            <!-- lazy-mounted on first expand -->
+            <p>Returns accepted within 30 days.</p>
+          </ng-template>
+        </mat-expansion-panel>
+      </mat-accordion>
+    `,
+  })
+  export class AppDemoComponent {
+    openIndex = signal<number | null>(0);
+
+    onClose(idx: number): void {
+      if (this.openIndex() === idx) this.openIndex.set(null);
+    }
+  }
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────────
+
+  - from: anatomy[header]
+    type: reshaped
+    to: >-
+      No heading element wraps the header. MatExpansionPanelHeader renders as a
+      custom element with `role="button"` on the host — not as a <button> inside
+      a heading. MatExpansionPanelTitle and MatExpansionPanelDescription are
+      content-projection directives inside the header, not a semantic heading
+      wrapper. There is no input for heading level (h2–h6).
+    rationale: >-
+      APG requires each accordion trigger to sit inside a heading element so
+      SR users can navigate by heading. Material ships a self-contained
+      mat-expansion-panel-header that uses role="button" directly on the host
+      element and omits the heading wrapper entirely. The trade-off is simpler
+      CSS layout control (expandedHeight / collapsedHeight inputs) at the cost
+      of APG heading-navigation conformance. Consumers who need heading
+      semantics must wrap mat-expansion-panel-header in a heading element
+      themselves. Source: github.com/angular/components blob
+      src/material/expansion/expansion-panel-header.ts (fetched 2026-05-04).
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: >-
+      MatExpansionPanelHeader is the trigger — a single custom element with
+      `role="button"`, `aria-expanded`, and `aria-controls` wired. It is not a
+      native <button>; tabIndex defaults to 0 and is removed to -1 on disabled
+      via host binding. MatExpansionPanelTitle and MatExpansionPanelDescription
+      are slotted via content projection inside the same header element.
+    rationale: >-
+      Canonical trigger is a real <button> inside the heading. Material
+      collapses trigger + title + description into one composed host element
+      (mat-expansion-panel-header) using role="button" rather than a native
+      button, keeping layout control simpler. aria-expanded and aria-controls
+      are wired correctly, so SR state announcements work, but the native-button
+      constraint is not met. Source: github.com/angular/components blob
+      src/material/expansion/expansion-panel-header.ts (fetched 2026-05-04).
+
+  - from: anatomy[icon]
+    type: renamed
+    to: >-
+      Built-in toggle indicator rendered internally by MatExpansionPanelHeader;
+      controlled by `hideToggle: boolean` on MatExpansionPanel or MatAccordion,
+      and `togglePosition: 'before' | 'after'` on MatAccordion (default 'after').
+      Consumers can project a custom indicator via the `mat-expansion-panel-header`
+      content or override via CSS.
+    rationale: >-
+      Canonical icon is an optional, author-controlled slot. Material bakes the
+      chevron-style toggle into MatExpansionPanelHeader with show/hide and
+      position as inputs, rather than exposing a composable slot. hideToggle on
+      the panel or accordion suppresses the built-in indicator; there is no
+      first-class slot for a replacement icon. Source: github.com/angular/components
+      blob src/material/expansion/accordion.ts (fetched 2026-05-04).
+
+  # ── Axes / Variants ──────────────────────────────────────────────────────────
+
+  - from: axes.variants
+    type: reshaped
+    to: >-
+      `displayMode: 'default' | 'flat'` on MatAccordion. 'default' adds spacing
+      around expanded panels; 'flat' removes the inter-panel gaps. There is no
+      'bordered' or 'flush' variant matching canonical taxonomy.
+    rationale: >-
+      Canonical variants are bordered / contained / flush. Material provides
+      only a spacing-mode axis (default vs flat) mapped through the
+      MatAccordionDisplayMode type. Visual containment, borders, and flush
+      treatment are controlled entirely by the Material Design theme and CSS —
+      not by a first-class variant input. Source: github.com/angular/components
+      blob src/material/expansion/accordion.ts (fetched 2026-05-04).
+
+  - from: axes.properties[collapsible]
+    type: omitted
+    rationale: >-
+      Canonical `collapsible` boolean controls whether the currently-open item
+      in single-open mode can be collapsed to a fully-closed state. MatAccordion
+      has no equivalent input. In single-open mode (multi=false) the user can
+      always click an open panel to close it — the "no-close-if-last-open"
+      pattern is not offered. Source: github.com/angular/components blob
+      src/material/expansion/accordion.ts (fetched 2026-05-04).
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      Canonical `density: comfortable | compact` property. MatAccordion and
+      MatExpansionPanel have no density input. Angular Material density is
+      applied globally via the SCSS mixin `mat.expansion-panel-density($scale)`;
+      per-instance density control is absent. Source: github.com/angular/components
+      blob src/material/expansion/accordion.ts (fetched 2026-05-04).
+
+  # ── Events ───────────────────────────────────────────────────────────────────
+
+  - from: events[expandedChange]
+    type: reshaped
+    to: >-
+      CdkAccordionItem (base of MatExpansionPanel) emits three outputs:
+      `opened` (void, fires on expand), `closed` (void, fires on collapse), and
+      `expandedChange: EventEmitter<boolean>` (fires on both with the new
+      boolean state). There is no accordion-level aggregate event — consumers
+      must listen per-panel or derive an aggregate by combining panel outputs.
+    rationale: >-
+      Canonical `expandedChange` fires from the accordion root with
+      `{ itemId: string, expanded: boolean }`. Material fires per-panel outputs
+      (opened / closed / expandedChange) with no item-id payload — the identity
+      is implicit via the panel reference in the template. Consumers building
+      single-open accordions must wire open/close handlers manually per panel
+      rather than subscribing to one root event. Source: github.com/angular/components
+      blob src/cdk/accordion/accordion-item.ts (fetched 2026-05-04).
+
+  - from: events[itemActivate]
+    type: omitted
+    rationale: >-
+      Canonical `itemActivate` fires when the user activates a trigger
+      regardless of whether the state actually changes (useful for
+      non-collapsible single-open mode). MatExpansionPanel exposes no equivalent
+      — there is no output for "header clicked / Enter pressed without a state
+      transition". Consumers who need activation-without-state-change tracking
+      must wire a click handler on mat-expansion-panel-header themselves.
+      Source: github.com/angular/components blob
+      src/material/expansion/expansion-panel.ts (fetched 2026-05-04).
+
+  # ── Extended ─────────────────────────────────────────────────────────────────
+
+  - from: anatomy[panel]
+    type: extended
+    addition: >-
+      `MatExpansionPanelContent` structural directive (`matExpansionPanelContent`
+      on an <ng-template>) enables lazy mounting — panel content is not rendered
+      until the panel is first expanded. Mirrors the canonical lazyMountThreshold
+      performance concern but expressed as an explicit opt-in directive rather
+      than automatic threshold behaviour. MatExpansionPanel also emits
+      `afterExpand` and `afterCollapse` outputs that fire after the CSS
+      transition completes, enabling post-animation DOM work.
+    rationale: >-
+      The canonical anatomy does not model a lazy-content directive or
+      post-animation lifecycle outputs. Material ships matExpansionPanelContent
+      as a first-class lazy-mount pattern (matching the canonical 50kb
+      lazyMountThreshold rationale) and afterExpand / afterCollapse for
+      fine-grained animation lifecycle hooks. Source: github.com/angular/components
+      blob src/material/expansion/expansion-panel.ts (fetched 2026-05-04).
+
+rationale: |
+  Angular Material Expansion Panel ships a batteries-included compound
+  component rather than the primitive-per-slot decomposition the canonical
+  anatomy describes. The most significant divergences:
+
+  1. No heading wrapper — MatExpansionPanelHeader uses role="button" directly
+     on its host element with no h2–h6 wrapper, breaking APG heading-navigation
+     conformance. Consumers must add the heading wrapper themselves.
+  2. No variant system — displayMode (default/flat) is a spacing axis, not the
+     bordered/contained/flush variant taxonomy the canonical describes.
+  3. No collapsible input — single-open mode always allows collapse; the
+     canonical "lock last open panel open" pattern is absent.
+  4. No root-level expandedChange event — state events are per-panel (opened /
+     closed / expandedChange); aggregate tracking requires manual wiring.
+
+  Notable Material strengths relative to the canonical:
+  1. togglePosition input — the indicator can be placed before or after the
+     label, which the canonical icon slot does not model.
+  2. collapsedHeight / expandedHeight inputs — fine-grained header height
+     control not in canonical.
+  3. matExpansionPanelContent lazy-mount directive — explicit opt-in lazy render
+     matching the canonical lazyMountThreshold rationale.
+  4. afterExpand / afterCollapse outputs — post-transition lifecycle hooks
+     enabling precise DOM work after animation completes.
+
+lastReviewed: '2026-05-04'

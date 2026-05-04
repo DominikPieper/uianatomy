@@ -1,0 +1,202 @@
+componentId: accordion
+libraryId: headlessui
+componentName: Disclosure / DisclosureButton / DisclosurePanel
+
+exampleCode: |
+  import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+
+  const items = [
+    { id: 'shipping', heading: 'Shipping policy', content: 'We ship worldwide in 3–5 days.' },
+    { id: 'returns',  heading: 'Returns',          content: 'Return within 30 days for a full refund.' },
+    { id: 'contact',  heading: 'Contact us',        content: 'Email support@example.com.' },
+  ];
+
+  export function FaqAccordion() {
+    return (
+      <div className="divide-y border rounded-md">
+        {items.map((item) => (
+          <Disclosure key={item.id}>
+            {({ open }) => (
+              <>
+                {/* canonical: trigger must be wrapped in a heading */}
+                <h3>
+                  <DisclosureButton className="flex w-full items-center justify-between px-4 py-3 text-left">
+                    <span>{item.heading}</span>
+                    <svg
+                      aria-hidden="true"
+                      className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      />
+                    </svg>
+                  </DisclosureButton>
+                </h3>
+                <DisclosurePanel className="px-4 pb-4 text-sm">
+                  {item.content}
+                </DisclosurePanel>
+              </>
+            )}
+          </Disclosure>
+        ))}
+      </div>
+    );
+  }
+
+divergence:
+  # ── No Accordion primitive ────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: omitted
+    rationale: >-
+      Headless UI ships no Accordion root component. There is no shared
+      container that manages the list of items, enforces single-vs-multi
+      expansion, or owns the accordion's ArrowDown/Up keyboard walk.
+      Consumers compose N independent Disclosure components inside a plain
+      div. The single-expansion contract (close the previously-open item
+      when a new one opens) must be implemented manually by the consumer
+      using controlled `open` state on each Disclosure — the library
+      provides no coordination mechanism.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  - from: anatomy[item]
+    type: omitted
+    rationale: >-
+      No Accordion.Item or equivalent wrapper exists. Each Disclosure is
+      an independent component with its own isolated open/closed state.
+      Per-item state grouping (the header-trigger-panel unit) is a
+      consumer responsibility. This means the canonical item-level
+      `data-state` attribute (closed | expanding | expanded | collapsing)
+      is absent; Headless UI surfaces only `data-open` on the Disclosure
+      and individual button data attributes.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Header slot ──────────────────────────────────────────────────────────
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      Headless UI provides no heading-wrapper component. The canonical APG
+      requirement that each accordion trigger be wrapped in a heading
+      element (`<h2>`–`<h6>`) is invisible to the library; consumers must
+      supply the heading themselves. DisclosureButton renders a `<button>`
+      directly and does not enforce or suggest the heading wrapper in its
+      API or docs. Omitting the wrapper is the most common a11y violation
+      when composing Disclosure into an accordion.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Icon slot ────────────────────────────────────────────────────────────
+
+  - from: anatomy[icon]
+    type: omitted
+    rationale: >-
+      No chevron or icon primitive is shipped. Icon rendering and rotation
+      are consumer responsibilities. DisclosureButton exposes an `open`
+      render prop (and `data-open` attribute) as the styling hook; the
+      consumer applies CSS rotation or swaps glyphs. No default icon is
+      included with the library.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Axes — variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[bordered]
+    type: omitted
+    rationale: >-
+      Headless UI is intentionally unstyled; no bordered / contained /
+      flush visual variants exist. All layout and border treatment is
+      consumer CSS. The library ships no design tokens or utility classes.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Axes — properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[multi]
+    type: omitted
+    rationale: >-
+      There is no `multi` prop and no accordion-level expansion controller.
+      Single-open (mutually-exclusive) behaviour requires the consumer to
+      lift state and pass a controlled `open` value plus a shared setter to
+      each Disclosure, resetting the others on every toggle. Multi-open is
+      the default because each Disclosure is fully independent. The
+      canonical distinction between the two modes is entirely a consumer
+      concern in this library.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  - from: axes.properties[collapsible]
+    type: omitted
+    rationale: >-
+      No `collapsible` prop. Each Disclosure is always independently
+      collapsible — there is no non-collapsible single-open mode. The
+      canonical `collapsible: false` behaviour (prevent the last-open item
+      from closing in single-open mode) must be enforced by consumer state
+      logic.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      No density prop. Padding and spacing are consumer CSS. Headless UI
+      stops at the accessibility primitive layer.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Keyboard contract ────────────────────────────────────────────────────
+
+  - from: a11yAcceptance.keyboardWalk
+    type: omitted
+    rationale: >-
+      The canonical APG accordion keyboard contract includes ArrowDown /
+      ArrowUp to move focus between item triggers and Home / End to jump to
+      the first / last trigger. Headless UI Disclosure supports only
+      Enter / Space on DisclosureButton; inter-item arrow navigation is not
+      implemented because the library has no shared accordion root to own
+      the roving tabindex logic. Consumers building an accessible accordion
+      must wire this keyboard navigation themselves.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+  # ── Transition states ────────────────────────────────────────────────────
+
+  - from: axes.states.data[expanding]
+    type: reshaped
+    to: >-
+      data-enter / data-leave transition attributes on DisclosurePanel
+      (opt-in via transition prop); no expanding/collapsing state names
+    rationale: >-
+      Canonical defines four data states: closed, expanding, expanded,
+      collapsing. Headless UI's transition system uses data-enter (panel
+      opening) and data-leave (panel closing) — present only when the
+      `transition` prop is set on DisclosurePanel. These attributes are
+      meant to drive CSS transition classes, not to represent a stable
+      state machine. There are no data-expanding or data-collapsing
+      equivalents; the intermediate animation states are implicit in the
+      CSS transition lifecycle rather than explicitly named on the element.
+      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+
+rationale: |
+  Headless UI does not ship an Accordion primitive. The intended
+  pattern is to compose N independent Disclosure components. This
+  introduces three structural gaps against the canonical accordion:
+
+  1. No shared root — no single-vs-multi expansion controller, no
+     roving-tabindex keyboard walk (ArrowDown/Up/Home/End), and no
+     accordion-level state ownership. Consumers must implement all of
+     this manually when lifting state across Disclosures.
+
+  2. No heading wrapper — the canonical APG requirement to wrap each
+     trigger in a heading element is invisible to the library API and
+     absent from Disclosure docs. This is the primary a11y risk when
+     composing Disclosures into an accordion.
+
+  3. No transition state machine — the canonical four-state model
+     (closed / expanding / expanded / collapsing) collapses to a
+     binary open/closed toggle with opt-in CSS transition hooks
+     (data-enter / data-leave). Coordinated animation (chevron
+     rotation + panel height transition sharing a single duration
+     token) is entirely consumer work.
+
+  These gaps are consistent with Headless UI's design philosophy:
+  ship the minimal accessible primitive, defer all composition,
+  styling, and state coordination to the consumer.
+
+lastReviewed: '2026-05-04'
