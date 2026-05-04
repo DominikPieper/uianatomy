@@ -1,0 +1,253 @@
+componentId: drawer
+libraryId: vaul
+componentName: Drawer
+
+exampleCode: |
+  import { Drawer } from 'vaul';
+
+  export function FilterDrawer({ open, onOpenChange }) {
+    return (
+      <Drawer.Root
+        open={open}
+        onOpenChange={onOpenChange}
+        snapPoints={[0.5, 1]}
+        fadeFromIndex={1}
+        direction="bottom"
+        dismissible
+        shouldScaleBackground
+      >
+        <Drawer.Trigger asChild>
+          <button>Open filters</button>
+        </Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+          <Drawer.Content className="fixed bottom-0 left-0 right-0 flex flex-col rounded-t-[10px] bg-white">
+            <Drawer.Handle />
+            <div className="p-4 flex-1 overflow-y-auto">
+              <Drawer.Title className="text-lg font-semibold">Filters</Drawer.Title>
+              <Drawer.Description className="sr-only">
+                Adjust search filters
+              </Drawer.Description>
+              {/* filter controls */}
+            </div>
+            <div className="p-4 border-t">
+              <Drawer.Close asChild>
+                <button>Apply</button>
+              </Drawer.Close>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+    );
+  }
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[backdrop]
+    type: renamed
+    to: Drawer.Overlay
+    rationale: >-
+      Identical role — full-viewport scrim that intercepts pointer events
+      in modal mode. Vaul adopts the Radix-Dialog vocabulary ("Overlay")
+      rather than the canonical "backdrop". Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: anatomy[container]
+    type: reshaped
+    to: Drawer.Root + Drawer.Portal + Drawer.Content
+    rationale: >-
+      Vaul is built on top of Radix Dialog and mirrors its three-part
+      split: Root owns controlled-state and gesture wiring, Portal owns
+      DOM relocation, Content owns the rendered surface and the ARIA
+      dialog role. The canonical "container" (one slot with a focus trap)
+      maps to the intersection of all three. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      Vaul ships no header sub-component. Drawer.Title and Drawer.Handle
+      are placed directly inside Drawer.Content without a wrapping region;
+      the canonical header layout (title + close button side by side) is
+      consumer-composed with a plain div. Source:
+      https://vaul.emilkowal.ski/getting-started (fetchedAt 2026-05-04)
+
+  - from: anatomy[title]
+    type: renamed
+    to: Drawer.Title
+    rationale: >-
+      One-to-one functional match. Vaul re-exports Radix Dialog.Title,
+      which renders an `<h2>` and auto-wires `aria-labelledby` on the
+      Content element. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: anatomy[close-button]
+    type: renamed
+    to: Drawer.Close
+    rationale: >-
+      Same role. Vaul re-exports Radix Dialog.Close; consumers pass their
+      own button via `asChild`. The accessible name is the consumer's
+      responsibility, not Vaul's. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: anatomy[body]
+    type: reshaped
+    to: Drawer.Description plus free children inside Drawer.Content
+    rationale: >-
+      Vaul re-exports Radix Dialog.Description as Drawer.Description for
+      the `aria-describedby` anchor; arbitrary body content is free
+      children of Drawer.Content. For non-prose bodies (filter controls,
+      forms) Description is typically visually hidden while still
+      providing the accessible description. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      Vaul ships no footer sub-component. Action buttons are free children
+      of Drawer.Content, typically in a consumer-composed div with a
+      border-top. Positioning and spacing are entirely consumer CSS.
+      Source: https://vaul.emilkowal.ski/getting-started (fetchedAt 2026-05-04)
+
+  - from: anatomy[handle]
+    type: extended
+    addition: >-
+      Vaul ships Drawer.Handle as a first-class sub-component — a pill-shaped
+      drag affordance rendered inside Drawer.Content. When handleOnly is true
+      on Drawer.Root, dragging is restricted to the Handle element only; the
+      rest of Content does not respond to drag input. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+    rationale: >-
+      The canonical handle slot is optional-decorative with no drag-target
+      constraints. Vaul promotes Handle to a named sub-component and adds
+      handleOnly mode, which changes the drag-target semantics beyond what
+      the canonical anatomy expresses.
+
+  # ── Axes — properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[side]
+    type: renamed
+    to: "direction — prop on Drawer.Root; values: 'top' | 'right' | 'bottom' | 'left'"
+    rationale: >-
+      Canonical uses logical-property values (`inline-start`, `inline-end`,
+      `block-start`, `block-end`). Vaul uses physical direction strings
+      (`top`, `right`, `bottom`, `left`), reflecting its mobile-first
+      bottom-sheet origin. RTL callers must flip `left`/`right` manually;
+      no automatic logical-property mirroring is provided. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Vaul ships no size prop. Drawer height/width is entirely
+      consumer CSS on Drawer.Content (or expressed as snap-point
+      fractions). The canonical `sm | md | lg | full` scale is a
+      design-system convention above the primitive. Source:
+      https://vaul.emilkowal.ski/getting-started (fetchedAt 2026-05-04)
+
+  - from: axes.properties[swipeable]
+    type: reshaped
+    to: >-
+      dismissible (boolean) + handleOnly (boolean) + snapPoints (array) +
+      closeThreshold (number) + snapToSequentialPoint (boolean)
+    rationale: >-
+      Canonical expresses drag-to-dismiss as a single `swipeable` boolean.
+      Vaul granularises this across several cooperating props: `dismissible`
+      covers swipe-to-close AND Escape AND overlay-click as one switch;
+      `handleOnly` restricts the drag hit-target; `snapPoints` introduces
+      intermediate rest positions; `closeThreshold` sets the fraction of
+      the drawer that must be dragged before it dismisses; and
+      `snapToSequentialPoint` controls velocity-skip behaviour across
+      snap points. These are not separate features — they are all
+      elaborations of the same swipe-gesture contract. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      and https://vaul.emilkowal.ski/snap-points (fetchedAt 2026-05-04)
+
+  - from: axes.variants[non-modal]
+    type: reshaped
+    to: "modal={false} on Drawer.Root"
+    rationale: >-
+      Canonical expresses modality as a variant enum (`modal`, `non-modal`,
+      `navigation`). Vaul uses a `modal` boolean prop on Drawer.Root
+      (defaults `true`). Setting `modal={false}` removes the Overlay and
+      allows background interaction, corresponding to the canonical
+      non-modal variant; the navigation variant has no direct Vaul
+      equivalent and must be composed by the consumer. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  # ── Vaul-only extensions ──────────────────────────────────────────────────
+
+  - from: axes.properties[dismissible]
+    type: reshaped
+    to: >-
+      dismissible (boolean on Drawer.Root) collapses Escape + overlay-click
+      + swipe-to-dismiss into a single flag; individual paths are not
+      separately suppressible
+    rationale: >-
+      Canonical treats `dismissible` as a single switch that maps to three
+      independent dismiss paths (Escape, backdrop click, swipe). Vaul's
+      `dismissible` prop is also a single switch but collapses all three
+      paths together — there is no way to allow Escape while disabling
+      swipe, for example. Consumers needing mixed suppress/allow must
+      intercept events at the Radix Dialog layer that Vaul wraps. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+
+  - from: events[openChange]
+    type: extended
+    addition: >-
+      Vaul adds onDrag(event, percentageDragged) and onRelease(event, open)
+      callbacks alongside onOpenChange. These expose the in-progress drag
+      position as a 0–1 fraction of total travel and the release decision,
+      enabling consumers to mirror the canonical dragging state in their own
+      UI without polling. Source:
+      https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      (fetchedAt 2026-05-04)
+    rationale: >-
+      The canonical events surface only openChange and dismiss at the settled
+      edges of the state graph. Vaul exposes mid-gesture telemetry (onDrag,
+      onRelease) that lets consumers drive parallel animations or progress
+      indicators during the drag — a capability the canonical event surface
+      does not model because it is implementation-specific to gesture-driven
+      drawers.
+
+  - from: axes.states.data[dragging]
+    type: extended
+    addition: >-
+      Beyond the canonical dragging state, Vaul surfaces activeSnapPoint as
+      a controlled value on Drawer.Root. Consumers can read and set which snap
+      point is currently active via snapPoints array plus setActiveSnapPoint
+      callback, creating discrete multi-position open states (e.g. half-open,
+      fully open) that the canonical binary open/closed model does not address.
+      fadeFromIndex controls at which snap index the Overlay begins to fade in.
+      Source: https://raw.githubusercontent.com/emilkowalski/vaul/main/src/index.tsx
+      and https://vaul.emilkowal.ski/snap-points (fetchedAt 2026-05-04)
+    rationale: >-
+      The canonical state graph treats open as a single position. Vaul's
+      snap-point system introduces a controlled intermediate-open axis that
+      is core to its mobile bottom-sheet use case — partial reveal at one
+      snap point, full reveal at another. This is a structural addition to
+      the state model, not a renaming of an existing state.
+
+rationale: |
+  Vaul is a React-only, bottom-sheet-first drawer primitive built on top of
+  Radix Dialog. It covers the canonical anatomy faithfully for modal use —
+  Overlay, Content, Title, Description, Close, Handle all map cleanly — but
+  deliberately narrows the scope: no header/footer sub-components, no logical
+  property direction values (physical strings only), no size scale, and no
+  navigation variant. The most significant additions over canon are snap-points
+  (multi-position rest states), shouldScaleBackground (parallax body-scale
+  during drag), and the granular drag-lifecycle callbacks (onDrag, onRelease).
+  The repo is currently unmaintained (maintainer notice on GitHub as of
+  2026-05-04); version-level pinning is not possible from the README.
+
+lastReviewed: '2026-05-04'

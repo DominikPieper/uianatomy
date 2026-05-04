@@ -1,0 +1,211 @@
+componentId: drawer
+libraryId: headlessui
+componentName: Dialog (side-anchored composition — no formal Drawer primitive)
+
+exampleCode: |
+  import { useState } from 'react';
+  import { Dialog, DialogPanel, DialogTitle, DialogBackdrop, CloseButton, Transition } from '@headlessui/react';
+
+  export function SideDrawer({ isOpen, onClose }) {
+    return (
+      <Transition show={isOpen}>
+        <Dialog onClose={onClose} className="relative z-50">
+          {/* Backdrop — DialogBackdrop is a named export in v2.1 */}
+          <DialogBackdrop
+            className="fixed inset-0 bg-black/40
+                       data-closed:opacity-0 data-enter:duration-200 data-leave:duration-150
+                       transition-opacity"
+          />
+
+          {/* Side-anchor positioning is purely consumer CSS — no library prop */}
+          <div className="fixed inset-y-0 inline-end-0 flex">
+            <DialogPanel
+              className="relative w-80 bg-white shadow-xl flex flex-col
+                         data-closed:translate-x-full data-enter:duration-300 data-leave:duration-200
+                         transition-transform"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <DialogTitle as="h2" className="text-lg font-semibold">
+                  Filters
+                </DialogTitle>
+                {/* CloseButton auto-wires onClose on the nearest Dialog ancestor */}
+                <CloseButton className="rounded p-1 hover:bg-gray-100">
+                  <span aria-hidden="true">&times;</span>
+                  <span className="sr-only">Close</span>
+                </CloseButton>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                {/* body content */}
+              </div>
+
+              <div className="border-t px-4 py-3 flex justify-end gap-2">
+                <CloseButton as="button" className="btn-secondary">Cancel</CloseButton>
+                <button className="btn-primary">Apply</button>
+              </div>
+            </DialogPanel>
+          </div>
+        </Dialog>
+      </Transition>
+    );
+  }
+
+divergence:
+  # ── No Drawer primitive ────────────────────────────────────────────────────
+
+  - from: anatomy[container]
+    type: reshaped
+    to: >-
+      Transition + Dialog + DialogPanel composition; side-anchoring via
+      consumer CSS only (e.g. `fixed inset-y-0 inline-end-0` Tailwind
+      utilities or `position: fixed; inset-block: 0; inset-inline-end: 0`)
+    rationale: >-
+      Headless UI ships no Drawer primitive. The canonical container is an
+      edge-anchored panel with a `side` prop driving logical positioning.
+      Headless UI Dialog renders into a portal but applies no positioning
+      itself — DialogPanel is unstyled and centred only when the consumer
+      wraps it in a flex/grid full-viewport positioner. Side-anchoring is
+      achieved purely by consumer CSS on the outer positioning wrapper;
+      the library has no API surface for it. This is the most fundamental
+      divergence: the library does not model Drawer as a distinct concept
+      from Dialog.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: axes.properties[side]
+    type: omitted
+    rationale: >-
+      No `side` prop (or any equivalent). The canonical `side:
+      inline-start | inline-end | block-start | block-end` axis is entirely
+      absent from Headless UI's API. Consumers must apply logical CSS
+      properties by hand (`inset-inline-start: 0`, `inset-block: 0`, etc.)
+      and manage RTL mirroring themselves. The library provides no mechanism
+      to enforce, document, or validate the side choice.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: axes.variants[non-modal]
+    type: omitted
+    rationale: >-
+      Headless UI Dialog is always modal: it installs a focus trap inside
+      DialogPanel and returns focus to the trigger on close. There is no
+      `non-modal` variant (canonical `role="region"` with focus allowed to
+      escape). Consumers needing a non-modal side panel must build a custom
+      component with no Dialog involvement — the Dialog primitive cannot be
+      used in a non-modal configuration because the focus trap is
+      non-negotiable.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: axes.variants[navigation]
+    type: omitted
+    rationale: >-
+      No `navigation` variant. The canonical navigation drawer maps to
+      `role="region"` + a non-modal configuration where the page stays
+      fully interactive. Since Headless UI Dialog is always modal (see
+      non-modal above), the navigation variant cannot be composed from it
+      without abandoning the focus trap.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: anatomy[handle]
+    type: omitted
+    rationale: >-
+      No drag-handle primitive or `swipeable` API. The canonical `handle`
+      slot exposes a resize/dismiss affordance for swipe-to-dismiss on
+      touch devices. Headless UI provides no pointer-drag lifecycle,
+      velocity tracking, or snap-back animation. Consumers must implement
+      the full swipe gesture from scratch (pointermove, pointerup,
+      velocity threshold, transform spring) with no library scaffolding.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: axes.properties[swipeable]
+    type: omitted
+    rationale: >-
+      No `swipeable` prop, no drag-to-dismiss velocity contract, and no
+      `dragging` state emitted. The canonical `swipeable: true` wires a
+      gesture handler that tracks pointer position and triggers
+      `dragging → closing` above a release-velocity threshold. None of
+      this scaffolding exists in Headless UI.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: axes.states.data[dragging]
+    type: omitted
+    rationale: >-
+      The canonical `dragging` data state (entered when a swipe gesture
+      is active) has no equivalent. Headless UI Dialog exposes only
+      `data-open` on Dialog and its sub-components. Intermediate drag
+      states must be tracked entirely in consumer component state.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: events[sideChange]
+    type: omitted
+    rationale: >-
+      No `onSideChange` callback. The canonical `sideChange` event fires
+      when the responsive auto-flip changes the resolved side (e.g.
+      `inline-end` → `block-end` below `breakpoint.sm`). Because the
+      library has no `side` concept and performs no responsive auto-flip,
+      this event cannot exist.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: events[dismiss]
+    type: reshaped
+    to: onClose callback without reason discrimination
+    rationale: >-
+      Canonical `dismiss` carries `{ reason: 'escape' | 'backdrop' |
+      'closeButton' | 'swipe' }`. Headless UI fires `onClose` for Escape
+      and for outside-panel clicks (when DialogBackdrop is wired). Reason
+      discrimination is absent; consumers wiring `CloseButton` or
+      `DialogBackdrop` must inspect the event source themselves. The
+      Drawer-specific `swipe` reason has no backing mechanism at all.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Headless UI's Transition component (v2.1) does not implement
+      `prefers-reduced-motion: reduce` automatically. The data-attribute
+      transition system (`data-enter`, `data-leave`, `data-closed`) emits
+      class hooks that consumers apply via Tailwind's `motion-safe:` /
+      `motion-reduce:` variants. The canonical `instant` fallback for
+      reduced-motion is achievable but is entirely a consumer responsibility;
+      the library does not skip or shorten transitions on its own.
+      Source: https://headlessui.com/react/transition (v2.1, 2026-05-04).
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      No `size` prop. The canonical `size: sm | md | lg | full` axis
+      drives container inline-size (left/right drawers) or block-size
+      (top/bottom drawers). DialogPanel is fully unstyled; width/height
+      are consumer CSS. This is consistent with Headless UI's intentional
+      no-styling policy.
+      Source: https://headlessui.com/react/dialog (v2.1, 2026-05-04).
+
+rationale: |
+  Headless UI React v2.1 ships no Drawer primitive. The closest
+  approximation is a Dialog with consumer-applied side-anchoring CSS, but
+  this mapping is structurally shallow: Dialog is always modal with a
+  focus trap and centred-by-default portal, while the canonical Drawer is
+  edge-anchored, can be non-modal, and supports swipe-to-dismiss with a
+  velocity-driven gesture API.
+
+  The divergences split into three tiers:
+
+  1. Missing concept entirely — no `side` prop, no `non-modal` variant,
+     no `navigation` variant, no `swipeable` prop, no drag-handle slot,
+     no `dragging` state, no `sideChange` event. These cannot be composed
+     from Dialog primitives without significant consumer-authored
+     infrastructure that duplicates what a Drawer primitive would provide.
+
+  2. Reshaped event model — `onClose` replaces the canonical typed
+     `dismiss({ reason })` contract; reason discrimination is manual.
+
+  3. Consistent with the library's unstyled-primitive philosophy — `size`,
+     motion timing, and RTL logical positioning are all consumer CSS.
+     This tier matches the same divergences found in the headlessui/modal
+     audit and is expected given Headless UI's design intent.
+
+  Consumers building a Drawer on top of Headless UI Dialog should treat
+  the Dialog as providing only the ARIA role, focus trap, Escape handling,
+  and portal mount. Everything that makes a Drawer distinct from a
+  centred Modal — edge anchor, side axis, non-modal mode, swipe gesture —
+  must be authored by the consumer.
+
+lastReviewed: '2026-05-04'

@@ -1,0 +1,289 @@
+componentId: drawer
+libraryId: cdk
+componentName: MatDrawer / MatSidenav (from @angular/material/sidenav)
+
+exampleCode: |
+  // app.component.ts
+  import { Component, signal } from '@angular/core';
+  import { MatSidenavModule } from '@angular/material/sidenav';
+  import { MatButtonModule } from '@angular/material/button';
+  import { MatIconModule } from '@angular/material/icon';
+
+  @Component({
+    selector: 'app-shell',
+    standalone: true,
+    imports: [MatSidenavModule, MatButtonModule, MatIconModule],
+    template: `
+      <mat-drawer-container [hasBackdrop]="mode() !== 'side'">
+        <mat-drawer
+          #drawer
+          [mode]="mode()"
+          position="start"
+          [disableClose]="false"
+          autoFocus="first-tabbable"
+          (openedChange)="onOpenedChange($event)"
+          (closedStart)="onClosedStart()"
+        >
+          <button mat-icon-button (click)="drawer.close()" aria-label="Close filters">
+            <mat-icon>close</mat-icon>
+          </button>
+          <h2 id="drawer-title">Filters</h2>
+          <!-- body content projected directly into mat-drawer -->
+          <ng-content />
+        </mat-drawer>
+
+        <mat-drawer-content>
+          <button mat-button (click)="drawer.open()">Open Filters</button>
+          <!-- main page content -->
+        </mat-drawer-content>
+      </mat-drawer-container>
+    `,
+  })
+  export class AppShellComponent {
+    mode = signal<'over' | 'push' | 'side'>('over');
+
+    onOpenedChange(isOpen: boolean): void {
+      console.log('drawer', isOpen ? 'opened' : 'closed');
+    }
+
+    onClosedStart(): void {
+      // fires when close animation begins
+    }
+  }
+
+divergence:
+  # ── Anatomy: container split ──────────────────────────────────────────────────
+
+  - from: anatomy[container]
+    type: reshaped
+    to: >-
+      Three-element compound: <mat-drawer-container> is the layout host that
+      manages drawer + page-content side by side; <mat-drawer> is the panel
+      itself (the drawable surface); <mat-drawer-content> is a sibling element
+      that holds main-page content and shifts/compresses when mode="push" or
+      mode="side". The canonical container is a single node bearing role="dialog"
+      or role="region"; Material splits the role-bearing node (<mat-drawer>)
+      from the layout host (<mat-drawer-container>) and the content-shift target
+      (<mat-drawer-content>).
+    rationale: >-
+      Material Sidenav is designed as a full-page layout primitive, not just an
+      overlay. The three-node split lets mat-drawer-container measure the drawer
+      width and push mat-drawer-content aside in side/push modes without
+      consumer-authored layout code. A single-node canonical container cannot
+      express this because the shift target must be a sibling, not a child.
+      Source: github.com/angular/components blob
+      src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Anatomy: backdrop ─────────────────────────────────────────────────────────
+
+  - from: anatomy[backdrop]
+    type: reshaped
+    to: >-
+      Backdrop is rendered automatically by <mat-drawer-container> when
+      mode="over" or mode="push" (default). Controlled by the container-level
+      input `hasBackdrop: boolean | null`; null (default) follows per-mode
+      defaults; true forces backdrop even in side mode; false suppresses it even
+      in over/push modes. Backdrop click fires the container output
+      `(backdropClick)`. There is no separate consumer-composed backdrop slot.
+    rationale: >-
+      Canonical backdrop is an optional anatomy slot the consumer composes.
+      Material bakes backdrop into the container layer as a mode-driven automatic
+      behaviour controlled by hasBackdrop, reducing consumer boilerplate. The
+      trade-off is loss of the canonical slot's composability (consumers cannot
+      swap in a custom scrim node). Source: github.com/angular/components blob
+      src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Anatomy: header / title / close-button / footer ──────────────────────────
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      No header primitive. <mat-drawer> accepts arbitrary content projection;
+      the consumer renders whatever heading + close-affordance layout they
+      choose. Angular Material does not ship a mat-drawer-header directive
+      analogous to mat-dialog-title / mat-dialog-actions. Source:
+      github.com/angular/components blob src/material/sidenav/drawer.ts
+      (fetched 2026-05-04).
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      No title primitive. The accessible name for the drawer must be provided
+      by the consumer via aria-label on <mat-drawer> or by projecting a heading
+      element and wiring aria-labelledby manually. MatDrawer does not auto-wire
+      aria-labelledby from a projected heading. Source: github.com/angular/components
+      blob src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  - from: anatomy[close-button]
+    type: omitted
+    rationale: >-
+      No close-button primitive. Consumers project a button and call
+      `drawerRef.close()` (template reference) or toggle the `opened` input.
+      Escape dismissal is controlled by the `disableClose: boolean` input
+      (default false — Escape is enabled). There is no built-in visible close
+      affordance; the consumer is responsible for providing one.
+      Source: github.com/angular/components blob src/material/sidenav/drawer.ts
+      (fetched 2026-05-04).
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      No footer primitive. Consumers project footer / action-row markup directly
+      into <mat-drawer>. Source: github.com/angular/components blob
+      src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Anatomy: handle ───────────────────────────────────────────────────────────
+
+  - from: anatomy[handle]
+    type: omitted
+    rationale: >-
+      No swipe-to-dismiss handle and no swipe gesture support. MatDrawer is
+      designed for pointer and keyboard interaction on desktop; there is no
+      drag-handle slot, no swipeable input, and no touch-velocity-based dismiss
+      in the Material sidenav implementation. Source: github.com/angular/components
+      blob src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Axes: variants ────────────────────────────────────────────────────────────
+
+  - from: axes.variants
+    type: reshaped
+    to: >-
+      `mode: 'over' | 'push' | 'side'` on <mat-drawer>. 'over' is the canonical
+      modal-overlay variant (drawer floats above content with backdrop). 'side' is
+      a persistent non-modal column (canonical navigation variant — drawer is
+      always visible, no backdrop, content shifts). 'push' is a Material-specific
+      intermediate: drawer slides in, main content is pushed aside (no overlay),
+      backdrop shown by default. MatSidenav additionally adds
+      fixedInViewport / fixedTopGap / fixedBottomGap for a pinned-navigation-rail
+      sub-variant.
+    rationale: >-
+      Canonical variants are modal / non-modal / navigation. Material collapses
+      all three into the `mode` input rather than a separate variant enum, and
+      adds push as a fourth mode with no canonical equivalent (push displaces
+      content without overlaying it, distinct from both overlay and side-column).
+      Source: github.com/angular/components blob src/material/sidenav/drawer.ts
+      (fetched 2026-05-04).
+
+  # ── Axes: side property ───────────────────────────────────────────────────────
+
+  - from: axes.properties[side]
+    type: reshaped
+    to: >-
+      `position: 'start' | 'end'` on <mat-drawer> (default: 'start'). Two
+      values only — logical inline-axis positions. block-start (top) and
+      block-end (bottom) are not supported; MatDrawer is strictly a
+      left/right-edge primitive.
+    rationale: >-
+      Canonical `side` has four values: inline-start, inline-end, block-start,
+      block-end. Material restricts to the inline axis only (start / end), using
+      logical property names. Top and bottom drawers are outside the Material
+      Sidenav scope — bottom-sheet patterns use MatBottomSheet instead.
+      Source: github.com/angular/components blob src/material/sidenav/drawer.ts
+      (fetched 2026-05-04).
+
+  # ── Axes: dismissible property ────────────────────────────────────────────────
+
+  - from: axes.properties[dismissible]
+    type: renamed
+    to: >-
+      `disableClose: boolean` on <mat-drawer> (default: false — dismiss enabled).
+      Controls both Escape-key and backdrop-click dismissal together. Inverted
+      polarity: dismissible=true ⇔ disableClose=false.
+    rationale: >-
+      Same inverted-polarity pattern as CDK Dialog (audited in modal.yaml).
+      disableClose=false is the Angular convention for "allow dismiss"; canonical
+      models this as dismissible=true. The two flags compose identically;
+      only the name and polarity differ. Source: github.com/angular/components
+      blob src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Axes: swipeable property ─────────────────────────────────────────────────
+
+  - from: axes.properties[swipeable]
+    type: omitted
+    rationale: >-
+      No swipeable input and no swipe gesture support. MatDrawer targets desktop
+      web; mobile swipe-to-dismiss is not part of the sidenav contract.
+      Source: github.com/angular/components blob src/material/sidenav/drawer.ts
+      (fetched 2026-05-04).
+
+  # ── Events ────────────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: >-
+      Four outputs on MatDrawer: `(openedChange): EventEmitter<boolean>` fires
+      after transition completes (true=opened, false=closed); `(openedStart)`
+      and `(closedStart)` are Observables that fire when the respective animation
+      begins; `(onPositionChanged)` fires when the position input changes.
+      There is no single boolean openChange that maps exactly — openedChange
+      matches the canonical payload but the name differs.
+    rationale: >-
+      Canonical openChange fires a boolean after settle. MatDrawer ships
+      openedChange (same payload, after settle) plus animation-start observables
+      for the opening and closing phases, giving consumers fine-grained lifecycle
+      hooks the canonical does not model. onPositionChanged is an unrelated
+      configuration event. Source: github.com/angular/components blob
+      src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  - from: events[dismiss]
+    type: omitted
+    rationale: >-
+      No dismiss event and no reason payload. openedChange(false) signals the
+      drawer closed but does not distinguish Escape, backdrop click, or
+      programmatic close(). Consumers who need the dismissal reason must wire
+      (backdropClick) on the container and (keydown.escape) on the drawer
+      themselves. Source: github.com/angular/components blob
+      src/material/sidenav/drawer.ts (fetched 2026-05-04).
+
+  # ── Extended: MatSidenav fixed-viewport inputs ───────────────────────────────
+
+  - from: axes.variants[navigation]
+    type: extended
+    addition: >-
+      MatSidenav (selector: mat-sidenav) extends MatDrawer with three additional
+      inputs for pinned navigation-rail layouts: `fixedInViewport: boolean`
+      (default false) — positions the sidenav fixed relative to the viewport
+      rather than the container; `fixedTopGap: number` (default 0) — gap in px
+      between the sidenav top edge and the viewport top; `fixedBottomGap: number`
+      (default 0) — gap in px between the sidenav bottom edge and the viewport
+      bottom. MatSidenavContainer / MatSidenavContent mirror the drawer pair.
+    rationale: >-
+      The canonical navigation variant is modelled as a persistent non-modal
+      column with no viewport-pinning details. Material ships fixedInViewport
+      as a first-class input for layouts where the app toolbar is not part of
+      the sidenav container (common Material Design shell pattern). This is a
+      genuine extension beyond the canonical contract.
+      Source: github.com/angular/components blob src/material/sidenav/sidenav.ts
+      (fetched 2026-05-04).
+
+rationale: |
+  Angular Material Sidenav diverges from the canonical Drawer in four
+  primary ways:
+
+  1. Three-node layout compound (<mat-drawer-container> + <mat-drawer> +
+     <mat-drawer-content>) — canonical is a single container node. The split
+     is required to implement mode="side" and mode="push" content-displacement
+     without consumer layout code, but it makes the component a full-page layout
+     primitive rather than a composable overlay.
+
+  2. mode input collapses canonical variants — 'over' (modal overlay), 'side'
+     (persistent non-modal), and 'push' (Material-specific content-push) replace
+     the canonical modal / non-modal / navigation variant enum. Push has no
+     canonical equivalent.
+
+  3. Inline-axis only — position: 'start' | 'end' covers left/right; top/bottom
+     drawers are out of scope (handled by MatBottomSheet separately). Canonical
+     supports all four viewport edges.
+
+  4. No anatomy slots — header, title, close-button, footer, and handle are all
+     omitted; the consumer projects content directly into <mat-drawer>. This is
+     consistent with Angular Material's full-content-projection philosophy but
+     places the entire UX anatomy in consumer hands.
+
+  Material strength: the mode="side" / mode="push" content-displacement is a
+  genuine capability the canonical Drawer does not model — it covers the
+  persistent sidebar-nav shell pattern that the canon explicitly calls out as
+  bordering on a layout primitive. MatSidenav's fixedInViewport extends this
+  further for pinned navigation rails, a common Material Design shell pattern.
+
+lastReviewed: '2026-05-04'
