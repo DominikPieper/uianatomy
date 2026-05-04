@@ -1108,19 +1108,12 @@ sources:
   - https://primer.style/components/progress-bar
 
 notes: >-
-  Determinate boolean follows the positive-default-polarity
-  convention (P6-119) — `determinate: true` is the canonical
-  default, `determinate: false` activates indeterminate mode
-  with the `aria-valuenow`-omitted rule. The native HTML
-  `<progress>` element is canonically equivalent to a
-  custom `role="progressbar"` element for AT and is the
-  recommended baseline when no bespoke styling is needed;
-  the canonical anatomy uses `role="progressbar"` to
-  document the styled-control case explicitly. The boundary
-  with Skeleton (layout-preserving placeholder) and Toast
-  (post-completion notification) is the most-overlooked
-  failure mode — designers reach for "loading icon" without
-  distinguishing the three patterns; the vsRelated entries
-  document the canonical decision rule.
+  `determinate` follows positive-default-polarity (P6-119); the
+  `aria-valuenow`-omitted-when-indeterminate rule is captured in
+  contracts. Native `<progress>` is canonically equivalent for
+  AT — anatomy uses `role="progressbar"` to document the
+  styled-control case. The Skeleton / Progress / Toast boundary
+  is the most-overlooked failure mode; vsRelated documents the
+  decision rule.
 
 lastReviewed: '2026-05-04'

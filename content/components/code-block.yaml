@@ -1124,20 +1124,12 @@ sources:
   - https://prismjs.com/
 
 notes: >-
-  Code Block is read-only content presentation —
-  events are limited to the optional copy
-  observation. The block-vs-inline variant split
-  reflects the structural HTML choice (`<pre>`
-  wrapping `<code>` versus bare `<code>`) and is
-  more meaningful than treating inline as a
-  styling-only variation. Syntax-highlighting is
-  decorative-by-default per WCAG 1.3.1; the
-  Shiki-emits-aria-hidden vs Prism-does-not
-  divergence in vocabularyDrift is the
-  most-consequential implementation choice
-  authors face. The line-numbers-via-CSS-counter
-  pattern is the canonical clipboard-clean
-  discipline; text-side line numbers are a
-  recurring regression.
+  Read-only content presentation; events limited to optional
+  copy observation. The block-vs-inline variant split reflects
+  the structural HTML choice (`<pre><code>` vs bare `<code>`),
+  not styling. The Shiki-emits-aria-hidden vs Prism-does-not
+  divergence in vocabularyDrift is the most-consequential
+  implementation choice; text-side line-numbers are the
+  recurring clipboard regression.
 
 lastReviewed: '2026-05-04'

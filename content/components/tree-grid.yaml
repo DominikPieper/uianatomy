@@ -1485,23 +1485,13 @@ sources:
   - https://react-spectrum.adobe.com/react-aria/Table.html
 
 notes: >-
-  TreeGrid is the steepest authoring overhead in the
-  canonical canon — it inherits the full Grid keyboard
-  model (roving-tabindex, 2D arrow-navigation, F2 /
-  Enter / Escape edit-lifecycle) AND adds tree-
-  navigation (ArrowRight / ArrowLeft expand /
-  collapse / traverse). Reach for it only when the
-  hierarchical-tabular affordance justifies the cost;
-  the grid-when-tree-suffices and tree-when-treegrid-
-  suffices mistakes document the down-escalation
-  paths. Production React / Angular / Vue treegrids
-  almost always escalate to AG Grid; canonical APG-
-  compliant headless treegrids are rare in the
-  ecosystem outside React Aria. The
-  aria-level-drives-visual-indent contract is the
-  single highest-load-bearing implementation
-  detail — most failed treegrid implementations
-  ship visual hierarchy without programmatic
-  hierarchy.
+  Steepest authoring overhead in the canon — inherits the
+  full Grid keyboard model and adds ArrowRight / ArrowLeft
+  tree-navigation. Reach for it only when hierarchical-
+  tabular affordance justifies the cost; the
+  treegrid-when-tree-suffices mistake documents the
+  down-escalation. The aria-level-drives-visual-indent
+  contract is the highest-load-bearing implementation
+  detail.
 
 lastReviewed: '2026-05-04'

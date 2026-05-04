@@ -1297,17 +1297,11 @@ sources:
   - https://design-system.service.gov.uk/components/pagination/
 
 notes: >-
-  Pagination has no formal APG pattern — it composes
-  from `nav` landmark plus `aria-current="page"`. The
-  canonical truncation API (siblingCount +
-  boundaryCount) derives from Material UI; alternate
-  library naming (Primer's marginPageCount /
-  surroundingPageCount, Atlassian's pages-with-
-  selectedIndex) maps onto the canonical surface in
-  the vocabularyDrift block. The disabled-not-removed
-  contract is the most-overlooked failure mode in
-  implementations — designers compose with hidden
-  prev/next on boundaries by default; the canonical
-  rule preserves tab-order stability instead.
+  No formal APG pattern; pagination composes from `nav`
+  landmark plus `aria-current="page"`. Material UI's
+  siblingCount + boundaryCount drive the canonical
+  truncation API (alternate library naming in
+  vocabularyDrift). The disabled-not-removed contract is
+  the most-overlooked implementation failure mode.
 
 lastReviewed: '2026-05-04'

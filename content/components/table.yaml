@@ -1475,16 +1475,10 @@ sources:
 notes: >-
   Native `<table>` semantics are the canonical baseline; ARIA
   roles only when the structural element cannot be authored.
-  Density is intentionally a two-value property (canonical
-  `comfortable | compact`) — Carbon's five-value scale and
-  Material's three-value scale collapse onto the canonical
-  axis with documented mappings in the vocabularyDrift block.
-  The `selectable` variant is structurally distinct from
-  `default` (extra leading column), justifying its place on
-  the variants axis rather than as a property. Future canon
-  expansion: the APG `grid` and `treegrid` patterns
-  (interactive-cells and hierarchical-rows escalations) are
-  forward-referenced via `pending: true` vsRelated entries
-  awaiting their own canonical files.
+  The two-value density property and the structurally-distinct
+  `selectable` variant are the load-bearing canonical decisions
+  (density-collapse mappings live in vocabularyDrift). The
+  table ↔ grid-pattern ↔ tree-grid escalation cluster is
+  bidirectionally documented in vsRelated.
 
 lastReviewed: '2026-05-04'

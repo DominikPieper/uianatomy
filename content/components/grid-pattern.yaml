@@ -1491,19 +1491,12 @@ sources:
   - https://tanstack.com/table/latest
 
 notes: >-
-  Grid is the APG escalation from Table — applied only
-  when interactive cells justify the steeper keyboard
-  model (roving-tabindex, 2D arrow-nav, F2 / Enter /
-  Escape edit-mode lifecycle). The canonical decision
-  rule lives in the vsRelated entry to Table and in
-  the grid-when-table-suffices mistake. Production
-  React grids almost always escalate to AG Grid for
-  full feature coverage (virtualization, edit-mode,
-  cell renderers); React Aria provides the headless
-  alternative for design systems that want to retain
-  visual control. The roving-tabindex contract is the
-  single highest-load-bearing implementation detail —
-  most failed grid implementations fail this rule
-  first.
+  APG escalation from Table — apply only when interactive
+  cells justify the steeper keyboard model (decision rule
+  lives in the Table vsRelated entry plus the
+  grid-when-table-suffices mistake). Production React
+  escalates to AG Grid for full coverage; React Aria is the
+  headless alternative. Roving-tabindex is the single
+  highest-load-bearing implementation detail.
 
 lastReviewed: '2026-05-04'
