@@ -639,6 +639,7 @@ propertyMap:
     notes: Swap the chevron glyph; defaults vary per design system (down-arrow, triangle, double-arrow).
 
 formIntegration:
+  nativeElement: select
   name: >-
     Native `<select>` carries the `name` attribute directly;
     custom selects either render an internal hidden `<select>`
@@ -647,6 +648,16 @@ formIntegration:
     Form, Vue's v-model). The canonical reference treats `name`
     as a passthrough to the underlying form-participating
     element.
+  submittedValue: >-
+    Single-select submits the selected option's `value`
+    attribute (canonical id / token), NOT the visible
+    `<option>`-text. Multi-select submits one FormData entry
+    per selected value (multiple entries with the same `name`,
+    matching `<select multiple>` native behaviour). Required-
+    and-unselected results in no entry plus a validation
+    failure. Default value when no `<option selected>` is
+    marked is the first option's value.
+  requiredAttr: true
   formData: >-
     Single-select submits the selected option's value (id /
     token), not the display label, under the configured `name`.
@@ -670,6 +681,31 @@ formIntegration:
     message via `aria-describedby` ("Please make a selection").
     The select's `:invalid` pseudo-class state propagates to
     `:invalid` on the parent form.
+  bridges:
+    react: >-
+      Controlled via `value` plus `onValueChange`. Radix Select
+      and React Aria Select render a hidden native `<select>`
+      for form participation when `name` is passed. React Hook
+      Form / Formik integrate via `register("name")` plus
+      `setValue`. Strict-mode validation uses the form-library's
+      validator callback returning a "select from list" message.
+    vue: >-
+      Two-way binding via `v-model` for selected value (string
+      or string[] for multi). VeeValidate / FormKit observe the
+      hidden native `<select>` for form-state. PrimeVue Select,
+      Naive UI Select as third-party precedents.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(value)` → selection.set(...). `formControl` /
+      `formControlName` plus `Validators.required` drive
+      validation. Material `mat-select` integrates natively
+      with reactive forms.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus `internals.setFormValue(
+      value)`. Custom-select hosts that render shadow-DOM
+      internals fall back to a hidden `<select>` slotted inside
+      when element-internals is not available.
 
 i18n:
   rtl:
@@ -816,4 +852,4 @@ sources:
   - https://atlassian.design/components/select/examples
   - https://m3.material.io/components/menus/overview
 
-lastReviewed: '2026-04-29'
+lastReviewed: '2026-05-04'

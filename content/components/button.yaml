@@ -394,12 +394,20 @@ i18n:
     aria-label is the translation surface.
 
 formIntegration:
+  nativeElement: button
   name: >-
     `<button>` with a `name` attribute participates in form submission
     — the button's `[name]=[value]` is appended to the form's FormData
     when this button is the submitter. Buttons without `name` do not
     contribute to FormData. The canonical reference treats `name` as a
     passthrough to the underlying `<button>`.
+  submittedValue: >-
+    Only the activating submit button's `[name]=[value]` pair is
+    appended (not all buttons in the form). Multi-action forms
+    distinguish via shared key — `<button name="action" value="save">`
+    plus `<button name="action" value="discard">`. Default value is
+    empty string when no `value` attribute is set.
+  requiredAttr: false
   formData: >-
     On submit, only the activating submit button's `[name]=[value]`
     pair is appended (not all buttons in the form). This makes Button
@@ -418,6 +426,33 @@ formIntegration:
     `formnovalidate` attribute on the submit button suppresses
     validation for that specific submit path — useful for "save draft"
     patterns where partial input is allowed.
+  bridges:
+    react: >-
+      Pass `name` / `value` / `type` / `formNoValidate` directly to the
+      Button — they passthrough to the native `<button>`. React Hook
+      Form / Formik recognise the submit button as the FormData
+      submitter automatically; no register-call needed for buttons
+      themselves (only for fields). Custom Button-shaped controls
+      that wrap `<button>` need to forward these attributes
+      explicitly.
+    vue: >-
+      Native `<button>` participates without v-model. Pass `name` /
+      `value` / `type` as plain attributes; VeeValidate / FormKit
+      observe the submit event on the parent form, not the button.
+      Composable wrappers (PrimeVue Button) forward attributes via
+      `$attrs` inheritance.
+    angularSignals: >-
+      `<button>` with `type="submit"` participates in NgForm /
+      ReactiveForms automatically; the form's `(ngSubmit)` fires when
+      the activating button submits. `name` / `value` passthrough as
+      attribute bindings. Dedicated material `mat-button` directives
+      preserve form-association via host-binding.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus `internals.setFormValue(value)` when
+      the activating submit. Falls back to a slotted native
+      `<button>` inside the custom element when element-internals is
+      not available; the slotted button participates natively.
 
 propertyMap:
   - figma: Variant
@@ -508,4 +543,4 @@ sources:
   - https://atlassian.design/components/button/examples
   - https://www.gov.uk/service-manual/design/buttons
 
-lastReviewed: '2026-04-28'
+lastReviewed: '2026-05-04'

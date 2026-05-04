@@ -573,12 +573,21 @@ i18n:
     favour shorter phrasing to avoid wrap on small viewports.
 
 formIntegration:
+  nativeElement: none
   name: >-
     Modal is a container, not a form control — it has no `name`
     attribute. Forms hosted inside the dialog carry their own `name`
     attributes on their fields. Native `<dialog>` cooperates with
     `<form method="dialog">` to submit-and-close in a single user
     action.
+  submittedValue: >-
+    Modal contributes nothing to FormData directly. The
+    `<form method="dialog">` pattern is special: the form's submitter
+    button populates `dialog.returnValue` (a string read via
+    `dialogElement.returnValue` after close) instead of issuing a
+    network request. Forms inside the dialog submit normally via
+    their own `<form>` element.
+  requiredAttr: false
   formData: >-
     Forms inside the dialog submit normally via their own `<form>`.
     The dialog itself contributes nothing to FormData. The
@@ -597,6 +606,33 @@ formIntegration:
     Validation failures focus the first invalid field — focus stays
     inside the dialog because of the focus trap, so the user lands on
     the field naturally without escaping the modal context.
+  bridges:
+    react: >-
+      React Hook Form / Formik observe the form inside the modal,
+      not the modal itself. Pass `onSubmit` to the inner `<form>`;
+      the modal close-handler reads form-state via the form-library
+      hooks. Radix Dialog and React Aria Modal both leave form
+      lifecycle to the consumer. For `<form method="dialog">`
+      semantics, render native `<dialog>` plus `<form
+      method="dialog">` and read `dialogElement.returnValue` after
+      close.
+    vue: >-
+      VeeValidate / FormKit bind to the inner `<form>` via
+      composable. The modal itself is not a form participant. v-model
+      on the inner fields drives the form-library's value tree
+      independent of the modal's open-state.
+    angularSignals: >-
+      `formGroup` / `formArray` lives on the inner `<form>` element;
+      ngSubmit on that form fires independently of the dialog state.
+      Closing the dialog via Esc does not reset the form unless
+      consumer explicitly calls `formGroup.reset()` in the close
+      handler.
+    webComponents: >-
+      Modal host is not formAssociated (it is a container, not a
+      control). Slotted `<form>` participates natively. For
+      `method="dialog"`-style returnValue semantics, the dialog host
+      reads its inner form's submitter and propagates the result via
+      a `closeWithValue` CustomEvent.
 
 propertyMap:
   - figma: Variant
@@ -806,4 +842,4 @@ sources:
   - https://atlassian.design/components/modal-dialog/examples
   - https://inclusive-components.design/a-todo-list/
 
-lastReviewed: '2026-04-28'
+lastReviewed: '2026-05-04'

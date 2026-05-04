@@ -621,11 +621,21 @@ propertyMap:
     notes: Swap the magnifier glyph; rare to deviate from the canonical magnifier.
 
 formIntegration:
+  nativeElement: input
   name: >-
     The internal `<input type="search">` carries the form
     `name` attribute. Native `<input type="search">` produces
     a string entry in the form's FormData under the
     configured `name`; the value is the current input text.
+  submittedValue: >-
+    Single FormData entry per SearchInput — the current input
+    string under the configured `name`. Empty queries submit
+    as empty strings (canonical "show all" semantic). The
+    type-search idiosyncrasy: browsers may auto-trim trailing
+    whitespace and offer a built-in clear-affordance via the
+    OS-native ✕ button (the canonical visible clear-button is
+    the cross-browser portable alternative).
+  requiredAttr: false
   formData: >-
     Submit produces a single FormData entry (key=name,
     value=current input string). For form-nested SearchInputs
@@ -649,6 +659,31 @@ formIntegration:
     Combobox's strict-mode `setCustomValidity()` plus
     `aria-invalid` for "must select from suggestions"
     enforcement.
+  bridges:
+    react: >-
+      Controlled via `value` plus `onChange` plus optional
+      `onSubmit` for Enter / magnifier-button activation.
+      Search-driven URL routing pattern: useSearchParams plus
+      a debounced sync from value to URL. Standalone search
+      bars in shells typically uncontrolled with form-nested
+      submit-handler.
+    vue: >-
+      Two-way binding via `v-model` (string). For Enter-driven
+      submission, listen on the parent `<form>` `@submit` or
+      directly on `@keyup.enter` of the input. URL-driven
+      routing pattern via `vue-router` + watcher.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(value: string)` → `value.set(...)`. Most
+      search bars are uncontrolled with reactive-forms-free
+      form-handling — a debounced signal effect drives the
+      query stream.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus
+      `internals.setFormValue(value)`. The slotted native
+      `<input type="search">` provides form participation
+      automatically when not encapsulated in shadow DOM.
 
 i18n:
   rtl:
@@ -831,4 +866,4 @@ sources:
   - https://m3.material.io/components/search/overview
   - https://www.gov.uk/service-manual/design/search
 
-lastReviewed: '2026-04-29'
+lastReviewed: '2026-05-04'

@@ -688,12 +688,20 @@ propertyMap:
     code: footer
     kind: slot
 formIntegration:
+  nativeElement: none
   name: >-
     Drawer is a container, not a form control — it has no `name`
     attribute. Forms hosted inside the drawer carry their own `name`
     attributes on their fields. Native `<dialog>` cooperates with
     `<form method="dialog">` to submit-and-close in a single user
     action; custom-implementation drawers re-implement this contract.
+  submittedValue: >-
+    Drawer contributes nothing to FormData directly. Forms inside
+    the drawer submit normally via their own `<form>`. Filter-style
+    drawers serialize their internal form to URL search params or
+    app state on change, not on submit — the drawer is a sustained
+    surface, not a one-shot dialog.
+  requiredAttr: false
   formData: >-
     Forms inside the drawer submit normally via their own `<form>`
     element. The drawer itself contributes nothing to FormData.
@@ -713,6 +721,29 @@ formIntegration:
     for non-modal drawers the focus also stays naturally because the
     field is reachable. Avoid auto-closing the drawer on submit
     failure.
+  bridges:
+    react: >-
+      React Hook Form / Formik observe the form inside the drawer,
+      not the drawer itself. Filter-drawer pattern: `useForm()` plus
+      a `watch()` callback that serializes to URL on each change.
+      Vaul / Radix Dialog (variant=drawer) leave form lifecycle to
+      the consumer.
+    vue: >-
+      VeeValidate / FormKit bind to the inner `<form>` via
+      composable. The drawer itself is not a form participant.
+      v-model on inner fields drives the form-library's value tree
+      independent of the drawer's open-state.
+    angularSignals: >-
+      `formGroup` / `formArray` lives on the inner `<form>`
+      element. Closing the drawer via Esc does not reset the form
+      unless consumer explicitly calls `formGroup.reset()` in the
+      close handler.
+    webComponents: >-
+      Drawer host is not formAssociated (it is a container, not a
+      control). Slotted `<form>` participates natively. For
+      filter-drawer URL-serialization, the host emits a
+      `formChange` CustomEvent that the consumer wires to history
+      / state.
 
 i18n:
   rtl:
@@ -846,4 +877,4 @@ sources:
   - https://atlassian.design/components/side-navigation
   - https://inclusive-components.design/a-todo-list/
 
-lastReviewed: '2026-04-29'
+lastReviewed: '2026-05-04'

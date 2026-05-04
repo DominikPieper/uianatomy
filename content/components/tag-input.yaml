@@ -614,6 +614,7 @@ propertyMap:
     notes: Optional leading icon per tag (avatar for user-tags, color swatch for label-tags).
 
 formIntegration:
+  nativeElement: input
   name: >-
     The internal `<input>` carries the form `name` attribute when
     free-text variant is used and the input value should
@@ -621,6 +622,15 @@ formIntegration:
     `<input type="hidden">` per tag with the same `name`,
     matching `<select multiple>` native behaviour. Or the
     consumer wires form-state via React Hook Form / Vue v-model.
+  submittedValue: >-
+    Multi-value commits as multiple FormData entries with the
+    same `name` key — one entry per tag, matching `<select
+    multiple>` and `<input multiple>` native behaviours. Backend
+    consumes via PHP-style `name[]` collection or via
+    duplicate-key iteration. Avoid comma-joining tags into a
+    single FormData entry — backends would have to re-split,
+    losing the canonical multi-value semantic.
+  requiredAttr: true
   formData: >-
     Multi-value commits as multiple FormData entries with the
     same key (one entry per tag), matching `<select multiple>`
@@ -644,6 +654,33 @@ formIntegration:
     constrained variant, custom validators per-tag (e.g.
     "must be valid email") are consumer-configured; failed tags
     are not committed and surface inline error.
+  bridges:
+    react: >-
+      Controlled via `tags: string[]` plus `onTagsChange`. React
+      Hook Form / Formik integrate via `register("name", { value:
+      tags })` plus `setValue`; on submit, the library serialises
+      the array to multiple FormData entries. Render hidden
+      `<input type="hidden" name="<key>" value="<tag>">` per tag
+      for native form-submission compatibility.
+    vue: >-
+      Two-way binding via `v-model:tags` (string[]). VeeValidate
+      / FormKit bind to the array; field-level rules apply per
+      collection or per-element depending on the validator
+      shape. PrimeVue Chips / Naive UI Dynamic Tags as third-
+      party precedents.
+    angularSignals: >-
+      ControlValueAccessor implementation maps `writeValue(tags:
+      string[])` → `tags.set(...)`. `formArray` shape preferred
+      over `formControl<string>` so individual tags map to
+      array members; `Validators.required` on the array triggers
+      when empty.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus
+      `internals.setFormValue(formData)` where formData is a
+      FormData object with one entry per tag. Falls back to
+      hidden `<input type="hidden">` per tag when element-
+      internals is not available.
 
 i18n:
   rtl:
@@ -795,4 +832,4 @@ sources:
   - https://carbondesignsystem.com/components/tag/usage/
   - https://polaris.shopify.com/components/selection-and-input/tag
 
-lastReviewed: '2026-04-29'
+lastReviewed: '2026-05-04'

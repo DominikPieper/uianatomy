@@ -613,12 +613,22 @@ i18n:
     "Search…" translations exceed 30% length.
 
 formIntegration:
+  nativeElement: input
   name: >-
     The inner `<input>` carries the form `name` attribute; the combobox
     wrapper does not. Submitting a form writes the input's current
     value to FormData under the configured name — the typed string for
     free-input variants, the canonical value of the selected option
     for strict mode.
+  submittedValue: >-
+    Strict mode submits the selected option's canonical value (id /
+    token from the listbox), NOT the display label visible to the
+    user. Multi-select variants submit one FormData entry per
+    selected value (multiple entries with the same `name` key,
+    matching `<select multiple>` native behaviour). Creatable
+    variants submit user-created strings verbatim. Free-input
+    variants submit the typed string directly.
+  requiredAttr: true
   formData: >-
     Single-select strict mode submits the selected option's *canonical
     value* (id or token), not the *display label*. Multi-select
@@ -640,6 +650,35 @@ formIntegration:
     hook for strict-mode "must select from list" enforcement on blur.
     The error message is announced via the inline-error pattern
     referenced through `aria-describedby`.
+  bridges:
+    react: >-
+      Controlled via `value` plus `onChange` / `onValueChange`
+      (varies by library — Radix uses `onValueChange`, React Aria
+      uses `onSelectionChange`). React Hook Form / Formik integrate
+      via `register("name")`; the inner `<input>` provides the
+      ref-target for native form-state. Strict-mode validation hooks
+      into the form-library's validate callback, returning the
+      "select from list" message when the value is not in the
+      option set.
+    vue: >-
+      Two-way binding via `v-model` for selected value (string or
+      string[] for multi). VeeValidate / FormKit bind to the inner
+      input via the field-name; PrimeVue Select / Naive UI Select as
+      third-party precedents render the underlying `<input>` for
+      form participation.
+    angularSignals: >-
+      ControlValueAccessor implementation maps `writeValue(value)` →
+      selection.set(...). `formControl` / `formControlName` plus
+      `Validators.required` drive validation; reactive-forms
+      ng-touched + ng-dirty surface in template state. Strict-mode
+      validation uses a custom validator that asserts value ∈
+      options.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus `internals.setFormValue(value)`.
+      Falls back to a hidden native `<input>` slotted inside the
+      shadow DOM when element-internals is not available; the
+      hidden input mirrors selection state.
 
 propertyMap:
   - figma: Variant
@@ -753,4 +792,4 @@ sources:
   - https://www.tpgi.com/the-anatomy-of-a-combobox/
   - https://inclusive-components.design/menus-menu-buttons/
 
-lastReviewed: '2026-04-28'
+lastReviewed: '2026-05-04'

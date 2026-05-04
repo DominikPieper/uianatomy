@@ -739,11 +739,21 @@ propertyMap:
     notes: Decorative or interactive depending on variant — document explicitly.
 
 formIntegration:
+  nativeElement: input
   name: >-
     The internal `<input>` carries the form `name` attribute.
     Native browser-native form-data participation: the input's
     current value submits as a string entry under the configured
     name when the parent `<form>` submits.
+  submittedValue: >-
+    Single FormData entry per TextInput — the input's current
+    `.value` (string). `type="number"` / `type="email"` /
+    `type="url"` all submit as strings; consumers must coerce.
+    `disabled` excludes the field from FormData entirely;
+    `readonly` includes it. `type="password"` submits in
+    cleartext — HTTPS at the transport layer is the canonical
+    secrecy boundary, not the input type.
+  requiredAttr: true
   formData: >-
     Single FormData entry per TextInput — `formData.get('email')`
     returns the current input string. `type="number"` still
@@ -771,6 +781,33 @@ formIntegration:
     side errors arriving after submission, mirror them with
     `setCustomValidity()` so the same UI surfaces both client-
     and server-validated errors.
+  bridges:
+    react: >-
+      Controlled via `value` plus `onChange` (native event) or
+      `onValueChange` (library idiom). React Hook Form / Formik
+      integrate via `register("name")`; the inner `<input>`
+      provides the ref-target. Validation surfaces via
+      `formState.errors` mapped to `aria-invalid` plus
+      `aria-describedby` linking to the error-message slot.
+    vue: >-
+      Two-way binding via `v-model` (string). VeeValidate /
+      FormKit bind to the inner input via field-name; field-
+      level rules apply on blur / submit. PrimeVue InputText,
+      Naive UI Input as third-party precedents.
+    angularSignals: >-
+      ControlValueAccessor implementation maps
+      `writeValue(value: string)` → `value.set(...)`. `formControl`
+      / `formControlName` plus `Validators.required` /
+      `Validators.pattern` / `Validators.minLength` drive
+      validation. ng-touched + ng-dirty surface in template
+      state for inline-error gating.
+    webComponents: >-
+      ElementInternals API for form-association: `static
+      formAssociated = true` plus
+      `internals.setFormValue(value)`. The native `<input>`
+      slotted inside provides form participation automatically;
+      element-internals is needed only when the input is
+      encapsulated in shadow DOM.
 
 i18n:
   rtl:
@@ -1012,4 +1049,4 @@ sources:
   - https://m3.material.io/components/text-fields/overview
   - https://www.gov.uk/service-manual/design/text-input
 
-lastReviewed: '2026-05-02'
+lastReviewed: '2026-05-04'
