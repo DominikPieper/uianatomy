@@ -148,7 +148,8 @@ anatomy:
         Plain prose. The first user-facing text the SR announces
         when the alert mounts (after the role is announced). Avoid
         embedding actions inline — separate actions into the
-        actions slot for keyboard reachability.
+        action-group region (primary-action / secondary-action
+        slots) for keyboard reachability.
     tokens:
       typography:
         size: text.sm
@@ -156,35 +157,31 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: actions
-    required: false
-    purpose: >-
-      Optional inline actions — typically a primary "Retry" / "Undo"
-      button plus an optional secondary action. Distinct from the
-      dismiss button. Keep to 1–2 actions; complex action sets
-      belong in a Modal or Drawer.
-    slotKind: structural
-    layout:
-      row: 3
-      col: 2
-      span: 5
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame containing button instances
-    code:
-      slot: actions
-      semantic: button-group
-    a11y:
-      hint: >-
-        Buttons keep native semantics. Order primary first
-        (visually inline-end on LTR; SR announces in DOM order).
-        Action buttons receive focus via Tab in document order;
-        the alert does not auto-focus its actions on mount (that
-        would interrupt the user's current task).
-    tokens:
-      spacing:
-        gap: spacing.tight
-        padding: spacing.tight
+  # P6-126 / ADR-030 — actions slot is the canonical action-group
+  # sub-anatomy. Alert is canonically capped at 1–2 actions; tertiary is
+  # omitted. The primary-action override re-states Alert-specific guidance
+  # that actions do not auto-focus on mount (interrupts the user's task).
+  - $ref: action-group
+    row: 3
+    overrides:
+      - slot: tertiary-action
+        type: omitted
+        rationale: >-
+          Alert is canonically capped at 1–2 actions; complex action sets
+          belong in a Modal or Drawer.
+      - slot: primary-action
+        type: overridden
+        rationale: >-
+          Re-state Alert-specific focus-on-mount guidance. Action buttons
+          receive focus via Tab in document order; alert does not
+          auto-focus its actions on mount.
+        a11y:
+          hint: >-
+            Real button with accessible name. First in DOM order; visual
+            position is inline-end via logical properties. Action buttons
+            receive focus via Tab in document order; the alert does not
+            auto-focus its actions on mount (that would interrupt the
+            user's current task).
 
   - id: dismiss-button
     required: false
@@ -380,7 +377,8 @@ mistakes:
       anchor (wrong semantic for an action) or a styled span with
       a click handler (no semantic at all).
     fix: >-
-      Move actions to the dedicated actions slot as Button
+      Move actions to the dedicated action-group region
+      (primary-action / secondary-action slots) as Button
       elements. The body describes the situation; actions are
       separately reachable.
 

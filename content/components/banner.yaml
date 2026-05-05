@@ -154,38 +154,28 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: actions
-    required: false
-    purpose: >-
-      Optional inline actions — typically 1–3 CTAs ("Accept all",
-      "Decline", "Customise" for cookie banners; "Learn more",
-      "Dismiss" for promotional). Distinct from the dismiss
-      button. Banner actions may navigate (Link semantic) or
-      trigger in-page state changes (Button semantic); choose per
-      action.
-    slotKind: structural
-    layout:
-      row: 3
-      col: 2
-      span: 5
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame containing button or link instances
-    code:
-      slot: actions
-      semantic: button-group
-    a11y:
-      hint: >-
-        Buttons keep native semantics; links keep anchor
-        semantics. Order primary first (visually inline-end on
-        LTR; SR announces in DOM order). For cookie banners with
-        legal-compliance requirements, "Decline" must be as
-        prominent as "Accept" — visual weight equality is
-        canonical.
-    tokens:
-      spacing:
-        gap: spacing.tight
-        padding: spacing.tight
+  # P6-126 / ADR-030 — actions slot is the canonical action-group
+  # sub-anatomy. Banner accepts all three slots (e.g. cookie banner:
+  # Accept all / Decline / Customise). Action buttons may navigate
+  # (Link semantic) or trigger in-page state changes (Button semantic).
+  # The primary-action override re-states the legal-compliance rule
+  # for cookie banners (visual weight equality with secondary).
+  - $ref: action-group
+    row: 3
+    overrides:
+      - slot: primary-action
+        type: overridden
+        rationale: >-
+          Banner actions may use Button or Link semantics; for cookie
+          banners with legal-compliance requirements, "Decline"
+          (secondary) must be as visually prominent as "Accept"
+          (primary) — visual weight equality is canonical.
+        a11y:
+          hint: >-
+            Real button or link with accessible name. First in DOM
+            order; visual position is inline-end via logical
+            properties. For cookie banners, the Decline action
+            (secondary) must carry visual weight equal to Accept.
 
   - id: dismiss-button
     required: false

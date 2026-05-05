@@ -64,12 +64,14 @@ describe('mcp server', () => {
         'get_pattern_a11y_aggregate',
         'get_patterns_for_component',
         'get_responsive',
+        'get_sub_anatomy',
         'get_tokens',
         'get_transitions',
         'get_when_to_use',
         'list_components',
         'list_implementations',
         'list_patterns',
+        'list_sub_anatomies',
         'search_components',
         'validate_implementation',
       ].sort(),
@@ -305,6 +307,52 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     expect(parsed).toEqual([]);
+  });
+
+  it('list_sub_anatomies returns action-group (P6-126)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_sub_anatomies', arguments: {} });
+    const parsed = parseJson(result as any);
+    expect(Array.isArray(parsed)).toBe(true);
+    const ag = parsed.find((s: any) => s.id === 'action-group');
+    expect(ag).toBeTruthy();
+    expect(ag.slotCount).toBe(3);
+    expect(ag.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('get_sub_anatomy returns full action-group body (P6-126)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_sub_anatomy',
+      arguments: { id: 'action-group' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('action-group');
+    expect(parsed.slots.map((s: any) => s.id)).toEqual([
+      'primary-action',
+      'secondary-action',
+      'tertiary-action',
+    ]);
+    expect(parsed.a11y.groupRule).toContain('primary');
+  });
+
+  it('get_sub_anatomy errors on unknown id', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_sub_anatomy',
+      arguments: { id: 'nope' },
+    });
+    expect((result as any).isError).toBe(true);
+  });
+
+  it('get_canonical_vocabularies includes subAnatomies id list (P6-126)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_canonical_vocabularies',
+      arguments: {},
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.subAnatomies).toContain('action-group');
   });
 
   it('get_changelog errors on unknown component id', async () => {

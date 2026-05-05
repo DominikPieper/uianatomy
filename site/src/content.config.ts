@@ -1,10 +1,33 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { componentSchema, implementationSchema, patternSchema } from '@uianatomy/shared/schema';
+import { componentSchema, implementationSchema, patternSchema, type AnatomySlot, type AnatomySlotRef, type SubAnatomy } from '@uianatomy/shared/schema';
+import { resolveAnatomyRefs } from '@uianatomy/shared/loader';
+import subAnatomiesBundle from '@uianatomy/shared/sub-anatomies-bundle.json' with { type: 'json' };
+import { subAnatomySchema } from '@uianatomy/shared/schema';
+
+// P6-126 / ADR-030 — load sub-anatomies once at module top-level so the
+// componentSchema transform below can resolve `$ref` entries synchronously
+// during Astro's content-collection parse.
+const subAnatomies: Map<string, SubAnatomy> = new Map(
+  Object.entries(subAnatomiesBundle as Record<string, unknown>).map(([id, raw]) => {
+    const result = subAnatomySchema.safeParse(raw);
+    if (!result.success) {
+      throw new Error(`Sub-anatomy bundle entry "${id}" failed validation: ${JSON.stringify(result.error.format())}`);
+    }
+    return [id, result.data];
+  }),
+);
+
+// Wrap componentSchema with a transform that resolves anatomy refs eagerly.
+// Output type stays compatible — anatomy becomes a flat AnatomySlot[].
+const resolvedComponentSchema = componentSchema.transform((c) => ({
+  ...c,
+  anatomy: resolveAnatomyRefs(c.anatomy as Array<AnatomySlot | AnatomySlotRef>, subAnatomies),
+}));
 
 const components = defineCollection({
   loader: glob({ pattern: '*.yaml', base: '../content/components' }),
-  schema: componentSchema,
+  schema: resolvedComponentSchema,
 });
 
 const implementations = defineCollection({

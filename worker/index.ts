@@ -13,16 +13,29 @@
 
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createServer } from '../mcp-server/src/server.js';
-import { setComponents, setImplementations, setPatterns } from '../mcp-server/src/state.js';
+import {
+  setComponents,
+  setImplementations,
+  setPatterns,
+  setSubAnatomies,
+} from '../mcp-server/src/state.js';
 import {
   loadComponentsFromBundle,
   loadImplementationsFromBundle,
   loadPatternsFromBundle,
+  loadSubAnatomiesFromBundle,
 } from '@uianatomy/shared/bundle';
 import bundleJson from '@uianatomy/shared/content-bundle.json';
 import implBundleJson from '@uianatomy/shared/implementations-bundle.json';
 import patternsBundleJson from '@uianatomy/shared/patterns-bundle.json';
+import subAnatomiesBundleJson from '@uianatomy/shared/sub-anatomies-bundle.json';
 
+// P6-126 / ADR-030 — content-bundle is pre-resolved at bundle-write time
+// (sub-anatomy `$ref` entries flattened into anatomy[]) so the worker
+// does not need a sub-anatomies map to load components. The sub-anatomies
+// bundle is registered separately so MCP tools (list_sub_anatomies,
+// get_sub_anatomy, get_canonical_vocabularies.subAnatomies) can serve it.
+setSubAnatomies(loadSubAnatomiesFromBundle(subAnatomiesBundleJson as Record<string, unknown>));
 setComponents(loadComponentsFromBundle(bundleJson as Record<string, unknown>));
 setImplementations(
   loadImplementationsFromBundle(implBundleJson as Record<string, Record<string, unknown>>),

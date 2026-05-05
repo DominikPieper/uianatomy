@@ -230,13 +230,28 @@ anatomy:
       semantic: button-group
     a11y:
       hint: >-
-        Buttons keep native semantics. Document the default focus
-        target (usually the primary commit button); destructive
-        commits should default focus to the cancel action.
+        Container for commit/cancel actions. The button instances live
+        inside the action-group sub-anatomy (primary-action /
+        secondary-action). Document the default focus target (usually
+        the primary commit button); destructive commits should default
+        focus to the cancel action.
     tokens:
       spacing:
         padding: spacing.compact
         gap: spacing.compact
+
+  # P6-126 / ADR-030 — buttons inside the footer use the canonical
+  # action-group sub-anatomy. Drawer caps at 2 actions (commit + cancel);
+  # tertiary is omitted. The wrapping `footer` slot stays for container-
+  # level concerns (padding, right-aligned default, focus-on-destructive).
+  - $ref: action-group
+    parent: footer
+    overrides:
+      - slot: tertiary-action
+        type: omitted
+        rationale: >-
+          Drawer footer is canonically capped at 2 actions
+          (commit + cancel).
 
   - id: handle
     required: false

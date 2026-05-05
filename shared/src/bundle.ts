@@ -2,13 +2,24 @@ import {
   componentSchema,
   implementationSchema,
   patternSchema,
+  subAnatomySchema,
+  type AnatomySlot,
+  type AnatomySlotRef,
   type Component,
   type Implementation,
   type Pattern,
+  type SubAnatomy,
 } from './schema.js';
+import { resolveAnatomyRefs } from './loader.js';
 
+// P6-126 / ADR-030 — bundles consumed by the worker may contain anatomy
+// `$ref` entries when the bundling script does not pre-resolve them.
+// `loadComponentsFromBundle` resolves refs eagerly when a sub-anatomy
+// map is supplied. Pre-resolved bundles (the recommended worker path)
+// pass an empty map; `$ref` entries cause a clear error then.
 export function loadComponentsFromBundle(
   bundle: Record<string, unknown>,
+  subAnatomies?: Map<string, SubAnatomy>,
 ): Map<string, Component> {
   const map = new Map<string, Component>();
   for (const [id, raw] of Object.entries(bundle)) {
@@ -16,6 +27,35 @@ export function loadComponentsFromBundle(
     if (!result.success) {
       throw new Error(
         `Bundle component "${id}" failed validation: ${JSON.stringify(result.error.format())}`,
+      );
+    }
+    const data = result.data;
+    const rawAnatomy = data.anatomy as Array<AnatomySlot | AnatomySlotRef>;
+    const hasRef = rawAnatomy.some((entry) => typeof (entry as AnatomySlotRef).$ref === 'string');
+    if (hasRef) {
+      if (!subAnatomies) {
+        throw new Error(
+          `Bundle component "${id}" contains anatomy $ref entries but no sub-anatomies map was supplied`,
+        );
+      }
+      const resolved = resolveAnatomyRefs(rawAnatomy, subAnatomies);
+      map.set(id, { ...data, anatomy: resolved } as Component);
+    } else {
+      map.set(id, { ...data, anatomy: rawAnatomy as AnatomySlot[] } as Component);
+    }
+  }
+  return map;
+}
+
+export function loadSubAnatomiesFromBundle(
+  bundle: Record<string, unknown>,
+): Map<string, SubAnatomy> {
+  const map = new Map<string, SubAnatomy>();
+  for (const [id, raw] of Object.entries(bundle)) {
+    const result = subAnatomySchema.safeParse(raw);
+    if (!result.success) {
+      throw new Error(
+        `Bundle sub-anatomy "${id}" failed validation: ${JSON.stringify(result.error.format())}`,
       );
     }
     map.set(id, result.data);

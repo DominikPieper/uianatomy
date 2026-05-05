@@ -199,32 +199,30 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: actions
-    required: false
-    purpose: >-
-      Primary call(s) to action associated with the card's content
-      (e.g., "View details", "Add to cart"). Distinct from card-as-link
-      affordance.
-    slotKind: structural
-    layout:
-      row: 6
-      col: 1
-      span: full
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame containing button instances
-    code:
-      slot: actions
-      semantic: button-group
-    a11y:
-      hint: >-
-        Keep nested buttons keyboard-reachable. If the whole card is also
-        clickable, see mistake "card-as-link-nested-buttons" for the
-        correct overlay pattern.
-    tokens:
-      spacing:
-        padding: spacing.compact
-        gap: spacing.compact
+  # P6-126 / ADR-030 — actions slot is the canonical action-group
+  # sub-anatomy. Card caps at two actions; tertiary is omitted. The
+  # primary-action override re-states the Card-specific a11y rule about
+  # nested buttons interacting with card-as-link overlays.
+  - $ref: action-group
+    row: 6
+    overrides:
+      - slot: tertiary-action
+        type: omitted
+        rationale: >-
+          Card actions are canonically capped at 2; tertiary belongs in
+          a Menu when present.
+      - slot: primary-action
+        type: overridden
+        rationale: >-
+          Re-state Card-specific guidance: nested buttons must remain
+          keyboard-reachable; card-as-link overlays demand the
+          card-as-link-nested-buttons pattern.
+        a11y:
+          hint: >-
+            Real button with accessible name. First in DOM order; visual
+            position is inline-end via logical properties so RTL mirroring
+            is automatic. If the whole card is also clickable, see mistake
+            "card-as-link-nested-buttons" for the correct overlay pattern.
 
   - id: footer
     required: false

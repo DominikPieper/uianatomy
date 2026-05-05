@@ -284,13 +284,35 @@ anatomy:
       semantic: button-group
     a11y:
       hint: >-
-        Buttons keep native semantics. Document the default focus
-        target (usually the primary action, but the *cancel* action
-        for destructive alerts) so behavior is consistent across uses.
+        Container for commit/cancel actions. The button instances live
+        inside the action-group sub-anatomy (primary-action /
+        secondary-action). Document the default focus target (usually
+        the primary action, but the *cancel* action for destructive
+        alerts) so behavior is consistent across uses.
     tokens:
       spacing:
         padding: spacing.compact
         gap: spacing.compact
+
+  # P6-126 / ADR-030 — buttons inside the footer use the canonical
+  # action-group sub-anatomy. Modal keeps the wrapping `footer` slot for
+  # container-level concerns (padding, right-aligned default, focus-on-
+  # destructive a11y). The override on primary-action documents the
+  # alertdialog-destructive default-focus rule per APG.
+  - $ref: action-group
+    parent: footer
+    overrides:
+      - slot: primary-action
+        type: overridden
+        rationale: >-
+          Destructive Modals (alertdialog with destructive intent)
+          override default focus to secondary-action per APG.
+        a11y:
+          hint: >-
+            Real button with accessible name. First in DOM order; visual
+            position is inline-end via logical properties. For
+            alertdialog with destructive intent, consumer overrides
+            default focus to secondary-action.
 
 axes:
   variants:

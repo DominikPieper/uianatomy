@@ -274,9 +274,15 @@ export interface CanonicalVocabularies {
   libraryVersions: Readonly<Record<string, LibraryVersionEntry>>;
   severity: readonly string[];
   severitySynonyms: Readonly<Record<string, readonly string[]>>;
+  // P6-126 / ADR-030 — ids of canonical sub-anatomies the loader knows
+  // about. Filled by the caller (the MCP `data.ts` knows the loaded ids);
+  // empty when no sub-anatomies are loaded.
+  subAnatomies: readonly string[];
 }
 
-export function getCanonicalVocabularies(): CanonicalVocabularies {
+export function getCanonicalVocabularies(
+  subAnatomyIds: readonly string[] = [],
+): CanonicalVocabularies {
   return {
     spacing: CANON_SPACING,
     radius: CANON_RADIUS,
@@ -294,5 +300,6 @@ export function getCanonicalVocabularies(): CanonicalVocabularies {
     libraryVersions: LIBRARY_VERSIONS,
     severity: CANON_SEVERITY,
     severitySynonyms: SEVERITY_SYNONYMS,
+    subAnatomies: subAnatomyIds,
   };
 }

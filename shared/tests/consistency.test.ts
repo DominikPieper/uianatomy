@@ -488,4 +488,48 @@ describe('cross-component consistency', () => {
     }
     expect(failures, failures.join('\n')).toEqual([]);
   });
+
+  // P6-126 / ADR-030 — soft conformance check for the action-group sub-anatomy.
+  // After the initial migration (Card, Alert, Modal, Drawer footer), the only
+  // remaining button-group semantic slots are the wrapper containers
+  // (Modal.footer, Drawer.footer) that hold the resolved action-group
+  // children. Any *other* component declaring an inline `code.semantic:
+  // button-group` slot is a candidate for migration — surface it loudly so
+  // future authors notice without blocking CI.
+  it('button-group slots prefer the action-group sub-anatomy ($ref) over inline declaration', async () => {
+    const components = await loadComponents({ contentDir });
+
+    // Components that intentionally keep an inline `button-group` slot as a
+    // wrapper container; the action buttons live inside via `$ref`.
+    const WRAPPER_ALLOWLIST: Readonly<Record<string, readonly string[]>> = {
+      modal: ['footer'],
+      drawer: ['footer'],
+    };
+
+    const candidates: string[] = [];
+    for (const c of components.values()) {
+      const allowedSlotIds = new Set(WRAPPER_ALLOWLIST[c.id] ?? []);
+      for (const slot of c.anatomy) {
+        const provenance = (slot as { __subAnatomy?: { id: string } }).__subAnatomy;
+        if (provenance) continue;  // resolved-from-ref slots already use sub-anatomy
+        if (slot.code.semantic !== 'button-group') continue;
+        if (allowedSlotIds.has(slot.id)) continue;  // documented wrapper
+        candidates.push(`${c.id}.${slot.id} (semantic: button-group) — consider $ref: action-group`);
+      }
+    }
+    // Soft assertion: log warnings rather than fail. The allowlist is the
+    // contract; any new entry to `candidates` means an author should review
+    // whether the component should migrate to action-group or extend the
+    // allowlist with a documented rationale.
+    if (candidates.length > 0) {
+      console.warn(
+        '[consistency soft-lint] button-group slots without action-group $ref:\n  ' +
+          candidates.join('\n  '),
+      );
+    }
+    // The empty-array assertion enforces zero drift relative to the
+    // expected post-P6-126 state. To intentionally accept a new wrapper
+    // pattern, extend WRAPPER_ALLOWLIST above with a one-line rationale.
+    expect(candidates).toEqual([]);
+  });
 });

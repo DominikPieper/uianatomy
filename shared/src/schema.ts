@@ -107,6 +107,87 @@ export const anatomySlotSchema = z.object({
   deprecated: deprecationSchema.optional(),
 });
 
+// P6-126 / ADR-030 — sub-anatomy: a slot pattern that recurs across
+// components (e.g. action-group used by Card, Alert, Modal/Drawer footer)
+// and is referenced by id rather than copy-pasted. The loader resolves
+// `$ref` entries eagerly, so consumers iterate a flat anatomy array.
+export const subAnatomySchema = z
+  .object({
+    id: slug,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    slots: z.array(anatomySlotSchema).min(1),
+    a11y: z
+      .object({
+        groupRule: z.string().min(1).optional(),
+        focusRule: z.string().min(1).optional(),
+      })
+      .strict()
+      .optional(),
+    lastReviewed: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'lastReviewed must be ISO YYYY-MM-DD'),
+  })
+  .strict();
+
+const slotOverrideOmittedSchema = z
+  .object({
+    slot: slug,
+    type: z.literal('omitted'),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+const slotOverrideRenamedSchema = z
+  .object({
+    slot: slug,
+    type: z.literal('renamed'),
+    to: slug,
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+const slotOverrideOverriddenSchema = z
+  .object({
+    slot: slug,
+    type: z.literal('overridden'),
+    rationale: z.string().min(1),
+    purpose: z.string().min(1).optional(),
+    a11y: a11yHintSchema.optional(),
+    figma: figmaHintSchema.optional(),
+    code: codeHintSchema.optional(),
+    layout: layoutHintSchema.optional(),
+    tokens: slotTokensSchema.optional(),
+    required: z.boolean().optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      v.purpose !== undefined ||
+      v.a11y !== undefined ||
+      v.figma !== undefined ||
+      v.code !== undefined ||
+      v.layout !== undefined ||
+      v.tokens !== undefined ||
+      v.required !== undefined,
+    { message: 'overridden requires at least one field to override' },
+  );
+
+export const subAnatomyOverrideSchema = z.discriminatedUnion('type', [
+  slotOverrideOmittedSchema,
+  slotOverrideRenamedSchema,
+  slotOverrideOverriddenSchema,
+]);
+
+export const anatomySlotRefSchema = z
+  .object({
+    $ref: slug,
+    parent: slug.optional(),
+    row: z.number().int().positive().optional(),
+    overrides: z.array(subAnatomyOverrideSchema).min(1).optional(),
+  })
+  .strict();
+
 const propertyPrimitiveSchema = z
   .object({
     name: z.string().min(1),
@@ -716,7 +797,10 @@ export const componentSchema = z.object({
   sources: z.array(sourceEntrySchema).optional(),
   since: semver.optional(),
   changelog: changelogSchema.optional(),
-  anatomy: z.array(anatomySlotSchema).min(1),
+  // P6-126 / ADR-030 — anatomy entries can be either inline slot objects
+  // or `{ $ref }` references to a canonical sub-anatomy. The loader resolves
+  // refs eagerly so post-load Component.anatomy is a flat AnatomySlot[].
+  anatomy: z.array(z.union([anatomySlotSchema, anatomySlotRefSchema])).min(1),
   axes: axesSchema,
   mismatches: z.array(mismatchSchema).min(1),
   mistakes: z.array(mistakeSchema).min(1),
@@ -740,6 +824,9 @@ export const componentSchema = z.object({
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
 export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
+export type SubAnatomy = z.infer<typeof subAnatomySchema>;
+export type AnatomySlotRef = z.infer<typeof anatomySlotRefSchema>;
+export type SubAnatomyOverride = z.infer<typeof subAnatomyOverrideSchema>;
 export type SlotKind = z.infer<typeof slotKindSchema>;
 export type SlotTokens = z.infer<typeof slotTokensSchema>;
 export type Property = z.infer<typeof propertySchema>;
@@ -779,7 +866,13 @@ export type Deprecation = z.infer<typeof deprecationSchema>;
 export type VariantDeprecation = z.infer<typeof variantDeprecationSchema>;
 export type ChangelogEntry = z.infer<typeof changelogEntrySchema>;
 export type Changelog = z.infer<typeof changelogSchema>;
-export type Component = z.infer<typeof componentSchema>;
+// P6-126 / ADR-030 — schema permits anatomy entries to be either inline
+// AnatomySlot or AnatomySlotRef (`$ref` to a sub-anatomy). The loader
+// resolves refs eagerly before returning, so consumers see the resolved
+// flat shape. The exported Component type reflects the post-resolution
+// shape; `RawComponent` is the schema-level shape that can carry refs.
+export type RawComponent = z.infer<typeof componentSchema>;
+export type Component = Omit<RawComponent, 'anatomy'> & { anatomy: AnatomySlot[] };
 export type CompositionEntry = z.infer<typeof compositionEntrySchema>;
 export type PatternDecision = z.infer<typeof patternDecisionSchema>;
 export type FrameworkSkeletons = z.infer<typeof frameworkSkeletonsSchema>;

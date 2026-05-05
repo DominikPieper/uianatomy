@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getComponents, getImplementations, getPatterns } from './state.js';
+import { getComponents, getImplementations, getPatterns, getSubAnatomies } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
 import { getCanonicalVocabularies, SEVERITY_SYNONYMS } from '@uianatomy/shared/vocabulary';
@@ -300,7 +300,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'search_components',
-    'Case-insensitive substring search across component id, name, description, anatomy slot ids, and variant names. Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Plain queries that are not synonyms behave unchanged.',
+    'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names, and referenced sub-anatomy ids (P6-126). Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer. Plain queries that are not synonyms behave unchanged.',
     { query: z.string().min(1) },
     async ({ query }) => {
       const map = await getComponents();
@@ -310,8 +310,25 @@ export function createServer(): McpServer {
       if (canonical && !expanded.includes(canonical)) expanded.push(canonical);
       const matches = [...map.values()]
         .filter((c) => {
+          // P6-126 — read non-enumerable __subAnatomy provenance from each
+          // resolved slot and add referenced sub-anatomy ids to haystack.
+          const subAnatomyIds = new Set<string>();
+          for (const s of c.anatomy) {
+            const provenance = (s as { __subAnatomy?: { id: string } }).__subAnatomy;
+            if (provenance) subAnatomyIds.add(provenance.id);
+          }
           const haystack = (
-            c.id + ' ' + c.name + ' ' + c.description + ' ' + c.anatomy.map((s) => s.id).join(' ') + ' ' + c.axes.variants.join(' ')
+            c.id +
+            ' ' +
+            c.name +
+            ' ' +
+            c.description +
+            ' ' +
+            c.anatomy.map((s) => s.id).join(' ') +
+            ' ' +
+            c.axes.variants.join(' ') +
+            ' ' +
+            [...subAnatomyIds].join(' ')
           ).toLowerCase();
           return expanded.some((term) => haystack.includes(term));
         })
@@ -453,9 +470,49 @@ export function createServer(): McpServer {
 
   server.tool(
     'get_canonical_vocabularies',
-    'Return the canonical token / motion / breakpoint / property / interactive-state vocabularies that YAML values must draw from. Same source the consistency-test enforces. Useful for resolving values like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or for surfacing the allowed enum to a downstream UI. Returns `{ spacing, radius, color, elevation, typography, motion: { durations, easing }, breakpoint, propertyVocab, propertyBounded, interactiveStates }`.',
+    'Return the canonical token / motion / breakpoint / property / interactive-state vocabularies that YAML values must draw from, plus the registered sub-anatomy ids (P6-126). Same source the consistency-test enforces. Useful for resolving values like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, surfacing the allowed enum to a downstream UI, or discovering canonical sub-anatomies an agent can $ref. Returns `{ spacing, radius, color, elevation, typography, motion: { durations, easing }, breakpoint, propertyVocab, propertyBounded, interactiveStates, libraryVersions, severity, severitySynonyms, subAnatomies }`.',
     {},
-    async () => jsonResult(getCanonicalVocabularies()),
+    async () => {
+      const subAnatomies = await getSubAnatomies();
+      const ids = [...subAnatomies.keys()].sort();
+      return jsonResult(getCanonicalVocabularies(ids));
+    },
+  );
+
+  server.tool(
+    'list_sub_anatomies',
+    'List every canonical sub-anatomy (recurring slot pattern referenced by component anatomy `$ref` entries — P6-126 / ADR-030). Today: action-group (button cluster shared by Card, Alert, Modal/Drawer footer). Each row reports id, name, description, slotCount, lastReviewed. Use this tool to discover canonical patterns an agent can reference instead of inlining anatomy.',
+    {},
+    async () => {
+      const map = await getSubAnatomies();
+      const rows = [...map.values()]
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          slotCount: s.slots.length,
+          lastReviewed: s.lastReviewed,
+        }))
+        .sort((a, b) => a.id.localeCompare(b.id));
+      return jsonResult(rows);
+    },
+  );
+
+  server.tool(
+    'get_sub_anatomy',
+    'Return the full canonical body of one sub-anatomy: id, name, description, slots[] (full anatomy slot definitions), a11y rules (groupRule, focusRule), lastReviewed. P6-126 / ADR-030. Returns an error result for unknown ids. Use this tool when an agent needs the canonical slot pattern (e.g., to render `action-group` slots inside a host component or to validate that an inline anatomy matches the canonical shape).',
+    { id: z.string() },
+    async ({ id }) => {
+      const map = await getSubAnatomies();
+      const sub = map.get(id);
+      if (!sub) {
+        return {
+          isError: true,
+          content: [{ type: 'text' as const, text: `No sub-anatomy found with id "${id}".` }],
+        };
+      }
+      return jsonResult(sub);
+    },
   );
 
   server.tool(

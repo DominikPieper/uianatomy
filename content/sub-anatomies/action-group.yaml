@@ -1,0 +1,88 @@
+id: action-group
+name: Action Group
+description: >-
+  Horizontal cluster of one to three buttons that commit, dismiss, or defer
+  a decision. Used inside Card, Alert, and the Modal/Drawer footer. Defines
+  canonical button order, focus order, and RTL mirroring once so call-sites
+  do not redeclare it.
+lastReviewed: '2026-05-05'
+
+a11y:
+  groupRule: >-
+    Order primary action first in the DOM. Visual position is inline-end
+    on LTR (right edge) and mirrors to inline-end on RTL (left edge) via
+    logical properties — DOM order does not change. Screen readers
+    announce in DOM order regardless of visual mirroring.
+  focusRule: >-
+    Default focus targets the primary action. Destructive operations
+    override the default to secondary-action via an `overridden` entry
+    on the call-site.
+
+slots:
+  - id: primary-action
+    required: true
+    purpose: >-
+      The decision-committing button — exactly one per group. Carries the
+      label that names the commit (Save, Confirm, Submit, Retry).
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance, primary variant, inline-end position
+    code:
+      slot: primary-action
+      semantic: button
+    a11y:
+      hint: >-
+        Real button with accessible name. First in DOM order; visual
+        position is inline-end via logical properties so RTL mirroring
+        is automatic.
+    tokens:
+      spacing:
+        gap: spacing.tight
+
+  - id: secondary-action
+    required: false
+    purpose: >-
+      Optional secondary path — typically Cancel, Dismiss, or an
+      alternative commit. Sits inline-start of primary in LTR and
+      mirrors automatically in RTL.
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: instance
+      hint: Button instance, secondary variant
+    code:
+      slot: secondary-action
+      semantic: button
+    a11y:
+      hint: >-
+        Real button with accessible name. Second in DOM order; visually
+        inline-start of the primary action in LTR.
+
+  - id: tertiary-action
+    required: false
+    purpose: >-
+      Optional tertiary affordance — typically a "Learn more" link or a
+      third commit path. Three actions is the canonical maximum;
+      four-or-more belongs in a Menu.
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Button or link instance, tertiary variant
+    code:
+      slot: tertiary-action
+      semantic: button
+    a11y:
+      hint: >-
+        Real button or link with accessible name. Third in DOM order.
