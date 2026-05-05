@@ -532,4 +532,35 @@ describe('cross-component consistency', () => {
     // pattern, extend WRAPPER_ALLOWLIST above with a one-line rationale.
     expect(candidates).toEqual([]);
   });
+
+  // P6-147 / ADR-032 — soft conformance check for the close-button sub-anatomy.
+  // After the initial migration (Modal, Drawer, Popover, Alert, Banner, Toast),
+  // any inline slot whose id matches the close/dismiss naming convention and
+  // has not been resolved from a sub-anatomy ref is a candidate for migration.
+  // Surface loudly without blocking CI so authors notice if a new dismissible
+  // surface declares its own close-button instead of $ref-ing the canon.
+  it('close-button slots prefer the close-button sub-anatomy ($ref) over inline declaration', async () => {
+    const components = await loadComponents({ contentDir });
+    const CLOSE_ID_PATTERNS = /^(close|dismiss)(-button)?$/;
+
+    const candidates: string[] = [];
+    for (const c of components.values()) {
+      for (const slot of c.anatomy) {
+        const provenance = (slot as { __subAnatomy?: { id: string } }).__subAnatomy;
+        if (provenance) continue; // resolved-from-ref slots already use sub-anatomy
+        if (!CLOSE_ID_PATTERNS.test(slot.id)) continue;
+        if (slot.code.semantic !== 'button') continue;
+        candidates.push(
+          `${c.id}.${slot.id} (semantic: button) — consider $ref: close-button`,
+        );
+      }
+    }
+    if (candidates.length > 0) {
+      console.warn(
+        '[consistency soft-lint] close/dismiss-button slots without close-button $ref:\n  ' +
+          candidates.join('\n  '),
+      );
+    }
+    expect(candidates).toEqual([]);
+  });
 });

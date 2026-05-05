@@ -202,37 +202,38 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: close-button
-    required: false
-    purpose: >-
-      Visible affordance for dismissing the dialog without committing
-      its primary action. Conventionally an "×" icon in the trailing
-      edge of the header, but may live in the footer for alert dialogs.
-    slotKind: interactive
-    layout:
-      parent: header
-      row: 1
-      col: 2
-      span: 3
-    figma:
-      type: instance
-      hint: Icon button instance; bound to component slot for variant swap
-    code:
-      slot: close
-      semantic: button
-    a11y:
-      hint: >-
-        Provide an accessible name ("Close" or "Close dialog"); a bare
-        × glyph is not announced. The Escape key must do the same thing
-        as clicking this button when the dialog is dismissible.
-    tokens:
-      spacing:
-        padding: spacing.tight
-      radius:
-        corner: radius.sm
-      color:
-        foreground: color.text.muted
-        ring: color.border.focus
+  # Header close-button — sub-anatomy reuse via $ref (P6-147 / ADR-032).
+  # Optional in alertdialog footer-only patterns; col 2 with span 3 places
+  # it in the trailing track of the header grid.
+  - $ref: close-button
+    parent: header
+    row: 1
+    overrides:
+      - slot: close-button
+        type: overridden
+        rationale: >-
+          Optional on Modal — visible only when dismissible: true, and may
+          be omitted on alertdialog where the destructive primary-action
+          is the canonical exit. Spans the trailing 3 columns of the
+          header grid (col 2, span 3).
+        required: false
+        layout:
+          row: 1
+          col: 2
+          span: 3
+      - slot: close-label
+        type: overridden
+        rationale: >-
+          Modal's accessible-name fallback is dialog-scoped ("Close
+          dialog") rather than the bare "Close" — disambiguates when
+          multiple close-buttons share a viewport (toast queue + open
+          dialog).
+        a11y:
+          hint: >-
+            Visually-hidden <span> "Close dialog" inside the button, OR
+            aria-label="Close dialog" on the host. "Close" alone is
+            acceptable when no other dialog/popover is concurrently
+            open — pick the disambiguated form for safety.
 
   - id: body
     required: true

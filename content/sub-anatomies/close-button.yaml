@@ -1,0 +1,110 @@
+id: close-button
+name: Close button
+description: >-
+  Icon-only button that dismisses a transient surface (modal, drawer,
+  popover, alert, banner, toast). Three structural parts: the
+  interactive button host, the decorative glyph, and the accessible-name
+  carrier (visually-hidden text or aria-label). Surfaces the WCAG 4.1.2
+  and APG icon-button accessible-name rule structurally rather than by
+  prose alone — every consumer that mounts this sub-anatomy declares
+  the dependency on a visible-name source by virtue of its slot list.
+lastReviewed: '2026-05-05'
+
+a11y:
+  groupRule: >-
+    Glyph and accessible-name carrier are children of the button host;
+    both contribute to the host's accessible-name computation. The
+    visually-hidden text must live inside the button, not as a sibling
+    — the accessible-name algorithm walks the button's subtree.
+  focusRule: >-
+    Focus targets the button host. The glyph and the name carrier are
+    non-interactive and never tabbable. The Escape key, when the host
+    surface is dismissible, must do the same thing as activating this
+    button — never one without the other.
+
+slots:
+  - id: close-button
+    required: true
+    purpose: >-
+      The interactive button itself — a native <button type="button">
+      that triggers dismissal when activated. Carries the accessible
+      name (via aria-label or a visually-hidden child) and receives
+      keyboard focus.
+    slotKind: interactive
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon button instance, "close" variant, inline-end position
+    code:
+      slot: close-button
+      semantic: button
+    a11y:
+      hint: >-
+        Real <button type="button"> with an accessible name. Pick one
+        of: aria-label="Close" OR a visually-hidden <span> child —
+        declaring both is duplicative announcement. The Escape key
+        must trigger the same action when the host surface is
+        dismissible.
+    tokens:
+      spacing:
+        padding: spacing.tight
+      radius:
+        corner: radius.sm
+      color:
+        foreground: color.text.muted
+        ring: color.border.focus
+
+  - id: close-icon
+    required: true
+    purpose: >-
+      Decorative glyph (× / cross / dismiss icon) rendered inside the
+      button. The visual signal that this control closes the surface;
+      the announced name comes from close-label, never from the icon.
+    slotKind: decorative
+    layout:
+      parent: close-button
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: × glyph or close-icon symbol, sized to the button's content area
+    code:
+      slot: close-icon
+      semantic: img-decorative
+    a11y:
+      hint: >-
+        aria-hidden="true" on the SVG. Never give the icon its own
+        accessible name (title attribute, <title> child, or aria-label)
+        — that double-announces alongside the host's name.
+
+  - id: close-label
+    required: true
+    purpose: >-
+      Accessible-name carrier. Either a visually-hidden text node
+      ("Close", localized) inside the button OR — when no DOM text
+      is rendered — the button's own aria-label attribute. Counted
+      as a slot so the a11y dependency is structurally explicit, not
+      prose-only.
+    slotKind: content
+    layout:
+      parent: close-button
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: text
+      hint: Visually-hidden, localized "Close" (or context-specific equivalent)
+    code:
+      slot: close-label
+      semantic: visually-hidden
+    a11y:
+      hint: >-
+        Preferred: visually-hidden <span> child of the button
+        (localizable via DOM i18n, surfaces in dev-tools as text).
+        Acceptable fallback: aria-label attribute on the host. Never
+        empty — an icon-only button with no accessible name is a
+        WCAG 4.1.2 (Name, Role, Value) blocker.

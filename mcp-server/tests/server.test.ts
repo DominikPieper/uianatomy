@@ -331,6 +331,19 @@ describe('mcp server', () => {
     expect(ag.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
+  it('list_sub_anatomies returns close-button (P6-147 / ADR-032)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_sub_anatomies', arguments: {} });
+    const parsed = parseJson(result as any);
+    const cb = parsed.find((s: any) => s.id === 'close-button');
+    expect(cb).toBeTruthy();
+    expect(cb.slotCount).toBe(3);
+    expect(cb.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // P6-147: enforce that the listing now contains BOTH canonical sub-anatomies
+    // so a regression that loses one is caught here.
+    expect(parsed.length).toBeGreaterThanOrEqual(2);
+  });
+
   it('get_sub_anatomy returns full action-group body (P6-126)', async () => {
     const { client } = await connect();
     const result = await client.callTool({
@@ -345,6 +358,29 @@ describe('mcp server', () => {
       'tertiary-action',
     ]);
     expect(parsed.a11y.groupRule).toContain('primary');
+  });
+
+  it('get_sub_anatomy returns full close-button body (P6-147 / ADR-032)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_sub_anatomy',
+      arguments: { id: 'close-button' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('close-button');
+    expect(parsed.slots.map((s: any) => s.id)).toEqual([
+      'close-button',
+      'close-icon',
+      'close-label',
+    ]);
+    // close-icon is decorative; close-label is the accessible-name carrier
+    const icon = parsed.slots.find((s: any) => s.id === 'close-icon');
+    const label = parsed.slots.find((s: any) => s.id === 'close-label');
+    expect(icon.slotKind).toBe('decorative');
+    expect(label.slotKind).toBe('content');
+    // a11y rules surface the WCAG 4.1.2 / icon-button-name canon structurally
+    expect(parsed.a11y.groupRule).toContain('accessible-name');
+    expect(parsed.a11y.focusRule).toContain('Escape');
   });
 
   it('get_sub_anatomy errors on unknown id', async () => {
@@ -364,6 +400,7 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     expect(parsed.subAnatomies).toContain('action-group');
+    expect(parsed.subAnatomies).toContain('close-button');
   });
 
   it('get_changelog errors on unknown component id', async () => {

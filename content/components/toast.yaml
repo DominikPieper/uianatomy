@@ -216,39 +216,39 @@ anatomy:
         foreground: color.text.accent
         ring: color.border.focus
 
-  - id: dismiss-button
-    required: false
-    purpose: >-
-      Optional close affordance. Conventionally an "×" icon at the
-      inline-end corner. Visible when `dismissible: true` (canonical
-      default true; rare to disable since users should always have
-      keyboard escape from the toast).
-    slotKind: interactive
-    layout:
-      parent: container
-      row: 1
-      col: 4
-      span: 1
-    figma:
-      type: instance
-      hint: Icon button instance; visibility bound to dismissible property
-    code:
-      slot: dismiss
-      semantic: button
-    a11y:
-      hint: >-
-        Provide an accessible name ("Dismiss" or "Dismiss
-        notification"). Activation removes the toast from the
-        viewport and from the live region. Escape key (when toast
-        region has focus) does the same.
-    tokens:
-      spacing:
-        padding: spacing.tight
-      radius:
-        corner: radius.sm
-      color:
-        foreground: color.text.muted
-        ring: color.border.focus
+  # Dismiss affordance — sub-anatomy reuse via $ref (P6-147 / ADR-032).
+  # Renames from the legacy `dismiss-button` slot id; canonical name is
+  # `close-button` (spec-anchored: WAI-ARIA, MDN, Radix, Headless UI).
+  - $ref: close-button
+    parent: container
+    row: 1
+    overrides:
+      - slot: close-button
+        type: overridden
+        rationale: >-
+          Optional on Toast — visible when dismissible: true (canonical
+          default true; rare to disable since users should always have
+          keyboard escape from the toast). Sits at col 4 of the toast
+          container grid (after icon, body, action-region).
+        required: false
+        layout:
+          row: 1
+          col: 4
+          span: 1
+      - slot: close-label
+        type: overridden
+        rationale: >-
+          Toast's accessible-name canon is "Dismiss" or "Dismiss
+          notification" — concise because toasts are short-lived and
+          may queue rapidly; verbose names create announcement noise
+          when multiple toasts dismiss in sequence.
+        a11y:
+          hint: >-
+            Visually-hidden <span> "Dismiss" or "Dismiss notification"
+            inside the button, OR aria-label on the host. Activation
+            removes the toast from the viewport and from the live
+            region. Escape key (when toast region has focus) does
+            the same.
 
 axes:
   variants:

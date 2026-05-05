@@ -144,39 +144,40 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: close-button
-    required: false
-    purpose: >-
-      Visible affordance for dismissing the drawer. Conventionally an
-      "×" icon in the inline-end corner of the header. Optional in
-      navigation-drawer patterns where dismissal happens via outside
-      tap or swipe; required when `dismissible: true` and no other
-      visible close affordance exists.
-    slotKind: interactive
-    layout:
-      parent: header
-      row: 1
-      col: 2
-      span: 3
-    figma:
-      type: instance
-      hint: Icon button instance; bound to component slot
-    code:
-      slot: close
-      semantic: button
-    a11y:
-      hint: >-
-        Provide an accessible name ("Close" or "Close filters"). The
-        Escape key must do the same thing as clicking this button when
-        `dismissible: true`.
-    tokens:
-      spacing:
-        padding: spacing.tight
-      radius:
-        corner: radius.sm
-      color:
-        foreground: color.text.muted
-        ring: color.border.focus
+  # Header close-button — sub-anatomy reuse via $ref (P6-147 / ADR-032).
+  # Optional in navigation-drawer patterns where dismissal happens via
+  # outside tap or swipe; required when dismissible: true with no other
+  # visible close affordance.
+  - $ref: close-button
+    parent: header
+    row: 1
+    overrides:
+      - slot: close-button
+        type: overridden
+        rationale: >-
+          Optional on Drawer — required only when dismissible: true and
+          no other visible close affordance exists (some navigation
+          drawers rely entirely on outside-tap or swipe). Spans the
+          trailing 3 columns of the header grid (col 2, span 3).
+        required: false
+        layout:
+          row: 1
+          col: 2
+          span: 3
+      - slot: close-label
+        type: overridden
+        rationale: >-
+          Drawer's accessible-name fallback is context-scoped ("Close
+          filters", "Close menu") rather than the bare "Close" — the
+          drawer's purpose (filter panel, navigation menu, settings
+          panel) belongs in the name when distinguishable.
+        a11y:
+          hint: >-
+            Visually-hidden <span> describing the drawer's content
+            ("Close filters", "Close navigation"), OR aria-label on
+            the host with the same text. Bare "Close" is acceptable
+            for a single-purpose drawer, but context-scoped is the
+            safer canonical choice.
 
   - id: body
     required: true

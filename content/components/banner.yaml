@@ -177,40 +177,40 @@ anatomy:
             properties. For cookie banners, the Decline action
             (secondary) must carry visual weight equal to Accept.
 
-  - id: dismiss-button
-    required: false
-    purpose: >-
-      Optional close affordance. Conventionally an "×" icon at the
-      inline-end corner. Visible when `dismissible: true`. For
-      banners conveying ongoing system state (maintenance,
-      service degradation), `dismissible: false` is canonical —
-      the banner persists until the underlying state resolves.
-    slotKind: interactive
-    layout:
-      row: 1
-      col: 3
-      span: 1
-    figma:
-      type: instance
-      hint: Icon button instance; visibility bound to dismissible property
-    code:
-      slot: dismiss
-      semantic: button
-    a11y:
-      hint: >-
-        Provide an accessible name ("Dismiss banner" or "Close
-        notification"). Activation removes the banner from the
-        document. Persistence (re-appears on next visit vs
-        permanently dismissed) is a `persistent` property,
-        documented separately.
-    tokens:
-      spacing:
-        padding: spacing.tight
-      radius:
-        corner: radius.sm
-      color:
-        foreground: color.text.muted
-        ring: color.border.focus
+  # Dismiss affordance — sub-anatomy reuse via $ref (P6-147 / ADR-032).
+  # Renames from the legacy `dismiss-button` slot id; canonical name is
+  # `close-button` (spec-anchored: WAI-ARIA, MDN, Radix, Headless UI).
+  - $ref: close-button
+    row: 1
+    overrides:
+      - slot: close-button
+        type: overridden
+        rationale: >-
+          Optional on Banner — visible when dismissible: true. For
+          banners conveying ongoing system state (maintenance, service
+          degradation), dismissible: false is canonical — the banner
+          persists until the underlying state resolves. Sits at the
+          trailing edge of the banner grid (col 3).
+        required: false
+        layout:
+          row: 1
+          col: 3
+          span: 1
+      - slot: close-label
+        type: overridden
+        rationale: >-
+          Banner's accessible-name canon is "Dismiss banner" or "Close
+          notification" — page-scoped rather than message-scoped
+          because banners are global system-state announcements
+          rather than per-action feedback. Persistence (re-appears
+          next visit vs permanently dismissed) is a separate
+          `persistent` property.
+        a11y:
+          hint: >-
+            Visually-hidden <span> "Dismiss banner" or "Close
+            notification" inside the button, OR aria-label on the
+            host with the same text. Activation removes the banner
+            from the document for the current session.
 
 axes:
   variants:

@@ -182,39 +182,40 @@ anatomy:
       color:
         foreground: color.text.primary
 
-  - id: close-button
-    required: false
-    purpose: >-
-      Optional explicit close affordance for popovers without
-      light-dismiss (`dismissible: false`) or for popovers whose
-      content discourages outside-click dismissal (forms with
-      unsaved input). Conventionally an "×" icon in the inline-end
-      corner of the header.
-    slotKind: interactive
-    layout:
-      parent: header
-      row: 1
-      col: 2
-      span: 1
-    figma:
-      type: instance
-      hint: Icon button instance; visibility bound to dismissible vs explicit-close pattern
-    code:
-      slot: close
-      semantic: button
-    a11y:
-      hint: >-
-        Provide an accessible name ("Close" or "Close popover").
-        Escape always dismisses regardless of close-button presence;
-        click-outside dismisses when `dismissible` is true.
-    tokens:
-      spacing:
-        padding: spacing.tight
-      radius:
-        corner: radius.sm
-      color:
-        foreground: color.text.muted
-        ring: color.border.focus
+  # Header close-button — sub-anatomy reuse via $ref (P6-147 / ADR-032).
+  # Surfaces explicitly when dismissible: false (no light-dismiss) or
+  # when content discourages outside-click dismissal (forms with
+  # unsaved input).
+  - $ref: close-button
+    parent: header
+    row: 1
+    overrides:
+      - slot: close-button
+        type: overridden
+        rationale: >-
+          Optional on Popover — Escape always dismisses regardless of
+          close-button presence. Surfaces when dismissible: false (no
+          light-dismiss) or when content discourages outside-click
+          dismissal. Sits at col 2 of the header grid (1-column wide,
+          unlike Modal/Drawer's span-3 trailing track).
+        required: false
+        layout:
+          row: 1
+          col: 2
+          span: 1
+      - slot: close-label
+        type: overridden
+        rationale: >-
+          Popover's accessible-name fallback is "Close popover" when
+          there is risk of confusion with a concurrently open dialog;
+          bare "Close" is acceptable when the popover is the only
+          dismissible surface in view.
+        a11y:
+          hint: >-
+            Visually-hidden <span> "Close" or "Close popover" inside
+            the button, OR aria-label on the host. Use the
+            disambiguated form when a dialog or another popover may
+            be open concurrently.
 
 axes:
   variants:
