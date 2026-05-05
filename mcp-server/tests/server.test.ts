@@ -131,31 +131,32 @@ describe('mcp server', () => {
     expect(parsed.some((c: any) => c.id === 'card')).toBe(true);
   });
 
-  it('search_components expands severity synonyms (P6-118b — danger → error variant)', async () => {
+  it('search_components surfaces severity-synonym queries via variant alternativeNames (P6-143)', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'search_components', arguments: { query: 'danger' } });
     const parsed = parseJson(result as any);
-    // Badge / Alert / Toast all carry an `error` variant; the synonym expansion should surface them.
+    // Badge / Alert / Toast / Banner each carry an `error` variant whose alternativeNames
+    // include `danger`; the haystack scan picks them up directly (no query-side reverse-index).
     const ids = parsed.map((c: any) => c.id);
     expect(ids).toContain('badge');
     expect(ids).toContain('alert');
     expect(ids).toContain('toast');
   });
 
-  it('search_components synonym expansion is symmetric for warning aliases', async () => {
+  it('search_components surfaces warning-alias queries via variant alternativeNames (P6-143)', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'search_components', arguments: { query: 'caution' } });
     const parsed = parseJson(result as any);
     const ids = parsed.map((c: any) => c.id);
-    // Components with `warning` variant should resolve via the caution → warning synonym.
+    // Toast/Alert/Banner/Badge `warning` variants carry `caution` as an alternativeName.
     expect(ids.length).toBeGreaterThan(0);
     expect(ids).toContain('badge');
   });
 
   it('search_components matches per-variant alternativeNames (P6-127 / ADR-031)', async () => {
     const { client } = await connect();
-    // `confirm` is not in SEVERITY_SYNONYMS — it lives only on Modal.alertdialog.alternativeNames.
-    // Query must surface Modal via the variant-alternativeNames haystack expansion.
+    // `confirm` lives only on Modal.alertdialog.alternativeNames — distinct from the
+    // severity-cluster aliases, exercises the variant-alternativeNames haystack path.
     const result = await client.callTool({ name: 'search_components', arguments: { query: 'confirm' } });
     const parsed = parseJson(result as any);
     const ids = parsed.map((c: any) => c.id);

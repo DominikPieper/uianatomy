@@ -3,18 +3,14 @@ import { z } from 'zod';
 import { getComponents, getImplementations, getPatterns, getSubAnatomies } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
-import { getCanonicalVocabularies, SEVERITY_SYNONYMS } from '@uianatomy/shared/vocabulary';
+import { getCanonicalVocabularies } from '@uianatomy/shared/vocabulary';
 
-// P6-118b: reverse-index for severity-synonym query expansion.
-// "danger" → "error", "destructive" → "error", "caution" → "warning", etc.
-// Built once at module-load; never mutated.
-const SEVERITY_SYNONYM_REVERSE: Readonly<Record<string, string>> = (() => {
-  const r: Record<string, string> = {};
-  for (const [canonical, synonyms] of Object.entries(SEVERITY_SYNONYMS)) {
-    for (const s of synonyms) r[s.toLowerCase()] = canonical;
-  }
-  return r;
-})();
+// P6-143 — SEVERITY_SYNONYM_REVERSE was previously built here from
+// SEVERITY_SYNONYMS to expand severity-aware queries (`danger` → `error`).
+// Decommissioned because per-variant `alternativeNames` (P6-127 / ADR-031)
+// now feeds those same synonyms directly into the search haystack at the
+// component-yaml level. `SEVERITY_SYNONYMS` itself remains in vocabulary.ts
+// as canonical synonym documentation, exposed via `get_canonical_vocabularies`.
 
 const VIEW_VALUES = ['designer', 'dev', 'bridge'] as const;
 type View = (typeof VIEW_VALUES)[number];
@@ -300,14 +296,11 @@ export function createServer(): McpServer {
 
   server.tool(
     'search_components',
-    'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names + per-variant alternativeNames (ADR-031, P6-127), and referenced sub-anatomy ids (P6-126). Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer. Plain queries that are not synonyms behave unchanged.',
+    'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names + per-variant `alternativeNames` (ADR-031, P6-127), and referenced sub-anatomy ids (P6-126). Per-variant `alternativeNames` are the canonical surface for cross-system synonyms — e.g. Toast/Alert/Banner/Badge `error` carries `[danger, destructive, critical]` and `warning` carries `[caution, attention]`, so `search_components({ query: "danger" })` resolves via the haystack rather than via a query-side synonym map. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer.',
     { query: z.string().min(1) },
     async ({ query }) => {
       const map = await getComponents();
       const q = query.toLowerCase();
-      const expanded = [q];
-      const canonical = SEVERITY_SYNONYM_REVERSE[q];
-      if (canonical && !expanded.includes(canonical)) expanded.push(canonical);
       const matches = [...map.values()]
         .filter((c) => {
           // P6-126 — read non-enumerable __subAnatomy provenance from each
@@ -332,7 +325,7 @@ export function createServer(): McpServer {
             ' ' +
             [...subAnatomyIds].join(' ')
           ).toLowerCase();
-          return expanded.some((term) => haystack.includes(term));
+          return haystack.includes(q);
         })
         .map((c) => ({ id: c.id, name: c.name, description: c.description }));
       return jsonResult(matches);

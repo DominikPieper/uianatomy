@@ -168,7 +168,9 @@ axes:
     - name: default
     - name: success
     - name: warning
+      alternativeNames: [caution, attention]
     - name: error
+      alternativeNames: [danger, destructive, critical]
     - name: info
   properties:
     - name: size
