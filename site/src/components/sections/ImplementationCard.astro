@@ -31,7 +31,7 @@ const lang = LANG_BY_LIBRARY[impl.libraryId] ?? 'tsx';
 
   {impl.divergence && impl.divergence.length > 0 && (
     <div class="impl-card__divergence">
-      <h4 class="impl-card__sub">Divergence</h4>
+      <h3 class="impl-card__sub">Divergence</h3>
       <DivergenceTable divergence={impl.divergence} />
     </div>
   )}
@@ -70,8 +70,12 @@ const lang = LANG_BY_LIBRARY[impl.libraryId] ?? 'tsx';
     display: inline-block;
     padding: 3px 10px;
     border-radius: 999px;
-    background: var(--accent-active, var(--text-primary));
-    color: var(--surface-bg);
+    /* P6-145 — previous styling resolved to ink-on-warm-orange (3.22:1, WCAG fail).
+       Switched to ink on the soft-warm tint with an accent-bordered ring; preserves
+       warm-accent affordance, contrast ≥10:1 in both light and dark modes. */
+    background: var(--accent-warm-soft);
+    color: var(--fg);
+    border: 1px solid color-mix(in oklab, var(--accent-warm) 35%, transparent);
     font-size: var(--text-step--1);
     font-weight: 600;
     letter-spacing: 0.04em;

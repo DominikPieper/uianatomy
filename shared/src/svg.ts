@@ -90,7 +90,11 @@ function layoutGrid(
   out: Map<string, SlotBoxes>,
   floatingExtensions: Map<string, number> = new Map(),
 ): number {
-  const innerWidth = area.w - GAP * (COLUMNS - 1);
+  // P6-144 — when nested area is too narrow to subdivide into 12 gapped
+  // columns (e.g. an indicator parented to an already 1-col input slot),
+  // colWidth would go negative and emit invalid `<rect width="-…">`. Clamp
+  // to 0 so nested slots collapse rather than overlap with negative geometry.
+  const innerWidth = Math.max(0, area.w - GAP * (COLUMNS - 1));
   const colWidth = innerWidth / COLUMNS;
   const rows = new Map<number, AnatomySlot[]>();
   for (const s of slots) {
@@ -185,8 +189,8 @@ function estimateNestedHeight(
   childrenByParent: Map<string, AnatomySlot[]>,
   parentWidth: number,
 ): number {
-  const innerWidth = parentWidth - NESTED_PADDING * 2;
-  const colWidth = (innerWidth - GAP * (COLUMNS - 1)) / COLUMNS;
+  const innerWidth = Math.max(0, parentWidth - NESTED_PADDING * 2);
+  const colWidth = Math.max(0, (innerWidth - GAP * (COLUMNS - 1)) / COLUMNS);
   const rows = new Map<number, AnatomySlot[]>();
   for (const s of children) {
     const r = s.layout.row ?? 1;
@@ -430,7 +434,7 @@ function emitSlotGroup(
   return (
     `  <g${idAttr}${dataSlot} class="${cls}" data-required="${slot.required}">` +
     titleText +
-    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" stroke="currentColor" stroke-width="1"${dasharray}/>` +
+    `<rect x="${x}" y="${y}" width="${Math.max(0, w)}" height="${Math.max(0, h)}" rx="4" stroke="currentColor" stroke-width="1"${dasharray}/>` +
     `<text class="anatomy-label label-figma" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">${figma}</text>` +
     `<text class="anatomy-label label-code"  x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${code}</text>` +
     `<text class="anatomy-label label-bridge" x="${labelX}" y="${labelY}" text-anchor="${textAnchor}" dominant-baseline="${baseline}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="currentColor">${bridge}</text>` +

@@ -59,7 +59,9 @@ const { component } = Astro.props;
     right: var(--s-3);
     font-family: var(--font-mono);
     font-size: var(--fs-12);
-    color: var(--ink-400);
+    /* P6-146 — ink-400 (#8c8678) on cool-tint background was 3.13:1 (WCAG fail).
+       Switched to ink-700 / fg-muted for 4.5:1+. */
+    color: var(--fg-muted);
     letter-spacing: var(--ls-wide);
     z-index: 1;
   }

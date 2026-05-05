@@ -764,18 +764,21 @@ main {
   width: 12px;
   height: 12px;
 }
+/* P6-146 — text-color darkened from raw accent (4.09:1 fail at 10.5px) to
+   accent-mixed-with-ink (≥ 4.5:1 in both light + dark modes). Affordance
+   preserved through bg + border still tracking the accent. */
 [data-role='designer'] .role-badge {
-  color: var(--accent-warm);
+  color: color-mix(in oklab, var(--accent-warm) 70%, var(--fg));
   background: var(--accent-warm-soft);
   border-color: color-mix(in oklab, var(--accent-warm) 25%, transparent);
 }
 [data-role='dev'] .role-badge {
-  color: var(--accent-cool);
+  color: color-mix(in oklab, var(--accent-cool) 70%, var(--fg));
   background: var(--accent-cool-soft);
   border-color: color-mix(in oklab, var(--accent-cool) 25%, transparent);
 }
 [data-role='both'] .role-badge {
-  color: var(--accent-neutral);
+  color: color-mix(in oklab, var(--accent-neutral) 70%, var(--fg));
   background: var(--accent-neutral-soft);
   border-color: color-mix(in oklab, var(--accent-neutral) 22%, transparent);
 }

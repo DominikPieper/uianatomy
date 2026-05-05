@@ -1008,6 +1008,27 @@ function extractFirstLabelY(svg: string, slotId: string): number | null {
 }
 
 describe('anatomy SVG layout invariants', () => {
+  // P6-144 — guard against negative-width rect emit (browser console-error,
+  // failed Lighthouse Best Practices). Triggered originally by indicator
+  // slots parented inside already-1-col-wide input slots (Checkbox /
+  // RadioGroup / Switch); the layoutGrid colWidth went negative.
+  it('emits no negative-width rects across all canonical components', async () => {
+    const map = await loadComponents({ contentDir });
+    const failures: string[] = [];
+    for (const [id, component] of map) {
+      const svg = renderAnatomySVG(component);
+      for (const m of svg.matchAll(/<rect[^>]*\bwidth="(-?\d+(?:\.\d+)?)"/g)) {
+        const w = parseFloat(m[1]!);
+        if (w < 0) failures.push(`${id}: width="${m[1]}"`);
+      }
+      for (const m of svg.matchAll(/<rect[^>]*\bheight="(-?\d+(?:\.\d+)?)"/g)) {
+        const h = parseFloat(m[1]!);
+        if (h < 0) failures.push(`${id}: height="${m[1]}"`);
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
   it('Tabs indicator does not vertically overlap tabpanel', async () => {
     const tabs = await loadComponent(join(contentDir, 'tabs.yaml'));
     const svg = renderAnatomySVG(tabs);
