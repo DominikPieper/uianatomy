@@ -592,4 +592,40 @@ describe('cross-component consistency', () => {
     }
     expect(candidates).toEqual([]);
   });
+
+  // P6-149 / ADR-034 — soft conformance check for the icon-leading-text
+  // sub-anatomy. After the initial migration (Button, List-item), any
+  // component carrying the FULL 3-slot inline icon-text composite (slot
+  // ids `icon-leading` AND `label`, optionally `icon-trailing`, all
+  // inline without sub-anatomy provenance) is a candidate for $ref
+  // migration. The full-shape match deliberately excludes partial
+  // adopters (Badge: icon-leading + content, no label; Link: label +
+  // icon-trailing, no icon-leading) which would require variable-arity
+  // overrides and are tracked separately under P6-150.
+  it('full icon-text composite prefers the icon-leading-text sub-anatomy ($ref) over inline declaration', async () => {
+    const components = await loadComponents({ contentDir });
+
+    const candidates: string[] = [];
+    for (const c of components.values()) {
+      const inlineSlotIds = new Set<string>();
+      for (const slot of c.anatomy) {
+        const provenance = (slot as { __subAnatomy?: { id: string } }).__subAnatomy;
+        if (provenance) continue; // resolved-from-ref slots already use sub-anatomy
+        inlineSlotIds.add(slot.id);
+      }
+      // Full-shape match: both icon-leading and label inline (icon-trailing optional)
+      if (inlineSlotIds.has('icon-leading') && inlineSlotIds.has('label')) {
+        candidates.push(
+          `${c.id} (inline icon-leading + label${inlineSlotIds.has('icon-trailing') ? ' + icon-trailing' : ''}) — consider $ref: icon-leading-text`,
+        );
+      }
+    }
+    if (candidates.length > 0) {
+      console.warn(
+        '[consistency soft-lint] full icon-text composites without icon-leading-text $ref:\n  ' +
+          candidates.join('\n  '),
+      );
+    }
+    expect(candidates).toEqual([]);
+  });
 });

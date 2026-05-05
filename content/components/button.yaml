@@ -99,90 +99,52 @@ anatomy:
         size: text.md
         weight: weight.semibold
 
-  - id: icon-leading
-    required: false
-    purpose: >-
-      Optional decorative or semantic icon before the label, anchoring
-      the action visually. Conventionally aligned to the leading edge
-      with consistent gap to the label.
-    slotKind: decorative
-    layout:
-      row: 2
-      col: 1
-      span: 2
-    figma:
-      type: instance
-      hint: Icon component instance; size bound to button size token
-    code:
-      slot: icon-leading
-      semantic: presentational-or-img
-    a11y:
-      hint: >-
-        Decorative when paired with a visible text label —
-        `aria-hidden="true"` on the icon, no alt. If the icon is the
-        sole label of the button (icon-only variant), the button
-        carries an `aria-label` describing the action.
-    tokens:
-      color:
-        foreground: color.accent.fg
-
-  - id: label
-    required: true
-    purpose: >-
-      The text that names the action. Carries the button's accessible
-      name when no `aria-label` overrides it. Should read as a verb
-      phrase ("Save changes", not "Changes").
-    slotKind: content
-    layout:
-      row: 2
-      col: 2
-      span: 8
-    figma:
-      type: text
-      hint: Button label text style; bound to a "label" component property
-    code:
-      slot: label
-      semantic: text
-    a11y:
-      hint: >-
-        Plain text node, no special role. The label is the button's
-        accessible name unless the button has an `aria-label` or
-        `aria-labelledby` override. Avoid using only an icon as the
-        label without an `aria-label`.
-    tokens:
-      typography:
-        size: text.md
-        weight: weight.semibold
-        tracking: tracking.normal
-      color:
-        foreground: color.accent.fg
-
-  - id: icon-trailing
-    required: false
-    purpose: >-
-      Optional icon after the label, conventionally a chevron or
-      arrow indicating direction (advance, external link, dropdown
-      disclosure).
-    slotKind: decorative
-    layout:
-      row: 2
-      col: 3
-      span: 2
-    figma:
-      type: instance
-      hint: Icon component instance; visibility bound to "has trailing icon" property
-    code:
-      slot: icon-trailing
-      semantic: presentational-or-img
-    a11y:
-      hint: >-
-        Decorative; `aria-hidden="true"`. If the icon communicates
-        state ("opens menu", "external link"), pair it with an
-        invisible-text addition to the label or an `aria-label` that
-        captures the meaning.
-    tokens:
-      color:
-        foreground: color.accent.fg
+  - $ref: icon-leading-text
+    parent: root
+    row: 2
+    overrides:
+      - slot: icon-leading
+        type: overridden
+        rationale: >-
+          Button's accent-context coloring: the leading icon picks up
+          the same accent foreground as the label so primary/secondary/
+          destructive variants tint icon and text in lockstep.
+        layout:
+          row: 2
+          col: 1
+          span: 2
+        tokens:
+          color:
+            foreground: color.accent.fg
+      - slot: label
+        type: overridden
+        rationale: >-
+          Button's label is semibold (Action emphasis) with normal
+          tracking, set in the active accent foreground. Sub-anatomy's
+          canonical text.md size cascades unchanged; only weight,
+          tracking, foreground, and layout span are Button-specific.
+        layout:
+          row: 2
+          col: 2
+          span: 8
+        tokens:
+          typography:
+            weight: weight.semibold
+            tracking: tracking.normal
+          color:
+            foreground: color.accent.fg
+      - slot: icon-trailing
+        type: overridden
+        rationale: >-
+          Symmetric to icon-leading — accent-context foreground keeps
+          the trailing chevron/state-icon tinted with the variant.
+        layout:
+          row: 2
+          col: 3
+          span: 2
+        tokens:
+          color:
+            foreground: color.accent.fg
 
 axes:
   variants:

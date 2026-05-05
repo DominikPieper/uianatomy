@@ -413,6 +413,43 @@ describe('mcp server', () => {
     expect(parsed.a11y.groupRule).toContain('aria-labelledby');
   });
 
+  it('list_sub_anatomies returns icon-leading-text (P6-149 / ADR-034)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_sub_anatomies', arguments: {} });
+    const parsed = parseJson(result as any);
+    const ilt = parsed.find((s: any) => s.id === 'icon-leading-text');
+    expect(ilt).toBeTruthy();
+    expect(ilt.slotCount).toBe(3);
+    expect(ilt.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('get_sub_anatomy returns full icon-leading-text body (P6-149 / ADR-034)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_sub_anatomy',
+      arguments: { id: 'icon-leading-text' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('icon-leading-text');
+    expect(parsed.slots.map((s: any) => s.id)).toEqual([
+      'icon-leading',
+      'label',
+      'icon-trailing',
+    ]);
+    // icons are decorative; label is the accessible-name carrier
+    const iconLeading = parsed.slots.find((s: any) => s.id === 'icon-leading');
+    const label = parsed.slots.find((s: any) => s.id === 'label');
+    const iconTrailing = parsed.slots.find((s: any) => s.id === 'icon-trailing');
+    expect(iconLeading.slotKind).toBe('decorative');
+    expect(iconLeading.required).toBe(false);
+    expect(label.slotKind).toBe('content');
+    expect(label.required).toBe(true);
+    expect(iconTrailing.slotKind).toBe('decorative');
+    expect(iconTrailing.required).toBe(false);
+    // a11y groupRule names the icon-text accessible-name contract
+    expect(parsed.a11y.groupRule).toContain('accessible name');
+  });
+
   it('get_sub_anatomy errors on unknown id', async () => {
     const { client } = await connect();
     const result = await client.callTool({

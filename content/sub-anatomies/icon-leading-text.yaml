@@ -1,0 +1,115 @@
+id: icon-leading-text
+name: Icon-leading-text
+description: >-
+  Recurring three-slot pattern: optional decorative leading icon +
+  required text label + optional decorative trailing icon. Used by
+  interactive components that combine a glyph affordance with text
+  content (Button, List-item). Surfaces the icon-text accessible-name
+  contract structurally — the label is the only slot that contributes
+  to the host's accessible name; both icons are decorative
+  (`aria-hidden="true"`) unless they carry state-meaning the label
+  does not, in which case the host's `aria-label` must absorb that
+  meaning explicitly.
+lastReviewed: '2026-05-05'
+
+a11y:
+  groupRule: >-
+    Label drives the host's accessible name; icons are decorative
+    glyphs that supplement the visual but never the announced
+    semantics. When an icon does carry meaning that the label does
+    not (external-link indicator, state-conveying chevron), the host
+    `aria-label` must absorb that meaning rather than the icon
+    receiving its own accessible name — double-announcement breaks
+    WCAG 1.3.1 (Info & Relationships) and the icon-button accessible-
+    name canon.
+  focusRule: >-
+    Focus targets the host (Button, List-item.root). Neither icon
+    nor label is independently tabbable; they are inert children of
+    the focusable host. Cursor / keyboard activation reaches the
+    host element, never the label or the icon.
+
+slots:
+  - id: icon-leading
+    required: false
+    purpose: >-
+      Optional decorative or semantic icon before the label, anchoring
+      the action visually. Conventionally aligned to the leading edge
+      with a consistent gap to the label.
+    slotKind: decorative
+    layout:
+      row: 1
+      col: 1
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; size bound to host's size token
+    code:
+      slot: icon-leading
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        `aria-hidden="true"` on the SVG when the icon is purely
+        decorative (paired with a visible label). If the icon is the
+        sole signal of the host's intent (icon-only host variant),
+        the host carries an `aria-label` describing the action — the
+        icon never announces itself.
+    tokens:
+      spacing:
+        gap: spacing.compact
+
+  - id: label
+    required: true
+    purpose: >-
+      The text content of the host. Carries the host's accessible
+      name unless an `aria-label` overrides it. Should read as a verb
+      phrase on Button ("Save changes") or as a noun-phrase identifier
+      on List-item ("Project Atlas" / "alice@example.com").
+    slotKind: content
+    layout:
+      row: 1
+      col: 2
+      span: 1
+    figma:
+      type: text
+      hint: Text style bound to a "label" component property; truncates with ellipsis when single-line variant overflows
+    code:
+      slot: label
+      semantic: text
+    a11y:
+      hint: >-
+        Plain text node; no special role. The label is the host's
+        accessible name unless overridden by `aria-label` /
+        `aria-labelledby`. Avoid visually-hidden modifiers — the
+        visible text and the announced name should match.
+    tokens:
+      typography:
+        size: text.md
+
+  - id: icon-trailing
+    required: false
+    purpose: >-
+      Optional icon after the label. Conventionally a chevron, arrow,
+      or status indicator suggesting direction (advance, external
+      link, dropdown disclosure) or affordance state (sort direction,
+      sync status).
+    slotKind: decorative
+    layout:
+      row: 1
+      col: 3
+      span: 1
+    figma:
+      type: instance
+      hint: Icon component instance; visibility bound to host's "has trailing icon" property
+    code:
+      slot: icon-trailing
+      semantic: presentational-or-img
+    a11y:
+      hint: >-
+        `aria-hidden="true"` on the SVG. If the icon communicates
+        state ("opens menu", "external link", "syncing"), pair it
+        with a visually-hidden text node inside the host or absorb
+        the meaning into the host's `aria-label` — the icon must
+        never carry its own accessible name.
+    tokens:
+      spacing:
+        gap: spacing.compact

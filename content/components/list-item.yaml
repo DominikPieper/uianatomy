@@ -61,34 +61,87 @@ anatomy:
       radius:
         corner: radius.sm
 
-  - id: leading-icon
-    required: false
-    purpose: >-
-      Optional icon at the inline-start of the row. Used for
-      file-type indicators, status icons, category markers.
-      Mutually exclusive with avatar (a row may have one or
-      the other, not both — the same slot position).
-    slotKind: decorative
-    layout:
-      row: 1
-      col: 1
-      span: 1
-    figma:
-      type: instance
-      hint: Icon component instance; visibility per "has icon" property
-    code:
-      slot: leading-icon
-      semantic: presentational-or-img
-    a11y:
-      hint: >-
-        Decorative when paired with a primary text label
-        (`aria-hidden="true"`). For information-carrying icons
-        (a verified-account checkmark, a syncing-status
-        indicator), surface the meaning via visually-hidden
-        text composed into the row's accessible name.
-    tokens:
-      color:
-        foreground: color.text.muted
+  - $ref: icon-leading-text
+    parent: root
+    row: 1
+    overrides:
+      - slot: icon-leading
+        type: overridden
+        rationale: >-
+          List-item's leading icon is semantic-row-text — file-type
+          indicators, status icons, category markers — tinted muted to
+          stay subordinate to the primary text. Mutually exclusive with
+          the avatar slot (same col 1 position).
+        layout:
+          row: 1
+          col: 1
+          span: 1
+        figma:
+          type: instance
+          hint: Icon component instance; visibility per "has icon" property
+        a11y:
+          hint: >-
+            Decorative when paired with the label
+            (`aria-hidden="true"`). For information-carrying icons (a
+            verified-account checkmark, a syncing-status indicator),
+            surface the meaning via visually-hidden text composed into
+            the row's accessible name.
+        tokens:
+          color:
+            foreground: color.text.muted
+      - slot: label
+        type: overridden
+        rationale: >-
+          The row's primary identifier — "Project Atlas",
+          "alice@example.com", a filename. Single-line; longer text
+          indicates two-line / three-line variant. Medium weight
+          (less emphasis than Button's semibold action label) in the
+          primary text color.
+        layout:
+          row: 1
+          col: 2
+          span: 5
+        figma:
+          type: text
+          hint: Primary text style; truncates with ellipsis when single-line variant overflows
+        a11y:
+          hint: >-
+            Plain text. The row's primary identifier for SR users.
+            Avoid visually-hidden modifiers in the label slot — the
+            visible text and the accessible name should match.
+        tokens:
+          typography:
+            weight: weight.medium
+          color:
+            foreground: color.text.primary
+      - slot: icon-trailing
+        type: overridden
+        rationale: >-
+          Inline-end glyph — chevron signalling navigation, status
+          indicator carrying meaning, sort-direction marker. Sits in
+          col 7 (after avatar/leading-icon, label, secondary, badge,
+          before action), tinted muted to stay subordinate to label
+          and badge.
+        layout:
+          row: 1
+          col: 7
+          span: 1
+        figma:
+          type: instance
+          hint: Icon component instance; visibility per "has trailing icon" property
+        code:
+          slot: icon-trailing
+          semantic: presentational-or-status
+        a11y:
+          hint: >-
+            Decorative when communicating affordance (chevron
+            signalling "tap for more"); status-bearing when carrying
+            meaning not in the primary text (a "syncing" indicator).
+            For status, surface via visually-hidden text in the row's
+            accessible name.
+        tokens:
+          color:
+            foreground: color.text.muted
 
   - id: avatar
     required: false
@@ -120,37 +173,6 @@ anatomy:
       radius:
         corner: radius.full
 
-  - id: primary
-    required: true
-    purpose: >-
-      The main label or title of the row. Acts as the row's
-      accessible name (composed via aria-labelledby or as the
-      direct text content of the activator). Single line by
-      canon; longer text indicates two-line or three-line
-      variant.
-    slotKind: content
-    layout:
-      row: 1
-      col: 2
-      span: 5
-    figma:
-      type: text
-      hint: Primary text style; truncates with ellipsis when single-line variant overflows
-    code:
-      slot: primary
-      semantic: text
-    a11y:
-      hint: >-
-        Plain text. The row's primary identifier for SR users.
-        Avoid visually-hidden modifiers in the primary slot —
-        the visible text and the accessible name should match.
-    tokens:
-      typography:
-        size: text.md
-        weight: weight.medium
-      color:
-        foreground: color.text.primary
-
   - id: secondary
     required: false
     purpose: >-
@@ -179,35 +201,6 @@ anatomy:
     tokens:
       typography:
         size: text.sm
-      color:
-        foreground: color.text.muted
-
-  - id: trailing-icon
-    required: false
-    purpose: >-
-      Optional icon at the inline-end of the row — a chevron
-      indicating navigation, a status indicator, a sort
-      direction marker. Decorative or status-bearing depending
-      on context.
-    slotKind: decorative
-    layout:
-      row: 1
-      col: 7
-      span: 1
-    figma:
-      type: instance
-      hint: Icon component instance; visibility per "has trailing icon" property
-    code:
-      slot: trailing-icon
-      semantic: presentational-or-status
-    a11y:
-      hint: >-
-        Decorative when communicating affordance (chevron
-        signalling "tap for more"); status-bearing when
-        carrying meaning not in the primary text (a
-        "syncing" indicator). For status, surface via
-        visually-hidden text in the row's accessible name.
-    tokens:
       color:
         foreground: color.text.muted
 
