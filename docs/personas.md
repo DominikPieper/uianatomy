@@ -70,7 +70,7 @@ Reads the canon to answer questions about components and to scaffold implementat
 
 **Today**
 
-- MCP server at `/mcp` (Streamable HTTP, 17 tools).
+- MCP server at `/mcp` (Streamable HTTP, 26 tools).
 - `/.well-known/mcp/server-card.json` (SEP-1649) for transport discovery.
 - `/.well-known/agent-skills/index.json` + `uianatomy-mcp/SKILL.md` (Cloudflare Agent Skills Discovery RFC v0.2.0) with sha256 digest.
 - WebMCP — three read tools (`list_components`, `get_component`, `search_components`) registered in-browser via `navigator.modelContext`.

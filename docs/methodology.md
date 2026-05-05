@@ -116,7 +116,7 @@ A real risk in long-form curated reference sites is *drift* — component 12 has
 
 ## Versioning + changelog editorial trigger
 
-The schema's `since` and `changelog` fields ([schema.md → Versioning](./schema.md#versioning-optional)) are dormant by editorial design until a component has a published change worth versioning. As of 2026-05-03 no canonical component declares either field, and the `get_changelog` MCP tool returns `null` for all 27 components — that is the intended state.
+The schema's `since` and `changelog` fields ([schema.md → Versioning](./schema.md#versioning-optional)) are dormant by editorial design until a component has a published change worth versioning. As of 2026-05-05 no canonical component declares either field, and the `get_changelog` MCP tool returns `null` for all 41 components — that is the intended state.
 
 When a qualifying edit lands, the editor writes the changelog entry. Qualifying edits:
 

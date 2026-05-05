@@ -91,6 +91,6 @@ The accent shift is functional, not decorative — it's a visual confirmation of
 
 - An "A11y view" sounds plausible but a11y concerns are entwined with both design and code; pulling them out creates artificial separation. Better to surface a11y notes in both Designer and Dev views.
 - A "Token view" is interesting for design-system maintainers but very narrow; better as a section within Designer view.
-- A "Storybook view" could embed live Atelier UI components. Deferred to phase 3+ when reference implementations are explicitly part of the site.
+- A "Storybook view" could embed live reference-implementation components from one of the audited libraries (Radix, Headless UI, Angular Material/CDK, Vaul). Deferred — implementation audits are surfaced today as YAML divergence reports rendered into the canonical component page rather than as live Storybook embeds.
 
 Three views is the right number for this scope. More fragments the experience; fewer fails to serve distinct audiences.

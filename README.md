@@ -27,4 +27,4 @@ pnpm -r typecheck
 
 ## Status
 
-Phase 1 — scaffolded with Card as the first canonical component. See [`docs/roadmap.md`](./docs/roadmap.md).
+Phase 1 + Phase 2 audit infrastructure complete. Canon at 41 components covering input / disclosure / overlay / data-pattern / feedback surfaces (full roster in `content/components/`). Phase 2 implementation audits cover modal + tabs + accordion + drawer + combobox + select × radix / headlessui / cdk / vaul (18 yamls across 4 libraries). MCP server exposes 26 tools over the canon plus the implementation audits. See [`docs/roadmap.md`](./docs/roadmap.md) for the original phased plan and [`docs/backlog.md`](./docs/backlog.md) for the live workflow state.

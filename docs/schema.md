@@ -844,7 +844,7 @@ axes:
 
 ### When to populate (editorial-trigger contract)
 
-The `since` + `changelog` surface is **dormant by editorial design** until a component has a published change worth versioning. As of 2026-05-03 no canonical component declares either field, and `get_changelog` returns `null` for all 27 components — that is the correct state until the first qualifying edit lands.
+The `since` + `changelog` surface is **dormant by editorial design** until a component has a published change worth versioning. As of 2026-05-05 no canonical component declares either field, and `get_changelog` returns `null` for all 41 components — that is the correct state until the first qualifying edit lands.
 
 A change qualifies for a changelog entry when at least one of these is true:
 
