@@ -492,11 +492,23 @@ sources:
   - https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/
   - https://www.w3.org/TR/WCAG22/#use-of-color
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/status_role
-  - https://polaris.shopify.com/components/feedback-indicators/badge
-  - https://carbondesignsystem.com/components/tag/usage/
-  - https://m3.material.io/components/badges/overview
-  - https://atlassian.design/components/lozenge/examples
-  - https://www.radix-ui.com/themes/docs/components/badge
-  - https://design-system.service.gov.uk/components/tag/
+  - url: https://polaris-react.shopify.com/components/feedback-indicators/badge
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/tag/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://m3.material.io/components/badges/overview
+    library: material3
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/lozenge
+    library: atlassian
+    verifiedAt: '2026-05-05'
+  - url: https://www.radix-ui.com/themes/docs/components/badge
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://design-system.service.gov.uk/components/tag/
+    library: govuk
+    verifiedAt: '2026-05-05'
 
-lastReviewed: '2026-05-03'
+lastReviewed: '2026-05-05'

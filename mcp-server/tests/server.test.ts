@@ -491,7 +491,10 @@ describe('mcp server', () => {
       arguments: { componentId: 'button' },
     });
     const buttonRows = parseJson(buttonRes as any);
-    expect(buttonRows).toEqual([]);
+    expect(buttonRows.length).toBe(3);
+    for (const row of buttonRows) expect(row.componentId).toBe('button');
+    const buttonLibs = buttonRows.map((r: any) => r.libraryId).sort();
+    expect(buttonLibs).toEqual(['headlessui', 'radix', 'react-aria']);
   });
 
   it('list_implementations({ libraryId }) filters to that library only', async () => {
@@ -501,10 +504,23 @@ describe('mcp server', () => {
       arguments: { libraryId: 'radix' },
     });
     const radixRows = parseJson(radixRes as any);
-    expect(radixRows.length).toBe(5);
+    expect(radixRows.length).toBe(12);
     expect(radixRows.every((r: any) => r.libraryId === 'radix')).toBe(true);
     const componentIds = radixRows.map((r: any) => r.componentId).sort();
-    expect(componentIds).toEqual(['accordion', 'combobox', 'modal', 'select', 'tabs']);
+    expect(componentIds).toEqual([
+      'accordion',
+      'alert',
+      'avatar',
+      'badge',
+      'button',
+      'card',
+      'checkbox',
+      'combobox',
+      'disclosure',
+      'modal',
+      'select',
+      'tabs',
+    ]);
   });
 
   it('get_implementations(modal) returns all three library audits', async () => {
@@ -524,14 +540,21 @@ describe('mcp server', () => {
     }
   });
 
-  it('get_implementations(button) returns empty array (no audits yet)', async () => {
+  it('get_implementations(button) returns all three library audits', async () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_implementations',
       arguments: { componentId: 'button' },
     });
     const parsed = parseJson(result as any);
-    expect(parsed).toEqual([]);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBe(3);
+    for (const impl of parsed) {
+      expect(impl.componentId).toBe('button');
+      expect(['radix', 'headlessui', 'react-aria']).toContain(impl.libraryId);
+      expect(impl.componentName).toBeTypeOf('string');
+      expect(impl.lastReviewed).toBeTypeOf('string');
+    }
   });
 
   it('get_implementations(unknown) also returns empty array (not an error)', async () => {

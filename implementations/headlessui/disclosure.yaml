@@ -1,0 +1,220 @@
+componentId: disclosure
+libraryId: headlessui
+componentName: Disclosure / DisclosureButton / DisclosurePanel
+
+exampleCode: |
+  import {
+    Disclosure, DisclosureButton, DisclosurePanel,
+  } from '@headlessui/react';
+  import { ChevronDownIcon } from '@heroicons/react/20/solid';
+
+  function ShippingDetails() {
+    return (
+      <Disclosure defaultOpen={false}>
+        <DisclosureButton className="flex w-full items-center justify-between py-2 text-left">
+          <span>Shipping details</span>
+          <ChevronDownIcon className="size-5 data-[open]:rotate-180 transition-transform" />
+        </DisclosureButton>
+        <DisclosurePanel className="mt-2 text-sm text-gray-600">
+          Free standard shipping on orders over $50. Delivery in 3–5 business days.
+        </DisclosurePanel>
+      </Disclosure>
+    );
+  }
+
+divergence:
+  # Anatomy
+
+  - from: anatomy[icon]
+    type: omitted
+    rationale: >-
+      Headless UI ships no icon or chevron slot. The icon is
+      entirely consumer-composed — typically a `<ChevronDownIcon>`
+      (from @heroicons/react) placed as a child of `DisclosureButton`.
+      Rotation on expand is consumer CSS driven by the `data-open`
+      attribute that `DisclosureButton` emits when the disclosure is
+      open (e.g. `data-[open]:rotate-180`). This matches Headless UI's
+      unstyled-by-design philosophy applied consistently across all
+      its primitives. Source: https://headlessui.com/react/disclosure
+      (example: "Showing and hiding the panel").
+
+  - from: anatomy[panel]
+    type: reshaped
+    to: "DisclosurePanel (div by default) with optional CloseButton / useClose for imperative close"
+    rationale: >-
+      The canonical panel slot is a single region controlled by
+      `aria-expanded` on the trigger plus `aria-labelledby`
+      referencing the trigger. Headless UI's `DisclosurePanel`
+      automatically receives an `id` that is referenced by
+      `aria-controls` on `DisclosureButton`, and is shown/hidden
+      by toggling its presence in the DOM (unmount=true, default)
+      or via `hidden` (unmount=false). However, no `aria-labelledby`
+      is applied to `DisclosurePanel` — the panel carries no
+      `role="region"` or labelling by default. The panel is extended
+      with two imperative-close affordances not present in the
+      canonical: `CloseButton` (a `<button>` that closes the nearest
+      ancestor disclosure when clicked) and the `useClose()` hook
+      (closes imperatively from any descendant component). The
+      `transition` boolean prop (default false) enables CSS
+      transition data attributes (`data-closed`, `data-enter`,
+      `data-leave`) on `DisclosurePanel` for CSS-driven open/close
+      animations. The `static` prop (default false) bypasses internal
+      state management for external control. The `unmount` prop
+      (default true) switches between DOM removal and `hidden`
+      attribute toggling. Source: https://headlessui.com/react/disclosure
+      (DisclosurePanel props table; CloseButton section; useClose section).
+
+  # Axes — variants
+
+  - from: axes.variants[inline]
+    type: omitted
+    rationale: >-
+      Headless UI ships no variant system. The inline vs standalone
+      distinction — which in the canonical drives heading-wrapping
+      and density defaults — is a design-system concern. Headless UI
+      is unstyled; consumers apply heading wrappers and spacing
+      independently. The `data-open` / `data-closed` state attributes
+      on `DisclosureButton` and `DisclosurePanel` are the styling
+      hooks. Source: https://headlessui.com/react/disclosure.
+
+  - from: axes.variants[standalone]
+    type: omitted
+    rationale: >-
+      Same reason as the inline variant — Headless UI has no variant
+      prop on `Disclosure`. All visual distinctions (standalone block
+      style vs inline link style) are consumer CSS.
+      Source: https://headlessui.com/react/disclosure.
+
+  # Axes — properties
+
+  - from: axes.properties[defaultExpanded]
+    type: renamed
+    to: defaultOpen
+    rationale: >-
+      The canonical boolean prop is `defaultExpanded`; Headless UI
+      names it `defaultOpen` (default `false`) on the root
+      `Disclosure` component. The semantics are identical —
+      uncontrolled initial open state — but the naming follows
+      Headless UI's consistent `open`/`defaultOpen` vocabulary across
+      all disclosure-pattern primitives (Popover, Menu, etc.).
+      Source: https://headlessui.com/react/disclosure
+      (Disclosure props table: "defaultOpen").
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      No density prop. Headless UI is unstyled; padding and spacing
+      inside `DisclosureButton` and `DisclosurePanel` are consumer
+      CSS. Canonical density (comfortable / compact) is a design-
+      system concern above the accessibility primitive.
+      Source: https://headlessui.com/react/disclosure.
+
+  - from: axes.properties[hasIcon]
+    type: omitted
+    rationale: >-
+      No `hasIcon` boolean. Whether an icon appears is purely a
+      consumer composition choice — the icon is not managed by the
+      Headless UI primitive at all (see anatomy[icon] divergence).
+      Source: https://headlessui.com/react/disclosure.
+
+  # Axes — states (data)
+
+  - from: axes.states.data[expanding]
+    type: omitted
+    rationale: >-
+      Headless UI does not expose an intermediate `expanding` state.
+      The `transition` prop on `DisclosurePanel` emits `data-enter`
+      and `data-leave` during CSS transitions, but these are not
+      a discrete `expanding` machine state — they are CSS class-
+      triggering hooks for the transition primitive, not states the
+      component tracks in its own reducer. Without `transition={true}`
+      on `DisclosurePanel`, the panel mounts/unmounts immediately with
+      no intermediate state.
+      Source: https://headlessui.com/react/disclosure
+      (section: "Transitions").
+
+  - from: axes.states.data[collapsing]
+    type: omitted
+    rationale: >-
+      Same as the `expanding` omission. No `collapsing` intermediate
+      state is surfaced. `data-leave` on `DisclosurePanel` (when
+      `transition={true}`) signals the leave phase for CSS, but
+      Headless UI's internal state is binary: open or closed.
+      Source: https://headlessui.com/react/disclosure
+      (section: "Transitions").
+
+  # Events
+
+  - from: events[openChange]
+    type: omitted
+    rationale: >-
+      Headless UI's `Disclosure` ships no `onOpenChange` or
+      `onChange` callback prop. The only imperative close surface
+      is the `close(ref?)` function exposed via the `Disclosure`
+      render prop (and mirrored through `useClose()`). There is no
+      open-state event bus; consumers needing to react to open/close
+      must either use the `open` render-prop boolean reactively or
+      wrap the primitive in their own state and toggle it via
+      `CloseButton` / `useClose`. This is the sharpest design
+      divergence from the canonical `openChange(boolean)` contract.
+      Source: https://headlessui.com/react/disclosure
+      (Disclosure render props: "open", "close"; no onChange in
+      Disclosure props table).
+
+  # Extended affordances not in canonical
+
+  - from: anatomy[trigger]
+    type: extended
+    addition: "CloseButton component and useClose() hook close the disclosure imperatively from any descendant"
+    rationale: >-
+      The canonical trigger slot is a toggle-only button — it opens
+      and closes the disclosure. Headless UI adds two imperative-
+      close affordances that the canonical does not model: (1)
+      `CloseButton` — a `<button>` (or any `as=` element) that,
+      when clicked, closes the nearest `Disclosure` ancestor and
+      refocuses `DisclosureButton`; (2) `useClose()` — a React hook
+      that returns the same close function for use in arbitrary
+      descendant components. These are useful for "done" or
+      "dismiss" actions inside a panel that should collapse the
+      disclosure. The canonical trigger-only model does not account
+      for in-panel close affordances. Source:
+      https://headlessui.com/react/disclosure
+      (sections: "Closing disclosures", "Using the useClose hook").
+
+rationale: |
+  Headless UI React's Disclosure is the closest library match to the
+  canonical Disclosure by naming (it ships `Disclosure` /
+  `DisclosureButton` / `DisclosurePanel` rather than Radix's
+  `Collapsible.*`). The divergences are fewer and less structural than
+  the modal audit but follow the same library-level pattern:
+
+  1. Unstyled by design. Variants (inline / standalone), density,
+     and the icon slot are all omitted — styling is consumer CSS
+     driven by `data-open` / `data-closed` attributes.
+
+  2. Uncontrolled-only root. `Disclosure` only ships `defaultOpen`;
+     there is no controlled `open` + `onOpenChange` pair. Consumers
+     needing controlled state must lift state up and use `static={true}`
+     on `DisclosurePanel` or rely on `useClose()` for imperative close.
+
+  3. No intermediate animation states. Canonical models four states
+     (closed / expanding / expanded / collapsing). Headless UI's
+     binary open/closed state plus `data-enter` / `data-leave`
+     on `DisclosurePanel` (when `transition={true}`) provides
+     animation hooks without discrete intermediate states in the
+     component's own reducer.
+
+  4. No openChange callback. The absence of a boolean change event is
+     the sharpest API gap. In-panel close is handled instead via the
+     extended `CloseButton` / `useClose()` affordances — a
+     pragmatic workaround but not equivalent to an event-driven
+     open/close contract.
+
+  5. aria-labelledby gap. Canonical requires the panel to carry
+     `aria-labelledby` referencing the trigger. Headless UI wires
+     only `aria-controls` (button → panel) but not the reverse
+     (`aria-labelledby` on the panel). Consumers applying
+     `role="region"` to `DisclosurePanel` must add `aria-labelledby`
+     manually.
+
+lastReviewed: '2026-05-05'

@@ -688,11 +688,18 @@ contracts:
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article
-  - https://polaris.shopify.com/components/layout-and-structure/card
-  - https://carbondesignsystem.com/components/tile/usage/
-  - https://m3.material.io/components/cards/overview
-  - https://atlassian.design/components/card/examples
-  - https://www.radix-ui.com/themes/docs/components/card
+  - url: https://polaris-react.shopify.com/components/layout-and-structure/card
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/tile/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://m3.material.io/components/cards/overview
+    library: material3
+    verifiedAt: '2026-05-05'
+  - url: https://www.radix-ui.com/themes/docs/components/card
+    library: radix
+    verifiedAt: '2026-05-05'
   - https://inclusive-components.design/cards/
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

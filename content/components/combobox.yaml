@@ -795,14 +795,26 @@ a11yAcceptance:
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/combobox_role
-  - https://react-spectrum.adobe.com/react-aria/ComboBox.html
-  - https://headlessui.com/react/combobox
+  - url: https://react-aria.adobe.com/ComboBox
+    library: reactAria
+    verifiedAt: '2026-05-05'
+  - url: https://headlessui.com/react/combobox
+    library: headlessUi
+    verifiedAt: '2026-05-05'
   - https://www.downshift-js.com/
-  - https://polaris.shopify.com/components/selection-and-input/combobox
-  - https://carbondesignsystem.com/components/combo-box/usage/
-  - https://m3.material.io/components/menus/overview
-  - https://atlassian.design/components/combobox/examples
+  - url: https://polaris-react.shopify.com/components/selection-and-input/combobox
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/dropdown/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://m3.material.io/components/menus/overview
+    library: material3
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/select
+    library: atlassian
+    verifiedAt: '2026-05-05'
   - https://www.tpgi.com/the-anatomy-of-a-combobox/
   - https://inclusive-components.design/menus-menu-buttons/
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

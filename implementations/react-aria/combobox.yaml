@@ -1,0 +1,397 @@
+componentId: combobox
+libraryId: react-aria
+componentName: ComboBox
+
+exampleCode: |
+  import {
+    ComboBox,
+    ComboBoxItem,
+    ComboBoxValue,
+    Input,
+    Button,
+    Label,
+    Text,
+    FieldError,
+    Popover,
+    ListBox,
+    ListBoxItem,
+  } from 'react-aria-components';
+
+  // Single-select (default)
+  <ComboBox
+    name="country"
+    isRequired
+    onSelectionChange={(key) => console.log(key)}
+    onInputChange={(value) => console.log(value)}
+  >
+    <Label>Country</Label>
+    <Input />
+    <Button><ChevronDownIcon /></Button>
+    <Text slot="description">Start typing to filter.</Text>
+    <FieldError />
+    <Popover>
+      <ListBox>
+        <ListBoxItem id="au">Australia</ListBoxItem>
+        <ListBoxItem id="ca">Canada</ListBoxItem>
+        <ListBoxItem id="de">Germany</ListBoxItem>
+      </ListBox>
+    </Popover>
+  </ComboBox>
+
+  // Multi-select with TagGroup display
+  <ComboBox selectionMode="multiple" name="tags" defaultItems={items}>
+    <Label>Tags</Label>
+    <ComboBoxValue placeholder="Select tags" />
+    <Input />
+    <Button><ChevronDownIcon /></Button>
+    <Popover>
+      <ListBox>
+        {(item) => <ListBoxItem id={item.id}>{item.name}</ListBoxItem>}
+      </ListBox>
+    </Popover>
+  </ComboBox>
+
+  // allowsCustomValue (creatable)
+  <ComboBox allowsCustomValue name="language" defaultItems={languages}>
+    <Label>Language</Label>
+    <Input />
+    <Button><ChevronDownIcon /></Button>
+    <Popover>
+      <ListBox>
+        {(item) => <ListBoxItem>{item.name}</ListBoxItem>}
+      </ListBox>
+    </Popover>
+  </ComboBox>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[clear-button]
+    type: omitted
+    rationale: >-
+      React Aria ComboBox ships no built-in clear button. The docs and API
+      reference contain no mention of a clear-button slot, prop, or sub-component.
+      Consumers who need a clear affordance must compose their own button and
+      wire it to the controlled `inputValue` / `value` props. The canonical
+      `clear-button` slot (with `tabindex="-1"` and Escape binding) is entirely
+      a consumer responsibility in React Aria.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: anatomy[trigger-button]
+    type: reshaped
+    to: "<Button> — standard React Aria Button sub-component, always present in the compound tree"
+    rationale: >-
+      The canonical `trigger-button` is marked optional (`required: false`) with
+      `tabindex="-1"` so it does not appear in the keyboard tab order. React Aria
+      ships a first-class `<Button>` sub-component inside the ComboBox compound
+      tree that is expected to always be present and is not `tabindex="-1"` by
+      default — the library manages focus routing differently (the button triggers
+      the popover; focus stays on the input via `aria-activedescendant`). The
+      trigger button is visible in all documented examples and the starter kits;
+      it is not annotated as optional. Its icon content (ChevronDown) is
+      consumer-composed children of the Button, not a built-in glyph.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: anatomy[listbox]
+    type: reshaped
+    to: "<Popover><ListBox> — two nested sub-components replacing the single listbox slot"
+    rationale: >-
+      The canonical anatomy collapses the floating popup and the listbox into
+      a single `listbox` slot. React Aria separates them: `<Popover>` handles
+      the floating positioning and portal mechanics (using floating-ui under the
+      hood, syncing width via `--trigger-width` CSS custom property), while
+      `<ListBox>` carries `role="listbox"` and the option collection. This split
+      lets consumers swap the Popover (e.g. use a drawer on mobile) independently
+      from the list surface. The divergence is structural: where the canon has one
+      slot, React Aria has two co-required sub-components.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: anatomy[option]
+    type: renamed
+    to: ListBoxItem
+    rationale: >-
+      The canonical anatomy slot is named `option` (matching `role="option"`).
+      React Aria names the sub-component `ListBoxItem` — the same component used
+      inside standalone `ListBox`, giving a consistent API across collection
+      surfaces (ListBox, ComboBox, Select, Autocomplete). The ARIA role produced
+      on the DOM element is still `option`; only the React component name differs.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: anatomy[empty-state]
+    type: omitted
+    rationale: >-
+      React Aria ComboBox has no dedicated empty-state slot or sub-component. The
+      `allowsEmptyCollection` prop keeps the Popover open when the ListBox has
+      zero items, but any "no results" message must be consumer-composed inside
+      the `<ListBox>` children (e.g. a plain `<p>` or `<ListBoxItem isDisabled>`).
+      No `role="status"` live-region is wired automatically. The canonical empty-
+      state slot with `semantic: status` and polite live-region announcement is
+      absent; consumers must implement the accessibility pattern themselves.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── Axes — Variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[single-select]
+    type: reshaped
+    to: "selectionMode=\"single\" (default, not a variant prop)"
+    rationale: >-
+      The canonical documents `single-select` as a named variant. React Aria
+      expresses selection mode as the `selectionMode` prop (`'single' | 'multiple'`)
+      on the `<ComboBox>` root with `'single'` as the default. There is no
+      `variant` prop; the selection-mode axis is orthogonal to any styling
+      variant the consumer defines.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.variants[multi-select]
+    type: reshaped
+    to: "selectionMode=\"multiple\" prop, with ComboBoxValue sub-component for display"
+    rationale: >-
+      React Aria implements multi-select via `selectionMode="multiple"` on
+      `<ComboBox>`. Selected values are displayed through the `<ComboBoxValue>`
+      sub-component (which accepts a render-prop function receiving
+      `{selectedItems, state}`) rather than as chips inside the input. The docs
+      show integration with `<TagGroup>` to render selected items as tags — the
+      tag rendering is consumer-composed, not built-in. `onChange` fires with
+      `Key[]` when `selectionMode="multiple"`.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.variants[creatable]
+    type: renamed
+    to: "allowsCustomValue (boolean prop)"
+    rationale: >-
+      The canonical `creatable` variant allows users to commit a value not present
+      in the option list. React Aria expresses this as `allowsCustomValue: boolean`
+      on the `<ComboBox>` root. When `allowsCustomValue` is true, the input value
+      is submitted as text (overriding `formValue: 'key'`). The concept is
+      one-to-one; only the surface name differs — it is a boolean prop rather than
+      a variant enum value.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[filterMode]
+    type: reshaped
+    to: "defaultFilter?: (textValue: string, inputValue: string) => boolean"
+    rationale: >-
+      The canonical `filterMode` property is an enum (`startsWith | contains |
+      fuzzy | none`). React Aria replaces this with a `defaultFilter` function
+      prop that accepts a custom predicate, defaulting to a built-in
+      case-insensitive contains filter. There is no built-in enum for filter
+      modes; consumers wanting `startsWith` or `fuzzy` supply their own function.
+      The power is greater but the API is not declarative — the library neither
+      names nor exports the built-in filter strategies as named presets.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties[strict]
+    type: reshaped
+    to: "allowsCustomValue: false (default) — semantics inverted"
+    rationale: >-
+      The canonical `strict: boolean` means "must select from the list" when
+      `true`. React Aria inverts the polarity: `allowsCustomValue: false` (the
+      default) is strict behaviour; `allowsCustomValue: true` opts into free-text.
+      The canonical `strict: true` maps to React Aria's default (no prop needed);
+      `strict: false` maps to `allowsCustomValue: true`. The behaviour is
+      equivalent; the API shape and default sense are opposite.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties[virtualised]
+    type: omitted
+    rationale: >-
+      React Aria ComboBox ships no built-in virtualisation prop or infrastructure.
+      Large option lists require the consumer to integrate `@tanstack/react-virtual`
+      or a similar library inside the `<ListBox>` children. The canonical
+      `virtualised` boolean prop and the ~200-item threshold guidance exist in the
+      canon; neither has a React Aria API surface.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties[async]
+    type: reshaped
+    to: "Controlled items prop + useAsyncList hook from @react-stately/data"
+    rationale: >-
+      The canonical `async: boolean` marks the filter as async (results arrive
+      via Promise). React Aria has no `async` prop on `<ComboBox>`; instead,
+      async loading is expressed architecturally: the consumer controls the
+      `items` prop, manages loading state in their own state (or via
+      `useAsyncList` from `@react-stately/data`), and supplies a `loadingState`
+      indicator inside the ListBox themselves. The library provides no built-in
+      busy-state announcement via `aria-live`; the consumer must compose this.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `menuTrigger: 'input' | 'focus' | 'manual'` — controls when the Popover
+      opens. `'input'` (default) opens on typing; `'focus'` opens when the input
+      gains focus; `'manual'` requires a Button click or ArrowDown/ArrowUp with
+      the popup closed. No equivalent in the canonical axes.properties.
+    rationale: >-
+      React Aria exposes `menuTrigger` as a first-class prop because the three
+      trigger modes have meaningfully different UX and ARIA implications (whether
+      `aria-expanded` changes on focus vs. on input vs. only on explicit
+      activation). The canonical documents `trigger-button` as optional, implying
+      a binary (button present / absent) rather than a three-way mode. React Aria
+      makes the trigger semantics explicit and independently configurable.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `selectionMode: 'single' | 'multiple'` — top-level prop driving both UI
+      and event shape. When `'multiple'`, `onChange` fires with `Key[]` and
+      `<ComboBoxValue>` is used to render selected items. No enum-level
+      equivalent in the canonical axes.properties (the canonical surfaces
+      single/multi as variants, not a property).
+    rationale: >-
+      React Aria unifies single and multi select under one `selectionMode` prop
+      consistent with its ListBox / GridList / Table primitives. The canonical
+      models these as structural variants (different component shapes). React
+      Aria's approach enables runtime switching between modes without changing
+      the compound tree structure — only the prop value changes.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `formValue: 'text' | 'key'` — controls what value is submitted to the form.
+      `'key'` (default) submits the selected item's `id`; `'text'` submits the
+      display label. When `allowsCustomValue` is true, text is always submitted
+      regardless of this setting.
+    rationale: >-
+      The canonical `formIntegration.submittedValue` states "strict mode submits
+      the selected option's canonical value (id or token), not the display label"
+      as prose guidance, but there is no canonical prop for toggling this behaviour
+      at runtime. React Aria makes it a first-class prop because different
+      back-ends need either the opaque key (API call) or the human-readable label
+      (legacy form POST). This is a real API divergence, not just a naming
+      difference.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `validationBehavior: 'native' | 'aria'` — selects between HTML Constraint
+      Validation API (`'native'`, default) and ARIA-only validation announcements
+      (`'aria'`). `'native'` hooks into `reportValidity()` and the browser's
+      built-in validation bubble; `'aria'` bypasses the native API and uses only
+      `aria-invalid` + `aria-describedby` on `<FieldError>`.
+    rationale: >-
+      The canonical `formIntegration.validation` documents `setCustomValidity()`
+      as the hook for strict-mode validation but does not model the
+      native-vs-ARIA trade-off as a prop. React Aria surfaces this choice because
+      native validation UX (browser tooltip) is inaccessible in some AT
+      configurations; `'aria'` mode routes all validation messaging through the
+      AT-visible `<FieldError>` instead. This is a React Aria platform-wide
+      pattern also present in the Checkbox and Select implementations.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── States ───────────────────────────────────────────────────────────────
+
+  - from: axes.states.interactive[disabled]
+    type: reshaped
+    to: "isDisabled prop (renders aria-disabled, not HTML disabled — consistent with React Aria platform contract)"
+    rationale: >-
+      Consistent with React Aria's platform-wide accessibility-first disabled
+      contract (same pattern as Button and Checkbox). `isDisabled` on `<ComboBox>`
+      sets `aria-disabled` on the input and suppresses interactions without
+      removing the element from the tab order. The HTML `disabled` attribute is
+      never applied. Consumers needing full removal from tab order use
+      `excludeFromTabOrder`.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[inputChange]
+    type: renamed
+    to: onInputChange
+    rationale: >-
+      One-to-one semantic match. React Aria adopts `on*` prefix for all event
+      callbacks per React convention. `onInputChange(value: string)` fires on
+      every keystroke and on programmatic mutation — matching the canonical
+      `inputChange` payload description exactly. The callback signature is
+      `(value: string) => void`.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: events[selectionChange]
+    type: renamed
+    to: onChange
+    rationale: >-
+      React Aria uses `onChange` rather than `onSelectionChange` for ComboBox
+      (unlike its Select component which uses `onSelectionChange`). The payload
+      is `Key | null` for single-select or `Key[]` for multi-select, matching
+      the canonical description of `null / []` after clear. The canonical
+      `selectionChange` concept maps exactly; the name is `onChange`.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  - from: events[openChange]
+    type: extended
+    addition: >-
+      `onOpenChange(isOpen: boolean, menuTrigger?: MenuTriggerAction)` — the
+      second argument `menuTrigger` indicates what caused the open/close:
+      `'input'`, `'focus'`, `'manual'`, or `undefined` on close. The canonical
+      `openChange` payload is `boolean` only; React Aria adds the trigger-source
+      discriminator.
+    rationale: >-
+      The extra `menuTrigger` argument lets consumers distinguish "opened by
+      typing" from "opened by button click" from "opened on focus", which drives
+      different UX responses (e.g. show all options on focus-open vs. filter on
+      type-open). The canonical does not model trigger-source awareness.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+  # ── Form integration ─────────────────────────────────────────────────────
+
+  - from: axes.properties[strict]
+    type: extended
+    addition: >-
+      `validate?: (value: ComboBoxValidationValue<M>) => ValidationError | true | null`
+      — declarative validation function replacing the imperative
+      `setCustomValidity()` model. Works with both `validationBehavior` modes.
+      The canonical documents `setCustomValidity` as the strict-mode hook;
+      React Aria provides a declarative `validate` prop that the library invokes
+      internally and routes through `<FieldError>`.
+    rationale: >-
+      React Aria's validation model is declarative-first (validate returns a
+      message string or `true`) rather than imperative (`setCustomValidity(msg)`).
+      This prevents the common mistake of forgetting to clear the custom validity
+      message after correction. The trade-off: consumers cannot call
+      `reportValidity()` imperatively without going through the form library
+      integration points.
+      Source: https://react-aria.adobe.com/ComboBox (fetched 2026-05-05)
+
+rationale: |
+  React Aria ComboBox is a behaviour-only compound primitive that owns the
+  accessibility contract (ARIA roles, aria-expanded, aria-activedescendant,
+  form participation, keyboard event normalisation) while leaving visual slot
+  anatomy and motion timing entirely to the consumer.
+
+  The five deepest structural divergences from the canon are:
+
+  1. No built-in clear button — the canonical `clear-button` slot (with
+     Escape binding and tabindex="-1") is absent. Consumers compose their own.
+
+  2. Single listbox slot → Popover + ListBox pair — React Aria separates floating
+     positioning (Popover) from list semantics (ListBox), enabling the Popover to
+     be swapped independently (e.g. bottom-sheet on mobile) without touching
+     the collection surface.
+
+  3. filterMode enum → defaultFilter function — React Aria does not ship named
+     filter presets; the consumer supplies a predicate. The built-in default is
+     contains (case-insensitive), but startsWith and fuzzy require consumer code.
+
+  4. Variant props collapsed to selectionMode + allowsCustomValue — what the
+     canon models as three named variants (single-select, multi-select, creatable)
+     is expressed as two orthogonal props, matching React Aria's preference for
+     composable boolean/enum props over variant enums.
+
+  5. formValue prop — React Aria adds a first-class toggle between submitting
+     the item key vs. the display label, which the canonical only documents as
+     prose guidance without an API hook.
+
+  The rename surface (onInputChange, onChange, onOpenChange, allowsCustomValue,
+  isDisabled, isRequired, isInvalid) follows React Aria's on*/is*/allows*
+  naming scheme uniformly applied. The underlying AT-visible ARIA state
+  (aria-expanded, aria-activedescendant, aria-controls, aria-required,
+  aria-invalid, aria-disabled) is canonical-compliant.
+
+lastReviewed: '2026-05-05'

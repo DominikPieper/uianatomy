@@ -1,0 +1,202 @@
+componentId: button
+libraryId: headlessui
+componentName: Button
+
+exampleCode: |
+  import { Button } from '@headlessui/react'
+
+  export default function Example() {
+    return (
+      <Button
+        type="button"
+        disabled={false}
+        className="rounded bg-sky-600 px-4 py-2 text-white data-[hover]:bg-sky-500 data-[disabled]:opacity-50"
+        onClick={() => console.log('clicked')}
+      >
+        Save changes
+      </Button>
+    )
+  }
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+  - from: anatomy[icon-leading]
+    type: omitted
+    rationale: >-
+      Headless UI Button is a thin wrapper around a native `<button>` element
+      (DEFAULT_BUTTON_TAG = 'button' in button.tsx). It ships no named sub-slots.
+      Icon-leading content is placed as plain React children; the library does
+      not distinguish a leading icon position from the label or any other child.
+      Source: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/button/button.tsx
+
+  - from: anatomy[label]
+    type: reshaped
+    to: Standard React children prop (no named slot)
+    rationale: >-
+      Canonical treats `label` as a named slot with explicit accessible-name
+      semantics. Headless UI Button accepts `children` as a standard React
+      children prop or a render function `(bag: ButtonRenderPropArg) => React.ReactNode`.
+      There is no label slot distinction — all children are rendered directly
+      inside the `<button>` element. Accessible-name derivation falls back to
+      the native button text-content algorithm.
+      Source: https://headlessui.com/react/button
+
+  - from: anatomy[icon-trailing]
+    type: omitted
+    rationale: >-
+      Same reason as icon-leading: Headless UI Button ships no named sub-slots.
+      A trailing icon is placed as plain React children after the label text;
+      the library does not track or expose a trailing-icon position concept.
+      Source: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/button/button.tsx
+
+  # ── Variants (all five omitted — unstyled library) ────────────────────────
+  - from: axes.variants[primary]
+    type: omitted
+    rationale: >-
+      Headless UI is an unstyled accessibility primitive library. It ships no
+      visual variant system; the `Button` component has no `variant` prop.
+      All visual differentiation (primary, secondary, tertiary, ghost,
+      destructive) is delegated to consumer CSS or utility classes via
+      `className` or the data-attribute selectors the library exposes
+      (`data-disabled`, `data-hover`, `data-active`, `data-focus`).
+      Source: https://headlessui.com/react/button
+
+  - from: axes.variants[secondary]
+    type: omitted
+    rationale: >-
+      No visual variant system. See axes.variants[primary] rationale.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.variants[tertiary]
+    type: omitted
+    rationale: >-
+      No visual variant system. See axes.variants[primary] rationale.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.variants[ghost]
+    type: omitted
+    rationale: >-
+      No visual variant system. See axes.variants[primary] rationale.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.variants[destructive]
+    type: omitted
+    rationale: >-
+      No visual variant system. See axes.variants[primary] rationale.
+      Source: https://headlessui.com/react/button
+
+  # ── Properties ────────────────────────────────────────────────────────────
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      No `size` prop. Headless UI is unstyled and ships no sizing scale.
+      Padding, font-size, and min-height are consumer CSS. The Button
+      component API in v2.1 exposes only `as`, `disabled`, `autoFocus`,
+      and `type` as first-class props.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.properties[iconOnly]
+    type: omitted
+    rationale: >-
+      No `iconOnly` prop. Accessible-name provision for icon-only buttons
+      (an `aria-label` on the root `<button>`) is the consumer's
+      responsibility; the library provides no guard or helper for it.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.properties[fullWidth]
+    type: omitted
+    rationale: >-
+      No `fullWidth` prop. Block-level vs inline-level sizing is consumer
+      CSS (`w-full` Tailwind class or equivalent).
+      Source: https://headlessui.com/react/button
+
+  # ── Data states ───────────────────────────────────────────────────────────
+  - from: axes.states.data[loading]
+    type: omitted
+    rationale: >-
+      Headless UI Button tracks no loading state. It does not manage
+      `aria-busy`, spinner rendering, or click-guard-while-loading.
+      Loading is a design-system convention that sits above the
+      accessibility primitive; consumers implement it by setting
+      `disabled` on the Button and managing their own `aria-busy`
+      attribute via spread props or a wrapper component.
+      Source: https://headlessui.com/react/button
+
+  - from: axes.states.data[pressed]
+    type: reshaped
+    to: data-active render prop (transient press feedback only, no aria-pressed management)
+    rationale: >-
+      Canonical `pressed` is a persistent toggle-button data state that
+      maps to `aria-pressed`. Headless UI Button exposes `active` (via
+      `useActivePress` hook in button.tsx) as a transient pointer/keyboard-
+      activation state — it is true while the user is pressing down and
+      resets on release. This surfaces as `data-active` attribute and the
+      `active` render-prop boolean. The library does not manage
+      `aria-pressed`; persistent toggle-button semantics are consumer-wired.
+      Source: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/button/button.tsx
+
+  # ── Interactive states ────────────────────────────────────────────────────
+  - from: axes.states.interactive[focus-visible]
+    type: renamed
+    to: data-focus (via useFocusRing hook, exposed as focus render prop)
+    rationale: >-
+      Canonical uses the CSS-standard term `focus-visible` (aligned with
+      `:focus-visible` pseudo-class). Headless UI exposes the state as
+      `data-focus` attribute and a `focus` render-prop boolean, derived
+      from the `useFocusRing` hook in button.tsx. The hook tracks
+      keyboard-initiated focus (equivalent to `:focus-visible`) but the
+      exposed name is `focus` / `data-focus`, not `focus-visible` /
+      `data-focus-visible`. Consumers must use `data-[focus]:ring-2`
+      (Tailwind) or `[data-focus]` (CSS) for ring styling.
+      Source: https://headlessui.com/react/button
+
+  # ── Extended props ────────────────────────────────────────────────────────
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `as` prop (polymorphic rendering): accepts any HTML tag string or React
+      component (default `"button"`). Allows rendering the Button as an `<a>`
+      or a custom component while retaining Headless UI's interaction-state
+      tracking (`data-hover`, `data-focus`, `data-active`, `data-disabled`,
+      `data-autofocus`). The canonical root slot always renders as `<button>`;
+      Headless UI's polymorphism is an extension beyond the canonical API.
+
+      `autoFocus` prop: natively wires `autofocus` attribute and tracks the
+      `data-autofocus` state for styling, beyond what the canonical axes expose.
+    rationale: >-
+      Headless UI's `as` prop is a library-wide design pattern allowing
+      consumers to swap the underlying element for framework-router links
+      or custom components without losing interaction-state data attributes.
+      `autoFocus` surfaces the browser's native autofocus mechanic as a
+      first-class tracked state rather than a bare HTML attribute passthrough.
+      Source: https://headlessui.com/react/button
+
+rationale: |
+  Headless UI Button (v2.1) is a minimal, unstyled accessibility primitive
+  whose design philosophy diverges from the canonical Button in two
+  fundamental ways:
+
+  1. No visual layer: Headless UI stops at the interaction-state machine
+     (hover, focus, active, disabled). All visual concerns — variant
+     (primary / secondary / ghost / destructive), size, icon slot
+     positioning, full-width layout, and loading feedback — are
+     delegated to consumer CSS. This is a deliberate trade-off: the
+     library remains framework-agnostic for styling and composable with
+     Tailwind CSS utility classes without imposing token opinions.
+
+  2. No sub-slot anatomy: The component is a single-element wrapper that
+     renders one `<button>`. It exposes no named child slots for icon-
+     leading, label, or icon-trailing. Icon placement and label markup
+     are consumer-composed free children. This keeps the API surface
+     minimal but shifts the accessible-name and icon-decoration
+     contracts entirely to the consumer.
+
+  The library does add genuine value above a bare `<button>`: the
+  interaction-state data attributes (`data-hover`, `data-focus`,
+  `data-active`, `data-disabled`) are computed correctly across pointer,
+  keyboard, and touch inputs using React Aria's hook suite, and the
+  `as` prop enables polymorphic rendering to router links while
+  preserving those state attributes. These extensions are documented
+  above as `extended` divergences on the root slot.
+
+lastReviewed: '2026-05-05'

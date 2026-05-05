@@ -663,10 +663,17 @@ sources:
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/region_role
   - https://www.w3.org/TR/WCAG22/#status-messages
   - https://gdpr.eu/cookies/
-  - https://polaris.shopify.com/components/feedback-indicators/banner
-  - https://m3.material.io/components/banners/overview
-  - https://carbondesignsystem.com/components/notification/usage/
-  - https://atlassian.design/components/section-message/examples
-  - https://www.gov.uk/service-manual/design/notification-banner
+  - url: https://polaris-react.shopify.com/components/feedback-indicators/banner
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/notification/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/section-message
+    library: atlassian
+    verifiedAt: '2026-05-05'
+  - url: https://design-system.service.gov.uk/components/notification-banner/
+    library: govuk
+    verifiedAt: '2026-05-05'
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

@@ -44,10 +44,10 @@ divergence:
     rationale: >-
       Same structural role (`role="region"` with `aria-labelledby` wired to the
       corresponding Trigger). Radix uses "Content" following its own primitives
-      vocabulary (Dialog.Content, Popover.Content). The canonical term "panel"
-      mirrors the APG accordion pattern; Radix diverges for internal naming
-      consistency. CSS variables `--radix-accordion-content-width` and
-      `--radix-accordion-content-height` are exposed on the element to enable
+      vocabulary (Dialog.Content, Popover.Content, Collapsible.Content). The
+      canonical term "panel" mirrors the APG accordion pattern; Radix diverges for
+      internal naming consistency. CSS variables `--radix-accordion-content-width`
+      and `--radix-accordion-content-height` are exposed on the element to enable
       CSS-driven expand/collapse animations — the canonical `motion` block
       describes the same intent with design tokens.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion#content
@@ -58,20 +58,22 @@ divergence:
     rationale: >-
       Same interactive role (`<button>` via CollapsiblePrimitive.Trigger). Radix
       uses "Trigger" across all its disclosure primitives (Collapsible, Popover,
-      Select). The component auto-wires `aria-expanded` and `aria-controls` to
-      the matching Content element, satisfying the canonical APG contract.
-      Notably Radix uses `aria-disabled` (not native `disabled`) on the button,
-      keeping disabled triggers in the focus order — this matches the canonical
-      a11y contract unlike Radix Tabs which uses native `disabled`.
-      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/accordion/src/accordion.tsx
+      Select). The component auto-wires `aria-expanded` and `aria-controls` to the
+      matching Content element, satisfying the canonical APG contract. The
+      `aria-disabled` attribute is set conditionally — only when the item is
+      currently open AND the root is `type="single"` with `collapsible={false}`,
+      preventing the user from collapsing the last open item while keeping the
+      trigger focusable. This matches the canonical a11y contract; native `disabled`
+      is never used.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/accordion/src/accordion.tsx
 
   - from: anatomy[icon]
     type: omitted
     rationale: >-
       Radix ships no chevron or indicator sub-component for accordion items.
       Consumers supply their own icon element inside Accordion.Trigger and style
-      its rotation via the `[data-state="open"]` selector on the Trigger or on
-      the icon element itself. The canonical icon slot is decorative and optional;
+      its rotation via the `[data-state="open"]` selector on the Trigger or on the
+      icon element itself. The canonical icon slot is decorative and optional;
       Radix makes the consumer responsible for the entire visual affordance.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion
 
@@ -79,19 +81,37 @@ divergence:
   - from: anatomy[header]
     type: reshaped
     to: >-
-      Accordion.Header renders <h3> by default. The recommended pattern for
-      controlling heading level is asChild with an explicit <h2>/<h3>/<h4> child
-      (e.g. <Accordion.Header asChild><h2>…</h2></Accordion.Header>).
+      Accordion.Header renders <h3> by default (Primitive.h3 in source). The
+      recommended pattern for controlling heading level is asChild with an explicit
+      <h2>/<h3>/<h4> child (e.g. <Accordion.Header asChild><h2>…</h2></Accordion.Header>).
     rationale: >-
-      The canonical contract requires that the heading level be chosen relative
-      to the document outline (h2 for a top-level accordion, h3 when nested).
-      Radix hard-codes `<h3>` as the default element for Accordion.Header rather
-      than exposing a `level` prop. Consumers working inside an h2-level section
-      must use `asChild` to override to `<h2>` — a two-step pattern not required
-      by the canonical anatomy. The `asChild` approach is fully conformant but
-      the fixed default of `<h3>` will violate heading-order in some document
-      outlines if used without override.
-      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/accordion/src/accordion.tsx
+      The canonical contract requires that the heading level be chosen relative to
+      the document outline (h2 for a top-level accordion, h3 when nested). Radix
+      hard-codes `<h3>` as the default element for Accordion.Header rather than
+      exposing a `level` prop. Consumers working inside an h2-level section must
+      use `asChild` to override to `<h2>` — a two-step pattern not required by the
+      canonical anatomy. The `asChild` approach is fully conformant but the fixed
+      default of `<h3>` will violate heading-order in document outlines where h3 is
+      not correct if used without an override.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/accordion/src/accordion.tsx
+
+  # ── Anatomy — Content forceMount extension ───────────────────────────────
+  - from: anatomy[panel]
+    type: extended
+    addition: >-
+      forceMount prop on Accordion.Content (boolean). When true, keeps the content
+      mounted in the DOM even when the item is closed, bypassing the default
+      unmount-on-collapse behaviour. Enables CSS animation exit transitions and
+      avoids re-mount cost for heavy panel content.
+    rationale: >-
+      The canonical anatomy has no `forceMount` concept because it is
+      framework-neutral — mount/unmount lifecycle is a React-specific concern.
+      Radix exposes `forceMount` via CollapsiblePrimitive.Content passthrough to
+      solve the common pattern of animating the exit transition (which requires
+      the element to remain mounted while the close animation runs). Without
+      `forceMount`, the element is removed from the DOM immediately on close and
+      the CSS exit animation cannot play.
+      Source: https://www.radix-ui.com/primitives/docs/components/accordion#content
 
   # ── Axes — properties ────────────────────────────────────────────────────
   - from: axes.properties[multi]
@@ -100,14 +120,13 @@ divergence:
       type prop on Accordion.Root; values: "single" | "multiple".
       When type="single", collapsible prop (boolean) is also available.
     rationale: >-
-      Canonical expresses the expansion mode as a boolean `multi` property on
-      the root. Radix reshapes this into a required string enum `type` that must
-      be "single" or "multiple". The `collapsible` boolean only applies when
-      `type="single"` — Radix enforces this at the TypeScript level by widening
-      the Root prop interface via a discriminated union, whereas the canonical
-      anatomy lists `multi` and `collapsible` as independent properties. There
-      is no runtime error if `collapsible` is passed with `type="multiple"` but
-      it has no effect.
+      Canonical expresses the expansion mode as a boolean `multi` property on the
+      root. Radix reshapes this into a required string enum `type` that must be
+      "single" or "multiple". The `collapsible` boolean only applies when
+      `type="single"` — Radix enforces this at the TypeScript level via a
+      discriminated union on the Root prop interface, whereas the canonical anatomy
+      lists `multi` and `collapsible` as independent properties. Passing `collapsible`
+      with `type="multiple"` has no effect at runtime.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion#root
 
   - from: axes.properties[density]
@@ -117,6 +136,7 @@ divergence:
       panel padding, and item gap are entirely consumer-controlled via CSS
       classNames. The canonical `comfortable | compact` density axis is a
       design-system convention layered above the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/accordion
 
   - from: axes.variants[bordered]
     type: omitted
@@ -134,13 +154,29 @@ divergence:
     addition: >-
       orientation prop on Accordion.Root ("vertical" | "horizontal", default
       "vertical"). Drives data-orientation on all sub-components and switches
-      ArrowDown/Up ↔ ArrowRight/Left keyboard navigation accordingly.
+      ArrowDown/Up to ArrowRight/Left keyboard navigation accordingly.
     rationale: >-
-      The canonical accordion anatomy is vertically-stacked; horizontal
-      orientation is not described in the canon. Radix exposes `orientation`
-      as a first-class prop enabling horizontal accordion layouts with matching
-      keyboard navigation (ArrowLeft/Right instead of ArrowDown/Up). This is a
-      genuine extension beyond what the canonical anatomy covers.
+      The canonical accordion anatomy is vertically-stacked; horizontal orientation
+      is not described in the canon. Radix exposes `orientation` as a first-class
+      prop enabling horizontal accordion layouts with matching keyboard navigation
+      (ArrowLeft/Right instead of ArrowDown/Up). This is a genuine extension beyond
+      what the canonical anatomy covers.
+      Source: https://www.radix-ui.com/primitives/docs/components/accordion#root
+
+  # ── Axes — disabled extension on Root ────────────────────────────────────
+  - from: axes.properties[multi]
+    type: extended
+    addition: >-
+      disabled prop on Accordion.Root (boolean). When true, disables all items
+      in the accordion simultaneously, setting data-disabled on Root, every Item,
+      Header, Trigger, and Content.
+    rationale: >-
+      The canonical anatomy exposes `disabled` only at the item level (via the
+      trigger's aria-disabled hint). Radix extends this with a root-level `disabled`
+      prop that disables the entire accordion in one declaration — a convenience
+      for form-disabled scenarios. The canonical anatomy has no equivalent
+      root-level disabled axis; this is an addition Radix makes to simplify
+      controlled disabled states across all items.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion#root
 
   # ── Events ───────────────────────────────────────────────────────────────
@@ -149,18 +185,18 @@ divergence:
     to: >-
       onValueChange on Accordion.Root.
       type="single": (value: string) => void — value is the open item's string
-      id, or empty string when all items are closed.
+      id, or empty string when all items are closed (collapsible=true) or the
+      previously-open item id when collapsible=false.
       type="multiple": (value: string[]) => void — value is the array of all
       currently open item ids.
     rationale: >-
-      Canonical fires a per-item event `{ itemId, expanded }` — one event per
-      item whose state changes. Radix fires a single root-level callback with
-      the full new open-set after each interaction. For `type="single"` the
-      payload is the open item id (not a delta); for `type="multiple"` it is the
-      complete array of open ids. Consumers deriving per-item change events must
-      diff the previous and next values themselves. The payload shape mismatch
-      means canonical event consumers cannot use the Radix callback without an
-      adapter.
+      Canonical fires a per-item event `{ itemId, expanded }` — one event per item
+      whose state changes. Radix fires a single root-level callback with the full
+      new open-set after each interaction. For `type="single"` the payload is the
+      open item id (not a delta); for `type="multiple"` it is the complete array of
+      open ids. Consumers deriving per-item change events must diff the previous
+      and next values themselves. The payload shape mismatch means canonical event
+      consumers cannot use the Radix callback without an adapter.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion#root
 
   - from: events[itemActivate]
@@ -168,28 +204,34 @@ divergence:
     rationale: >-
       Radix exposes no distinct activation event separate from `onValueChange`.
       Activating an already-open item in `type="single"` non-collapsible mode
-      produces no `onValueChange` call (state is unchanged). Consumers who need
-      to distinguish user intent from state changes must attach an `onClick`
-      handler directly to `Accordion.Trigger`; Radix provides no dedicated
-      lifecycle hook for the activation edge.
+      produces no `onValueChange` call (state is unchanged). Consumers who need to
+      distinguish user intent from state changes must attach an `onClick` handler
+      directly to `Accordion.Trigger`; Radix provides no dedicated lifecycle hook
+      for the activation edge.
       Source: https://www.radix-ui.com/primitives/docs/components/accordion#root
 
 rationale: |
-  Radix Accordion is an unstyled primitive that correctly implements the APG
-  accordion pattern: heading-wraps-trigger, aria-expanded auto-wired,
-  aria-controls linking Trigger to Content, role="region" on Content, and the
-  ArrowDown/Up/Home/End keyboard model. The anatomy renames (panel→Content,
-  trigger→Trigger) follow Radix's own primitives vocabulary consistently.
+  Radix Accordion (@radix-ui/react-accordion@1.2.12) is an unstyled primitive
+  that correctly implements the APG accordion pattern: heading-wraps-trigger,
+  aria-expanded auto-wired, aria-controls linking Trigger to Content,
+  role="region" on Content, and the ArrowDown/Up/Home/End keyboard model. The
+  anatomy renames (panel→Content, trigger→Trigger) follow Radix's own primitives
+  vocabulary consistently.
 
-  Two structural divergences are notable. First, the Header heading level: Radix
-  defaults to <h3> and relies on asChild for level overrides, rather than a
-  level prop — consumers who skip the asChild pattern will violate heading-order
-  in documents where h3 is not correct. Second, the expansion-mode API: canonical
-  uses a boolean multi prop; Radix uses a required discriminated type enum
-  ("single" | "multiple") with collapsible scoped to single-mode only.
+  Three structural divergences are notable. First, the Header heading level: Radix
+  defaults to <h3> (hard-coded as Primitive.h3 in source) and relies on asChild for
+  level overrides — consumers who skip asChild will violate heading-order in
+  documents where h3 is not correct. Second, the expansion-mode API: canonical uses
+  a boolean multi prop; Radix uses a required discriminated type enum ("single" |
+  "multiple") with collapsible scoped to single-mode only. Third, the aria-disabled
+  behaviour on Trigger: Radix sets aria-disabled only in the narrow case where the
+  item is currently open AND collapsible=false in single-mode, keeping non-collapsible
+  triggers focusable without advertising them as disabled in the general case.
 
-  The unstyled nature means all three canonical visual variants and the density
-  axis are consumer responsibilities. The orientation extension (horizontal
-  accordion with ArrowLeft/Right navigation) goes beyond the canonical anatomy.
+  The forceMount extension on Content is React-specific infrastructure not representable
+  in the framework-neutral canonical anatomy. The unstyled nature means all three
+  canonical visual variants and the density axis are consumer responsibilities. The
+  orientation extension (horizontal accordion) and root-level disabled prop go beyond
+  the canonical anatomy.
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

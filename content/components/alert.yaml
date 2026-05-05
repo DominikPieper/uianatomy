@@ -711,12 +711,18 @@ sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/alert/
   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/alert_role
   - https://www.w3.org/TR/WCAG22/#status-messages
-  - https://www.radix-ui.com/themes/docs/components/callout
-  - https://react-spectrum.adobe.com/react-aria/Alert.html
-  - https://polaris.shopify.com/components/feedback-indicators/banner
-  - https://carbondesignsystem.com/components/notification/usage/
-  - https://atlassian.design/components/inline-message/examples
-  - https://m3.material.io/components/banners/overview
+  - url: https://www.radix-ui.com/themes/docs/components/callout
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://polaris-react.shopify.com/components/feedback-indicators/banner
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/notification/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/inline-message
+    library: atlassian
+    verifiedAt: '2026-05-05'
   - https://inclusive-components.design/notifications/
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

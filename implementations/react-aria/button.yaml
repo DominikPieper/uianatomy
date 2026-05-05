@@ -1,0 +1,245 @@
+componentId: button
+libraryId: react-aria
+componentName: Button
+
+exampleCode: |
+  import { Button } from 'react-aria-components';
+
+  // Basic usage
+  <Button onPress={() => alert('Pressed!')}>Save changes</Button>
+
+  // With isPending (loading state)
+  <Button isPending={isSaving} onPress={handleSave}>
+    {({ isPending }) => (
+      <>
+        {isPending && <ProgressCircle aria-label="Saving" />}
+        Save changes
+      </>
+    )}
+  </Button>
+
+  // With form integration (submit)
+  <Button type="submit">Submit</Button>
+
+  // Icon-only with aria-label
+  <Button aria-label="Close">
+    <CloseIcon />
+  </Button>
+
+  // isDisabled (maintains focusability, uses aria-disabled)
+  <Button isDisabled>Unavailable</Button>
+
+divergence:
+  # Anatomy: React Aria Button is a single-component, no slot decomposition
+  - from: anatomy[icon-leading]
+    type: reshaped
+    to: children (render-props function or plain JSX)
+    rationale: >-
+      React Aria Button has no named `icon-leading` slot. Leading icons are
+      passed as children alongside the label text, composed by the consumer
+      inside the children prop (or a render-props function). There is no slot
+      boundary enforced by the library — the canonical `icon-leading` slot
+      concept is a consumer convention with no API surface in React Aria.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  - from: anatomy[label]
+    type: reshaped
+    to: children (plain text or render-props)
+    rationale: >-
+      React Aria Button has no explicit `label` slot. The accessible name
+      comes from children text or `aria-label`. When `isPending` is true the
+      library dynamically updates `aria-labelledby` to combine the button's
+      own label with the ProgressBar's `aria-label`, so the accessible name
+      is computed, not a discrete slot.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Button.tsx (fetched 2026-05-05)
+
+  - from: anatomy[icon-trailing]
+    type: reshaped
+    to: children (render-props function or plain JSX)
+    rationale: >-
+      Same as icon-leading — no named trailing-icon slot. Trailing icons are
+      composed inside children. This is consistent with React Aria's
+      philosophy: the component manages behaviour and ARIA; layout/composition
+      is the consumer's responsibility.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  # Variants: React Aria ships a limited variant set, omits tertiary and ghost
+  - from: axes.variants[secondary]
+    type: extended
+    addition: >-
+      React Aria's Tailwind/Vanilla CSS starter kits expose `variant="secondary"`,
+      matching the canonical name. This is documented as a starter-kit convention,
+      not a required prop on the unstyled primitive — the `variant` prop is
+      consumer-defined. For styled starter kit consumers the mapping holds exactly.
+    rationale: >-
+      React Aria exposes `variant` as a pass-through for consumer styling
+      rather than driving internal logic. The Vanilla CSS and Tailwind starter
+      kits name the variants `primary | secondary | quiet | destructive` (Tailwind
+      also `destructive`). The canonical `secondary` is present; `tertiary` and
+      `ghost` are absent from the starter-kit set, replaced by `quiet`.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  - from: axes.variants[tertiary]
+    type: omitted
+    rationale: >-
+      React Aria's documented starter-kit variants are `primary | secondary |
+      quiet | destructive`. There is no `tertiary` variant. The canonical
+      `tertiary` visual emphasis level is closest to `quiet` in the React Aria
+      starter kit. Consumers layering their own design system can add tertiary
+      as a custom variant value; the library places no constraint.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  - from: axes.variants[ghost]
+    type: omitted
+    rationale: >-
+      Same as `tertiary` — no `ghost` variant in the React Aria starter kit.
+      The `quiet` variant in the React Aria set is the closest analogue:
+      reduced visual weight, no border or fill. Canonical `ghost` maps to
+      `quiet` for consumers using the starter kit.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  # Properties
+  - from: axes.properties[iconOnly]
+    type: omitted
+    rationale: >-
+      React Aria Button has no `iconOnly` prop. The icon-only pattern is
+      achieved by passing an icon as children and an `aria-label` on the
+      button. The library enforces accessible-name requirements (via axe)
+      but does not model icon-only as a variant or property.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  - from: axes.properties[fullWidth]
+    type: omitted
+    rationale: >-
+      No `fullWidth` prop. Full-width layout is consumer CSS (`width: 100%`
+      on the button or its container). React Aria Button does not alter layout.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  # States
+  - from: axes.states.data[loading]
+    type: renamed
+    to: isPending
+    rationale: >-
+      React Aria uses `isPending` rather than `loading`. The semantics are
+      close but not identical: `isPending` disables press/hover events while
+      keeping the button focusable and in the accessibility tree, and it wires
+      a ProgressBar component to `aria-labelledby` for screen-reader
+      announcements. The canonical `loading` data state maps exactly to
+      `isPending`; only the name differs.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Button.tsx (fetched 2026-05-05)
+
+  - from: axes.states.data[pressed]
+    type: extended
+    addition: >-
+      React Aria exposes `isPressed` as a render-prop state (also surfaced as
+      `[data-pressed]` data attribute) and separately provides `aria-pressed`
+      as a passthrough. The canonical `pressed` data state is fully matched;
+      React Aria additionally provides `onPressChange` for reactive updates
+      and distinguishes `isPressed` (visual feedback) from `aria-pressed`
+      (toggle semantics).
+    rationale: >-
+      The canonical pressed state documents `aria-pressed` usage for toggle
+      buttons. React Aria goes further by providing a render-prop boolean
+      (`isPressed`) that reflects the transient press state regardless of
+      `aria-pressed`, enabling hover-like visual feedback during press without
+      conflating it with toggle semantics. This is an additive extension.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Button.tsx (fetched 2026-05-05)
+
+  - from: axes.states.interactive[disabled]
+    type: reshaped
+    to: isDisabled prop (renders aria-disabled="true", not HTML disabled attribute)
+    rationale: >-
+      The canonical reference distinguishes `disabled` (removes from tab
+      order) from `aria-disabled` (keeps focusable), noting `aria-disabled`
+      is preferred when a tooltip explains the disabled state. React Aria
+      resolves this ambiguity by always using `isDisabled` → `aria-disabled`,
+      never the HTML `disabled` attribute. The button stays focusable and
+      receives no press events when `isDisabled` is true. Consumers who
+      *want* the button removed from the tab order must also set
+      `excludeFromTabOrder`. This is a deliberate divergence from the
+      canonical dual-mode model in favour of consistent accessibility.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  # Events
+  - from: events[click]
+    type: renamed
+    to: onPress (PressEvent)
+    rationale: >-
+      React Aria replaces `onClick` with `onPress` for cross-device
+      consistency. `PressEvent` carries pointer type (`mouse | touch | pen |
+      keyboard`), position, keyboard modifiers, and a `continuePropagation()`
+      method. Standard `onClick` is explicitly excluded from the props
+      interface (GlobalDOMAttributes minus onClick). The canonical `click`
+      event payload (`MouseEvent`) does not capture touch or pen devices;
+      React Aria's `PressEvent` is a strict superset for pointer-type
+      awareness. Additionally, `onPressStart`, `onPressEnd`, `onPressUp`,
+      and `onPressChange` give lifecycle hooks the canonical event does not
+      model.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+  # Form integration
+  - from: axes.properties[type]
+    type: extended
+    addition: >-
+      React Aria Button supports all canonical `type` values (`button |
+      submit | reset`) and additionally exposes `form`, `formAction`,
+      `formMethod`, `formEncType`, `formTarget`, `formNoValidate` — matching
+      all HTML button form-related attributes as first-class props. When
+      `isPending` is true and `type="submit"`, the component automatically
+      converts the button to `type="button"` to prevent implicit form
+      submission while pending.
+    rationale: >-
+      The canonical reference documents `type` as the only form-related
+      property on the Button primitive, leaving the rest as passthrough.
+      React Aria promotes all HTML form-button attributes to typed props,
+      reducing prop spreading and enabling type-safe form composition.
+      The auto-conversion of submit→button during pending is a behaviour
+      addition the canonical does not specify.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Button.tsx (fetched 2026-05-05)
+
+  # Motion
+  - from: motion.durations
+    type: reshaped
+    to: data-pending / data-pressed / data-hovered / data-focus-visible CSS attribute selectors
+    rationale: >-
+      React Aria Button ships no motion duration tokens. All interactive-state
+      transitions (press feedback, pending entry) are driven by CSS attribute
+      selectors on the data attributes exposed by ButtonRenderProps. The
+      canonical motion.durations.pressedFeedback maps to a
+      `[data-pressed]` CSS transition at the consumer's duration token;
+      the canonical motion.durations.spinnerRotation maps to the consumer's
+      animation on the ProgressCircle inside children. The library exposes
+      the state hooks; the timing is entirely consumer-side.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Button.tsx (fetched 2026-05-05)
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      React Aria Button does not implement reduced-motion fallback. Consumers
+      apply `@media (prefers-reduced-motion: reduce)` in their CSS. The
+      library's data-attribute state machine still updates; motion suppression
+      is entirely the consumer's CSS responsibility.
+      Source: https://react-aria.adobe.com/Button (fetched 2026-05-05)
+
+rationale: |
+  React Aria Button is a behaviour-only primitive: it owns the accessibility
+  contract (ARIA attributes, press event normalisation, focus management)
+  while leaving visual composition, slot anatomy, variant styling, and motion
+  timing entirely to the consumer. Most divergences are reshapings, not
+  omissions — the canonical concepts are present but surfaced through a
+  different API shape (render-props children instead of named slots,
+  `isPending` instead of `loading`, `onPress` instead of `onClick`).
+
+  The two deepest structural divergences from the canon are:
+  1. No named anatomy slots — React Aria Button renders a single <button>
+     and treats all visual sub-structure (icons, label, spinner) as
+     consumer-composed children.
+  2. `isDisabled` always maps to `aria-disabled` (never `disabled`) — a
+     deliberate accessibility-first choice that collapses the canonical
+     dual-mode model into a single, always-focusable disabled behaviour.
+
+  Variant naming is a starter-kit concern, not a primitive constraint; the
+  `variant` prop is consumer-driven and the library places no validation on
+  its values.
+
+lastReviewed: '2026-05-05'

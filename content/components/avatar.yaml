@@ -578,12 +578,19 @@ contracts:
 sources:
   - https://www.w3.org/TR/wai-aria-1.2/#img
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
-  - https://www.radix-ui.com/primitives/docs/components/avatar
-  - https://m3.material.io/components/avatar/overview
-  - https://polaris.shopify.com/components/images-and-icons/avatar
-  - https://carbondesignsystem.com/components/user-avatar/usage/
-  - https://atlassian.design/components/avatar/examples
+  - url: https://www.radix-ui.com/primitives/docs/components/avatar
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://polaris-react.shopify.com/components/images-and-icons/avatar
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/user-avatar/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/avatar
+    library: atlassian
+    verifiedAt: '2026-05-05'
   - https://chakra-ui.com/docs/components/avatar
   - https://mantine.dev/core/avatar/
 
-lastReviewed: '2026-05-03'
+lastReviewed: '2026-05-05'

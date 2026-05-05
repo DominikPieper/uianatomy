@@ -1,0 +1,195 @@
+componentId: disclosure
+libraryId: radix
+componentName: Collapsible
+
+exampleCode: |
+  import * as Collapsible from '@radix-ui/react-collapsible';
+
+  <Collapsible.Root defaultOpen={false} onOpenChange={setOpen}>
+    <Collapsible.Trigger>Toggle</Collapsible.Trigger>
+    <Collapsible.Content>
+      {/* panel content */}
+    </Collapsible.Content>
+  </Collapsible.Root>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: renamed
+    to: Collapsible.Trigger
+    rationale: >-
+      One-to-one role match. Collapsible.Trigger renders a `<button>` with
+      `aria-expanded` and `aria-controls` wired automatically to the content
+      region's generated id. The canonical slot contract is fully honoured;
+      only the export name differs.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/collapsible/src/collapsible.tsx
+
+  - from: anatomy[icon]
+    type: omitted
+    rationale: >-
+      Collapsible ships no icon or chevron slot. The canonical icon is a
+      decorative expansion-direction glyph; Radix leaves icon placement
+      entirely to the consumer (typically an SVG inside Collapsible.Trigger).
+      The `data-state="open|closed"` attribute on both Root and Content allows
+      consumers to rotate or swap an icon via CSS without Radix owning the
+      slot.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  - from: anatomy[panel]
+    type: renamed
+    to: Collapsible.Content
+    rationale: >-
+      Same purpose: the collapsible content region. Collapsible.Content
+      receives `id={context.contentId}` (referenced by Trigger's
+      `aria-controls`) and toggles visibility via a `hidden` attribute when
+      closed. The canonical slot name "panel" is replaced by "Content" in
+      Radix's naming scheme.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/collapsible/src/collapsible.tsx
+
+  # ── Variants ─────────────────────────────────────────────────────────────
+
+  - from: axes.variants[inline]
+    type: omitted
+    rationale: >-
+      Radix Collapsible has no variant prop and makes no structural distinction
+      between inline and standalone disclosure. The difference (whether the
+      trigger is heading-wrapped) is a consumer concern layered above the
+      primitive. Radix's unstyled, composable model intentionally omits
+      variant classification.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  - from: axes.variants[standalone]
+    type: omitted
+    rationale: >-
+      Same as inline — no variant axis exists on Collapsible.Root. Standalone
+      heading-wrapping and inline prose placement are consumer composition
+      choices outside Radix's scope.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  # ── Properties ───────────────────────────────────────────────────────────
+
+  - from: axes.properties[defaultExpanded]
+    type: renamed
+    to: defaultOpen
+    rationale: >-
+      Identical semantics: the uncontrolled initial open state. Radix uses
+      `defaultOpen` (matching React's convention of `default` prefix for
+      uncontrolled defaults and aligning with the `open` controlled-prop
+      name). The canonical uses `defaultExpanded` to align with ARIA
+      terminology (`aria-expanded`). Both represent the same boolean gate.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      Radix ships no density prop. Comfortable / compact spacing is a
+      design-system concern layered above the unstyled primitive; consumers
+      apply it via className or CSS custom properties. Radix intentionally
+      owns no spacing tokens.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  - from: axes.properties[hasIcon]
+    type: omitted
+    rationale: >-
+      Radix has no hasIcon prop because it has no icon slot. Whether a chevron
+      or plus-minus glyph appears is purely consumer markup inside
+      Collapsible.Trigger. Radix's `data-state` attribute is the hook for
+      icon-rotation CSS.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  # ── Extended: properties Radix adds beyond the canonical surface ──────────
+
+  - from: axes.properties[defaultExpanded]
+    type: extended
+    addition: "open: boolean (controlled) + disabled: boolean + forceMount: true on Collapsible.Content"
+    rationale: >-
+      Radix adds three properties the canon does not model as first-class.
+      `open` enables fully controlled usage (paired with `onOpenChange`),
+      following the React controlled/uncontrolled pattern. `disabled` on Root
+      propagates `data-disabled` to Trigger and Content, blocking interaction
+      without removing from the DOM. `forceMount` on Content keeps the DOM
+      subtree mounted even when closed, required for exit-animation libraries
+      (Framer Motion, GSAP) that need the element to exist during the
+      closing animation — canonical motion assumes a `[hidden]` toggle, which
+      Radix also uses by default.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  # ── States ───────────────────────────────────────────────────────────────
+
+  - from: axes.states.transitions
+    type: reshaped
+    to: "data-state: open | closed on Root and Content; no expanding/collapsing intermediate states"
+    rationale: >-
+      The canonical state graph has four data states (closed, expanding,
+      expanded, collapsing) representing the animation lifecycle. Radix
+      Collapsible exposes only two: `open` and `closed` via the `data-state`
+      attribute. Intermediate states (expanding, collapsing) are not surfaced
+      as named states — consumers drive animation through CSS transitions on
+      `[data-state]` attribute changes, with `--radix-collapsible-content-width`
+      and `--radix-collapsible-content-height` CSS custom properties enabling
+      height/width animations. The full four-state lifecycle exists at the CSS
+      layer but is not observable programmatically.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/collapsible/src/collapsible.tsx
+
+  # ── Events ────────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: renamed
+    to: onOpenChange (Collapsible.Root prop)
+    rationale: >-
+      One-to-one match in semantics and payload: `onOpenChange(open: boolean)`
+      fires when the open state changes. The canonical event name follows a
+      framework-neutral camelCase convention (`openChange`); Radix places it
+      as a React prop with the `on` prefix on Root, per React's synthetic
+      event naming convention.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  # ── Motion ────────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: "--radix-collapsible-content-width and --radix-collapsible-content-height CSS custom properties on Collapsible.Content"
+    rationale: >-
+      Radix ships no duration or easing tokens. Instead, Collapsible.Content
+      exposes two CSS custom properties — `--radix-collapsible-content-width`
+      and `--radix-collapsible-content-height` — that reflect the measured
+      dimensions during open/close transitions. Consumers write their own CSS
+      keyframes that animate from `0` to these custom property values,
+      supplying their own duration tokens. The canonical `motion.duration.base`
+      / `motion.duration.fast` are achievable but entirely consumer-side.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix does not implement a reduced-motion fallback. The canonical
+      `instant` fallback (skip animation under `prefers-reduced-motion:
+      reduce`) must be authored by the consumer via a `@media
+      (prefers-reduced-motion: reduce)` rule that zeroes the transition
+      duration. Radix's `data-state` toggles unconditionally regardless of
+      motion preference.
+      Source: https://www.radix-ui.com/primitives/docs/components/collapsible
+
+rationale: |
+  Radix Collapsible is the closest Radix primitive to the canonical Disclosure.
+  The accessibility contract is fully implemented: Collapsible.Trigger ships a
+  real `<button>` with `aria-expanded` and `aria-controls` auto-wired; the
+  content region carries the matching `id`. The ARIA Disclosure pattern
+  (W3C APG) is honoured at the core.
+
+  Divergence is concentrated in three areas. First, the naming layer: Radix
+  calls this component Collapsible (not Disclosure), calls the state prop
+  `defaultOpen` (not `defaultExpanded`), and uses `onOpenChange` for the event.
+  Second, the variant and styling surface: Radix deliberately ships nothing —
+  no icon slot, no density, no variant classification — because these are
+  design-system concerns above the primitive. Third, the motion surface: Radix
+  replaces the canonical four-state transition graph with a two-state
+  `data-state` attribute plus CSS custom properties for dimension-based
+  animations, offloading all timing and easing to the consumer.
+
+  The overall pattern matches other Radix audits: the primitive owns the
+  accessibility wiring; design-system specifics (variants, density, motion
+  timing, icon composition) are a layer that consumers compose above Radix.
+
+lastReviewed: '2026-05-05'

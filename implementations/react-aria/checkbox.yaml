@@ -1,0 +1,345 @@
+componentId: checkbox
+libraryId: react-aria
+componentName: Checkbox
+
+exampleCode: |
+  import {
+    Checkbox,
+    CheckboxGroup,
+    Label,
+    Text,
+    FieldError,
+  } from 'react-aria-components';
+
+  // Standalone checkbox (controlled)
+  <Checkbox isSelected={agreed} onChange={setAgreed}>
+    I accept the terms
+  </Checkbox>
+
+  // With indeterminate (presentational-only — persists regardless of user interaction)
+  <Checkbox isIndeterminate>Select all</Checkbox>
+
+  // CheckboxGroup with description and validation
+  <CheckboxGroup
+    value={selected}
+    onChange={setSelected}
+    isRequired
+  >
+    <Label>Interests</Label>
+    <Checkbox value="coding">Coding</Checkbox>
+    <Checkbox value="music">Music</Checkbox>
+    <Checkbox value="design">Design</Checkbox>
+    <Text slot="description">Choose at least one interest.</Text>
+    <FieldError />
+  </CheckboxGroup>
+
+  // isDisabled (renders aria-disabled="true", keeps focusable)
+  <Checkbox isDisabled>Unavailable</Checkbox>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: Checkbox (renders a <label> wrapping all children)
+    rationale: >-
+      The canonical root is either a `<label>` wrapping the input or a `<div>`
+      paired with `<label for>`. React Aria's `Checkbox` component renders a
+      single `<label>` element as its root, which wraps both the hidden native
+      input and the consumer-composed children (indicator SVG + label text).
+      The association contract is identical, but the root is always a `<label>`,
+      never the `<div>` + `<label for>` form. There is no separate named root
+      slot — the component itself is the root.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: anatomy[input]
+    type: reshaped
+    to: VisuallyHidden native <input type="checkbox"> (internal, not exposed as a slot)
+    rationale: >-
+      React Aria renders a native `<input type="checkbox">` hidden via
+      `VisuallyHidden` for form participation and AT wiring. The interactive
+      surface (hit-target, focus, press events) is managed on the `<label>` root
+      via `useCheckbox` / `usePress` hooks. Consumers cannot reference or style
+      the internal input directly — it is not a named slot. The canonical input
+      slot's accessibility contract (role, aria-checked, form participation) is
+      fully honoured internally; the difference is that the slot is opaque.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Checkbox.tsx (fetched 2026-05-05)
+
+  - from: anatomy[indicator]
+    type: reshaped
+    to: consumer-composed SVG children inside Checkbox (no named slot)
+    rationale: >-
+      React Aria provides no named indicator slot. The checkmark and
+      indeterminate dash are composed by the consumer as SVG children inside
+      `Checkbox`, using render-prop state (`isSelected`, `isIndeterminate`)
+      or `data-selected` / `data-indeterminate` CSS attribute selectors to
+      switch glyphs. The docs ship a starter-kit `<div className="indicator">`
+      wrapping conditional SVG polylines as the canonical example, but this
+      is purely consumer code, not a library-exported slot boundary.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: anatomy[label]
+    type: reshaped
+    to: children prop (text or JSX nodes)
+    rationale: >-
+      React Aria `Checkbox` has no named `label` slot. The accessible name
+      comes from the `children` prop — text content or JSX passed as children.
+      When `children` is a function (render-props pattern), it receives
+      `CheckboxRenderProps` including `isSelected`, `isIndeterminate`,
+      `isDisabled`, etc. There is no `<Label>` sub-component used inside a
+      standalone `Checkbox`; `Label` is imported for use inside `CheckboxGroup`.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: anatomy[description]
+    type: reshaped
+    to: '<Text slot="description"> inside CheckboxGroup only (not available on standalone Checkbox)'
+    rationale: >-
+      The canonical `description` slot is associated via `aria-describedby` on
+      the input. React Aria surfaces the description pattern through
+      `<Text slot="description">` (from `react-aria-components`) but this is
+      only wired automatically when `Checkbox` is a child of `CheckboxGroup`.
+      Standalone `Checkbox` has no built-in description slot; consumers wishing
+      to add description text to a standalone checkbox must wire `aria-describedby`
+      manually. This is a structural constraint: the field-level description
+      context is owned by the group container, not the individual checkbox.
+      Source: https://react-aria.adobe.com/CheckboxGroup (fetched 2026-05-05)
+
+  - from: anatomy[error-message]
+    type: reshaped
+    to: '<FieldError> inside CheckboxGroup only (not available on standalone Checkbox)'
+    rationale: >-
+      The canonical error-message slot is an `aria-live` region linked to the
+      input via `aria-describedby` plus `aria-invalid`. React Aria's
+      `<FieldError>` component (from `react-aria-components`) fulfils this
+      role but is only wired into the validation context when used inside
+      `CheckboxGroup`. Standalone `Checkbox` exposes `isInvalid` for the visual
+      invalid state but provides no built-in error-message slot or aria-live
+      region. Consumers must compose their own error-message element and wire
+      `aria-describedby` manually for standalone usage.
+      Source: https://react-aria.adobe.com/CheckboxGroup (fetched 2026-05-05)
+
+  # ── Axes — Variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[group]
+    type: reshaped
+    to: CheckboxGroup (separate named component, not a variant prop)
+    rationale: >-
+      The canonical `group` variant documents that multiple checkboxes can be
+      grouped under a shared label using `<fieldset>` + `<legend>`. React Aria
+      ships this as a dedicated `CheckboxGroup` component (from
+      `react-aria-components`) rather than as a `variant="group"` prop on
+      `Checkbox`. `CheckboxGroup` renders a `<div>` (not a native `<fieldset>`)
+      and manages group label, description, validation, and `aria-labelledby`
+      wiring automatically. The semantic is preserved; the surface is a separate
+      component, not a variant switch.
+      Source: https://react-aria.adobe.com/CheckboxGroup (fetched 2026-05-05)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[indeterminate]
+    type: reshaped
+    to: isIndeterminate (boolean — presentational only, persists regardless of user interaction)
+    rationale: >-
+      The canonical `indeterminate` property documents the tri-state where
+      the indeterminate visual reflects aggregate child state and activating
+      the parent checkbox cycles through checked/unchecked per the APG
+      tri-state pattern. React Aria's `isIndeterminate` is explicitly
+      documented as "presentational only — the indeterminate visual
+      representation remains regardless of user interaction." This means
+      React Aria does not implement the APG tri-state cycle automatically;
+      the consumer must compute the mixed state from children and toggle
+      `isIndeterminate` / `isSelected` externally. The prop exists but the
+      activation-cycle contract is absent.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: axes.properties[disabled]
+    type: reshaped
+    to: isDisabled (renders aria-disabled="true" on the label, not HTML disabled on the input)
+    rationale: >-
+      The canonical `disabled` property maps to the HTML `disabled` attribute
+      on the native input, which removes the element from the tab order. React
+      Aria's `isDisabled` maps instead to `aria-disabled="true"` on the label
+      root and suppresses press events via the `useCheckbox` hook, while
+      keeping the element focusable (consistent with React Aria's global
+      accessibility-first disabled contract, also applied in the Button
+      implementation). Consumers who need the element removed from the tab
+      order must additionally pass `excludeFromTabOrder`.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Checkbox.tsx (fetched 2026-05-05)
+
+  - from: axes.properties[required]
+    type: renamed
+    to: isRequired (boolean on Checkbox and CheckboxGroup)
+    rationale: >-
+      One-to-one semantic match. React Aria adopts the `is*` naming convention
+      uniformly for boolean state props. `isRequired` on standalone `Checkbox`
+      sets `aria-required` on the hidden input and participates in the native
+      Constraint Validation API. On `CheckboxGroup`, it requires at least one
+      checkbox to be selected.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: axes.properties[invalid]
+    type: renamed
+    to: isInvalid (boolean on Checkbox and CheckboxGroup)
+    rationale: >-
+      One-to-one semantic match. React Aria's `is*` convention. `isInvalid`
+      sets `data-invalid` on the root `<label>` and `aria-invalid` on the
+      hidden input. It can be set manually or derived automatically from the
+      `validate` function when `validationBehavior="aria"`.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      React Aria `Checkbox` ships no `size` prop. React Aria is an unstyled
+      primitive library; size scaling (sm / md / lg) is consumer CSS applied
+      via class or data attributes. The `CheckboxRenderProps` type does not
+      include a size field.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      isReadOnly (boolean) — React Aria ships an `isReadOnly` prop not present
+      in the canonical. When set, the checkbox is visually active but the user
+      cannot change its state; it still submits its value in forms. Sets
+      `data-readonly` and `aria-readonly` on the input. The canonical has no
+      equivalent — readonly binary fields are rare and the canonical documents
+      only disabled as the inert state.
+    rationale: >-
+      React Aria models read-only as a distinct state from disabled because
+      the ARIA spec distinguishes `aria-disabled` (cannot interact, may be
+      excluded from form) from `aria-readonly` (can focus, cannot change,
+      submits value). The canonical collapses these into `disabled` only,
+      following HTML's form-control model where readonly is not applicable to
+      `<input type="checkbox">`. React Aria adopts the broader ARIA model.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  # ── Axes — States ────────────────────────────────────────────────────────
+
+  - from: axes.states.interactive[hover]
+    type: extended
+    addition: >-
+      React Aria exposes `data-hovered` on the root `<label>` (via `useHover`
+      internally), enabling pointer-device hover styling without relying on CSS
+      `:hover`, which has known false-positive behaviour on touch devices. The
+      canonical documents `hover` as an interactive state; React Aria surfaces
+      it as `data-hovered` in addition to CSS `:hover`.
+    rationale: >-
+      React Aria normalises hover across pointer types. `data-hovered` reflects
+      true hover (pointer device, not touch emulation). Consumers style from
+      `[data-hovered]` for reliable cross-device hover feedback. This is
+      additive over the canonical's CSS-only hover contract.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Checkbox.tsx (fetched 2026-05-05)
+
+  - from: axes.states.data[checked]
+    type: renamed
+    to: data-selected (attribute) / isSelected (prop name)
+    rationale: >-
+      The canonical data state is `checked`; React Aria uses `isSelected`
+      (the prop name) and surfaces it as `data-selected` (the CSS attribute).
+      This is consistent with React Aria's pattern across all selection
+      components (ListBox, RadioGroup, etc.) where "selected" is the uniform
+      term. The ARIA mapping (`aria-checked="true"`) is still produced
+      correctly by the library on the hidden input.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: axes.states.data[mixed]
+    type: renamed
+    to: data-indeterminate (attribute) / isIndeterminate (prop name)
+    rationale: >-
+      The canonical data state is `mixed` (aligning with `aria-checked="mixed"`).
+      React Aria uses `isIndeterminate` (prop) and `data-indeterminate`
+      (attribute). The underlying `aria-checked="mixed"` is still set on the
+      hidden input by the `useCheckbox` hook. The rename is a React Aria
+      naming preference; the AT-visible state is canonical-compliant.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[checkedChange]
+    type: reshaped
+    to: "onChange(isSelected: boolean)"
+    rationale: >-
+      The canonical `checkedChange` event carries
+      `{ checked: boolean | 'mixed', previousChecked: boolean | 'mixed' }`.
+      React Aria's `onChange` fires with a single `boolean` (the new
+      `isSelected` value) — no `previousChecked` in the payload, and no
+      `'mixed'` value since `isIndeterminate` is presentational-only and
+      does not cycle through on user interaction. The indeterminate visual does
+      not produce a `mixed` value in the `onChange` callback; consumers must
+      manage the mixed-to-checked transition in their own `onChange` handler.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: events[validityChange]
+    type: reshaped
+    to: validate prop (function) + validationBehavior ("native" | "aria")
+    rationale: >-
+      The canonical `validityChange` event fires `{ valid, message }` when
+      the field's validity changes. React Aria replaces the event model with
+      a declarative approach: a `validate` function prop (returns a string or
+      `true`) combined with `validationBehavior` to select between native
+      browser Constraint Validation (`"native"`, default) and ARIA-only
+      validation (`"aria"`). There is no `validityChange` event; validity
+      state is derived reactively from `validate` return value and surfaced
+      through `data-invalid` / `isInvalid` in `FieldError`. The trade-off
+      shifts from imperative event handling to declarative validation logic.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: data-selected / data-indeterminate CSS attribute selectors on the consumer's stylesheet
+    rationale: >-
+      React Aria ships no motion duration tokens. Indicator draw animation
+      (checkmark stroke, indeterminate dash) and state-change transitions are
+      driven by consumer CSS keyed off `[data-selected]` and
+      `[data-indeterminate]` on the Checkbox root or the consumer's indicator
+      element. The canonical `motion.duration.indicatorDraw` and
+      `motion.duration.stateChange` tokens are achievable but entirely
+      consumer-side.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      React Aria does not implement reduced-motion suppression in JS. Consumers
+      apply `@media (prefers-reduced-motion: reduce)` in their CSS to suppress
+      transitions on `[data-selected]` and `[data-indeterminate]`. The library's
+      data-attribute state machine still updates; motion suppression is entirely
+      consumer CSS responsibility.
+      Source: https://react-aria.adobe.com/Checkbox (fetched 2026-05-05)
+
+rationale: |
+  React Aria Checkbox is a behaviour-only primitive: it owns the accessibility
+  contract (aria-checked, indeterminate, form participation, press event
+  normalisation, focus management) while leaving visual slot anatomy, size
+  variants, and motion timing entirely to the consumer. The three deepest
+  structural divergences from the canon are:
+
+  1. No named indicator, label, description, or error-message slots — all
+     visual sub-structure is consumer-composed children. Description and
+     FieldError wiring is only automatic inside CheckboxGroup; standalone
+     Checkbox consumers wire aria-describedby manually.
+
+  2. isIndeterminate is presentational-only — it does not implement the APG
+     tri-state activation cycle. The canonical contract (mixed → checked on
+     activation) must be coded by the consumer by resetting isIndeterminate
+     and isSelected in the onChange handler.
+
+  3. isDisabled always maps to aria-disabled (never HTML disabled) — consistent
+     with React Aria's global accessibility-first disabled contract. The
+     canonical dual-mode model (disabled removes from tab order; aria-disabled
+     keeps focusable) is collapsed: React Aria always keeps the element
+     focusable; consumers opt out via excludeFromTabOrder.
+
+  The rename surface (isSelected/data-selected for "checked",
+  isIndeterminate/data-indeterminate for "mixed", isRequired, isInvalid,
+  isDisabled) follows React Aria's consistent is*/data-* naming scheme applied
+  uniformly across all components. The underlying AT-visible ARIA state
+  (aria-checked, aria-required, aria-invalid, aria-disabled) is canonical-
+  compliant.
+
+lastReviewed: '2026-05-05'

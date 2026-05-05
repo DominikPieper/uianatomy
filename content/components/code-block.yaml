@@ -1117,11 +1117,21 @@ sources:
   - https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html
   - https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html
   - https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html
-  - https://carbondesignsystem.com/components/code-snippet/usage/
-  - https://atlassian.design/components/code/examples
-  - https://primer.style/components/code-block
-  - https://shiki.style/
-  - https://prismjs.com/
+  - url: https://carbondesignsystem.com/components/code-snippet/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/code
+    library: atlassian
+    verifiedAt: '2026-05-05'
+  - url: https://primer.style/components/code-block
+    library: primer
+    verifiedAt: '2026-05-05'
+  - url: https://shiki.style/
+    library: shiki
+    verifiedAt: '2026-05-05'
+  - url: https://prismjs.com/
+    library: prism
+    verifiedAt: '2026-05-05'
 
 notes: >-
   Read-only content presentation; events limited to optional

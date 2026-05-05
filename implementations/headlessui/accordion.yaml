@@ -60,7 +60,7 @@ divergence:
       when a new one opens) must be implemented manually by the consumer
       using controlled `open` state on each Disclosure — the library
       provides no coordination mechanism.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   - from: anatomy[item]
     type: omitted
@@ -72,7 +72,7 @@ divergence:
       `data-state` attribute (closed | expanding | expanded | collapsing)
       is absent; Headless UI surfaces only `data-open` on the Disclosure
       and individual button data attributes.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Header slot ──────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ divergence:
       directly and does not enforce or suggest the heading wrapper in its
       API or docs. Omitting the wrapper is the most common a11y violation
       when composing Disclosure into an accordion.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Icon slot ────────────────────────────────────────────────────────────
 
@@ -98,17 +98,55 @@ divergence:
       render prop (and `data-open` attribute) as the styling hook; the
       consumer applies CSS rotation or swaps glyphs. No default icon is
       included with the library.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
+
+  # ── CloseButton — extended slot not in canonical ─────────────────────────
+
+  - from: anatomy[panel]
+    type: extended
+    addition: >-
+      CloseButton — a named export (`import { CloseButton } from
+      '@headlessui/react'`) that closes the nearest DisclosurePanel
+      ancestor when clicked. Useful for "close" affordances inside
+      expanded panel content (e.g. navigation menus that dismiss on
+      item selection). Also available as `useClose()` hook for
+      imperative control inside deeply nested components.
+    rationale: >-
+      The canonical accordion anatomy has no `close-button` slot inside
+      the panel — panels close via the trigger button in the header.
+      Headless UI extends this with a CloseButton primitive targeted
+      at content inside the panel that must close its own parent
+      Disclosure (e.g. a link inside a nav disclosure menu). This is
+      specific to the Disclosure-as-nav pattern and has no canonical
+      equivalent in accordion use-cases. Included here because
+      CloseButton is a named export users will encounter.
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Axes — variants ──────────────────────────────────────────────────────
 
   - from: axes.variants[bordered]
     type: omitted
     rationale: >-
-      Headless UI is intentionally unstyled; no bordered / contained /
-      flush visual variants exist. All layout and border treatment is
-      consumer CSS. The library ships no design tokens or utility classes.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Headless UI is intentionally unstyled; no bordered, contained, or
+      flush visual variants exist. All layout, border, gap, and radius
+      treatment is consumer CSS (typically Tailwind utilities). The
+      library ships no design tokens or utility classes. This omission
+      covers all three canonical variants: bordered, contained, and flush.
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
+
+  - from: axes.variants[contained]
+    type: omitted
+    rationale: >-
+      See axes.variants[bordered] — same rationale applies. All visual
+      container treatment is consumer CSS.
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
+
+  - from: axes.variants[flush]
+    type: omitted
+    rationale: >-
+      See axes.variants[bordered] — same rationale applies. The flush
+      (no-border, no-gap) layout mode is consumer CSS.
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Axes — properties ────────────────────────────────────────────────────
 
@@ -122,7 +160,7 @@ divergence:
       the default because each Disclosure is fully independent. The
       canonical distinction between the two modes is entirely a consumer
       concern in this library.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   - from: axes.properties[collapsible]
     type: omitted
@@ -132,14 +170,14 @@ divergence:
       canonical `collapsible: false` behaviour (prevent the last-open item
       from closing in single-open mode) must be enforced by consumer state
       logic.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   - from: axes.properties[density]
     type: omitted
     rationale: >-
       No density prop. Padding and spacing are consumer CSS. Headless UI
       stops at the accessibility primitive layer.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Keyboard contract ────────────────────────────────────────────────────
 
@@ -153,25 +191,30 @@ divergence:
       implemented because the library has no shared accordion root to own
       the roving tabindex logic. Consumers building an accessible accordion
       must wire this keyboard navigation themselves.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
   # ── Transition states ────────────────────────────────────────────────────
 
   - from: axes.states.data[expanding]
     type: reshaped
     to: >-
-      data-enter / data-leave transition attributes on DisclosurePanel
-      (opt-in via transition prop); no expanding/collapsing state names
+      data-enter / data-leave / data-closed transition attributes on
+      DisclosurePanel (opt-in via `transition` prop on DisclosurePanel);
+      no expanding/collapsing state names
     rationale: >-
       Canonical defines four data states: closed, expanding, expanded,
-      collapsing. Headless UI's transition system uses data-enter (panel
-      opening) and data-leave (panel closing) — present only when the
-      `transition` prop is set on DisclosurePanel. These attributes are
-      meant to drive CSS transition classes, not to represent a stable
-      state machine. There are no data-expanding or data-collapsing
+      collapsing. Headless UI's transition system uses `data-enter` (panel
+      opening) and `data-leave` (panel closing), plus `data-closed` — all
+      present only when the `transition` prop is set to true on
+      DisclosurePanel. These attributes are meant to drive CSS transition
+      classes via attribute selectors, not to represent a stable named
+      state machine. There are no `data-expanding` or `data-collapsing`
       equivalents; the intermediate animation states are implicit in the
       CSS transition lifecycle rather than explicitly named on the element.
-      Source: https://headlessui.com/react/disclosure (v2.1, 2026-05-04).
+      Framer Motion and React Spring are supported via the `static` prop
+      on DisclosurePanel (bypasses unmount management for external
+      animation libraries).
+      Source: https://headlessui.com/react/disclosure (v2.2.10, 2026-05-05).
 
 rationale: |
   Headless UI does not ship an Accordion primitive. The intended
@@ -191,12 +234,19 @@ rationale: |
   3. No transition state machine — the canonical four-state model
      (closed / expanding / expanded / collapsing) collapses to a
      binary open/closed toggle with opt-in CSS transition hooks
-     (data-enter / data-leave). Coordinated animation (chevron
-     rotation + panel height transition sharing a single duration
-     token) is entirely consumer work.
+     (data-enter / data-leave / data-closed). Coordinated animation
+     (chevron rotation + panel height transition sharing a single
+     duration token) is entirely consumer work.
+
+  Notable addition vs canonical: CloseButton (and useClose hook)
+  for imperative panel closure from within panel content. This
+  targets the Disclosure-as-nav-menu use-case, not accordion.
 
   These gaps are consistent with Headless UI's design philosophy:
   ship the minimal accessible primitive, defer all composition,
   styling, and state coordination to the consumer.
 
-lastReviewed: '2026-05-04'
+  Audited against @headlessui/react v2.2.10 (released 2026-04-07).
+  Version sourced from: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/CHANGELOG.md
+
+lastReviewed: '2026-05-05'

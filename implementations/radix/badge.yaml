@@ -1,0 +1,232 @@
+componentId: badge
+libraryId: radix
+componentName: Badge
+
+exampleCode: |
+  import { Badge } from '@radix-ui/themes';
+
+  {/* Default soft badge */}
+  <Badge variant="soft" size="1">New</Badge>
+
+  {/* Solid with accent colour closest to "success" intent */}
+  <Badge variant="solid" color="green" size="2">Active</Badge>
+
+  {/* High-contrast surface badge */}
+  <Badge variant="surface" highContrast>Beta</Badge>
+
+  {/* Custom radius */}
+  <Badge variant="soft" radius="small">Tag</Badge>
+
+  {/* asChild — render badge markup on a consumer element */}
+  <Badge asChild variant="soft">
+    <mark>Highlight</mark>
+  </Badge>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[icon-leading]
+    type: omitted
+    rationale: >-
+      Radix Themes Badge has no icon-leading named slot or prop. Any icon
+      placed before badge text is a free React child; the component applies
+      gap via CSS automatically with no mechanism to mark a child as
+      "leading icon" versus arbitrary preceding content. This is the same
+      pattern as Radix Themes Button.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: anatomy[content]
+    type: omitted
+    rationale: >-
+      Radix Themes Badge has no named content slot. All badge text is a
+      free React child rendered inside the `<span>` root. The canonical
+      content slot exists to pin the live-region contract (aria-live on
+      that slot for count updates); Radix has no equivalent structural
+      anchor — the entire badge `<span>` is the only element and no
+      aria-live wiring is applied by the library.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  # ── Variants ─────────────────────────────────────────────────────────────
+
+  - from: axes.variants[default]
+    type: reshaped
+    to: variant="soft" (default) — fill-style vocabulary, no severity mapping
+    rationale: >-
+      Radix Themes Badge models fill style, not semantic severity. The four
+      variants are `solid`, `soft` (default), `surface`, and `outline` —
+      each controls the fill treatment independently of any semantic intent.
+      The canonical `default` severity maps loosely to `soft` in neutral
+      colour, but Radix provides no first-class severity vocabulary. A
+      design system using Radix must compose (variant × color) to encode
+      severity: e.g. `variant="soft" color="green"` for success intent.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.variants[success]
+    type: omitted
+    rationale: >-
+      No `success` variant. Radix's fill-style taxonomy has no semantic
+      severity tier. Success intent is achieved by a consumer-side
+      convention: `color="green"` combined with any fill variant. The
+      canonical closed enum (default / success / warning / error / info)
+      does not exist as a prop axis; severity is expressed through the
+      orthogonal `color` prop.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.variants[warning]
+    type: omitted
+    rationale: >-
+      No `warning` variant. Warning intent maps to `color="amber"` or
+      `color="orange"` combined with a fill variant; there is no first-class
+      warning semantic.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.variants[error]
+    type: omitted
+    rationale: >-
+      No `error` (danger) variant. Error intent maps to `color="red"` or
+      `color="crimson"` combined with a fill variant. Radix does not encode
+      semantic severity in any component prop.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.variants[info]
+    type: omitted
+    rationale: >-
+      No `info` variant. Info intent maps to `color="blue"` or `color="indigo"`
+      combined with a fill variant. Severity is entirely a consumer convention
+      on top of Radix's (variant × color) matrix.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  # ── Properties ────────────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: reshaped
+    to: size="1" | "2" | "3" (numeric, responsive, default "1")
+    rationale: >-
+      Canonical uses semantic names (sm / md). Radix Themes Badge uses a
+      numeric t-shirt scale 1–3 where "1" is smallest. The scale also
+      supports Responsive<> wrapping so each breakpoint can carry a
+      different numeric tier — a capability the canonical sm/md enum does
+      not model. No mechanical mapping exists; consumers must decide whether
+      their canonical sm maps to "1" or "2".
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.properties[dot]
+    type: omitted
+    rationale: >-
+      Radix Themes Badge has no `dot` boolean. There is no built-in
+      collapsed dot-indicator variant. Consumers needing a dot badge must
+      render a custom element; Radix does not ship the css treatment, the
+      aria-label contract, or the radius-full override that the canonical
+      dot variant specifies.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.properties[hasIcon]
+    type: omitted
+    rationale: >-
+      Radix Themes Badge has no `hasIcon` prop. Whether an icon appears is
+      determined by whether the consumer includes an icon element as a child;
+      there is no declarative prop controlling icon presence or the gap
+      treatment between icon and label.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  # ── Events ────────────────────────────────────────────────────────────────
+
+  - from: events[countChange]
+    type: omitted
+    rationale: >-
+      Radix Themes Badge is a purely static display component; it ships no
+      events and no controlled count prop. The canonical countChange event
+      is predicated on the Badge acting as a live counter. Consumers that
+      need live-count behaviour must implement the aria-live wrapper, the
+      count prop, and the change event themselves — nothing in Radix Themes
+      Badge assists with this.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  # ── Motion ────────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: omitted
+    rationale: >-
+      Radix Themes Badge ships no motion durations. There are no enter/exit
+      animations, no countTick animation, and no severityChange transition.
+      The canonical motion.durations.countTick and severityChange token
+      bindings have no equivalent surface in the library.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: motion.easing
+    type: omitted
+    rationale: >-
+      Radix Themes Badge applies no configurable easing. Motion is not a
+      first-class concern for a static display component in Radix Themes;
+      no easing token is exposed.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  # ── Extensions ────────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `color` prop (AccentColor enum — indigo, cyan, orange, crimson, red,
+      amber, green, blue, gray, …), `highContrast` (boolean), `radius`
+      ("none" | "small" | "medium" | "large" | "full"), `asChild` (boolean).
+      These four props have no canonical counterparts.
+    rationale: >-
+      Radix Themes Badge exposes the same palette of composability props as
+      every other Radix Themes component. `color` decouples accent colour from
+      fill variant, enabling (e.g.) a soft green badge or a solid crimson
+      badge without a severity variant. `highContrast` boosts foreground/
+      background contrast for accessibility-critical or emphasis contexts.
+      `radius` allows per-instance corner radius override of the theme default.
+      `asChild` (via Radix Slot) renders badge behaviour on a consumer-supplied
+      element. These are Radix Themes architectural conventions applied
+      consistently across the component library, not Badge-specific choices.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+  - from: axes.variants[default]
+    type: extended
+    addition: >-
+      variant="solid" | "surface" | "outline" — three additional fill-style
+      tiers beyond the canonical severity vocabulary. Combined with the full
+      AccentColor enum, Radix Themes exposes a (4 variants × ~30 colours)
+      matrix that the canonical five-tier severity enum does not model.
+    rationale: >-
+      Radix Themes separates fill style from semantic severity, giving
+      consumers explicit control over visual weight (solid → heaviest,
+      outline → lightest) independently of colour intent. A design system
+      author layers a severity convention on top of this matrix rather than
+      receiving it as first-class library behaviour. This is a deliberate
+      product decision to keep the primitive flexible and design-system-
+      agnostic, at the cost of requiring the consumer to encode severity
+      semantics themselves.
+      (https://www.radix-ui.com/themes/docs/components/badge)
+
+rationale: |
+  Radix Themes Badge is a styled, opinionated display primitive derived from
+  Radix Themes' design system. Unlike Radix Primitives, which are unstyled and
+  behaviour-focused, Radix Themes Badge ships a full visual treatment (4 fill
+  variants, 3 size tiers, ~30 accent colours, radius control) but deliberately
+  stops short of semantic severity vocabulary, slot anatomy, motion, and
+  live-region contracts.
+
+  The three most substantive divergences are:
+
+  1. Variant taxonomy: Radix models fill style (solid / soft / surface /
+     outline), not semantic severity (default / success / warning / error /
+     info). The entire canonical severity ladder is absent; severity is a
+     consumer convention achieved through the (variant × color) matrix.
+
+  2. No named sub-slots: icon-leading and content are free children. The
+     canonical slot contract — which pins the aria-live live-region anchor to
+     the content slot and marks icon-leading as decorative — has no structural
+     equivalent in Radix Themes Badge.
+
+  3. No live-count support: Radix Themes Badge is purely static. It ships no
+     controlled count prop, no aria-live wiring, no countChange event, and no
+     dot variant. All of the canonical count and dot mechanics are consumer
+     responsibilities.
+
+  The `color`, `highContrast`, `radius`, and `asChild` props are Radix Themes
+  architectural conventions that give consumers compositional power exceeding
+  the canonical surface.
+
+lastReviewed: '2026-05-05'

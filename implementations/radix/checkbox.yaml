@@ -1,0 +1,215 @@
+componentId: checkbox
+libraryId: radix
+componentName: Checkbox
+
+exampleCode: |
+  import * as Checkbox from '@radix-ui/react-checkbox';
+  import { CheckIcon, MinusIcon } from '@radix-ui/react-icons';
+
+  <form>
+    <label htmlFor="terms" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Checkbox.Root id="terms" name="terms" required>
+        <Checkbox.Indicator>
+          {/* checked renders CheckIcon, indeterminate renders MinusIcon */}
+          <CheckIcon />
+        </Checkbox.Indicator>
+      </Checkbox.Root>
+      Accept terms and conditions
+    </label>
+  </form>
+
+  {/* Indeterminate / tri-state parent */}
+  <Checkbox.Root
+    checked={allChecked ? true : someChecked ? 'indeterminate' : false}
+    onCheckedChange={(checked) => setAll(checked === true)}
+  >
+    <Checkbox.Indicator>
+      {checked === 'indeterminate' ? <MinusIcon /> : <CheckIcon />}
+    </Checkbox.Indicator>
+  </Checkbox.Root>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: Checkbox.Root renders as a <button role="checkbox"> (not <label> or <div>)
+    rationale: >-
+      The canonical root is a <label> (wrapping the input) or a <div> paired
+      with <label for>, so the label-association is built into the root
+      element itself. Radix.Root renders as a <button role="checkbox"> — a
+      custom interactive element that carries the checked state and ARIA role
+      directly, bypassing the native <label>-wrap approach entirely.
+      Label association is the consumer's responsibility: wrap Root in a
+      <label> or pair it with a <label htmlFor> targeting the Root's id.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      <button role="checkbox"> (CheckboxTrigger) + hidden CheckboxBubbleInput
+      for form participation
+    rationale: >-
+      The canonical input slot is a visible native <input type="checkbox">
+      that carries the interactive, form-participation, and aria-checked
+      roles in one element. Radix splits these concerns: the visible,
+      interactive element is a <button role="checkbox"> (CheckboxTrigger)
+      that holds aria-checked and handles Space-key; a separate hidden
+      CheckboxBubbleInput (<input type="checkbox">) is absolutely positioned
+      off-screen (translateX(-100%)) solely for native form participation
+      and constraint-validation bubbling. The hidden input is rendered only
+      when isFormControl is true (i.e., the Root is inside a <form>).
+      Consumers cannot target the hidden input directly — it is internal.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/checkbox/src/checkbox.tsx
+
+  - from: anatomy[indicator]
+    type: extended
+    addition: forceMount prop (boolean) — mounts Indicator even when unchecked, enabling CSS exit animations
+    rationale: >-
+      Canonical Indicator is decorative-only with no lifecycle control.
+      Radix.Indicator wraps its children in a Presence component and exposes
+      forceMount: when true, the Indicator node stays in the DOM in all
+      states so consumers can animate the exit stroke. This is a pure
+      extension — the indicator is still decorative and aria-hidden in all
+      states.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: anatomy[label]
+    type: omitted
+    rationale: >-
+      Radix ships no Label sub-component. The canonical label slot — a
+      <label> or <label for> that provides the accessible name — is entirely
+      the consumer's responsibility. Consumers compose a native <label>
+      wrapping Checkbox.Root (click on label activates the button) or a
+      <label htmlFor={id}> paired with an id on Root. Without this, the
+      button's accessible name is empty and SR users hear "checkbox" with no
+      field meaning. Radix's docs show the consumer-composed label pattern
+      but do not package it.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: anatomy[description]
+    type: omitted
+    rationale: >-
+      Radix has no description sub-component. Consumers who need auxiliary
+      helper text programmatically linked to the checkbox must author a
+      <span id="desc"> and pass aria-describedby={id} to Checkbox.Root
+      themselves. Radix Root does accept arbitrary HTML attributes including
+      aria-describedby, but the slot is not first-class.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: anatomy[error-message]
+    type: omitted
+    rationale: >-
+      Radix has no error-message sub-component and no invalid / error state
+      surfaced as a data attribute. Validation error presentation is
+      entirely consumer-composed: add aria-invalid and aria-describedby to
+      Checkbox.Root, render an error span with aria-live="polite" as a
+      sibling. Radix's constraint-validation propagation (via the hidden
+      bubble input) handles native form validity; visual error messaging is
+      out of scope for the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  # ── Properties ───────────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix Checkbox has no size prop. The visual size of the button and
+      indicator are controlled entirely via consumer CSS on Checkbox.Root
+      and Checkbox.Indicator. The canonical sm | md | lg scale is a
+      design-system convention layered above the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: axes.properties[invalid]
+    type: omitted
+    rationale: >-
+      Radix ships no invalid prop and exposes no [data-invalid] attribute.
+      Consumers signal invalidity by passing aria-invalid directly to
+      Checkbox.Root (accepted as a passthrough HTML attribute). Native
+      constraint-validation errors are propagated through the hidden bubble
+      input without surfacing a first-class invalid state on the Root.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  # ── States ───────────────────────────────────────────────────────────────
+
+  - from: axes.states.data[invalid]
+    type: omitted
+    rationale: >-
+      No [data-invalid] or equivalent data attribute is emitted by Radix.
+      Only [data-state] ("checked" | "unchecked" | "indeterminate") and
+      [data-disabled] are emitted. Styling invalid state requires consumer
+      selectors on aria-invalid="true" rather than a data attribute.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[checkedChange]
+    type: renamed
+    to: "onCheckedChange (Checkbox.Root prop, signature (checked: boolean | 'indeterminate') => void)"
+    rationale: >-
+      One-to-one conceptual match. Radix uses the React convention of
+      on-prefixed callback props rather than the canonical camelCase event
+      name. The payload is the new checked value directly (boolean |
+      'indeterminate'), not an object — the canonical { checked,
+      previousChecked } shape is not reproduced. Consumers needing
+      previousChecked must track it in local state.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: events[validityChange]
+    type: omitted
+    rationale: >-
+      Radix exposes no validityChange event or equivalent. Native
+      constraint-validation fires through the hidden bubble input's own
+      change/invalid events but these are internal. Consumers who need
+      validation-change notifications must subscribe to the form's native
+      invalid event or manage validity in their own state layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: >-
+      [data-state]="checked" | "unchecked" | "indeterminate" CSS attribute
+      selectors on Checkbox.Root and Checkbox.Indicator; Indicator forceMount
+      enables exit animation
+    rationale: >-
+      Radix ships no motion duration tokens. State changes are communicated
+      via the data-state attribute on both Root and Indicator; consumers
+      write CSS transitions or animations keyed to these selectors using
+      their own duration values. Exit animations require forceMount on
+      Indicator so the node persists in the DOM during the closing phase.
+      The canonical indicatorDraw / stateChange durations are achievable
+      but values are fully consumer-side.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix implements no reduced-motion behaviour. The data-state attribute
+      still flips immediately; suppressing animation under
+      prefers-reduced-motion is entirely the consumer's CSS responsibility.
+      The canonical "instant" fallback is achievable via
+      @media (prefers-reduced-motion: reduce) but is not bundled.
+      Source: https://www.radix-ui.com/primitives/docs/components/checkbox
+
+rationale: |
+  Radix Checkbox is a minimal, unstyled primitive that covers the
+  accessibility contract (button role="checkbox", aria-checked including
+  "mixed", Space-key toggle, hidden input for form participation) but
+  deliberately omits every design-system slot above the interactive core:
+  no label, description, error-message, size, or invalid prop.
+
+  The most architecturally significant divergence is Root's element choice:
+  a <button role="checkbox"> rather than a wrapping <label> or native
+  <input type="checkbox">. This shifts label-association responsibility to
+  the consumer and means the visible control is not the form field — the
+  hidden bubble input is. Consumers must be aware of this split to wire
+  aria-describedby, aria-invalid, and label htmlFor correctly.
+
+  All remaining divergences follow the same Radix philosophy: expose the
+  ARIA state machine and form integration at the lowest layer; leave every
+  design-system concern (sizing, validation UI, description, motion timing)
+  to the consumer layer above the primitive.
+
+lastReviewed: '2026-05-05'

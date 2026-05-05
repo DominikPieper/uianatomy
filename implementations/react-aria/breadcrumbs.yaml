@@ -1,0 +1,342 @@
+componentId: breadcrumbs
+libraryId: react-aria
+componentName: Breadcrumbs
+
+exampleCode: |
+  import {
+    Breadcrumbs,
+    Breadcrumb,
+    Link,
+  } from 'react-aria-components';
+  import { ChevronRight } from 'lucide-react';
+
+  // Static JSX — full trail
+  <nav aria-label="Breadcrumb">
+    <Breadcrumbs onAction={(key) => navigate(key)}>
+      <Breadcrumb id="home">
+        {({ isCurrent }) => (
+          <>
+            <Link href="/">Home</Link>
+            {!isCurrent && <ChevronRight size={14} aria-hidden="true" />}
+          </>
+        )}
+      </Breadcrumb>
+      <Breadcrumb id="settings">
+        {({ isCurrent }) => (
+          <>
+            <Link href="/settings">Settings</Link>
+            {!isCurrent && <ChevronRight size={14} aria-hidden="true" />}
+          </>
+        )}
+      </Breadcrumb>
+      <Breadcrumb id="account">
+        {({ isCurrent }) => (
+          <>
+            <Link>Account</Link>
+          </>
+        )}
+      </Breadcrumb>
+    </Breadcrumbs>
+  </nav>
+
+  // Dynamic collection
+  <nav aria-label="Breadcrumb">
+    <Breadcrumbs items={crumbs} onAction={(key) => navigate(key)}>
+      {(item) => (
+        <Breadcrumb id={item.id}>
+          {({ isCurrent }) => (
+            <>
+              <Link href={isCurrent ? undefined : item.href}>{item.label}</Link>
+              {!isCurrent && <ChevronRight size={14} aria-hidden="true" />}
+            </>
+          )}
+        </Breadcrumb>
+      )}
+    </Breadcrumbs>
+  </nav>
+
+divergence:
+  # ── Anatomy — root ────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      Consumer-supplied <nav aria-label="..."> wrapping
+      Breadcrumbs (renders <ol>)
+    rationale: >-
+      The canonical root is a `<nav aria-label="Breadcrumb">` landmark that
+      wraps the ordered list. React Aria splits this across two layers:
+      `Breadcrumbs` renders only the `<ol>` element; the `<nav>` landmark is
+      not generated automatically by the component. The docs state "When
+      breadcrumbs are used as a main navigation element for a page, they can
+      be placed in a navigation landmark" — the consumer must supply the `<nav
+      aria-label="...">` wrapper themselves. This shifts the landmark contract
+      from the library to the consumer, creating a risk that implementations
+      ship a bare `<ol>` without the required landmark.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: anatomy[list]
+    type: reshaped
+    to: Breadcrumbs component renders <ol class="react-aria-Breadcrumbs">
+    rationale: >-
+      The `list` slot is the `<ol>` rendered by the `Breadcrumbs` component
+      itself — there is no separate named List child component. The class
+      `react-aria-Breadcrumbs` is the default CSS hook. This collapses the
+      canonical two-level anatomy (root wraps list) into a single component
+      that IS the list, with the root landmark delegated to the consumer.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Breadcrumbs.tsx (fetched 2026-05-05)
+
+  - from: anatomy[item]
+    type: renamed
+    to: Breadcrumb (renders <li class="react-aria-Breadcrumb">)
+    rationale: >-
+      The canonical `item` slot maps directly to the `Breadcrumb` component,
+      which renders an `<li>`. The rename from generic `item` to `Breadcrumb`
+      is idiomatic in React Aria — named per-item components (matching the
+      pattern of `Disclosure`, `Tab`, `ListBoxItem`) rather than a generic
+      `Item`. The `id` prop on `Breadcrumb` serves as the key passed to
+      `onAction`, enabling SPA router navigation without href interception.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: anatomy[link]
+    type: reshaped
+    to: >-
+      React Aria Link component inside Breadcrumb children; last item's Link
+      receives aria-current="page" via LinkContext when isCurrent is true
+    rationale: >-
+      The canonical `link` slot is an `<a>` for intermediate items. React Aria
+      uses its own `Link` component (from react-aria-components) inside the
+      `Breadcrumb` children. The `Link` receives `aria-current="page"`
+      automatically via `LinkContext` when the breadcrumb is the current item
+      (`node.nextKey == null`). Consumers use the `isCurrent` render prop to
+      conditionally omit the `href` from the current item's Link, converting
+      it from an active anchor to a non-navigating element. If the consumer
+      passes `href` on the current item's Link, React Aria still applies
+      `aria-current="page"` but the link remains interactive — the canonical
+      rule (no href on current item) is a consumer responsibility, not
+      enforced by the library.
+      Source: https://react-aria.adobe.com/Breadcrumbs#anatomy (fetched 2026-05-05)
+
+  - from: anatomy[current-marker]
+    type: reshaped
+    to: >-
+      Link with isCurrent=true (data-current attribute) receiving
+      aria-current="page" via LinkContext; no separate <span> element
+    rationale: >-
+      The canonical `current-marker` is a static `<span aria-current="page">`
+      (not a link). React Aria has no distinct current-marker component —
+      the final `Breadcrumb` item's `Link` child receives `data-current` and
+      `aria-current="page"` via the context, making it a styled link rather
+      than a non-interactive span. The consumer is responsible for removing
+      the `href` on the current item's Link to prevent a self-link; the
+      library does not enforce this. This is a significant deviation from the
+      canonical non-link pattern.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: anatomy[separator]
+    type: reshaped
+    to: >-
+      Consumer-composed element (e.g. ChevronRight icon with aria-hidden) inside
+      Breadcrumb children render function, conditionally rendered via {!isCurrent}
+    rationale: >-
+      The canonical separator is a decorative slot managed by the component
+      (rendered as CSS pseudo-element or `aria-hidden` element). React Aria
+      ships no built-in separator. The documented pattern places a chevron
+      icon (e.g. from lucide-react) inside each `Breadcrumb`'s children
+      render function, conditionally shown only when `!isCurrent`. The
+      consumer must apply `aria-hidden="true"` to the icon manually; there
+      is no library-enforced accessibility contract on the separator. This
+      moves the separator from a component slot to a consumer convention.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: anatomy[overflow-collapse]
+    type: omitted
+    rationale: >-
+      React Aria Breadcrumbs has no built-in overflow-collapse mechanism.
+      There is no `maxItems`, `itemsBeforeCollapse`, or `itemsAfterCollapse`
+      prop, and no `…` button that opens a menu of collapsed items. The
+      canonical overflow-collapse slot and its `button-with-aria-expanded`
+      semantic are absent entirely. Consumers needing trail truncation must
+      compose their own overflow button and collapsed-items menu on top of
+      the primitive. This is a significant omission for deep hierarchies.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  # ── Axes — Variants ───────────────────────────────────────────────────────
+
+  - from: axes.variants[back-link]
+    type: omitted
+    rationale: >-
+      React Aria does not ship a back-link variant. The library models
+      breadcrumbs as a collection-based trail only; a single-item "← Parent"
+      back-link pattern is not a first-class variant. Consumers can construct
+      it by rendering a single `Breadcrumb` with a Link containing a back
+      arrow label, but the library provides no dedicated API or variant prop
+      for this pattern. The canonical `back-link` variant is undocumented in
+      React Aria.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  # ── Axes — Properties ─────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      React Aria is an unstyled primitive library. No `size` prop (sm / md /
+      lg) is shipped on `Breadcrumbs` or `Breadcrumb`. Text size is the
+      consumer's CSS responsibility, applied via the default class selectors
+      (`.react-aria-Breadcrumbs`, `.react-aria-Breadcrumb`) or custom
+      `className`.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: axes.properties[expandable]
+    type: omitted
+    rationale: >-
+      No `expandable` prop and no overflow-collapse mechanism. Since there is
+      no built-in truncation (see `anatomy[overflow-collapse]`), the expand/
+      collapse axis does not exist in this library.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: axes.properties[showRoot]
+    type: omitted
+    rationale: >-
+      No `showRoot` prop. The concept of pinning the root item during
+      overflow-collapse does not exist because overflow-collapse itself is
+      absent. All rendered `Breadcrumb` items are always visible.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  # ── Axes — States ─────────────────────────────────────────────────────────
+
+  - from: axes.states.data[collapsed]
+    type: omitted
+    rationale: >-
+      No collapsed state — there is no overflow-collapse mechanism in React
+      Aria Breadcrumbs, so the collapsed/expanded axis does not apply.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: axes.states.data[expanded]
+    type: omitted
+    rationale: >-
+      Same as collapsed — the expanded state only exists relative to the
+      overflow-collapse button, which React Aria does not ship.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: axes.states.interactive[hover]
+    type: extended
+    addition: >-
+      React Aria exposes `data-hovered` on the `Link` component (via
+      `useHover`), enabling pointer-device hover styling without CSS `:hover`.
+      This avoids `:hover` stickiness on touch devices. The canonical
+      documents hover as a CSS state; React Aria surfaces it as a data
+      attribute.
+    rationale: >-
+      React Aria normalises hover across pointer types using its internal
+      `useHover` hook. `[data-hovered]` is set on the Link; consumers style
+      from `[data-hovered]` rather than `:hover`. This is an additive
+      extension — the canonical hover state is fully covered and the data
+      attribute is an additional hook.
+      Source: https://react-aria.adobe.com/Breadcrumbs#styling (fetched 2026-05-05)
+
+  - from: axes.states.interactive[focus-visible]
+    type: extended
+    addition: >-
+      React Aria exposes `data-focus-visible` on the `Link` component (via
+      `useFocusVisible`). The canonical documents `focus-visible` as a
+      CSS pseudo-class; React Aria additionally surfaces it as a data
+      attribute for consumers who need JS-driven focus ring logic or cannot
+      rely on the `:focus-visible` CSS pseudo-class.
+    rationale: >-
+      React Aria's `useFocusVisible` tracks keyboard-vs-pointer focus intent
+      and sets `data-focus-visible` on the link element. The CSS hook is more
+      reliable than `:focus-visible` polyfills and is consistent with how
+      React Aria exposes focus state across all interactive primitives.
+      Source: https://react-aria.adobe.com/Breadcrumbs#styling (fetched 2026-05-05)
+
+  # ── Axes — Transitions ────────────────────────────────────────────────────
+
+  - from: axes.states.transitions[collapsed-to-expanded]
+    type: omitted
+    rationale: >-
+      The collapsed→expanded transition (overflow-collapse menu opens) does
+      not exist because React Aria ships no overflow-collapse mechanism.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: axes.states.transitions[expanded-to-collapsed]
+    type: omitted
+    rationale: >-
+      Same as collapsed→expanded — absent because overflow-collapse is absent.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  # ── Events ────────────────────────────────────────────────────────────────
+
+  - from: events[itemActivate]
+    type: renamed
+    to: "onAction(key: Key) on Breadcrumbs"
+    rationale: >-
+      The canonical `itemActivate` event (fired with `{ item, index }`) maps
+      to `onAction` on the `Breadcrumbs` container. `onAction` receives only
+      the `Key` of the activated breadcrumb (the `id` prop value), not the
+      full item object or index. This follows the standard React Aria
+      Collection pattern (same shape as `ListBox.onAction`, `Menu.onAction`).
+      Consumers derive the full item from the key by looking up their items
+      array. The `index` and full item payload in the canonical event are not
+      present — key-only.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  - from: events[expandedChange]
+    type: omitted
+    rationale: >-
+      No `expandedChange` / `onExpandedChange` event — the overflow-collapse
+      mechanism that fires this event is absent from React Aria Breadcrumbs.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+  # ── Props — extended ──────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      React Aria adds an `isDisabled` prop on `Breadcrumbs` that disables all
+      breadcrumb links simultaneously (propagated to children via
+      `LinkContext`). The canonical anatomy defines no component-level disable
+      axis for breadcrumbs — individual intermediate items are simply omitted
+      from the trail, not disabled. This is an additive capability with no
+      canonical equivalent.
+    rationale: >-
+      React Aria's collection-based model allows a single `isDisabled` toggle
+      on the container to propagate disabled state to all child `Link`
+      components via context, matching the library-wide pattern of
+      `ListBox.isDisabled`, `Menu.isDisabled`, etc. It is a convenience
+      affordance for forms or conditional states where the entire trail
+      becomes non-interactive; the canonical does not model this because
+      breadcrumbs in non-interactive state are typically hidden rather than
+      disabled.
+      Source: https://react-aria.adobe.com/Breadcrumbs (fetched 2026-05-05)
+
+rationale: |
+  React Aria Breadcrumbs (`Breadcrumbs` + `Breadcrumb` + `Link` from
+  react-aria-components) covers the core interactive contract — ordered list
+  semantics, aria-current on the last item, keyboard-navigable links, and
+  onAction for SPA routing — but diverges from the canonical anatomy in three
+  structural ways:
+
+  1. No auto-generated nav landmark. The library renders `<ol>` only; the
+     `<nav aria-label="...">` wrapper must be supplied by the consumer.
+     This shifts the landmark accessibility contract onto every consumer
+     integration.
+
+  2. No distinct current-marker element. The last Breadcrumb's Link receives
+     aria-current="page" via context, but the consumer must also remove the
+     href to satisfy the canonical non-link rule. The library does not enforce
+     the href-omission — a consumer passing href on the current item creates a
+     self-link, which is the canonical mistake breadcrumbs-current-is-link.
+
+  3. No overflow-collapse mechanism. The canonical overflow-collapse slot
+     (a button that expands collapsed middle items) is entirely absent. Deep
+     trails render all items with no truncation. Consumers must compose
+     truncation themselves.
+
+  Beyond these structural gaps, React Aria follows its library-wide philosophy:
+  no visual variant props (size, back-link variant), no motion tokens, and
+  separator rendering delegated to consumer children. The data-attribute state
+  hooks (data-current, data-hovered, data-focus-visible, data-disabled) are
+  additive extensions that give consumers fine-grained CSS targeting.
+
+lastReviewed: '2026-05-05'

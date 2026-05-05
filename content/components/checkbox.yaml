@@ -768,11 +768,21 @@ contracts:
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox
-  - https://www.radix-ui.com/primitives/docs/components/checkbox
-  - https://react-aria.adobe.com/Checkbox
-  - https://m3.material.io/components/checkbox/specs
-  - https://design-system.service.gov.uk/components/checkboxes/
-  - https://polaris.shopify.com/components/forms/checkbox
+  - url: https://www.radix-ui.com/primitives/docs/components/checkbox
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://react-aria.adobe.com/Checkbox
+    library: reactAria
+    verifiedAt: '2026-05-05'
+  - url: https://m3.material.io/components/checkbox/specs
+    library: material3
+    verifiedAt: '2026-05-05'
+  - url: https://design-system.service.gov.uk/components/checkboxes/
+    library: govuk
+    verifiedAt: '2026-05-05'
+  - url: https://polaris-react.shopify.com/components/selection-and-input/checkbox
+    library: polaris
+    verifiedAt: '2026-05-05'
   - https://mui.com/material-ui/react-checkbox/
 
-lastReviewed: '2026-05-03'
+lastReviewed: '2026-05-05'

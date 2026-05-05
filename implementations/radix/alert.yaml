@@ -1,0 +1,229 @@
+componentId: alert
+libraryId: radix
+componentName: Callout
+
+exampleCode: |
+  import { Callout } from '@radix-ui/themes';
+  import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+
+  {/* Closest Radix equivalent — colour + role convey severity manually */}
+  <Callout.Root color="red" role="alert">
+    <Callout.Icon>
+      <ExclamationTriangleIcon />
+    </Callout.Icon>
+    <Callout.Text>
+      Access denied. Please contact the network administrator to view this page.
+    </Callout.Text>
+  </Callout.Root>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────────
+
+  - from: anatomy[container]
+    type: reshaped
+    to: Callout.Root with explicit consumer-supplied role attribute
+    rationale: >-
+      Canonical container owns the live-region semantics: it maps severity
+      (error/warning → role="alert", info/success → role="status")
+      automatically through an internal severity prop. Callout.Root is an
+      unstyled div with no awareness of severity; the consumer must pass
+      role="alert" or role="status" as a plain HTML attribute. Without this,
+      the Callout is silent to screen readers. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), code example shows role="alert" passed manually.
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      Callout ships only two content parts: Callout.Icon and Callout.Text.
+      There is no title part. Consumers who want a heading above the body
+      text must compose it as free children inside Callout.Text or add a
+      sibling element — the library provides no semantic slot or layout
+      hook for a title. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), API reference lists only Root / Icon / Text.
+
+  - from: anatomy[icon]
+    type: renamed
+    to: Callout.Icon
+    rationale: >-
+      Same purpose — a size-normalised wrapper for a severity-indicating
+      glyph at the inline-start of the callout. Radix names it Callout.Icon
+      rather than the canonical "icon". The wrapper renders as a div;
+      the icon glyph itself is supplied by the consumer (e.g. from
+      @radix-ui/react-icons). Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: anatomy[body]
+    type: renamed
+    to: Callout.Text
+    rationale: >-
+      Callout.Text is the sole text container (renders as a <p>). It serves
+      the same role as the canonical body slot — the primary prose of the
+      alert — but is named "Text" (matching the Radix Themes typographic
+      primitive) rather than "body". Because there is no title part, the
+      Callout.Text must carry both the heading-level summary and the
+      body prose when needed. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: anatomy[action-group]
+    type: omitted
+    rationale: >-
+      Callout has no action-group slot or any mechanism for embedding
+      action buttons within the component boundary. Consumers who need
+      inline actions must compose button elements as free siblings outside
+      Callout.Root — there is no layout, spacing, or keyboard contract
+      provided by the library. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), API reference lists no action-related parts.
+
+  - from: anatomy[close-button]
+    type: omitted
+    rationale: >-
+      Callout ships no dismiss affordance. The component is a static,
+      always-visible surface with no built-in dismissal state, close
+      button, or onDismiss callback. Consumers who need dismissal must
+      implement unmounting themselves (e.g. conditional rendering driven
+      by local state) and compose their own accessible close button
+      outside the Callout compound. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  # ── Variants / Axes ──────────────────────────────────────────────────────────
+
+  - from: axes.variants
+    type: reshaped
+    to: color prop on Callout.Root (blue | green | red | gray | + full Radix accent palette)
+    rationale: >-
+      Canonical severity variants (info / success / warning / error) map
+      semantic intent to a role and a visual treatment in a single axis.
+      Callout splits these concerns: visual treatment is driven by the
+      `color` prop (an open accent-palette enum — blue, green, red, gray,
+      etc.) combined with `variant` (soft | surface | outline), while
+      live-region role is a bare HTML attribute the consumer applies
+      manually. There is no severity enum; colour choice is purely visual
+      and has no implied ARIA contract. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), Root props table.
+
+  - from: axes.properties[dismissible]
+    type: omitted
+    rationale: >-
+      Callout has no dismissible prop, no internal dismissed state, and no
+      onDismiss callback. The component is always visible once rendered;
+      lifecycle management is entirely the consumer's responsibility.
+      Source: https://www.radix-ui.com/themes/docs/components/callout
+      (fetched 2026-05-05).
+
+  - from: axes.properties[hasIcon]
+    type: omitted
+    rationale: >-
+      There is no boolean prop to toggle the icon region. Icon presence is
+      controlled by whether the consumer includes a Callout.Icon child
+      element — pure composition, not a configuration prop. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: axes.properties[hasTitle]
+    type: omitted
+    rationale: >-
+      Follows directly from the omission of the title part. Because there
+      is no Callout.Title component, there is no hasTitle toggle. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: axes.properties[density]
+    type: renamed
+    to: size prop on Callout.Root ("1" | "2" | "3", default "2")
+    rationale: >-
+      Canonical density (comfortable / compact) controls internal spacing
+      and padding. Callout.Root exposes a numeric size scale (1 = small,
+      2 = medium, 3 = large) that serves the same purpose — adjusting
+      typographic size and internal padding — but uses ordinal numbers
+      rather than semantic density names, and adds a third tier (large)
+      that canonical does not model. The two axes are not directly
+      interchangeable: size="1" approximates compact but also changes
+      font-size, not only spacing. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), Root props table, size default "2".
+
+  - from: axes.properties[density]
+    type: extended
+    addition: variant prop on Callout.Root ("soft" | "surface" | "outline", default "soft")
+    rationale: >-
+      Callout ships a visual-style axis with no canonical equivalent:
+      `variant` controls whether the callout background is a tinted fill
+      (soft), a bordered tinted surface (surface), or an outlined frame
+      (outline). This axis is orthogonal to severity — it expresses a
+      visual weight preference independent of alert state. Canonical alert
+      has no equivalent property. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05), Root props table.
+
+  - from: axes.states
+    type: omitted
+    rationale: >-
+      Callout is a stateless display component. It carries no open/busy/
+      dismissed data states, no interactive hover or focus-visible states
+      on the container, and no state-transition graph. All canonical states
+      (open, busy, dismissed, transitions) are absent. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  # ── Events ───────────────────────────────────────────────────────────────────
+
+  - from: events[dismiss]
+    type: omitted
+    rationale: >-
+      No dismiss event exists because the component has no dismiss
+      mechanism. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: events[actionInvoke]
+    type: omitted
+    rationale: >-
+      No action-invocation event exists because the component has no
+      action slots. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  # ── Motion ───────────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: omitted
+    rationale: >-
+      Callout is a static, always-rendered surface. It has no enter/exit
+      animation and ships no motion tokens or data-state attributes for
+      transition hooks. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      With no animation to suppress, the reduced-motion contract is not
+      applicable. Source:
+      https://www.radix-ui.com/themes/docs/components/callout (fetched
+      2026-05-05).
+
+rationale: |
+  Radix Themes Callout is the library's closest analogue to the canonical
+  Alert — it is an inline, non-modal informational surface. However, it is
+  a styled display primitive, not a semantically-aware alert component:
+  severity is expressed through manual colour selection and a bare HTML
+  role attribute, not through a library-managed severity prop. The three-
+  part compound (Root / Icon / Text) covers the container and icon/body
+  anatomy, but omits title, action-group, close-button, state management,
+  motion, and any dismiss lifecycle entirely.
+
+  The most consequential divergence is the missing severity-to-role
+  mapping: consumers who reach for Callout as a drop-in Alert will
+  silently ship a visually styled but screen-reader-invisible notification
+  unless they remember to add role="alert" or role="status" themselves.
+  The Radix documentation surfaces this only in a code example, not in the
+  API reference.
+
+lastReviewed: '2026-05-05'

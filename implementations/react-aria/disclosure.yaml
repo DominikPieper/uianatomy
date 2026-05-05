@@ -1,0 +1,266 @@
+componentId: disclosure
+libraryId: react-aria
+componentName: Disclosure
+
+exampleCode: |
+  import {
+    Disclosure,
+    DisclosureHeader,
+    DisclosurePanel,
+    Button,
+  } from 'react-aria-components';
+
+  // Uncontrolled, starts collapsed
+  <Disclosure>
+    <DisclosureHeader>
+      <Button slot="trigger">
+        Show shipping details
+        <ChevronRight aria-hidden />
+      </Button>
+    </DisclosureHeader>
+    <DisclosurePanel>
+      <p>Estimated delivery: 3–5 business days.</p>
+    </DisclosurePanel>
+  </Disclosure>
+
+  // Controlled with defaultExpanded
+  <Disclosure defaultExpanded onExpandedChange={(open) => setOpen(open)}>
+    <DisclosureHeader>
+      <Button slot="trigger">Advanced settings</Button>
+    </DisclosureHeader>
+    <DisclosurePanel role="region">
+      {/* panel content */}
+    </DisclosurePanel>
+  </Disclosure>
+
+  // Inside a DisclosureGroup (accordion behaviour)
+  <DisclosureGroup defaultExpandedKeys={['shipping']}>
+    <Disclosure id="shipping">
+      <DisclosureHeader><Button slot="trigger">Shipping</Button></DisclosureHeader>
+      <DisclosurePanel>{/* … */}</DisclosurePanel>
+    </Disclosure>
+    <Disclosure id="returns">
+      <DisclosureHeader><Button slot="trigger">Returns</Button></DisclosureHeader>
+      <DisclosurePanel>{/* … */}</DisclosurePanel>
+    </Disclosure>
+  </DisclosureGroup>
+
+divergence:
+  # ── Anatomy ────────────────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: "DisclosureHeader wrapping <Button slot=\"trigger\">"
+    rationale: >-
+      The canonical `trigger` slot is a single named slot on the component
+      (e.g. `slot="trigger"`). React Aria splits this into two layers:
+      `DisclosureHeader` (a structural heading wrapper that renders a `<h3>`
+      by default) and an inner `<Button slot="trigger">` child. The heading
+      wrapper is optional but idiomatic — the `slot="trigger"` attribute on
+      the Button is what wires the press handler and `aria-expanded`; the
+      `DisclosureHeader` wrapper provides optional heading semantics around it.
+      Consumers who don't need heading semantics can omit `DisclosureHeader`
+      and place `<Button slot="trigger">` directly inside `<Disclosure>`.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: anatomy[icon]
+    type: reshaped
+    to: "Consumer-composed children inside <Button slot=\"trigger\">"
+    rationale: >-
+      The canonical `icon` slot is a discrete anatomy slot for the chevron or
+      plus-minus glyph, placed and managed by the component. React Aria has no
+      dedicated icon slot — icons are composed as children inside the trigger
+      Button (e.g. `<ChevronRight aria-hidden />`). Rotation on expand is the
+      consumer's CSS responsibility via `[data-expanded]` on the parent
+      Disclosure or `[data-expanded]` on the button. This matches React Aria's
+      philosophy: the library owns behaviour and ARIA; visual composition is
+      consumer-defined.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: anatomy[panel]
+    type: reshaped
+    to: "DisclosurePanel with role defaulting to 'group' not 'region'"
+    rationale: >-
+      The canonical panel calls for `role="region"` on standalone disclosures
+      with regional content, citing APG and the requirement that SR users can
+      navigate to the region by landmark. React Aria's `DisclosurePanel`
+      defaults `role` to `'group'`, not `'region'`. The `'group'` role does
+      not create a landmark; SR users cannot jump to it via landmark navigation.
+      Consumers must pass `role="region"` explicitly when regional semantics are
+      needed. The choice of `'group'` default is intentional — `role="region"`
+      requires an accessible name and creates a landmark that can clutter the
+      landmark tree on pages with many disclosures; `'group'` is lighter and
+      avoids landmark pollution for inline disclosure patterns.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Disclosure.tsx (fetched 2026-05-05)
+
+  # ── Axes: variants ─────────────────────────────────────────────────────────
+
+  - from: axes.variants[inline]
+    type: omitted
+    rationale: >-
+      React Aria Disclosure has no `variant` prop and no `inline` / `standalone`
+      distinction. The library is an unstyled primitive; variant-level visual
+      treatment is entirely the consumer's CSS concern. The heading-wrapping
+      distinction that drives the canonical `standalone` variant (trigger inside
+      a heading) is available via `DisclosureHeader`, but it is not coupled to
+      a variant enum — consumers opt in by including or excluding
+      `DisclosureHeader`.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: axes.variants[standalone]
+    type: omitted
+    rationale: >-
+      Same as `inline` — no `variant` prop. The `standalone` visual distinction
+      is irrelevant to the unstyled primitive; heading semantics are provided
+      by `DisclosureHeader` which wraps the trigger in a heading element, but
+      this is not a named variant.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  # ── Axes: properties ───────────────────────────────────────────────────────
+
+  - from: axes.properties[defaultExpanded]
+    type: extended
+    addition: >-
+      React Aria pairs `defaultExpanded` (uncontrolled) with `isExpanded`
+      (controlled) and `onExpandedChange` (change handler). The canonical
+      property axis documents only `defaultExpanded`; React Aria adds the
+      fully-controlled pattern via `isExpanded` boolean prop. This is a
+      React-idiomatic controlled/uncontrolled pattern the canon does not
+      specify at the property-axis level.
+    rationale: >-
+      The canonical `defaultExpanded` property is present in React Aria
+      under the same name. React Aria extends it with `isExpanded` for
+      controlled state — consumers can fully own the open/closed state from
+      outside the component, matching the React controlled-component pattern.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: axes.properties[density]
+    type: omitted
+    rationale: >-
+      React Aria Disclosure has no `density` prop. Spacing is fully the
+      consumer's CSS concern; the library renders a structural wrapper with
+      no padding or spacing opinions. The canonical `density` axis (comfortable
+      / compact) maps to consumer class names or CSS custom properties.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: axes.properties[hasIcon]
+    type: omitted
+    rationale: >-
+      No `hasIcon` prop. The presence or absence of a chevron icon is a
+      consumer decision made by including or excluding an icon element inside
+      `<Button slot="trigger">` children. The library places no constraint on
+      trigger children.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  # ── Axes: states ───────────────────────────────────────────────────────────
+
+  - from: axes.states.data[expanding]
+    type: omitted
+    rationale: >-
+      React Aria does not expose an `expanding` intermediate state. The
+      Disclosure transitions directly from closed to expanded
+      (`data-expanded` appears); the expanding animation duration is the
+      consumer's CSS concern driven by `--disclosure-panel-height` CSS
+      custom property on `DisclosurePanel`. The canonical `expanding` /
+      `collapsing` intermediate states (for `data-state`) have no equivalent
+      data attribute in React Aria.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Disclosure.tsx (fetched 2026-05-05)
+
+  - from: axes.states.data[collapsing]
+    type: omitted
+    rationale: >-
+      Same as `expanding` — no `collapsing` intermediate state attribute.
+      The `data-expanded` attribute is removed immediately when the trigger is
+      activated to close; consumers animate collapse by detecting when
+      `data-expanded` disappears and using the `--disclosure-panel-height`
+      CSS variable in a CSS transition. There is no animation-completion
+      callback or intermediate attribute.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Disclosure.tsx (fetched 2026-05-05)
+
+  # ── Events ─────────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: renamed
+    to: onExpandedChange
+    rationale: >-
+      The canonical event is named `openChange`; React Aria names it
+      `onExpandedChange`. Both fire with a boolean payload (`true` when
+      expanded, `false` when collapsed). The semantic difference is naming
+      only: `onExpandedChange` aligns with React Aria's vocabulary used
+      consistently across other disclosure-like components (`DisclosureGroup`
+      also uses `onExpandedChange`). The canonical `open` / `closed`
+      vocabulary is replaced by `isExpanded` / `onExpandedChange` throughout
+      the React Aria API surface.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  # ── Extensions ─────────────────────────────────────────────────────────────
+
+  - from: anatomy[panel]
+    type: extended
+    addition: >-
+      `DisclosurePanel` exposes two CSS custom properties:
+      `--disclosure-panel-width` (intrinsic width) and
+      `--disclosure-panel-height` (intrinsic height). These enable
+      height/width-based CSS transitions without JavaScript measurement.
+      The canonical panel anatomy has no equivalent mechanism — canon does not
+      specify CSS custom properties on the panel. This is a production-grade
+      animation primitive that fills the gap left by the omission of
+      `expanding` / `collapsing` intermediate states.
+    rationale: >-
+      CSS height transitions from `0` to `auto` are not directly possible in
+      CSS without JavaScript measurement. React Aria solves this by exposing the
+      panel's intrinsic height as a CSS variable updated before each
+      transition, enabling pure-CSS `height: 0 → var(--disclosure-panel-height)`
+      animations. The canonical motion model specifies duration tokens but does
+      not address the `0 → auto` height animation problem.
+      Source: https://react-aria.adobe.com/Disclosure.html (fetched 2026-05-05)
+
+  - from: axes.variants[standalone]
+    type: extended
+    addition: >-
+      React Aria ships `DisclosureGroup` — a container that groups multiple
+      `<Disclosure>` components with shared expanded-key state
+      (`expandedKeys`, `defaultExpandedKeys`, `allowsMultipleExpanded`,
+      `onExpandedChange`, `isDisabled`). This enables accordion behaviour
+      (multiple disclosures with optionally mutually-exclusive expansion) without
+      a separate Accordion component. The canonical disclosure anatomy has no
+      equivalent grouping primitive — the canon separates Accordion from
+      Disclosure as distinct components.
+    rationale: >-
+      React Aria deliberately collapses the canonical Disclosure / Accordion
+      boundary: a single-item Disclosure is `<Disclosure>`; an accordion is
+      `<DisclosureGroup>` wrapping multiple `<Disclosure>` items. This avoids
+      a separate Accordion component in the library. The canonical model treats
+      these as distinct components with distinct anatomy and ARIA roles; React
+      Aria unifies them via the group wrapper. Consumers who need APG Accordion
+      keyboard navigation (Arrow keys between triggers) must implement it on
+      top of `DisclosureGroup`, as it provides only shared-state management,
+      not group keyboard navigation.
+      Source: https://react-aria.adobe.com/DisclosureGroup.html (fetched 2026-05-05)
+
+rationale: |
+  React Aria Disclosure is a behaviour-first primitive that wires the
+  aria-expanded / aria-controls / aria-labelledby contract and provides
+  controlled + uncontrolled state management, leaving all visual
+  composition (icon placement, density, variant styling, animation
+  timing) to the consumer. The deepest structural divergences are:
+
+  1. The canonical `trigger` slot is split across two React Aria layers:
+     an optional `DisclosureHeader` wrapper (heading semantics) and a
+     mandatory `<Button slot="trigger">` (ARIA wiring). Consumers opt
+     into heading semantics explicitly.
+
+  2. `DisclosurePanel` defaults `role="group"` rather than `role="region"`.
+     This avoids landmark pollution on pages with many disclosures but
+     means consumers must opt into landmark semantics for regional content.
+
+  3. The canonical `expanding` / `collapsing` intermediate states are
+     absent; React Aria substitutes CSS custom properties
+     (`--disclosure-panel-height`) to enable pure-CSS height transitions,
+     shifting animation-state responsibility to consumer CSS.
+
+  4. `DisclosureGroup` collapses the canonical Accordion component into
+     a grouping layer on top of Disclosure, unifying the two separate
+     canon components into one composable primitive.
+
+lastReviewed: '2026-05-05'

@@ -68,28 +68,28 @@ divergence:
       wire `onClick` to reset the controlled value, and manage its
       visibility themselves. The `onClose` callback on `Combobox` is the
       nearest affordance but it fires on dropdown close, not on value clear.
-      Source: https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+      Source: https://headlessui.com/react/combobox (v2.1, 2026-05-05).
 
   - from: anatomy[listbox]
     type: renamed
-    to: ComboboxOptions (renders a div, not a role="listbox" element by default)
+    to: ComboboxOptions
     rationale: >-
       Canonical `listbox` slot maps to `role="listbox"`. Headless UI's
       `ComboboxOptions` renders a `<div>` by default and injects the
       correct ARIA roles internally — but the component name is
-      `ComboboxOptions`, not `ComboboxListbox`. Consumers who read the
+      `ComboboxOptions`, not `ComboboxListbox`. Consumers who inspect the
       rendered HTML will find `role="listbox"` present; the divergence is
       purely at the API naming layer. Source:
-      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+      https://headlessui.com/react/combobox (v2.1, 2026-05-05).
 
   - from: anatomy[option]
     type: renamed
-    to: ComboboxOption (renders a div, not a role="option" element by default)
+    to: ComboboxOption
     rationale: >-
       Canonical `option` slot expects `role="option"`. `ComboboxOption`
       renders a `<div>` by default and applies ARIA option role internally.
       The rename is API-level; the ARIA contract is honoured. Source:
-      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+      https://headlessui.com/react/combobox (v2.1, 2026-05-05).
 
   - from: anatomy[empty-state]
     type: omitted
@@ -102,7 +102,7 @@ divergence:
       no live-region announcement. Consumers must author their own
       conditional render inside `ComboboxOptions` and manage the
       `aria-live` announcement themselves. Source:
-      https://headlessui.com/react/combobox (v2.1, 2026-05-04).
+      https://headlessui.com/react/combobox (v2.1, 2026-05-05).
 
   # ── API reshape: input change ────────────────────────────────────────────────
 
@@ -116,7 +116,7 @@ divergence:
       `event.target.value` to extract the string. This matches standard
       React `<input onChange>` convention but diverges from the canonical
       abstracted payload. Source: https://headlessui.com/react/combobox
-      (ComboboxInput props, 2026-05-04).
+      (ComboboxInput props, 2026-05-05).
 
   # ── API reshape: selection change ───────────────────────────────────────────
 
@@ -130,13 +130,13 @@ divergence:
       in single-select it receives `T | null`. The payload shape matches
       canonical intent but the event name and attachment point differ.
       Source: https://headlessui.com/react/combobox (Combobox props —
-      onChange, 2026-05-04).
+      onChange, 2026-05-05).
 
   # ── API reshape: open change ─────────────────────────────────────────────────
 
   - from: events[openChange]
     type: reshaped
-    to: onClose callback on Combobox root (no open-path callback)
+    to: "onClose callback on Combobox root (no open-path callback; open edge derived from render prop)"
     rationale: >-
       Canonical `openChange` fires on both edges — open (`true`) and close
       (`false`). Headless UI only surfaces `onClose`, which fires when the
@@ -144,7 +144,7 @@ divergence:
       to detect the open edge must read the `open` render prop from the
       `Combobox` children or use a `useEffect` on controlled state. Source:
       https://headlessui.com/react/combobox (Combobox props — onClose,
-      2026-05-04).
+      2026-05-05).
 
   # ── Axes / variants ──────────────────────────────────────────────────────────
 
@@ -159,24 +159,23 @@ divergence:
       appearing in `ComboboxOptions`. Consumers must author the
       "create option" row manually inside `ComboboxOptions` and handle the
       new-value path in `onChange`. Source: https://headlessui.com/react/combobox
-      (Combobox props, 2026-05-04).
+      (Combobox props, 2026-05-05).
 
-  # ── Extended: virtual scrolling ─────────────────────────────────────────────
+  # ── Reshaped: virtualised property ──────────────────────────────────────────
 
   - from: axes.properties[virtualised]
     type: reshaped
-    to: "virtual={{ options, disabled }} prop on Combobox root"
+    to: "virtual prop object on Combobox root — shape: { options: T[], disabled?: (item: T) => boolean }"
     rationale: >-
       Canonical `virtualised` is a boolean flag; virtualisation strategy is
       implementation-defined. Headless UI ships a first-class virtual
       scrolling API via a `virtual` prop object on the root `Combobox`
-      component — `{ options: T[], disabled?: (item: T) => boolean }`. When
-      `virtual` is set, `ComboboxOptions` renders via a render-function
-      child `{ option }` rather than mapping `ComboboxOption` children
-      directly. This is more structured than the canonical boolean but
-      requires a different child API, breaking the non-virtual composition
-      pattern. Source: https://headlessui.com/react/combobox
-      (Combobox — virtual prop, 2026-05-04).
+      component. When `virtual` is set, `ComboboxOptions` renders via a
+      render-function child `{ option }` rather than mapping `ComboboxOption`
+      children directly. This is more structured than the canonical boolean
+      but requires a different child API, breaking the non-virtual
+      composition pattern. Source: https://headlessui.com/react/combobox
+      (Combobox — virtual prop, 2026-05-05).
 
   # ── Extended: displayValue ───────────────────────────────────────────────────
 
@@ -185,17 +184,17 @@ divergence:
     addition: >-
       `displayValue: (item: T) => string` prop on `ComboboxInput`. When a
       structured object is selected, `displayValue` converts it to the
-      human-readable label shown in the `<input>`. The canonical anatomy
-      has no equivalent — it assumes the committed value is already a
-      string. This prop is required when `value` is an object; omitting it
-      causes the input to display `[object Object]`.
+      human-readable label shown in the input. The canonical anatomy has no
+      equivalent — it assumes the committed value is already a string. This
+      prop is required when `value` is an object; omitting it causes the
+      input to display `[object Object]`.
     rationale: >-
       The canonical anatomy deals exclusively with string values. Headless
       UI's generic type parameter `T` allows any object as the combobox
       value, so a projection function from `T` to string is necessary to
       populate the input's text content. Source:
       https://headlessui.com/react/combobox (ComboboxInput props —
-      displayValue, 2026-05-04).
+      displayValue, 2026-05-05).
 
   # ── Extended: anchor-based positioning ──────────────────────────────────────
 
@@ -203,19 +202,24 @@ divergence:
     type: extended
     addition: >-
       `anchor` prop on `ComboboxOptions` drives built-in floating
-      positioning (`top`, `bottom`, `left`, `right`, with optional
-      `start`/`end` modifiers). When `anchor` is set, `portal` is
+      positioning. String values: `"top"`, `"right"`, `"bottom"`, `"left"`
+      with optional `"start"` / `"end"` modifiers. Object form accepts
+      `{ to, gap, offset, padding }`. When `anchor` is set, `portal` is
       auto-enabled and the options panel is rendered in a portal. CSS
       custom properties `--input-width`, `--button-width`, `--anchor-gap`,
-      `--anchor-offset`, and `--anchor-padding` are injected for
-      consumer sizing.
+      `--anchor-offset`, and `--anchor-padding` are injected for consumer
+      sizing. `modal` prop (default `true`) enables scroll locking, focus
+      trapping, and inerting of other page elements when the dropdown is
+      open.
     rationale: >-
       The canonical anatomy documents floating/portal behaviour as a
-      Figma–code mismatch concern but prescribes no specific library prop.
-      Headless UI ships a first-party positioning API (backed by Floating
-      UI) to remove the need for consumers to wire a third-party
-      positioning library manually. Source: https://headlessui.com/react/combobox
-      (ComboboxOptions props — anchor, portal, 2026-05-04).
+      Figma-code mismatch concern but prescribes no specific library prop.
+      Headless UI ships first-party positioning (backed by Floating UI) to
+      remove the need for consumers to wire a third-party positioning
+      library, and adds `modal` accessibility semantics on the options
+      panel as an opt-out (default on) rather than opt-in. Source:
+      https://headlessui.com/react/combobox (ComboboxOptions props —
+      anchor, portal, modal, 2026-05-05).
 
   # ── Extended: immediate ──────────────────────────────────────────────────────
 
@@ -234,7 +238,70 @@ divergence:
       (typing, arrow keys, trigger button) do not cover this focus-driven
       open path, making `immediate` a meaningful extension beyond the
       canonical property axis. Source: https://headlessui.com/react/combobox
-      (Combobox props — immediate, 2026-05-04).
+      (Combobox props — immediate, 2026-05-05).
+
+  # ── Extended: invalid prop ───────────────────────────────────────────────────
+
+  - from: axes.states[invalid]
+    type: extended
+    addition: >-
+      `invalid: boolean` prop on `Combobox` root. Sets `data-invalid` on
+      all child components and exposes `invalid` as a render prop. The
+      canonical `invalid` data state is driven purely by application logic
+      (e.g. strict-mode blur with unmatched value); Headless UI promotes
+      it to a first-party boolean prop that propagates the invalid marker
+      through the component tree without requiring consumers to manually
+      set `aria-invalid` on the inner input.
+    rationale: >-
+      Surfacing `invalid` as a root prop reduces the boilerplate for
+      form-validation integration: consumers pass `invalid={!!formError}`
+      and `data-invalid` propagates to every child automatically, including
+      `ComboboxInput` which will receive `aria-invalid="true"`. The
+      canonical model relies on the consumer setting `aria-invalid` on the
+      input directly. Source: https://headlessui.com/react/combobox
+      (Combobox props — invalid, 2026-05-05).
+
+  # ── Extended: form integration props ────────────────────────────────────────
+
+  - from: formIntegration.name
+    type: extended
+    addition: >-
+      `name: string` and `form: string` props on `Combobox` root. When
+      `name` is provided, Headless UI injects a hidden native `<input>`
+      carrying the selected value for native form submission. The `form`
+      prop associates the hidden input with a specific form element by id.
+      The canonical `formIntegration` says the inner `<input>` carries the
+      form `name`; Headless UI also supports value submission via the
+      hidden-input mechanism for the selected option value (separate from
+      the typed string in `ComboboxInput`).
+    rationale: >-
+      The canonical model routes form submission through the visible text
+      input — consumers set `name` on the inner `<input>` and submit the
+      typed string. Headless UI's `name` prop on the root instead injects
+      a hidden input carrying the committed selection value (the option
+      object or its serialised form), cleanly separating "what the user
+      typed" from "what was selected and submitted". This matches how Headless
+      UI handles form submission in its `Select` and `Switch` components.
+      Source: https://headlessui.com/react/combobox (Combobox props —
+      name, form, 2026-05-05).
+
+  # ── Extended: ComboboxOption order prop ──────────────────────────────────────
+
+  - from: anatomy[option]
+    type: extended
+    addition: >-
+      `order: number` prop on `ComboboxOption`. Provides a performance hint
+      for the library's internal option ordering when options are not
+      rendered in DOM order. Not relevant when using the `virtual` prop.
+      The canonical `option` slot has no ordering prop.
+    rationale: >-
+      Dynamic option lists (e.g. filtered results inserted via portals or
+      out-of-order rendering) can confuse the library's internal index
+      tracking; `order` lets consumers declare the logical position
+      explicitly without forcing a specific DOM order. This is a library
+      internal optimisation with no canonical equivalent. Source:
+      https://headlessui.com/react/combobox (ComboboxOption props — order,
+      2026-05-05).
 
 rationale: |
   Headless UI React v2.1 Combobox is an unstyled, accessibility-focused
@@ -242,7 +309,7 @@ rationale: |
   the canonical anatomy in predictable ways consistent with the library's
   design philosophy.
 
-  The divergences cluster into four groups:
+  The divergences cluster into five groups:
 
   1. Missing consumer-visible slots — no clear-button primitive, no
      empty-state slot with live-region support. Consumers must author
@@ -257,14 +324,21 @@ rationale: |
      handles object-to-string conversion; `virtual` prop ships a
      first-class virtualisation API; `immediate` adds open-on-focus
      behaviour; `anchor` on ComboboxOptions provides built-in floating
-     positioning with CSS custom-property hooks.
+     positioning with CSS custom-property hooks; `modal` on ComboboxOptions
+     enables scroll locking and inerting (default on); `invalid` on the
+     root propagates `data-invalid` through the tree automatically;
+     `name`/`form` on the root inject a hidden input for form submission
+     of the selected value.
 
   4. Variant gaps — no `creatable` variant API; `virtualised` is not a
      boolean flag but a structured object config that changes the child
      composition pattern entirely.
 
+  5. Performance hints — `ComboboxOption.order` provides an index hint
+     for non-DOM-ordered option lists; no canonical equivalent.
+
   The ARIA contract (role="combobox" on input, aria-activedescendant for
   highlighted option, focus staying on the input throughout) is correctly
   implemented by the library and matches canonical requirements.
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

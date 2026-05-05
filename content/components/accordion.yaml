@@ -741,13 +741,21 @@ notes: >-
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/accordion/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details
-  - https://www.radix-ui.com/primitives/docs/components/accordion
-  - https://react-spectrum.adobe.com/react-aria/Disclosure.html
-  - https://headlessui.com/react/disclosure
-  - https://polaris.shopify.com/components/utilities/collapsible
-  - https://carbondesignsystem.com/components/accordion/usage/
-  - https://atlassian.design/components/expand/examples
-  - https://m3.material.io/components/dividers/overview
+  - url: https://www.radix-ui.com/primitives/docs/components/accordion
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://react-aria.adobe.com/Disclosure
+    library: reactAria
+    verifiedAt: '2026-05-05'
+  - url: https://headlessui.com/react/disclosure
+    library: headlessUi
+    verifiedAt: '2026-05-05'
+  - url: https://polaris-react.shopify.com/components/utilities/collapsible
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/accordion/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
   - https://inclusive-components.design/collapsible-sections/
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'

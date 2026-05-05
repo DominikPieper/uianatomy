@@ -1,0 +1,208 @@
+componentId: avatar
+libraryId: radix
+componentName: Avatar
+
+exampleCode: |
+  import * as Avatar from '@radix-ui/react-avatar';
+
+  <Avatar.Root className="AvatarRoot">
+    <Avatar.Image
+      className="AvatarImage"
+      src="https://example.com/photo.jpg"
+      alt="Alex Black"
+      onLoadingStatusChange={(status) => console.log(status)}
+    />
+    <Avatar.Fallback className="AvatarFallback" delayMs={600}>
+      AB
+    </Avatar.Fallback>
+  </Avatar.Root>
+
+divergence:
+  # Anatomy divergences
+
+  - from: anatomy[initials]
+    type: reshaped
+    to: Avatar.Fallback (accepts any children — initials text, icon element, or any React node)
+    rationale: >-
+      Canonical anatomy separates initials and fallback-icon as two distinct
+      slots in an ordered chain. Radix collapses both into a single
+      Avatar.Fallback that accepts arbitrary children, leaving the
+      initials-vs-icon distinction entirely to the consumer. The library
+      manages only whether Fallback is visible (image loading or error), not
+      which fallback tier is active. Consumers who need the canonical two-rung
+      chain must compose two elements inside a single Avatar.Fallback or
+      conditionally choose content themselves.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar (fetched 2026-05-05)
+
+  - from: anatomy[fallback-icon]
+    type: omitted
+    rationale: >-
+      Radix has no separate fallback-icon slot. Both the initials rung and the
+      icon rung of the canonical fallback chain map to the same Avatar.Fallback
+      component. Distinguishing between them is the consumer's responsibility
+      via conditional rendering inside Fallback's children prop.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  - from: anatomy[status-indicator]
+    type: omitted
+    rationale: >-
+      Radix Avatar has no status-indicator slot. Presence states (online,
+      offline, away, busy) are not modeled in the library at all. Consumers
+      who need a status badge must position a separate element relative to
+      Avatar.Root using CSS; Radix provides no anchor, ARIA wiring, or
+      accessible-label slot for this purpose.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar (fetched 2026-05-05)
+
+  # Axes — variants
+
+  - from: axes.variants[circle]
+    type: omitted
+    rationale: >-
+      Radix Avatar.Root extends a plain `<span>` with no shape props. The
+      circle shape (border-radius: 50%) is a consumer CSS concern. Radix does
+      not ship a `shape` prop or a variant enumeration.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+
+  - from: axes.variants[square]
+    type: omitted
+    rationale: >-
+      Same as circle: Radix has no shape variant. Square shape is consumer CSS.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+
+  # Axes — properties
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix Avatar has no size prop. Dimensions are set by consumer CSS on
+      Avatar.Root. The canonical xs/sm/md/lg/xl size scale is a design-system
+      convention layered above the primitive, not a primitive concern.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+
+  - from: axes.properties[status]
+    type: omitted
+    rationale: >-
+      Radix Avatar has no concept of presence status. The online/offline/away/
+      busy enum does not exist in the library. Consumers must implement status
+      as a separate overlay element.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+
+  - from: axes.properties[hasStatusIndicator]
+    type: omitted
+    rationale: >-
+      No status indicator exists in Radix Avatar; this boolean control has no
+      corresponding surface in the library.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+
+  # Axes — states
+
+  - from: axes.states.data[initials-fallback]
+    type: reshaped
+    to: onLoadingStatusChange status='error' or status='loading' with consumer-chosen Fallback children
+    rationale: >-
+      Canonical defines `initials-fallback` as a discrete data state signalling
+      that the initials rung is active. Radix models loading state as
+      ImageLoadingStatus ('idle' | 'loading' | 'loaded' | 'error') surfaced via
+      Avatar.Image's `onLoadingStatusChange` callback. Which visual content
+      (initials or icon) appears inside Avatar.Fallback is driven entirely by
+      the consumer, not the library. There is no Radix-native concept of
+      "initials-fallback" vs "icon-fallback".
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  - from: axes.states.data[icon-fallback]
+    type: omitted
+    rationale: >-
+      Radix has no icon-fallback state. As with initials-fallback, Fallback
+      visibility is binary (shown or hidden based on image loading status); the
+      content tier within Fallback is not tracked as a library state.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  # Events
+
+  - from: events[imageLoad]
+    type: reshaped
+    to: onLoadingStatusChange(status='loaded') on Avatar.Image
+    rationale: >-
+      Canonical `imageLoad` fires as a discrete event with payload
+      `{ src, durationMs }`. Radix uses a single `onLoadingStatusChange`
+      callback prop on Avatar.Image that fires on every status transition
+      ('idle' → 'loading' → 'loaded' or 'error'). To match the canonical
+      imageLoad contract, consumers filter for `status === 'loaded'`. The
+      `durationMs` payload field has no Radix equivalent — consumers must
+      record the load-start timestamp themselves.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  - from: events[imageError]
+    type: reshaped
+    to: onLoadingStatusChange(status='error') on Avatar.Image
+    rationale: >-
+      Canonical `imageError` fires with `{ src, fallbackTier }`. Radix surfaces
+      image errors as `status === 'error'` via the same `onLoadingStatusChange`
+      callback. The `fallbackTier` payload field ('initials' | 'icon') has no
+      Radix equivalent — Radix does not distinguish which fallback tier becomes
+      active because it does not model the two-rung chain.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  # Motion
+
+  - from: motion.durations
+    type: omitted
+    rationale: >-
+      Radix Avatar ships no motion tokens or animation primitives. The library
+      does not emit data-state attributes on Avatar.Root, Avatar.Image, or
+      Avatar.Fallback (unlike Dialog which exposes data-state for open/closed
+      animation). Consumers who want to animate the fallback transition write
+      CSS directly, outside any Radix-managed surface.
+      Source: https://raw.githubusercontent.com/radix-ui/primitives/main/packages/react/avatar/src/avatar.tsx (fetched 2026-05-05)
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix Avatar has no reduced-motion handling. No data-state attributes are
+      emitted, so there is no library-managed surface on which
+      prefers-reduced-motion media queries would apply. Motion suppression is
+      entirely outside Radix's scope for this component.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar (fetched 2026-05-05)
+
+  # Radix extends the fallback concept with a flash-prevention delay prop
+  - from: anatomy[initials]
+    type: extended
+    addition: >-
+      Avatar.Fallback gains `delayMs?: number` — a Radix-specific prop absent
+      from the canonical anatomy. When set, Fallback is withheld for the given
+      number of milliseconds; if the image loads within that window, Fallback
+      never renders, eliminating the flash of fallback content on fast
+      connections.
+      Source: https://www.radix-ui.com/primitives/docs/components/avatar#api-reference (fetched 2026-05-05)
+    rationale: >-
+      Radix adds delayMs to solve a practical UX problem: on fast connections,
+      images resolve before the first paint, making a briefly-visible fallback
+      a perceptible flash of unstyled content. The canonical anatomy specifies
+      the fallback chain order but does not model the timing of when each rung
+      becomes visible. Radix handles this at the library layer so consumers do
+      not need to debounce fallback rendering themselves.
+
+rationale: |
+  Radix Avatar is an unstyled primitive that implements the canonical image-
+  loading and fallback-visibility contract but collapses the canonical
+  two-rung fallback chain (initials → icon) into a single Avatar.Fallback
+  slot. The library's primary contribution is the image-load state machine
+  (idle/loading/loaded/error) and the delayMs flash-prevention mechanism;
+  everything else — shape, size, status indicator, motion — is left entirely
+  to consumers.
+
+  The most significant divergence is the Fallback collapse: canonical anatomy
+  treats initials and fallback-icon as separate slots to enforce a deterministic
+  order and distinct accessible-name strategies. Radix treats them as one slot
+  with any-children, which means the canonical fallback-chain contract must be
+  re-implemented at the consumer level. The onLoadingStatusChange callback
+  provides the mechanism; the discipline of the chain does not come from the
+  library.
+
+  Radix Avatar has no ARIA role assignments in its source — accessibility is
+  left entirely to consumers (img alt, role="img", aria-label). This matches
+  the library's "unstyled and accessible-by-consumer-choice" philosophy but
+  means the canonical a11y contracts (role=img on initials/icon variants,
+  aria-label with full entity name) are not enforced by the library.
+
+lastReviewed: '2026-05-05'

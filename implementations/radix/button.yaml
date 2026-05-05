@@ -1,0 +1,271 @@
+componentId: button
+libraryId: radix
+componentName: Button
+
+exampleCode: |
+  import { Button } from '@radix-ui/themes';
+
+  {/* Basic usage */}
+  <Button variant="solid" size="2">Save changes</Button>
+
+  {/* With icon (free child — no named slot) */}
+  <Button variant="solid" size="2">
+    <PlusIcon />
+    Add item
+  </Button>
+
+  {/* Loading state */}
+  <Button loading>Saving…</Button>
+
+  {/* High-contrast ghost, full-width via className */}
+  <Button variant="ghost" highContrast className="w-full">Cancel</Button>
+
+  {/* asChild — render as anchor */}
+  <Button asChild variant="solid">
+    <a href="/dashboard">Go to dashboard</a>
+  </Button>
+
+divergence:
+  # Anatomy: Radix Themes Button has no named sub-slots. Icons and the label
+  # are free children; Radix inserts gap spacing automatically via CSS.
+
+  - from: anatomy[icon-leading]
+    type: omitted
+    rationale: >-
+      Radix Themes Button has no `icon-leading` named slot or prop. Icons
+      are passed as free React children alongside the label text; the
+      component applies `gap` via CSS automatically
+      (https://www.radix-ui.com/themes/docs/components/button — "You can
+      nest icons directly inside the button. An appropriate gap is provided
+      automatically"). There is no mechanism to distinguish a leading icon
+      child from an arbitrary preceding child.
+
+  - from: anatomy[icon-trailing]
+    type: omitted
+    rationale: >-
+      Same rationale as icon-leading: Radix has no trailing-icon slot.
+      Icons placed after the label text are trailing by position, not by
+      a named slot or prop. The consumer controls order through JSX child
+      ordering.
+
+  - from: anatomy[label]
+    type: omitted
+    rationale: >-
+      Radix Themes Button has no named label slot. The label is a free text
+      node among the button's children. There is no `label` prop or named
+      slot — children are rendered in a flex container with automatic gap
+      between icon and text nodes. The canonical slot distinction (label vs
+      icon-leading vs icon-trailing) exists only at the consumer layout level.
+
+  # Variants: canonical 5-item emphasis ladder vs. Radix 6-item style ladder.
+  # None of the Radix variant names match the canonical names.
+
+  - from: axes.variants[primary]
+    type: omitted
+    rationale: >-
+      Radix Themes has no "primary" variant. The closest visual analogue is
+      `variant="solid"` (filled background, highest visual weight), but
+      Radix does not map the design-emphasis vocabulary (primary / secondary
+      / tertiary / ghost / destructive) — it maps fill-style vocabulary
+      (classic / solid / soft / surface / outline / ghost). There is no
+      one-to-one equivalence; "primary" is a consumer-layer convention
+      achieved by choosing a variant + color combination.
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+  - from: axes.variants[secondary]
+    type: omitted
+    rationale: >-
+      No "secondary" variant. Closest visual candidates are `variant="soft"`
+      or `variant="surface"` depending on the design system's emphasis
+      convention. Radix's style taxonomy does not encode hierarchy.
+
+  - from: axes.variants[tertiary]
+    type: omitted
+    rationale: >-
+      No "tertiary" variant. Closest analogue is `variant="outline"` or
+      `variant="ghost"` at a lower hierarchy position, but again Radix does
+      not express hierarchy — it expresses fill style.
+
+  - from: axes.variants[destructive]
+    type: reshaped
+    to: color="red" (or another danger-signalling color) on any variant
+    rationale: >-
+      Radix has no "destructive" variant. Destructive intent is expressed via
+      the `color` prop (e.g. `color="red"`) combined with any style variant.
+      This is a two-prop composition rather than a single variant value.
+      The canonical `destructive` variant bundles color + fill style into one
+      enum value; Radix separates color from fill style orthogonally.
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+  - from: axes.variants[ghost]
+    type: renamed
+    to: variant="ghost"
+    rationale: >-
+      One-to-one name match. Radix `ghost` renders with no background or
+      border, matching the canonical ghost intent. Radix note: ghost buttons
+      use a negative margin to optically align with surrounding text
+      (https://www.radix-ui.com/themes/docs/components/button), which is
+      an implementation detail not present in the canonical description.
+
+  # Properties
+
+  - from: axes.properties[size]
+    type: reshaped
+    to: size="1" | "2" | "3" | "4" (numeric, default "2")
+    rationale: >-
+      Canonical uses semantic size names (sm / md / lg). Radix Themes uses a
+      numeric t-shirt scale 1–4 where "1" is smallest and "4" is largest.
+      The number of tiers also differs: canonical has 3, Radix has 4. There
+      is no mechanical mapping — a consumer bridging the two must decide
+      whether sm → "1" or sm → "2" (the Radix default).
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+  - from: axes.properties[iconOnly]
+    type: reshaped
+    to: IconButton (separate component — import { IconButton } from '@radix-ui/themes')
+    rationale: >-
+      Radix Themes does not support an `iconOnly` boolean on Button. Icon-only
+      activators are a separate component `IconButton`, which ships its own
+      padding and aspect-ratio treatment. A consumer wanting the canonical
+      `iconOnly` variant must switch to a different Radix component entirely.
+      (https://www.radix-ui.com/themes/docs/components/icon-button)
+
+  - from: axes.properties[fullWidth]
+    type: omitted
+    rationale: >-
+      Radix Themes Button has no `fullWidth` prop. Consumers achieve full-width
+      rendering via className (`className="w-full"` with Tailwind) or inline
+      style (`style={{ width: '100%' }}`). The canonical prop is a
+      design-system convenience layer above what Radix ships.
+
+  - from: axes.properties[type]
+    type: reshaped
+    to: HTML attribute passthrough via spread props
+    rationale: >-
+      Radix Themes Button does not declare `type` as an explicit prop, but
+      since it renders a native `<button>` element and spreads all standard
+      HTML attributes, `type="submit"` | `"reset"` | `"button"` can be passed
+      as a plain HTML attribute. The canonical prop is first-class; in Radix
+      it is an implicit passthrough with no type-system enforcement of the
+      allowed values.
+
+  # Data states
+
+  - from: axes.states.data[loading]
+    type: reshaped
+    to: loading prop (boolean, default false) — replaces all button content with a spinner
+    rationale: >-
+      Canonical loading state preserves the label (visually or via
+      visually-hidden text) and replaces only the leading icon with a spinner,
+      announcing `aria-busy="true"`. Radix `loading` displays a spinner "in
+      place of button content" — the label is not preserved in the DOM during
+      loading, only the spinner. Radix also automatically applies `disabled`
+      to prevent interaction. This diverges from the canonical prescription
+      that the accessible name should remain stable and `aria-busy` should be
+      used rather than `disabled`.
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+  - from: axes.states.data[pressed]
+    type: omitted
+    rationale: >-
+      Radix Themes Button has no `pressed` data state and does not manage
+      `aria-pressed`. Toggle-button behaviour (e.g. toolbar formatting Bold /
+      Italic / Underline) is not a first-class Radix Themes concern; consumers
+      must add `aria-pressed` and its toggle logic themselves.
+
+  # Motion: Radix Themes Button ships no motion tokens or transitions.
+
+  - from: motion.durations
+    type: omitted
+    rationale: >-
+      Radix Themes Button ships no motion durations. There is no enter/exit
+      animation on the button itself; hover and active state changes are
+      instantaneous CSS transitions defined in the Radix theme CSS with no
+      consumer-configurable duration tokens.
+
+  - from: motion.easing
+    type: omitted
+    rationale: >-
+      Radix Themes Button applies no configurable easing. The internal CSS
+      transitions use browser-default easing; there is no motion.easing token
+      surface exposed to consumers.
+
+  # Events: Radix Themes Button does not wrap the click event.
+
+  - from: events[click]
+    type: reshaped
+    to: native onClick (React.MouseEvent<HTMLButtonElement>) via HTML spread
+    rationale: >-
+      The canonical click event specifies a loading-guard (suppression when
+      loading or disabled). Radix Themes enforces this by setting `disabled`
+      on the element when `loading={true}`, which prevents the native click
+      from firing at all. The canonical guard is therefore honoured through
+      the disabled mechanism rather than through a handler guard. The event
+      itself is a standard React synthetic MouseEvent, not a wrapped or
+      renamed event.
+
+  # Extensions: props that Radix adds beyond the canonical surface.
+
+  - from: axes.variants[ghost]
+    type: extended
+    addition: >-
+      variant="classic" | "soft" | "surface" | "outline" — four additional
+      fill-style variants (classic, soft, surface, outline) not present in the
+      canonical variant set. These expose fill-style orthogonally from color
+      and emphasis.
+    rationale: >-
+      Radix Themes separates fill style from emphasis, exposing 6 fill variants
+      (classic, solid, soft, surface, outline, ghost) that can be combined with
+      any `color` value. This is a deliberate product decision to let one
+      component cover all fill styles rather than encoding emphasis in the
+      variant name. The canonical emphasis ladder (primary / secondary / ghost)
+      is a higher-level abstraction that a design system would layer on top
+      of Radix's fill-style taxonomy.
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `color` prop (AccentColor enum — indigo, cyan, orange, crimson, red,
+      gray, …), `highContrast` (boolean), `radius` ("none" | "small" |
+      "medium" | "large" | "full"), `asChild` (boolean)
+    rationale: >-
+      Radix Themes Button exposes four additional props beyond the canonical
+      surface. `color` selects the accent color from the theme palette
+      independently of the variant — allowing e.g. a soft red button without
+      a "destructive" variant. `highContrast` increases the color contrast
+      between foreground and background for accessibility or emphasis.
+      `radius` overrides the theme's corner radius per-instance. `asChild`
+      (via Radix Slot) renders the button's behaviour onto a consumer-supplied
+      child element (e.g. `<a>` for link-styled-as-button) without wrapping.
+      None of these are present in the canonical surface.
+      (https://www.radix-ui.com/themes/docs/components/button)
+
+rationale: |
+  Radix Themes Button is a styled, opinionated component — unlike Radix
+  Primitives (which has no Button at all). It ships a complete visual system
+  (6 fill-style variants, 4 sizes, full color palette, radius control) but
+  does not adopt the canonical emphasis-ladder vocabulary (primary / secondary
+  / tertiary / ghost / destructive). The most substantive divergences are:
+
+  1. Variant taxonomy: Radix models fill style, not design emphasis. A
+     design system using Radix Themes must map its own emphasis ladder onto
+     Radix's (variant × color) matrix.
+
+  2. No named anatomy slots: icon-leading, icon-trailing, and label are all
+     free children. The canonical slot contract (leading icon, label, trailing
+     icon as distinct composition points) is a consumer responsibility.
+
+  3. Icon-only requires a different component (IconButton), not a prop.
+
+  4. Loading reshapes accessibility: Radix hides the label entirely and uses
+     `disabled`, while the canon prescribes keeping the accessible name
+     stable and using `aria-busy`.
+
+  5. No pressed / toggle-button state management.
+
+  The `asChild`, `color`, `highContrast`, and `radius` props are genuine
+  Radix extensions that give consumers compositional power beyond the
+  canonical surface.
+
+lastReviewed: '2026-05-05'

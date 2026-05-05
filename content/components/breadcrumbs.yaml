@@ -780,12 +780,19 @@ contracts:
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/
   - https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/examples/breadcrumb/
-  - https://react-aria.adobe.com/Breadcrumbs
+  - url: https://react-aria.adobe.com/Breadcrumbs
+    library: reactAria
+    verifiedAt: '2026-05-05'
   - https://mui.com/material-ui/react-breadcrumbs/
   - https://www.heroui.com/docs/components/breadcrumbs
-  - https://atlassian.design/components/breadcrumbs/usage
-  - https://design-system.service.gov.uk/components/breadcrumbs/
-  - https://primer.style/components/breadcrumbs/react
-  - https://polaris-react.shopify.com/components/breadcrumbs
+  - url: https://atlassian.design/components/breadcrumbs
+    library: atlassian
+    verifiedAt: '2026-05-05'
+  - url: https://design-system.service.gov.uk/components/breadcrumbs/
+    library: govuk
+    verifiedAt: '2026-05-05'
+  - url: https://primer.style/components/breadcrumbs/react
+    library: primer
+    verifiedAt: '2026-05-05'
 
-lastReviewed: '2026-05-03'
+lastReviewed: '2026-05-05'

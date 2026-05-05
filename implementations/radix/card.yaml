@@ -1,0 +1,248 @@
+componentId: card
+libraryId: radix
+componentName: Card
+
+exampleCode: |
+  import { Card, Flex, Box, Avatar, Text, Inset } from '@radix-ui/themes';
+
+  {/* Basic freeform card — no dedicated slots */}
+  <Card size="2" variant="surface">
+    <Flex gap="3" align="center">
+      <Avatar radius="full" fallback="T" />
+      <Box>
+        <Text as="p" weight="bold">Teodros Girmay</Text>
+        <Text as="p" color="gray">Engineering</Text>
+      </Box>
+    </Flex>
+  </Card>
+
+  {/* Card with flush media via Inset */}
+  <Card size="2" variant="surface">
+    <Inset clip="padding-box" side="top" pb="current">
+      <img src="/hero.jpg" alt="Hero image" style={{ display: 'block', width: '100%' }} />
+    </Inset>
+    <Text as="p" weight="bold">Card title</Text>
+    <Text as="p" color="gray">Supporting body text.</Text>
+  </Card>
+
+  {/* Interactive card via asChild */}
+  <Card asChild size="2" variant="surface">
+    <a href="/destination">
+      <Text as="p" weight="bold">Linked card</Text>
+    </a>
+  </Card>
+
+divergence:
+  # ── Anatomy ─────────────────────────────────────────────────────────────────
+
+  - from: anatomy[media]
+    type: reshaped
+    to: >-
+      Inset component (flush wrapper) containing a consumer-supplied img or
+      video element; no dedicated card slot.
+    rationale: >-
+      Radix Themes provides no media slot on Card. Flush-edge imagery is
+      achieved by nesting the Radix `Inset` component
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05) as a child of Card with props
+      `clip="padding-box" side="top" pb="current"`. This delegates all
+      aspect-ratio, lazy-load, and alt-text decisions to the consumer — Radix
+      makes no canonical claim about media handling inside cards.
+
+  - from: anatomy[eyebrow]
+    type: omitted
+    rationale: >-
+      Radix Card has no eyebrow slot or prop. The component is an unstyled
+      container; an eyebrow label is composed by the consumer using Radix
+      `Text` with a colour or size prop. No first-class slot exists.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      Radix Card has no title slot. Heading text is placed as a free child
+      using Radix `Text` (e.g. `<Text as="p" weight="bold">`). The library
+      does not enforce heading semantics or an accessible-name relationship
+      between the title and the card surface; these are consumer
+      responsibilities.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: anatomy[subtitle]
+    type: omitted
+    rationale: >-
+      No subtitle slot. Consumer-composed alongside title using Radix `Text`
+      with a muted colour prop. Radix Themes Card is a purely structural
+      container and does not segment content by hierarchy.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: anatomy[body]
+    type: omitted
+    rationale: >-
+      No body slot. Radix Card accepts arbitrary children; prose, structured
+      content, and nested components are placed directly in the card with no
+      wrapping slot providing spacing or semantic context.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: anatomy[action-group]
+    type: omitted
+    rationale: >-
+      Radix Card ships no action slot or footer-action region. Action buttons
+      are composed as free children of Card using Radix `Button` or similar
+      primitives. No spacing contract, keyboard-order guarantee, or
+      primary/secondary action grouping is provided by the library.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: anatomy[footer]
+    type: omitted
+    rationale: >-
+      No footer slot. Metadata or attribution content is placed as free
+      children; the library imposes no visual weight distinction between
+      footer and body content.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  # ── Variants ────────────────────────────────────────────────────────────────
+
+  - from: axes.variants[elevated]
+    type: renamed
+    to: variant="classic"
+    rationale: >-
+      The canonical `elevated` variant — a card with a shadow that lifts it
+      above the page surface — maps to Radix `variant="classic"`, which
+      applies a box-shadow. Radix does not use the word "elevated". The
+      `classic` name reflects Radix Themes' design vocabulary, not the
+      cross-library concept.
+      (https://github.com/radix-ui/themes/blob/main/packages/radix-ui-themes/src/components/card.props.tsx,
+      fetched 2026-05-05)
+
+  - from: axes.variants[outlined]
+    type: renamed
+    to: variant="surface"
+    rationale: >-
+      The canonical `outlined` variant — a card demarcated by a visible border
+      — maps to Radix `variant="surface"`, which renders a subtle border and
+      background fill. Radix chose "surface" to align with its colour-token
+      naming system rather than the structural term "outlined".
+      (https://github.com/radix-ui/themes/blob/main/packages/radix-ui-themes/src/components/card.props.tsx,
+      fetched 2026-05-05)
+
+  - from: axes.variants[flat]
+    type: renamed
+    to: variant="ghost"
+    rationale: >-
+      The canonical `flat` variant — no border and no shadow — maps to Radix
+      `variant="ghost"`, which removes border and background. Radix labels it
+      "ghost" by analogy with ghost buttons; the structural semantics (zero
+      visual boundary) match the canonical `flat` concept.
+      (https://github.com/radix-ui/themes/blob/main/packages/radix-ui-themes/src/components/card.props.tsx,
+      fetched 2026-05-05)
+
+  # ── Properties ──────────────────────────────────────────────────────────────
+
+  - from: axes.properties[interactive]
+    type: reshaped
+    to: asChild prop (polymorphic rendering as <a> or <button>)
+    rationale: >-
+      The canonical `interactive: boolean` enables whole-card activation via
+      an overlay pattern. Radix achieves the same effect through `asChild`,
+      which renders Card as the passed child element (typically `<a href>`
+      or `<button>`), making the entire card surface the interactive
+      activator. There is no `interactive` prop; the affordance is expressed
+      by substituting the root element rather than toggling a flag.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: axes.properties[orientation]
+    type: omitted
+    rationale: >-
+      Radix Card has no `orientation` prop. Horizontal layout (media on the
+      leading edge) is achieved by the consumer composing Radix `Flex`
+      with `direction="row"` around the card's children. The library provides
+      no canonical layout variant for this.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: axes.properties[density]
+    type: reshaped
+    to: size prop ("1" | "2" | "3" | "4" | "5"; default "1")
+    rationale: >-
+      The canonical `density` axis (comfortable / compact) maps imperfectly to
+      Radix `size`, which is a five-step numeric scale controlling the card's
+      padding. Radix's `size` is finer-grained and does not cleanly map to the
+      two-value density enum; it also controls border-radius alongside padding.
+      The canonical two-step density concept is subsumed into a wider
+      design-token scale.
+      (https://github.com/radix-ui/themes/blob/main/packages/radix-ui-themes/src/components/card.props.tsx,
+      fetched 2026-05-05)
+
+  # ── Extended: size prop ────────────────────────────────────────────────────
+
+  - from: axes.properties[density]
+    type: extended
+    addition: >-
+      `size` accepts Responsive<"1" | "2" | "3" | "4" | "5"> — five steps
+      with responsive breakpoint objects (e.g. `size={{ initial: '1', md: '2'
+      }}`), giving per-breakpoint padding and radius control that the canonical
+      `density` enum does not model.
+    rationale: >-
+      Radix Themes exposes responsive prop objects on many of its sizing props.
+      This is a first-class Radix-Themes affordance absent from the canonical
+      axis, which only distinguishes comfortable vs compact.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  # ── States ──────────────────────────────────────────────────────────────────
+
+  - from: axes.states[selected]
+    type: omitted
+    rationale: >-
+      Radix Card carries no `data-selected` state or `aria-selected`
+      attribute. Selectable card collections are not a Radix Themes primitive
+      concern — the library ships separate `CheckboxCards` and `RadioCards`
+      components for selection semantics rather than toggling a state on the
+      base Card. The canonical `selected` data state has no equivalent on
+      `Card` itself.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+  - from: axes.states[loading]
+    type: omitted
+    rationale: >-
+      Radix Card has no `loading` data state or skeleton affordance. A loading
+      skeleton is consumer-composed (e.g. using Radix Skeleton component inside
+      the card's children). The canonical `loading` data state has no
+      equivalent on the Card primitive itself.
+      (https://www.radix-ui.com/themes/docs/components/card, fetched
+      2026-05-05)
+
+rationale: |
+  Radix Themes Card is a minimal styled-container primitive — a `<div>` with
+  theme tokens applied for padding, border-radius, background, and optional
+  shadow. It ships three named variants (surface / classic / ghost) that map
+  cleanly but with renamed terminology to the canonical elevated / outlined /
+  flat axis, and a five-step numeric size scale that subsumes the canonical
+  two-step density.
+
+  The Card has no internal anatomy: no media, eyebrow, title, subtitle, body,
+  action, or footer slots. Every structural division the canonical anatomy
+  defines must be composed by the consumer from Radix primitives (Text, Flex,
+  Box, Button, Inset). This is a deliberate design choice — Radix Themes is a
+  composable primitive layer, not a pre-structured content component.
+
+  The canonical `interactive` boolean is realised through the `asChild` prop
+  (polymorphic root element), which makes the whole card surface a single
+  anchor or button without an explicit flag. This means the overlay-pattern
+  complexity described in the canonical mistakes section is the consumer's
+  responsibility to implement correctly.
+
+  All anatomy divergences are `omitted` (no library slots match canonical
+  slots). Variant divergences are `renamed` (one-to-one terminology map).
+  Property divergences are `reshaped` (asChild for interactive, size for
+  density) plus one `extended` for the responsive size affordance.
+
+lastReviewed: '2026-05-05'

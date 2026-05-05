@@ -534,13 +534,29 @@ a11yAcceptance:
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/button/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button
-  - https://www.radix-ui.com/themes/docs/components/button
-  - https://react-spectrum.adobe.com/react-aria/Button.html
-  - https://headlessui.com/react/button
-  - https://polaris.shopify.com/components/actions/button
-  - https://carbondesignsystem.com/components/button/usage/
-  - https://m3.material.io/components/buttons/overview
-  - https://atlassian.design/components/button/examples
-  - https://www.gov.uk/service-manual/design/buttons
+  - url: https://www.radix-ui.com/themes/docs/components/button
+    library: radix
+    verifiedAt: '2026-05-05'
+  - url: https://react-aria.adobe.com/Button
+    library: reactAria
+    verifiedAt: '2026-05-05'
+  - url: https://headlessui.com/react/button
+    library: headlessUi
+    verifiedAt: '2026-05-05'
+  - url: https://polaris-react.shopify.com/components/actions/button
+    library: polaris
+    verifiedAt: '2026-05-05'
+  - url: https://carbondesignsystem.com/components/button/usage/
+    library: carbon
+    verifiedAt: '2026-05-05'
+  - url: https://m3.material.io/components/buttons/overview
+    library: material3
+    verifiedAt: '2026-05-05'
+  - url: https://atlassian.design/components/button
+    library: atlassian
+    verifiedAt: '2026-05-05'
+  - url: https://design-system.service.gov.uk/components/button/
+    library: govuk
+    verifiedAt: '2026-05-05'
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-05-05'
