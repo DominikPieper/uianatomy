@@ -1,0 +1,99 @@
+id: header-bar
+name: Header bar
+description: >-
+  Top wrapper region of an overlay surface (modal, drawer, popover)
+  that groups a heading-region container with a title element. Two
+  structural parts: the wrapper region (slotKind: structural,
+  code.semantic: heading-region — a layout region, not itself a
+  heading) and the title (slotKind: content, code.semantic: heading
+  — the real heading element referenced by the host's aria-labelledby).
+  Closing affordances and other header occupants are mounted by the
+  consumer at the consumer level (the close-button sub-anatomy is the
+  canonical co-mount; both reference parent: header in the resolved
+  anatomy). The two-part split surfaces the canonical APG-rule
+  "header is a region, not a heading" structurally rather than only
+  in a11y.hint prose, and makes the aria-labelledby dependency a
+  visible structural relation between header and title.
+lastReviewed: '2026-05-05'
+
+a11y:
+  groupRule: >-
+    The header is a layout region (role implicit from heading-region
+    semantic), not a heading. The title inside carries the real
+    heading semantics — pick an appropriate level (typically <h2>
+    for top-level overlays). The host surface's container references
+    the title element via aria-labelledby; never rely on aria-label
+    on the container when a visible title exists.
+  focusRule: >-
+    Focus does not land on the header or the title by default. When
+    the host is a focus-trapping surface (modal dialog, focus-trapping
+    drawer), the initial focus targets the body's first interactive
+    element (or the close-button when no body interactive exists).
+    Headings are non-tabbable by default; do not add tabindex="0".
+
+slots:
+  - id: header
+    required: true
+    purpose: >-
+      Top region grouping the title with any header-mounted affordances
+      (close-button, status-icon, badges). A layout wrapper, not itself
+      a heading — the heading semantics live on the title slot inside.
+      Spans the full inline-size of the host's container so close-buttons
+      mount cleanly at the inline-end edge.
+    slotKind: structural
+    layout:
+      row: 1
+      span: full
+    figma:
+      type: frame
+      hint: Auto-layout horizontal frame; padding from container token; spans full inline-size
+    code:
+      slot: header
+      semantic: heading-region
+    a11y:
+      hint: >-
+        Header is a layout region (heading-region semantic), not a
+        heading. Heading semantics live on the title element inside.
+        Do not give the wrapper its own role attribute or heading
+        level — APG dialog and tooltip patterns place the heading
+        on the title element only.
+    tokens:
+      spacing:
+        padding: spacing.compact
+        gap: spacing.compact
+
+  - id: title
+    required: true
+    purpose: >-
+      The host surface's name. The value referenced by aria-labelledby
+      on the host container; the first content announced when focus
+      enters the surface (modals, drawers) or when the surface opens
+      (popovers). Visually-hidden titles are valid when no visible
+      title is desired but an accessible name is still required.
+    slotKind: content
+    layout:
+      parent: header
+      row: 1
+      col: 1
+      span: 9
+    figma:
+      type: text
+      hint: Heading text style; bound to a component property for content
+    code:
+      slot: title
+      semantic: heading
+    a11y:
+      hint: >-
+        Use a real heading element of an appropriate level (typically
+        <h2> for top-level overlay surfaces). Reference it from the
+        host container with aria-labelledby. Never rely on aria-label
+        on the container if a visible title exists. Visually-hidden
+        titles (sr-only) are valid when no visible title is shown
+        but an accessible name is still required.
+    tokens:
+      typography:
+        size: text.lg
+        weight: weight.semibold
+        lineHeight: leading.tight
+      color:
+        foreground: color.text.primary

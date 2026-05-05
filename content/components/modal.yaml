@@ -146,61 +146,21 @@ anatomy:
       elevation:
         shadow: elevation.overlay
 
-  - id: header
-    required: false
-    purpose: >-
-      Top region grouping title and close affordance. Optional because
-      some dialogs (alert dialogs, confirmation dialogs) inline the
-      title with the body and place the close affordance in the footer.
-    slotKind: structural
-    layout:
-      parent: container
-      row: 1
-      span: full
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame; padding from container token
-    code:
-      slot: header
-      semantic: heading-region
-    a11y:
-      hint: >-
-        Header is a layout region, not a heading. The actual heading
-        semantics live on the title element.
-    tokens:
-      spacing:
-        padding: spacing.compact
-        gap: spacing.compact
-
-  - id: title
-    required: true
-    purpose: >-
-      The dialog's name. The first thing announced after the dialog
-      opens and the value of `aria-labelledby` on the container.
-    slotKind: content
-    layout:
-      parent: header
-      row: 1
-      col: 1
-      span: 9
-    figma:
-      type: text
-      hint: Heading text style; bound to a component property for content
-    code:
-      slot: title
-      semantic: heading
-    a11y:
-      hint: >-
-        Use a real heading element of an appropriate level. Reference
-        it from the container with `aria-labelledby`. Never rely on
-        `aria-label` on the container if a visible title exists.
-    tokens:
-      typography:
-        size: text.lg
-        weight: weight.semibold
-        lineHeight: leading.tight
-      color:
-        foreground: color.text.primary
+  # Header region + title — sub-anatomy reuse via $ref (P6-148 / ADR-033).
+  # Header is optional on alert dialogs / confirmation dialogs that inline
+  # the title with the body and place the close affordance in the footer.
+  - $ref: header-bar
+    parent: container
+    row: 1
+    overrides:
+      - slot: header
+        type: overridden
+        rationale: >-
+          Optional on Modal — alert dialogs and confirmation dialogs
+          inline the title with the body and place the close affordance
+          in the footer. Header is the second-most-omitted slot after
+          close-button itself.
+        required: false
 
   # Header close-button — sub-anatomy reuse via $ref (P6-147 / ADR-032).
   # Optional in alertdialog footer-only patterns; col 2 with span 3 places

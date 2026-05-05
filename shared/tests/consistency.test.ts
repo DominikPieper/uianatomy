@@ -563,4 +563,33 @@ describe('cross-component consistency', () => {
     }
     expect(candidates).toEqual([]);
   });
+
+  // P6-148 / ADR-033 — soft conformance check for the header-bar sub-anatomy.
+  // After the initial migration (Modal, Drawer, Popover), any inline slot
+  // with `code.semantic: heading-region` that has not been resolved from a
+  // sub-anatomy ref is a candidate for migration. Surface loudly without
+  // blocking CI so authors notice if a new overlay surface declares its
+  // own header region instead of $ref-ing the canon.
+  it('heading-region slots prefer the header-bar sub-anatomy ($ref) over inline declaration', async () => {
+    const components = await loadComponents({ contentDir });
+
+    const candidates: string[] = [];
+    for (const c of components.values()) {
+      for (const slot of c.anatomy) {
+        const provenance = (slot as { __subAnatomy?: { id: string } }).__subAnatomy;
+        if (provenance) continue; // resolved-from-ref slots already use sub-anatomy
+        if (slot.code.semantic !== 'heading-region') continue;
+        candidates.push(
+          `${c.id}.${slot.id} (semantic: heading-region) — consider $ref: header-bar`,
+        );
+      }
+    }
+    if (candidates.length > 0) {
+      console.warn(
+        '[consistency soft-lint] heading-region slots without header-bar $ref:\n  ' +
+          candidates.join('\n  '),
+      );
+    }
+    expect(candidates).toEqual([]);
+  });
 });

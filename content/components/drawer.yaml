@@ -85,64 +85,38 @@ anatomy:
       elevation:
         shadow: elevation.overlay
 
-  - id: header
-    required: false
-    purpose: >-
-      Top region grouping title and close affordance. Optional because
-      some drawers (in-flow filter panels, simple navigation drawers)
-      embed the title directly in the body or omit a title entirely in
-      favour of an external trigger label.
-    slotKind: structural
-    layout:
-      parent: container
-      row: 1
-      span: full
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame at the inline-start edge of the container
-    code:
-      slot: header
-      semantic: heading-region
-    a11y:
-      hint: >-
-        Header is a layout region, not a heading. Heading semantics live
-        on the title element inside.
-    tokens:
-      spacing:
-        padding: spacing.compact
-        gap: spacing.compact
-
-  - id: title
-    required: true
-    purpose: >-
-      The drawer's name. The value referenced by `aria-labelledby` on
-      the container. First content announced when focus enters a modal
-      drawer.
-    slotKind: content
-    layout:
-      parent: header
-      row: 1
-      col: 1
-      span: 9
-    figma:
-      type: text
-      hint: Heading text style; bound to a component property for content
-    code:
-      slot: title
-      semantic: heading
-    a11y:
-      hint: >-
-        Use a real heading element of an appropriate level. The drawer's
-        container references this element via `aria-labelledby`. Hidden
-        titles (visually-hidden but accessible) are valid for drawers
-        that do not visually display a title.
-    tokens:
-      typography:
-        size: text.lg
-        weight: weight.semibold
-        lineHeight: leading.tight
-      color:
-        foreground: color.text.primary
+  # Header region + title — sub-anatomy reuse via $ref (P6-148 / ADR-033).
+  # Header is optional on in-flow filter panels and simple navigation
+  # drawers that embed the title in the body or omit it in favour of an
+  # external trigger label.
+  - $ref: header-bar
+    parent: container
+    row: 1
+    overrides:
+      - slot: header
+        type: overridden
+        rationale: >-
+          Optional on Drawer — in-flow filter panels and simple
+          navigation drawers may embed the title in the body or
+          omit it in favour of an external trigger label.
+        required: false
+        figma:
+          type: frame
+          hint: Auto-layout horizontal frame at the inline-start edge of the container
+      - slot: title
+        type: overridden
+        rationale: >-
+          Drawer's accessible-name canon explicitly permits
+          visually-hidden titles (sr-only) for drawers without a
+          visible title — the aria-labelledby relation is preserved
+          even when the heading text is not visually displayed.
+        a11y:
+          hint: >-
+            Use a real heading element of an appropriate level. The
+            drawer's container references this element via
+            aria-labelledby. Hidden titles (visually-hidden but
+            accessible) are valid for drawers that do not visually
+            display a title.
 
   # Header close-button — sub-anatomy reuse via $ref (P6-147 / ADR-032).
   # Optional in navigation-drawer patterns where dismissal happens via

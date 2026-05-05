@@ -124,31 +124,38 @@ anatomy:
         background: color.surface.raised
         border: color.border.subtle
 
-  - id: header
-    required: false
-    purpose: >-
-      Top region grouping title and close affordance. Optional —
-      smaller popovers (single-paragraph helper text, single-action
-      menus) often skip the header in favour of inline content.
-    slotKind: structural
-    layout:
-      parent: container
-      row: 1
-      span: full
-    figma:
-      type: frame
-      hint: Auto-layout horizontal frame; padding from container token
-    code:
-      slot: header
-      semantic: heading-region
-    a11y:
-      hint: >-
-        Header is a layout region, not a heading. The actual heading
-        semantics live on the title element inside.
-    tokens:
-      spacing:
-        padding: spacing.tight
-        gap: spacing.tight
+  # Header region + title — sub-anatomy reuse via $ref (P6-148 / ADR-033).
+  # Header is optional — smaller popovers (single-paragraph helper text,
+  # single-action menus) often skip the header in favour of inline
+  # content. Title is also optional on Popover — when omitted, the
+  # popover's accessible name comes from the trigger's aria-describedby
+  # or from the body's first textual content.
+  - $ref: header-bar
+    parent: container
+    row: 1
+    overrides:
+      - slot: header
+        type: overridden
+        rationale: >-
+          Optional on Popover — smaller popovers skip the header in
+          favour of inline body content. Token spacing is tighter
+          than Modal/Drawer because popovers are sized closer to
+          their content.
+        required: false
+        tokens:
+          spacing:
+            padding: spacing.tight
+            gap: spacing.tight
+      - slot: title
+        type: overridden
+        rationale: >-
+          Optional on Popover — when omitted, the popover's
+          accessible name comes from the trigger's aria-describedby
+          target or from the body's first textual content. Required
+          when the popover is a labelled disclosure (form panel,
+          named filter sheet) where the trigger does not carry the
+          full name.
+        required: false
 
   - id: body
     required: true

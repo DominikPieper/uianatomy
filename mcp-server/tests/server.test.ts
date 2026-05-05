@@ -339,9 +339,19 @@ describe('mcp server', () => {
     expect(cb).toBeTruthy();
     expect(cb.slotCount).toBe(3);
     expect(cb.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    // P6-147: enforce that the listing now contains BOTH canonical sub-anatomies
-    // so a regression that loses one is caught here.
-    expect(parsed.length).toBeGreaterThanOrEqual(2);
+    // P6-148: enforce that the listing now contains all three canonical
+    // sub-anatomies so a regression that loses one is caught here.
+    expect(parsed.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('list_sub_anatomies returns header-bar (P6-148 / ADR-033)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'list_sub_anatomies', arguments: {} });
+    const parsed = parseJson(result as any);
+    const hb = parsed.find((s: any) => s.id === 'header-bar');
+    expect(hb).toBeTruthy();
+    expect(hb.slotCount).toBe(2);
+    expect(hb.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it('get_sub_anatomy returns full action-group body (P6-126)', async () => {
@@ -383,6 +393,26 @@ describe('mcp server', () => {
     expect(parsed.a11y.focusRule).toContain('Escape');
   });
 
+  it('get_sub_anatomy returns full header-bar body (P6-148 / ADR-033)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_sub_anatomy',
+      arguments: { id: 'header-bar' },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.id).toBe('header-bar');
+    expect(parsed.slots.map((s: any) => s.id)).toEqual(['header', 'title']);
+    // header is a wrapper region, NOT a heading; title carries the heading
+    const header = parsed.slots.find((s: any) => s.id === 'header');
+    const title = parsed.slots.find((s: any) => s.id === 'title');
+    expect(header.slotKind).toBe('structural');
+    expect(header.code.semantic).toBe('heading-region');
+    expect(title.slotKind).toBe('content');
+    expect(title.code.semantic).toBe('heading');
+    // a11y rules surface the APG region-vs-heading canon structurally
+    expect(parsed.a11y.groupRule).toContain('aria-labelledby');
+  });
+
   it('get_sub_anatomy errors on unknown id', async () => {
     const { client } = await connect();
     const result = await client.callTool({
@@ -401,6 +431,7 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.subAnatomies).toContain('action-group');
     expect(parsed.subAnatomies).toContain('close-button');
+    expect(parsed.subAnatomies).toContain('header-bar');
   });
 
   it('get_changelog errors on unknown component id', async () => {
