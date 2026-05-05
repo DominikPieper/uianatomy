@@ -220,8 +220,8 @@ anatomy:
 
 axes:
   variants:
-    - circle
-    - square
+    - name: circle
+    - name: square
   properties:
     - name: size
       kind: enum

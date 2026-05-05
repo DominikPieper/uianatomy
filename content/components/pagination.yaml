@@ -480,9 +480,9 @@ anatomy:
 
 axes:
   variants:
-    - numbered
-    - prev-next-only
-    - load-more
+    - name: numbered
+    - name: prev-next-only
+    - name: load-more
   properties:
     - name: size
       kind: enum

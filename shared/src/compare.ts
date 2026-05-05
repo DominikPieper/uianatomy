@@ -108,7 +108,10 @@ export function computeCompareDiff(a: Component, b: Component): ComponentDiff {
       optionalOnlyInB: [...bOptional].filter((id) => !aSlots.has(id)).sort(),
       shared: [...aSlots].filter((id) => bSlots.has(id)).sort(),
     },
-    variants: setDiff(a.axes.variants, b.axes.variants),
+    variants: setDiff(
+      a.axes.variants.map((v) => v.name),
+      b.axes.variants.map((v) => v.name),
+    ),
     properties: {
       onlyInA: onlyInA.sort(),
       onlyInB: onlyInB.sort(),

@@ -230,9 +230,9 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - interactive
-    - selectable
+    - name: standard
+    - name: interactive
+    - name: selectable
   properties:
     - name: aspect
       kind: enum

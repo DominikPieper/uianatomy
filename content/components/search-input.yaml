@@ -228,9 +228,9 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - compact
-    - with-suggestions
+    - name: standard
+    - name: compact
+    - name: with-suggestions
   properties:
     - { name: hasIcon, kind: primitive, of: boolean }
     - { name: hasClear, kind: primitive, of: boolean }

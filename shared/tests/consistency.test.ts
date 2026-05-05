@@ -479,9 +479,9 @@ describe('cross-component consistency', () => {
       }
       const allowed = new Set<string>([...canonSeveritySet, ...exceptions]);
       for (const variant of c.axes.variants) {
-        if (!allowed.has(variant)) {
+        if (!allowed.has(variant.name)) {
           failures.push(
-            `${id}: variant "${variant}" is not in CANON_SEVERITY (${[...canonSeveritySet].join(', ')}) and not in the documented exception list (${exceptions.length === 0 ? '—' : exceptions.join(', ')}). Either rename to canonical severity or add to SEVERITY_AXIS_REGISTRY exceptions with rationale.`,
+            `${id}: variant "${variant.name}" is not in CANON_SEVERITY (${[...canonSeveritySet].join(', ')}) and not in the documented exception list (${exceptions.length === 0 ? '—' : exceptions.join(', ')}). Either rename to canonical severity or add to SEVERITY_AXIS_REGISTRY exceptions with rationale.`,
           );
         }
       }

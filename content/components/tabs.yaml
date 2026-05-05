@@ -221,9 +221,9 @@ anatomy:
 
 axes:
   variants:
-    - line
-    - contained
-    - pill
+    - name: line
+    - name: contained
+    - name: pill
   properties:
     - name: orientation
       kind: enum

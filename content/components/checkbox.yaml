@@ -298,8 +298,8 @@ anatomy:
 
 axes:
   variants:
-    - single
-    - group
+    - name: single
+    - name: group
   properties:
     - name: size
       kind: enum

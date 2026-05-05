@@ -300,7 +300,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'search_components',
-    'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names, and referenced sub-anatomy ids (P6-126). Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer. Plain queries that are not synonyms behave unchanged.',
+    'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names + per-variant alternativeNames (ADR-031, P6-127), and referenced sub-anatomy ids (P6-126). Severity synonyms expand transparently — `search_components({ query: "danger" })` resolves via SEVERITY_SYNONYMS to also match the canonical `error` variant on Alert / Toast / Badge. Synonym map covers `error: [danger, destructive, critical]` and `warning: [caution, attention]`. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer. Plain queries that are not synonyms behave unchanged.',
     { query: z.string().min(1) },
     async ({ query }) => {
       const map = await getComponents();
@@ -326,7 +326,9 @@ export function createServer(): McpServer {
             ' ' +
             c.anatomy.map((s) => s.id).join(' ') +
             ' ' +
-            c.axes.variants.join(' ') +
+            c.axes.variants
+              .flatMap((v) => [v.name, ...(v.alternativeNames ?? [])])
+              .join(' ') +
             ' ' +
             [...subAnatomyIds].join(' ')
           ).toLowerCase();

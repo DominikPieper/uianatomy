@@ -13,13 +13,17 @@ const variantDeprecation = new Map(
   <div class="axes__group">
     <h3>Variants</h3>
     <p>Structurally different versions of the component.</p>
-    <div class="chip-row">
+    <div class="variant-list">
       {axes.variants.map((v) => {
-        const dep = variantDeprecation.get(v);
+        const dep = variantDeprecation.get(v.name);
+        const aliases = v.alternativeNames ?? [];
         return (
           <span class:list={['chip-wrap', { 'is-deprecated': !!dep }]}>
-            <code class="chip">{v}</code>
+            <code class="chip">{v.name}</code>
             <VersionBadges deprecated={dep ? { since: dep.since, reason: dep.reason, replacement: dep.replacement } : undefined} />
+            {aliases.length > 0 && (
+              <span class="variant-aliases">aka {aliases.join(' · ')}</span>
+            )}
           </span>
         );
       })}
@@ -93,9 +97,22 @@ const variantDeprecation = new Map(
     border: 1px solid var(--border-subtle);
     padding: 3px 8px;
   }
+  .variant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
   .chip-wrap {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .variant-aliases {
+    font-style: italic;
+    color: var(--ink-muted);
+    font-size: 0.85em;
   }
   .chip-wrap.is-deprecated .chip {
     text-decoration: line-through;

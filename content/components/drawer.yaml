@@ -286,9 +286,9 @@ anatomy:
 
 axes:
   variants:
-    - modal
-    - non-modal
-    - navigation
+    - name: modal
+    - name: non-modal
+    - name: navigation
   properties:
     - name: side
       kind: enum

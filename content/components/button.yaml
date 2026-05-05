@@ -186,11 +186,11 @@ anatomy:
 
 axes:
   variants:
-    - primary
-    - secondary
-    - tertiary
-    - ghost
-    - destructive
+    - name: primary
+    - name: secondary
+    - name: tertiary
+    - name: ghost
+    - name: destructive
   properties:
     - name: size
       kind: enum

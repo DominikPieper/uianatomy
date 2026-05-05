@@ -1,0 +1,36 @@
+---
+import type { ResolvedAnatomySlot } from '@uianatomy/shared/schema';
+// Prop is named `entry` rather than `slot` because `slot` is a reserved
+// Astro prop name (named-template slot routing).
+interface Props {
+  entry: ResolvedAnatomySlot;
+}
+const { entry } = Astro.props;
+const prov = entry.__subAnatomy;
+---
+{prov && (
+  <span
+    class="sub-anatomy-badge"
+    title={`Resolved from sub-anatomy "${prov.id}" slot "${prov.slot}"`}
+  >
+    from {prov.id}
+  </span>
+)}
+
+<style>
+  .sub-anatomy-badge {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    line-height: 1.4;
+    border: 1px solid;
+    vertical-align: middle;
+    white-space: nowrap;
+    color: color-mix(in oklab, var(--accent-neutral) 80%, var(--fg));
+    background: var(--accent-neutral-soft);
+    border-color: color-mix(in oklab, var(--accent-neutral) 30%, transparent);
+  }
+</style>

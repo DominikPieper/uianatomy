@@ -285,9 +285,9 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - two-line
-    - three-line
+    - name: standard
+    - name: two-line
+    - name: three-line
   properties:
     - { name: interactive, kind: primitive, of: boolean }
     - { name: selectable, kind: primitive, of: boolean }

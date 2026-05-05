@@ -283,8 +283,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - auto-resize
+    - name: standard
+    - name: auto-resize
   properties:
     - name: size
       kind: enum

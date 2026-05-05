@@ -26,7 +26,7 @@ describe('component schema', () => {
     expect(card.id).toBe('card');
     expect(card.name).toBe('Card');
     expect(card.anatomy.length).toBeGreaterThan(0);
-    expect(card.axes.variants).toContain('elevated');
+    expect(card.axes.variants.map((v) => v.name)).toContain('elevated');
   });
 
   it('loadComponents returns a map keyed by id', async () => {
@@ -1275,7 +1275,7 @@ describe('versioning', () => {
 
   it('parses axes with variantDeprecations referencing existing variant', () => {
     const result = axesSchema.safeParse({
-      variants: ['primary', 'secondary', 'tertiary'],
+      variants: [{ name: 'primary' }, { name: 'secondary' }, { name: 'tertiary' }],
       properties: [],
       states: { interactive: [], data: [] },
       variantDeprecations: [
@@ -1292,7 +1292,7 @@ describe('versioning', () => {
 
   it('rejects variantDeprecations referencing unknown variant', () => {
     const result = axesSchema.safeParse({
-      variants: ['primary'],
+      variants: [{ name: 'primary' }],
       properties: [],
       states: { interactive: [], data: [] },
       variantDeprecations: [
@@ -1304,13 +1304,75 @@ describe('versioning', () => {
 
   it('rejects duplicate variantDeprecations entries', () => {
     const result = axesSchema.safeParse({
-      variants: ['primary'],
+      variants: [{ name: 'primary' }],
       properties: [],
       states: { interactive: [], data: [] },
       variantDeprecations: [
         { name: 'primary', since: '2.0.0', reason: 'a' },
         { name: 'primary', since: '3.0.0', reason: 'b' },
       ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // P6-127 / ADR-031 — variants reshape to object form with optional alternativeNames
+  it('parses variants as object array without alternativeNames', () => {
+    const result = axesSchema.safeParse({
+      variants: [{ name: 'default' }, { name: 'dot' }],
+      properties: [],
+      states: { interactive: [], data: [] },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('parses variants with alternativeNames populated', () => {
+    const result = axesSchema.safeParse({
+      variants: [
+        { name: 'default' },
+        { name: 'error', alternativeNames: ['danger', 'destructive'] },
+      ],
+      properties: [],
+      states: { interactive: [], data: [] },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects bare-string variants (clean break, no string|object union)', () => {
+    const result = axesSchema.safeParse({
+      variants: ['default', 'dot'],
+      properties: [],
+      states: { interactive: [], data: [] },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects duplicate variant names', () => {
+    const result = axesSchema.safeParse({
+      variants: [{ name: 'primary' }, { name: 'primary' }],
+      properties: [],
+      states: { interactive: [], data: [] },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects alternativeNames colliding with another variant name', () => {
+    const result = axesSchema.safeParse({
+      variants: [
+        { name: 'primary' },
+        { name: 'destructive' },
+        { name: 'error', alternativeNames: ['destructive'] },
+      ],
+      properties: [],
+      states: { interactive: [], data: [] },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects alternativeNames duplicating the variant own name', () => {
+    const result = axesSchema.safeParse({
+      variants: [{ name: 'error', alternativeNames: ['error', 'danger'] }],
+      properties: [],
+      states: { interactive: [], data: [] },
     });
     expect(result.success).toBe(false);
   });

@@ -1,6 +1,7 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
 import VersionBadges from './VersionBadges.astro';
+import SubAnatomyBadge from './SubAnatomyBadge.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
 ---
@@ -19,6 +20,7 @@ const { component } = Astro.props;
           <td>
             <code>{slot.id}</code>
             <VersionBadges since={slot.since} deprecated={slot.deprecated} />
+            <SubAnatomyBadge entry={slot} />
           </td>
           <td>{slot.required ? 'required' : 'optional'}</td>
           <td>{slot.purpose}</td>

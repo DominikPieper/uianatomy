@@ -157,9 +157,9 @@ anatomy:
 
 axes:
   variants:
-    - text
-    - circle
-    - rect
+    - name: text
+    - name: circle
+    - name: rect
   properties:
     - name: size
       kind: enum

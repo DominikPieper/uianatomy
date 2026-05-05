@@ -316,9 +316,10 @@ anatomy:
 
 axes:
   variants:
-    - dialog
-    - alertdialog
-    - fullscreen
+    - name: dialog
+    - name: alertdialog
+      alternativeNames: [confirm, destructive]
+    - name: fullscreen
   properties:
     - name: size
       kind: enum

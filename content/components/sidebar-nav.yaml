@@ -296,8 +296,8 @@ anatomy:
 
 axes:
   variants:
-    - expanded
-    - collapsed
+    - name: expanded
+    - name: collapsed
   properties:
     - { name: collapsible, kind: primitive, of: boolean }
     - { name: hasFooter, kind: primitive, of: boolean }

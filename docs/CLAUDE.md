@@ -15,7 +15,7 @@ A canonical reference for UI component anatomy — see [README.md](./README.md) 
 5. **personas.md** — who the canon serves and where it currently fails them; gap-tracking ground for new feature work
 6. **decisions/** — the architectural decisions in order (001 → 005)
 7. **roadmap.md** — what's planned and in what order
-8. **backlog.md** — concrete open work items from the latest review (read before suggesting new work)
+8. **backlog.md** — concrete open work items from the latest review (read before suggesting new work). Closed items live in `backlog-archive.md` — only consult it when you need a completion record or want to avoid an `PX-NN` ID collision.
 
 ## The backlog is canonical workflow state
 
@@ -23,11 +23,11 @@ A canonical reference for UI component anatomy — see [README.md](./README.md) 
 
 **When the user asks "what's next?", "where did we leave off?", "what's the status?", or anything similar:** read `docs/backlog.md` first, before any other exploration. The "Empfohlener Pfad" section names the next item; the priority sections (P0/P1/P2/...) hold the full open list.
 
-**When you discover new work during a session — bugs, follow-ups, deferred cleanups, missing tests, schema gaps, anything that should not be done right now but must not be lost — append it to `docs/backlog.md` automatically, in the right priority section, before ending the turn.** Do not wait to be asked. Use the existing format: `[ ] **PX-NN Title** — one-line summary. Datei: <path>.` Keep IDs sequential within their priority bucket.
+**When you discover new work during a session — bugs, follow-ups, deferred cleanups, missing tests, schema gaps, anything that should not be done right now but must not be lost — append it to `docs/backlog.md` automatically, in the right priority section, before ending the turn.** Do not wait to be asked. Use the existing format: `[ ] **PX-NN Title** — one-line summary. Datei: <path>.` Keep IDs sequential within their priority bucket — and scan `docs/backlog-archive.md` too when picking the next `NN`, since closed items still own their original ids.
 
-**When you finish a backlog item:** flip `[ ]` → `[x]`, add the completion date and a one-line outcome plus the affected file(s), and update the "Empfohlener Pfad" line if the next item has shifted.
+**When you finish a backlog item:** flip `[ ]` → `[x]` *in `docs/backlog.md`*, add the completion date and a one-line outcome plus the affected file(s), and update the "Empfohlener Pfad" line if the next item has shifted. The freshly-flipped item stays in `docs/backlog.md` so the recommended-path narrative keeps the recent context — moving it to the archive is a separate, periodic tidying step, not a per-item action.
 
-**Maintenance loop:** after any non-trivial change, scan the backlog for items that are now obsolete or already covered, and either mark them done or remove them with a brief rationale. A stale backlog is worse than no backlog.
+**Maintenance loop:** after any non-trivial change, scan the backlog for items that are now obsolete or already covered, and either mark them done or remove them with a brief rationale. A stale backlog is worse than no backlog. When the closed-item count in `docs/backlog.md` grows enough to bloat the file again, batch-move them to `docs/backlog-archive.md` and keep only what the Empfohlener-Pfad summary needs.
 
 ## Core principles (always keep in mind)
 

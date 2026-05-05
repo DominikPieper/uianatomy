@@ -133,8 +133,8 @@ anatomy:
 
 axes:
   variants:
-    - inline
-    - standalone
+    - name: inline
+    - name: standalone
   properties:
     - { name: defaultExpanded, kind: primitive, of: boolean }
     - name: density

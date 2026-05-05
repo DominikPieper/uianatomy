@@ -255,9 +255,9 @@ anatomy:
 
 axes:
   variants:
-    - elevated
-    - outlined
-    - flat
+    - name: elevated
+    - name: outlined
+    - name: flat
   properties:
     - { name: interactive, kind: primitive, of: boolean }
     - name: orientation

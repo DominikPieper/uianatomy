@@ -218,8 +218,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - tip
+    - name: standard
+    - name: tip
   properties:
     - name: side
       kind: enum

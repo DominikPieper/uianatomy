@@ -496,9 +496,9 @@ The three-way distinction between variants, properties, and states.
 ```yaml
 axes:
   variants:
-    - elevated
-    - outlined
-    - flat
+    - name: elevated
+    - name: outlined
+    - name: flat
   properties:
     - { name: interactive, kind: primitive, of: boolean }
     - name: orientation
@@ -508,6 +508,24 @@ axes:
     interactive: [hover, focus-visible, active, disabled]
     data: [selected, loading]
 ```
+
+### `variants[]` shape and `alternativeNames`
+
+Per [ADR-031](./adr/031-variant-alternative-names.md), each entry under `axes.variants` is an object with a required `name` and an optional `alternativeNames: string[]`. Bare-string entries are rejected.
+
+```yaml
+variants:
+  - name: default
+  - name: dot
+    alternativeNames: [compact, minimal]
+  - name: error
+    alternativeNames: [danger, destructive, critical]
+```
+
+- `name` is the canonical variant id used by anatomy props, code, and design-system docs. Variant names within a component must be unique.
+- `alternativeNames` are colloquial or cross-system synonyms agents/searchers may type. The values feed `search_components`'s haystack alongside the canonical `name`. Use sparingly: the entry is canon, not aspirational. Each alias must not collide with another variant's `name` in the same component, must not duplicate the variant's own `name`, and must not repeat within the array.
+- Render: `AxesTable.astro` shows the canonical `name` as the variant chip and renders an italic muted "aka …" line beneath when `alternativeNames` is non-empty.
+- The parallel `axes.variantDeprecations` array (per [ADR-023](./adr/023-versioning.md)) continues to reference variant names — its cross-refine reads from `axes.variants.map((v) => v.name)`.
 
 ### `properties[].type`
 
@@ -825,7 +843,10 @@ changelog:                         # optional, non-empty when present
 
 ```yaml
 axes:
-  variants: [primary, secondary, tertiary]
+  variants:
+    - name: primary
+    - name: secondary
+    - name: tertiary
   variantDeprecations:
     - name: tertiary
       since: 2.0.0

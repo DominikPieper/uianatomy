@@ -317,8 +317,8 @@ anatomy:
 
 axes:
   variants:
-    - trail
-    - back-link
+    - name: trail
+    - name: back-link
   properties:
     - name: size
       kind: enum

@@ -230,8 +230,8 @@ anatomy:
 
 axes:
   variants:
-    - default
-    - inline
+    - name: default
+    - name: inline
   properties:
     - { name: multi, kind: primitive, of: boolean }
     - { name: required, kind: primitive, of: boolean }

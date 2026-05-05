@@ -365,8 +365,8 @@ anatomy:
 
 axes:
   variants:
-    - linear
-    - circular
+    - name: linear
+    - name: circular
   properties:
     - name: size
       kind: enum

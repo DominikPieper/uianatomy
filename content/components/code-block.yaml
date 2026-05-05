@@ -340,8 +340,8 @@ anatomy:
 
 axes:
   variants:
-    - block
-    - inline
+    - name: block
+    - name: inline
   properties:
     - name: size
       kind: enum

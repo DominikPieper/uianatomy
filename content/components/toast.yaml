@@ -252,10 +252,12 @@ anatomy:
 
 axes:
   variants:
-    - info
-    - success
-    - warning
-    - error
+    - name: info
+    - name: success
+    - name: warning
+      alternativeNames: [caution, attention]
+    - name: error
+      alternativeNames: [danger, destructive, critical]
   properties:
     - name: position
       kind: enum

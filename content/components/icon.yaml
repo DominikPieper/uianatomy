@@ -163,8 +163,8 @@ anatomy:
 
 axes:
   variants:
-    - outline
-    - solid
+    - name: outline
+    - name: solid
   properties:
     - name: size
       kind: enum

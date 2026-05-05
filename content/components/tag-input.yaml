@@ -208,9 +208,9 @@ anatomy:
 
 axes:
   variants:
-    - free-text
-    - constrained
-    - creatable
+    - name: free-text
+    - name: constrained
+    - name: creatable
   properties:
     - { name: removable, kind: primitive, of: boolean }
     - { name: duplicates, kind: primitive, of: boolean }

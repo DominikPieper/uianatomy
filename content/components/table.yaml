@@ -506,8 +506,8 @@ anatomy:
 
 axes:
   variants:
-    - default
-    - selectable
+    - name: default
+    - name: selectable
   properties:
     - name: density
       kind: enum

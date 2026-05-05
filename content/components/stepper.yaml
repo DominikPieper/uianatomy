@@ -237,9 +237,9 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - dot
-    - vertical
+    - name: standard
+    - name: dot
+    - name: vertical
   properties:
     - { name: linear, kind: primitive, of: boolean }
     - { name: hasDescriptions, kind: primitive, of: boolean }

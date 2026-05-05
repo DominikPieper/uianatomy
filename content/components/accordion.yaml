@@ -224,9 +224,9 @@ anatomy:
 
 axes:
   variants:
-    - bordered
-    - contained
-    - flush
+    - name: bordered
+    - name: contained
+    - name: flush
   properties:
     - { name: multi, kind: primitive, of: boolean }
     - { name: collapsible, kind: primitive, of: boolean }

@@ -432,8 +432,8 @@ anatomy:
 
 axes:
   variants:
-    - static
-    - editable
+    - name: static
+    - name: editable
   properties:
     - name: size
       kind: enum

@@ -89,7 +89,9 @@ export function validateImplementation({
   const requiredSlotsMissing = requiredSlots.filter((id) => !containsAnyCi(lower, [id]));
 
   const variants = component.axes.variants;
-  const variantsMissing = variants.filter((v) => !containsAnyCi(lower, [v]));
+  const variantsMissing = variants
+    .filter((v) => !containsAnyCi(lower, [v.name, ...(v.alternativeNames ?? [])]))
+    .map((v) => v.name);
 
   const propertyNames = component.axes.properties.map((p) => p.name);
   const propertiesMissing = propertyNames.filter((name) => !containsAnyCi(lower, [name]));

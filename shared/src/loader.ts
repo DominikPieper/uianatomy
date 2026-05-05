@@ -12,6 +12,7 @@ import {
   type Implementation,
   type LayoutHint,
   type Pattern,
+  type ResolvedAnatomySlot,
   type SlotTokens,
   type SubAnatomy,
   type SubAnatomyOverride,
@@ -101,7 +102,7 @@ export async function loadComponent(
     const resolvedAnatomy = resolveAnatomyRefs(rawAnatomy, resolvedSubs);
     return { ...data, anatomy: resolvedAnatomy } as Component;
   }
-  return { ...data, anatomy: rawAnatomy as AnatomySlot[] } as Component;
+  return { ...data, anatomy: rawAnatomy as ResolvedAnatomySlot[] } as Component;
 }
 
 export async function loadComponents(
@@ -294,7 +295,7 @@ const resolveOneRef = (
   ref: AnatomySlotRef,
   subAnatomies: Map<string, SubAnatomy>,
   ctx: ResolveContext,
-): AnatomySlot[] => {
+): ResolvedAnatomySlot[] => {
   const sub = subAnatomies.get(ref.$ref);
   if (!sub) {
     throw new SubAnatomyResolutionError(
@@ -326,7 +327,7 @@ const resolveOneRef = (
     if (ov.type === 'renamed') renames.set(ov.slot, ov.to);
   }
 
-  const resolved: AnatomySlot[] = [];
+  const resolved: ResolvedAnatomySlot[] = [];
   for (const original of sub.slots) {
     const ov = overridesBySlot.get(original.id);
     if (ov?.type === 'omitted') continue;
@@ -391,8 +392,8 @@ const resolveOneRef = (
 export function resolveAnatomyRefs(
   rawAnatomy: ReadonlyArray<AnatomySlot | AnatomySlotRef>,
   subAnatomies: Map<string, SubAnatomy>,
-): AnatomySlot[] {
-  const out: AnatomySlot[] = [];
+): ResolvedAnatomySlot[] {
+  const out: ResolvedAnatomySlot[] = [];
   const seenIds = new Set<string>();
   rawAnatomy.forEach((entry, idx) => {
     if (isAnatomySlotRef(entry)) {

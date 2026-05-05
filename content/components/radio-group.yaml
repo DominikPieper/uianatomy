@@ -364,8 +364,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - card
+    - name: standard
+    - name: card
   properties:
     - name: size
       kind: enum

@@ -199,8 +199,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - icon-only
+    - name: standard
+    - name: icon-only
   properties:
     - name: size
       kind: enum

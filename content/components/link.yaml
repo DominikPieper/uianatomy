@@ -154,9 +154,9 @@ anatomy:
 
 axes:
   variants:
-    - inline
-    - standalone
-    - button-styled
+    - name: inline
+    - name: standalone
+    - name: button-styled
   properties:
     - { name: external, kind: primitive, of: boolean }
     - { name: download, kind: primitive, of: boolean }

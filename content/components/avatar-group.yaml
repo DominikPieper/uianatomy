@@ -213,8 +213,8 @@ anatomy:
 
 axes:
   variants:
-    - stack
-    - grid
+    - name: stack
+    - name: grid
   properties:
     - name: size
       kind: enum

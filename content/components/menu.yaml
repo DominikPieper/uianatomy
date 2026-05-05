@@ -412,8 +412,8 @@ anatomy:
 
 axes:
   variants:
-    - vertical
-    - horizontal
+    - name: vertical
+    - name: horizontal
   properties:
     - name: size
       kind: enum

@@ -260,19 +260,66 @@ export const variantDeprecationSchema = z
   })
   .strict();
 
+export const variantEntrySchema = z
+  .object({
+    name: z.string().min(1),
+    alternativeNames: z.array(z.string().min(1)).min(1).optional(),
+  })
+  .strict();
+
+export type VariantEntry = z.infer<typeof variantEntrySchema>;
+
 export const axesSchema = z
   .object({
-    variants: z.array(z.string().min(1)),
+    variants: z.array(variantEntrySchema).min(1),
     properties: z.array(propertySchema),
     states: statesSchema,
     variantDeprecations: z.array(variantDeprecationSchema).min(1).optional(),
   })
   .superRefine((axes, ctx) => {
+    const variantNames = new Set<string>();
+    axes.variants.forEach((v, i) => {
+      if (variantNames.has(v.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['variants', i, 'name'],
+          message: `variants[${i}].name "${v.name}" is declared twice`,
+        });
+      }
+      variantNames.add(v.name);
+    });
+    axes.variants.forEach((v, i) => {
+      if (!v.alternativeNames) return;
+      const seenAliases = new Set<string>();
+      v.alternativeNames.forEach((alias, k) => {
+        if (variantNames.has(alias) && alias !== v.name) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['variants', i, 'alternativeNames', k],
+            message: `variants[${i}].alternativeNames[${k}] "${alias}" collides with another variant name`,
+          });
+        }
+        if (alias === v.name) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['variants', i, 'alternativeNames', k],
+            message: `variants[${i}].alternativeNames[${k}] "${alias}" duplicates the variant's own name`,
+          });
+        }
+        if (seenAliases.has(alias)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['variants', i, 'alternativeNames', k],
+            message: `variants[${i}].alternativeNames[${k}] "${alias}" is declared twice`,
+          });
+        }
+        seenAliases.add(alias);
+      });
+    });
     if (!axes.variantDeprecations) return;
-    const known = new Set(axes.variants);
     const seen = new Set<string>();
     axes.variantDeprecations.forEach((d, i) => {
-      if (!known.has(d.name)) {
+      if (!variantNames.has(d.name)) {
         ctx.addIssue({
           code: 'custom',
           path: ['variantDeprecations', i, 'name'],
@@ -824,6 +871,12 @@ export const componentSchema = z.object({
 export type LayoutHint = z.infer<typeof layoutHintSchema>;
 export type FloatingHint = z.infer<typeof floatingHintSchema>;
 export type AnatomySlot = z.infer<typeof anatomySlotSchema>;
+// P6-126b — provenance marker attached at resolve-time by `resolveAnatomyRefs`.
+// Non-enumerable at runtime (invisible to JSON.stringify / Object.keys);
+// the type is optional because not every slot comes from a `$ref`.
+export type ResolvedAnatomySlot = AnatomySlot & {
+  readonly __subAnatomy?: { readonly id: string; readonly slot: string };
+};
 export type SubAnatomy = z.infer<typeof subAnatomySchema>;
 export type AnatomySlotRef = z.infer<typeof anatomySlotRefSchema>;
 export type SubAnatomyOverride = z.infer<typeof subAnatomyOverrideSchema>;
@@ -872,7 +925,7 @@ export type Changelog = z.infer<typeof changelogSchema>;
 // flat shape. The exported Component type reflects the post-resolution
 // shape; `RawComponent` is the schema-level shape that can carry refs.
 export type RawComponent = z.infer<typeof componentSchema>;
-export type Component = Omit<RawComponent, 'anatomy'> & { anatomy: AnatomySlot[] };
+export type Component = Omit<RawComponent, 'anatomy'> & { anatomy: ResolvedAnatomySlot[] };
 export type CompositionEntry = z.infer<typeof compositionEntrySchema>;
 export type PatternDecision = z.infer<typeof patternDecisionSchema>;
 export type FrameworkSkeletons = z.infer<typeof frameworkSkeletonsSchema>;

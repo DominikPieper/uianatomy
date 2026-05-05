@@ -152,6 +152,16 @@ describe('mcp server', () => {
     expect(ids).toContain('badge');
   });
 
+  it('search_components matches per-variant alternativeNames (P6-127 / ADR-031)', async () => {
+    const { client } = await connect();
+    // `confirm` is not in SEVERITY_SYNONYMS — it lives only on Modal.alertdialog.alternativeNames.
+    // Query must surface Modal via the variant-alternativeNames haystack expansion.
+    const result = await client.callTool({ name: 'search_components', arguments: { query: 'confirm' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.map((c: any) => c.id);
+    expect(ids).toContain('modal');
+  });
+
   it('list_components surfaces lastReviewed and stalenessDays (P6-125)', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'list_components', arguments: {} });

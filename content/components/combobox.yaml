@@ -300,9 +300,9 @@ anatomy:
 
 axes:
   variants:
-    - single-select
-    - multi-select
-    - creatable
+    - name: single-select
+    - name: multi-select
+    - name: creatable
   properties:
     - name: filterMode
       kind: enum

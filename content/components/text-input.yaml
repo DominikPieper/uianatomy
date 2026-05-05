@@ -263,9 +263,9 @@ anatomy:
 
 axes:
   variants:
-    - outlined
-    - filled
-    - underlined
+    - name: outlined
+    - name: filled
+    - name: underlined
   properties:
     - name: type
       kind: enum

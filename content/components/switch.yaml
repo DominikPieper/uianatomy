@@ -291,8 +291,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - with-icons
+    - name: standard
+    - name: with-icons
   properties:
     - name: size
       kind: enum

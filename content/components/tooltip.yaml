@@ -127,8 +127,8 @@ anatomy:
 
 axes:
   variants:
-    - standard
-    - inline-help
+    - name: standard
+    - name: inline-help
   properties:
     - name: side
       kind: enum

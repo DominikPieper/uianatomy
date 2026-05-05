@@ -165,11 +165,11 @@ anatomy:
 
 axes:
   variants:
-    - default
-    - success
-    - warning
-    - error
-    - info
+    - name: default
+    - name: success
+    - name: warning
+    - name: error
+    - name: info
   properties:
     - name: size
       kind: enum

@@ -20,10 +20,24 @@ const subAnatomies: Map<string, SubAnatomy> = new Map(
 
 // Wrap componentSchema with a transform that resolves anatomy refs eagerly.
 // Output type stays compatible — anatomy becomes a flat AnatomySlot[].
-const resolvedComponentSchema = componentSchema.transform((c) => ({
-  ...c,
-  anatomy: resolveAnatomyRefs(c.anatomy as Array<AnatomySlot | AnatomySlotRef>, subAnatomies),
-}));
+//
+// P6-126b — `resolveAnatomyRefs` attaches provenance as a non-enumerable
+// `__subAnatomy` property on each resolved slot (loader.ts:354). Astro 5's
+// content-layer caches collection entries to JSON on disk, which strips
+// non-enumerable own properties. Lift the marker into an enumerable own
+// property here so it survives the cache round-trip and is reachable from
+// `.astro` templates as `slot.__subAnatomy`.
+const resolvedComponentSchema = componentSchema.transform((c) => {
+  const resolved = resolveAnatomyRefs(
+    c.anatomy as Array<AnatomySlot | AnatomySlotRef>,
+    subAnatomies,
+  );
+  const withProvenance = resolved.map((slot) => {
+    const prov = (slot as { __subAnatomy?: { id: string; slot: string } }).__subAnatomy;
+    return prov ? { ...slot, __subAnatomy: prov } : slot;
+  });
+  return { ...c, anatomy: withProvenance };
+});
 
 const components = defineCollection({
   loader: glob({ pattern: '*.yaml', base: '../content/components' }),
