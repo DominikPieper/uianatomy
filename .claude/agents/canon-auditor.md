@@ -45,7 +45,15 @@ These two false-positives recurred across the 2026-05-03 pilot batch. **Internal
 
 Same name, different schemas, different ADRs. **Never flag `axes.properties[].kind: primitive` as a vocabulary issue.** Only `propertyMap[].kind` belongs to the ADR-025 vocabulary check. If you see `kind: primitive, of: boolean` inside `axes.properties[]`, that is correct and must not appear in `findings` or `vocabularyDrift`.
 
-**Rule 2 — `vsRelated` reverse-refs require literal file-read of the target.** Do not skim, do not infer from the directory. For each `whenToUse.vsRelated[].id` in the audited component, open `content/components/<targetId>.yaml`, search for `whenToUse.vsRelated`, and verify a `- id: <auditedComponentId>` entry exists. If you skip the read, you will hallucinate missing reverse-refs that the bidirectional lint already validates green. The lint runs in `pnpm -F @uianatomy/shared test` — if all 155 tests pass, no reverse-ref is structurally missing. Reverse-ref **prose quality** (generic vs target-perspective) is a separate, narrower judgement.
+**Rule 2 — `vsRelated` reverse-refs: trust the lint, not your skim-read.** The bidirectional lint in `shared/tests/consistency.test.ts:248-281` enforces zero asymmetry (`ALLOWED_ASYMMETRIC = new Set<string>()` — empty, no exceptions). If the test suite is green, every `whenToUse.vsRelated[].id` reference has a verified reverse — period. The 2026-05-05 audit batch produced 4 simultaneous false-positives (avatar→tile, menu→menu-button, menu→popover, table→list-item) because agents skim-read partial Read-tool output of long YAML files and missed reverse-ref blocks that lived past the read window. All 4 reverse-refs existed; the lint was green throughout.
+
+**Procedure:**
+
+1. **First**, run `pnpm -F @uianatomy/shared test 2>&1 | tail -5`. If the line "Tests  N passed (N)" appears, the bidirectional lint passed. **Do not flag any reverse-ref as structurally missing.** Skip to step 3.
+2. **Only** if the test suite reports a `vsRelated → "<id>" has no reverse ref` failure, treat the reported pair as a real missing reverse-ref. Do not invent missing pairs the lint did not flag.
+3. **Reverse-ref prose quality** (generic "see X" vs target-perspective `difference:` wording) is a separate narrower check. To audit prose quality, do read the target's `vsRelated[].id: <auditedComponentId>` entry — but use grep to locate the line first (`grep -n "id: <auditedComponentId>" content/components/<targetId>.yaml`), then Read with an offset, so you do not skim partial output.
+
+**Never** report a missing reverse-ref unless step 2 produced a concrete failure line. Forward-references with `pending: true` are excluded from the lint and from your audit.
 
 ### A. Schema-section presence
 

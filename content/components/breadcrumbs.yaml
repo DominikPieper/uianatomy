@@ -187,7 +187,9 @@ anatomy:
       except the last). Points to the parent page's URL. The
       visible label is the page title; full path is in the
       `href`. Every intermediate item has a link; the last item
-      does not (rendered as current-marker).
+      does not (rendered as current-marker). Structurally a
+      wrapper — its accessible name comes from the nested label
+      slot (sub-anatomy `icon-leading-text`).
     slotKind: interactive
     layout:
       row: 2
@@ -211,6 +213,50 @@ anatomy:
         foreground: color.text.accent
       typography:
         size: text.sm
+
+  - $ref: icon-leading-text
+    parent: link
+    row: 1
+    overrides:
+      - slot: icon-leading
+        type: overridden
+        rationale: >-
+          Material UI Breadcrumbs and Atlassian Breadcrumbs ship
+          optional leading-icons (Home-icon on the root item,
+          page-class glyphs on intermediate items). Hidden from AT
+          when the label conveys the destination; the host anchor's
+          accessible name comes from the label, not the icon.
+        layout:
+          row: 1
+          col: 1
+          span: 1
+        tokens:
+          color:
+            foreground: color.text.muted
+      - slot: label
+        type: overridden
+        rationale: >-
+          The visible page title. Drives the anchor's accessible
+          name. Regular weight per GOV.UK and Material UI breadcrumb
+          typography — visual cleanliness over emphasis; the trail
+          itself, not any one item, communicates location.
+        layout:
+          row: 1
+          col: 2
+          span: 7
+        tokens:
+          typography:
+            size: text.sm
+            weight: weight.regular
+      - slot: icon-trailing
+        type: omitted
+        rationale: >-
+          Breadcrumb-items have no trailing affordance — separation
+          between items is the canonical `separator` slot
+          (decorative, between items, not within). A trailing icon
+          inside the anchor would compete with the separator and
+          imply per-item meaning the canonical pattern reserves for
+          the trail as a whole.
 
   - id: current-marker
     required: true

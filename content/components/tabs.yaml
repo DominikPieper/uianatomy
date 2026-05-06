@@ -157,6 +157,56 @@ anatomy:
         foreground: color.text.muted
         ring: color.border.focus
 
+  - $ref: icon-leading-text
+    parent: tab
+    row: 2
+    overrides:
+      - slot: icon-leading
+        type: overridden
+        rationale: >-
+          Material 3 ships a first-class `LeadingIconTab`; Atlassian Tabs
+          documents leading icons as canonical affordance for typing the
+          panel content (e.g. file-type, channel-class). Tinted muted to
+          stay subordinate to the label, which carries the accessible name.
+        layout:
+          row: 2
+          col: 1
+          span: 2
+        tokens:
+          color:
+            foreground: color.text.muted
+      - slot: label
+        type: overridden
+        rationale: >-
+          The tab's visible text — the host's accessible name. Medium
+          weight (less emphasis than Button's semibold action label)
+          mirrors the canonical tab-text density. Sub-anatomy's
+          canonical `text.md` is overridden to `text.sm` to match the
+          tablist density token.
+        layout:
+          row: 2
+          col: 2
+          span: 6
+        tokens:
+          typography:
+            size: text.sm
+            weight: weight.medium
+      - slot: icon-trailing
+        type: overridden
+        rationale: >-
+          Optional badge/count or close affordance per Atlassian's
+          closable-tabs pattern (dirty-state markers, unread counts).
+          Decorative when reinforcing label meaning; if it carries
+          meaning the label omits (e.g. "modified" dot), the host's
+          `aria-label` absorbs that meaning.
+        layout:
+          row: 2
+          col: 3
+          span: 2
+        tokens:
+          color:
+            foreground: color.text.muted
+
   - id: indicator
     required: false
     purpose: >-
@@ -604,7 +654,7 @@ propertyMap:
       drives whether arrow-key navigation activates on focus.
   - figma: Tab Count
     code: 'tabs.length'
-    kind: enum
+    kind: number
     notes: >-
       Figma exposes a Variant for 2 / 3 / 4 / 5 / 6+ tab counts to allow
       preview-time layout review. Code accepts an array of tab

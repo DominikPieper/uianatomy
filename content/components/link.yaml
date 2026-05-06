@@ -57,70 +57,80 @@ anatomy:
         foreground: color.text.accent
         ring: color.border.focus
 
-  - id: label
-    required: true
-    purpose: >-
-      The text that names the destination. Carries the link's
-      accessible name in the absence of `aria-label`. Should describe
-      the destination meaningfully out of context — "Download Q3
-      report (PDF, 2 MB)", not "click here".
-    slotKind: content
-    layout:
-      row: 2
-      col: 1
-      span: 8
-    figma:
-      type: text
-      hint: Inline text style; underline applied by variant treatment
-    code:
-      slot: label
-      semantic: text
-    a11y:
-      hint: >-
-        Plain text node. Avoid generic phrases ("read more", "click
-        here") — they are uninformative when SR users navigate by
-        link list. Distinguish links to the same destination from
-        links to different destinations through the link text alone,
-        not just through surrounding context.
-    tokens:
-      typography:
-        size: text.md
-        weight: weight.medium
-        tracking: tracking.normal
-      color:
-        foreground: color.text.accent
-
-  - id: icon-trailing
-    required: false
-    purpose: >-
-      Optional indicator after the label. Conventionally signals
-      external navigation (arrow / square-out-of-square glyph),
-      download (down-arrow), or anchor-jump (down-chevron). Its
-      meaning is communicated by the icon's visual semantics paired
-      with the link's `external` / `download` property.
-    slotKind: decorative
-    layout:
-      row: 2
-      col: 2
-      span: 2
-    figma:
-      type: instance
-      hint: Icon component instance; visibility bound to the relevant property
-    code:
-      slot: icon-trailing
-      semantic: presentational-or-img
-    a11y:
-      hint: >-
-        Decorative when its meaning is also conveyed in the label
-        text or the link's accessible name (e.g. "Download report,
-        opens PDF" with a download icon). When the icon carries
-        meaning the label omits, surface the meaning in
-        `aria-label` on the link, not on the icon. Per WCAG, "opens
-        in new tab" / "external link" must be announced for SR
-        users.
-    tokens:
-      color:
-        foreground: color.text.accent
+  - $ref: icon-leading-text
+    parent: root
+    row: 2
+    overrides:
+      - slot: icon-leading
+        type: omitted
+        rationale: >-
+          The Link pattern carries no canonical leading-icon
+          affordance. A glyph before link text collides with the
+          underline onset (the underline starts at the icon, not
+          the first letter of the destination) and dilutes the
+          WCAG 2.4.4 link-purpose contract — the destination should
+          be readable from the text alone. External / download /
+          anchor-jump indicators are exclusively trailing per W3C
+          link-purpose convention.
+      - slot: label
+        type: overridden
+        rationale: >-
+          The text that names the destination — drives the link's
+          accessible name. Should describe the destination
+          meaningfully out of context per WCAG 2.4.4 (not "click
+          here" / "read more"). Medium weight in the accent
+          foreground; `text.md` size cascades from the sub-anatomy.
+        layout:
+          row: 2
+          col: 1
+          span: 8
+        figma:
+          type: text
+          hint: Inline text style; underline applied by variant treatment
+        a11y:
+          hint: >-
+            Plain text node. Avoid generic phrases ("read more",
+            "click here") — they are uninformative when SR users
+            navigate by link list. Distinguish links to the same
+            destination from links to different destinations through
+            the link text alone, not just through surrounding
+            context.
+        tokens:
+          typography:
+            weight: weight.medium
+            tracking: tracking.normal
+          color:
+            foreground: color.text.accent
+      - slot: icon-trailing
+        type: overridden
+        rationale: >-
+          Optional indicator after the label. Conventionally signals
+          external navigation (arrow / square-out-of-square glyph),
+          download (down-arrow), or anchor-jump (down-chevron).
+          Decorative when its meaning is also conveyed in the
+          label or the link's accessible name; when the icon
+          carries meaning the label omits ("opens in new tab"),
+          the meaning is absorbed into the link's `aria-label` per
+          WCAG 3.2.5.
+        layout:
+          row: 2
+          col: 2
+          span: 2
+        figma:
+          type: instance
+          hint: Icon component instance; visibility bound to the relevant property
+        a11y:
+          hint: >-
+            Decorative when its meaning is also conveyed in the
+            label text or the link's accessible name (e.g.
+            "Download report, opens PDF" with a download icon).
+            When the icon carries meaning the label omits, surface
+            the meaning in `aria-label` on the link, not on the
+            icon. Per WCAG, "opens in new tab" / "external link"
+            must be announced for SR users.
+        tokens:
+          color:
+            foreground: color.text.accent
 
   - id: visited-marker
     required: false

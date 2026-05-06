@@ -593,16 +593,16 @@ describe('cross-component consistency', () => {
     expect(candidates).toEqual([]);
   });
 
-  // P6-149 / ADR-034 — soft conformance check for the icon-leading-text
-  // sub-anatomy. After the initial migration (Button, List-item), any
-  // component carrying the FULL 3-slot inline icon-text composite (slot
-  // ids `icon-leading` AND `label`, optionally `icon-trailing`, all
-  // inline without sub-anatomy provenance) is a candidate for $ref
-  // migration. The full-shape match deliberately excludes partial
-  // adopters (Badge: icon-leading + content, no label; Link: label +
-  // icon-trailing, no icon-leading) which would require variable-arity
-  // overrides and are tracked separately under P6-150.
-  it('full icon-text composite prefers the icon-leading-text sub-anatomy ($ref) over inline declaration', async () => {
+  // P6-149 / ADR-034 + P6-150 — soft conformance check for the
+  // icon-leading-text sub-anatomy. After the full migration cohort
+  // (Button + List-item from P6-149; Tab + Breadcrumb-item + Badge +
+  // Link from P6-150), any inline slot with id `icon-leading` or
+  // `icon-trailing` is a candidate for $ref migration — including
+  // partial-arity adopters (Link-like: trailing-only via `omitted:
+  // icon-leading`; Badge-like: leading-only via `omitted:
+  // icon-trailing`). The shape match catches all three patterns:
+  // full 3-slot, leading-only, trailing-only.
+  it('inline icon-leading / icon-trailing slots prefer the icon-leading-text sub-anatomy ($ref)', async () => {
     const components = await loadComponents({ contentDir });
 
     const candidates: string[] = [];
@@ -613,16 +613,24 @@ describe('cross-component consistency', () => {
         if (provenance) continue; // resolved-from-ref slots already use sub-anatomy
         inlineSlotIds.add(slot.id);
       }
-      // Full-shape match: both icon-leading and label inline (icon-trailing optional)
-      if (inlineSlotIds.has('icon-leading') && inlineSlotIds.has('label')) {
+      const hasLeading = inlineSlotIds.has('icon-leading');
+      const hasTrailing = inlineSlotIds.has('icon-trailing');
+      if (hasLeading || hasTrailing) {
+        const shape = [
+          hasLeading ? 'icon-leading' : null,
+          inlineSlotIds.has('label') ? 'label' : null,
+          hasTrailing ? 'icon-trailing' : null,
+        ]
+          .filter(Boolean)
+          .join(' + ');
         candidates.push(
-          `${c.id} (inline icon-leading + label${inlineSlotIds.has('icon-trailing') ? ' + icon-trailing' : ''}) — consider $ref: icon-leading-text`,
+          `${c.id} (inline ${shape}) — consider $ref: icon-leading-text${hasLeading && !hasTrailing ? ' (omit icon-trailing)' : ''}${!hasLeading && hasTrailing ? ' (omit icon-leading)' : ''}`,
         );
       }
     }
     if (candidates.length > 0) {
       console.warn(
-        '[consistency soft-lint] full icon-text composites without icon-leading-text $ref:\n  ' +
+        '[consistency soft-lint] inline icon-leading/icon-trailing slots without icon-leading-text $ref:\n  ' +
           candidates.join('\n  '),
       );
     }

@@ -465,6 +465,7 @@ responsive:
 
 events:
   - name: queryChange
+    optional: true
     payload: >-
       `{ value: string }`. Fires on every input change. For
       with-suggestions variant, this is the source for

@@ -360,6 +360,7 @@ responsive:
 
 events:
   - name: openChange
+    optional: true
     payload: >-
       Boolean. `true` after the tooltip has finished entering
       (delay completed and visible), `false` after it has finished

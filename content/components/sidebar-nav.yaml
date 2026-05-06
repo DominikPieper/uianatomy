@@ -540,6 +540,7 @@ events:
         `@update:variant` for `v-model:variant`.
 
   - name: itemActivate
+    optional: true
     payload: >-
       `{ itemId: string, href: string }`. Fires when the user
       activates an item (click, Enter on focused link). For

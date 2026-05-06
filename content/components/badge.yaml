@@ -104,64 +104,52 @@ anatomy:
         size: text.xs
         weight: weight.semibold
 
-  - id: icon-leading
-    required: false
-    purpose: >-
-      Optional decorative icon before the content — a status dot, a
-      severity glyph (check, exclamation), an item-class icon. Hidden
-      from the accessibility tree when the content carries the
-      meaning.
-    slotKind: decorative
-    layout:
-      row: 2
-      col: 1
-      span: 1
-    figma:
-      type: instance
-      hint: Icon component instance; size bound to badge size token
-    code:
-      slot: icon-leading
-      semantic: presentational
-    a11y:
-      hint: >-
-        Decorative when paired with a visible label —
-        `aria-hidden="true"` on the icon. If the icon is the entire
-        badge content (dot or icon-only variant), the badge root
-        carries an `aria-label` describing the meaning.
-    tokens:
-      color:
-        foreground: color.text.muted
-
-  - id: content
-    required: true
-    purpose: >-
-      The visible label or count. Numbers, short status words
-      ("New", "Beta", "3"). For counts, render directly as text node
-      so the live-region announcement reads the value verbatim.
-    slotKind: content
-    layout:
-      row: 2
-      col: 2
-      span: 11
-    figma:
-      type: text
-      hint: Badge text style; bound to a "label" component property
-    code:
-      slot: content
-      semantic: text
-    a11y:
-      hint: >-
-        Plain text node. For counts that update live, wrap in
-        `aria-live="polite"` (set on root or on this slot). Avoid
-        truncating counts visually without an accessible-name
-        equivalent; use the "99+" pattern when counts exceed 99 and
-        keep the full count in `aria-label`.
-    tokens:
-      typography:
-        size: text.xs
-        weight: weight.semibold
-      color:
-        foreground: color.text.primary
+  - $ref: icon-leading-text
+    parent: root
+    row: 2
+    overrides:
+      - slot: icon-leading
+        type: overridden
+        rationale: >-
+          Polaris, Carbon, and Material 3 ship Badge with an optional
+          leading status-glyph (severity icon, status dot, category
+          marker). Hidden from AT when paired with a visible label —
+          the badge's meaning lives in the label or the host
+          `aria-label` for dot/icon-only variants, never on the icon.
+        layout:
+          row: 2
+          col: 1
+          span: 1
+        tokens:
+          color:
+            foreground: color.text.muted
+      - slot: label
+        type: overridden
+        rationale: >-
+          The visible label or count. Short status words ("New",
+          "Beta", "3"). Drives the badge's accessible name unless
+          `dot: true` collapses the slot and the host carries an
+          `aria-label`. Semibold weight + `text.xs` size per the
+          status-glyph density convention; counts use the same
+          treatment so live-region announcements read verbatim.
+        layout:
+          row: 2
+          col: 2
+          span: 11
+        tokens:
+          typography:
+            size: text.xs
+            weight: weight.semibold
+          color:
+            foreground: color.text.primary
+      - slot: icon-trailing
+        type: omitted
+        rationale: >-
+          Badge is a single-affordance status-glyph (W3C status
+          pattern). A trailing icon would imply secondary action and
+          collide with the Chip / Tag Input pattern (which carries
+          the removal affordance). Implementations that need a
+          trailing dismissal reach for `Tag Input`, not Badge.
 
 axes:
   variants:
@@ -375,9 +363,9 @@ propertyMap:
     kind: slot
     notes: Hosts an Icon instance; decorative by default with `aria-hidden`.
   - figma: Label
-    code: content
+    code: label
     kind: text
-    notes: Badge text content. For numeric counts use the controlled `count` prop instead.
+    notes: Badge text content. For numeric counts use the controlled `count` prop instead. (Slot id renamed `content` → `label` per P6-150 / ADR-034 — converged with `icon-leading-text` sub-anatomy.)
 
 i18n:
   rtl:
