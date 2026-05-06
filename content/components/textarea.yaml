@@ -574,6 +574,69 @@ events:
       vue: >-
         `@height-change` event with payload `{ height, rows }`.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: standard (fixed `rows`) / auto-resize (grows from `minRows` to `maxRows` based on content).
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md / lg.
+  - figma: Resize
+    code: resize
+    kind: enum
+    notes: >-
+      none / vertical / horizontal / both. Maps to CSS `resize`
+      property; controls the browser-provided handle availability.
+      Default `vertical` to keep WCAG 1.4.10 reflow intact.
+  - figma: Rows
+    code: rows
+    kind: number
+    notes: Initial line-count. For auto-resize variant, this is the `minRows` lower bound.
+  - figma: Max Rows
+    code: maxRows
+    kind: number
+    notes: Auto-resize-only — ceiling at which the textarea stops growing and switches to internal scrolling.
+  - figma: Disabled
+    code: disabled
+    kind: boolean
+  - figma: Readonly
+    code: readonly
+    kind: boolean
+    notes: Prefer over `disabled` when the value is locked but should remain readable / tabbable / submittable.
+  - figma: Required
+    code: required
+    kind: boolean
+    notes: Pairs visual asterisk with the `required` attribute.
+  - figma: Invalid
+    code: invalid
+    kind: boolean
+    notes: Pairs `aria-invalid="true"` with the visual error treatment.
+  - figma: Label
+    code: children of `<label>`
+    kind: text
+    notes: Visible label text. Placeholder is not a substitute.
+  - figma: Placeholder
+    code: placeholder
+    kind: text
+    notes: Optional example value ("e.g. Steps to reproduce") — never the field meaning.
+  - figma: Description
+    code: description
+    kind: text
+    notes: Optional supporting prose, programmatically linked via `aria-describedby`.
+  - figma: Error Message
+    code: errorMessage
+    kind: text
+    notes: Visibility bound to invalid state.
+  - figma: Character Count
+    code: characterCount
+    kind: slot
+    notes: >-
+      `aria-live="polite"` so SR announces on typing-pause.
+      Threshold-visibility pattern (visible above ~75% of
+      `maxlength`) is the GOV.UK canonical reference.
+
 formIntegration:
   nativeElement: textarea
   submittedValue: >-

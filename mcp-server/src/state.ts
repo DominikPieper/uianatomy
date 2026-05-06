@@ -1,9 +1,15 @@
 import type { Component, Implementation, Pattern, SubAnatomy } from '@uianatomy/shared/schema';
 
+export interface AboutPayload {
+  markdown: string;
+  summary: string;
+}
+
 let cache: Promise<Map<string, Component>> | null = null;
 let implCache: Promise<Map<string, Map<string, Implementation>>> | null = null;
 let patternCache: Promise<Map<string, Pattern>> | null = null;
 let subAnatomyCache: Promise<Map<string, SubAnatomy>> | null = null;
+let aboutCache: Promise<AboutPayload> | null = null;
 
 export function setComponents(map: Map<string, Component>): void {
   cache = Promise.resolve(map);
@@ -65,9 +71,25 @@ export function getSubAnatomies(): Promise<Map<string, SubAnatomy>> {
   return subAnatomyCache;
 }
 
+export function setAbout(payload: AboutPayload): void {
+  aboutCache = Promise.resolve(payload);
+}
+
+export function setAboutPromise(p: Promise<AboutPayload>): void {
+  aboutCache = p;
+}
+
+export function getAbout(): Promise<AboutPayload> {
+  if (!aboutCache) {
+    throw new Error('uianatomy about-doc not initialized — call setAbout() or setAboutPath() first');
+  }
+  return aboutCache;
+}
+
 export function resetCache(): void {
   cache = null;
   implCache = null;
   patternCache = null;
   subAnatomyCache = null;
+  aboutCache = null;
 }

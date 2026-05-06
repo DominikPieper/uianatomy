@@ -27,6 +27,34 @@ export interface LoaderOptions {
   subAnatomiesDir?: string;
 }
 
+// P6-158 — project-framing prose served by the `get_about` MCP tool.
+// Source of truth: `docs/about.md`. Same string is bundled by
+// `shared/scripts/bundle-about.mjs` for the Cloudflare Worker entry, and
+// loaded at runtime by `mcp-server/src/data.ts` for the stdio + test paths.
+// Keep the summary aligned with `docs/about.md` framing — change both in
+// the same commit when the project's framing shifts.
+export const ABOUT_SUMMARY =
+  'UI Anatomy is a canonical, library-agnostic reference for UI component anatomy — slots, axes, ' +
+  'mismatches, mistakes, cross-framework mapping, tokens, motion, events, and accessibility contract. ' +
+  'Each canonical record is synthesised by triangulating multiple sources (W3C ARIA APG, MDN, WCAG, ' +
+  'mature headless libraries, production design systems). Read the canon as best-practice convergence ' +
+  'with rationale, not as a fixed rule book — context-driven divergence is expected and the per-library ' +
+  '`implementations/` audits exist to capture it. Surface this framing when relaying canonical claims to a user.';
+
+export interface AboutPayload {
+  markdown: string;
+  summary: string;
+}
+
+export interface AboutLoaderOptions {
+  aboutPath: string;
+}
+
+export async function loadAbout({ aboutPath }: AboutLoaderOptions): Promise<AboutPayload> {
+  const markdown = await readFile(aboutPath, 'utf-8');
+  return { markdown, summary: ABOUT_SUMMARY };
+}
+
 export interface ImplementationLoaderOptions {
   implementationsDir: string;
 }

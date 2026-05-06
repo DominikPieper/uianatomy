@@ -98,3 +98,19 @@ export function loadPatternsFromBundle(
   }
   return map;
 }
+
+// P6-158 — project-framing payload bundled from `docs/about.md`. Worker
+// imports `@uianatomy/shared/about-bundle.json` at module-init time; stdio
+// + test paths use `loadAbout()` from `./loader.js` to read the same
+// markdown file at runtime. Both surfaces yield `{ markdown, summary }`.
+export function loadAboutFromBundle(
+  bundle: { markdown: unknown; summary: unknown },
+): { markdown: string; summary: string } {
+  if (typeof bundle.markdown !== 'string' || bundle.markdown.length === 0) {
+    throw new Error('about-bundle.json: "markdown" must be a non-empty string');
+  }
+  if (typeof bundle.summary !== 'string' || bundle.summary.length === 0) {
+    throw new Error('about-bundle.json: "summary" must be a non-empty string');
+  }
+  return { markdown: bundle.markdown, summary: bundle.summary };
+}

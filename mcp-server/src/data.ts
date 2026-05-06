@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { loadComponents, loadImplementations, loadPatterns, loadSubAnatomies } from '@uianatomy/shared';
+import { loadAbout, loadComponents, loadImplementations, loadPatterns, loadSubAnatomies } from '@uianatomy/shared';
 import {
+  setAboutPromise,
   setComponentsPromise,
   setImplementationsPromise,
   setPatternsPromise,
@@ -10,11 +11,13 @@ import {
 } from './state.js';
 
 export {
+  setAbout,
   setComponents,
   setImplementations,
   setPatterns,
   setSubAnatomies,
   resetCache,
+  getAbout,
   getComponents,
   getImplementations,
   getPatterns,
@@ -71,10 +74,23 @@ function pickSubAnatomiesDir(): string {
   return candidates[1] ?? resolve(process.cwd(), 'content', 'sub-anatomies');
 }
 
+function pickAboutPath(): string {
+  const candidates = [
+    process.env.UIANATOMY_ABOUT_PATH,
+    resolve(here, '..', '..', 'docs', 'about.md'),
+    resolve(process.cwd(), 'docs', 'about.md'),
+  ].filter((p): p is string => typeof p === 'string' && p.length > 0);
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return candidates[1] ?? resolve(process.cwd(), 'docs', 'about.md');
+}
+
 const DEFAULT_CONTENT_DIR = pickContentDir();
 const DEFAULT_IMPLEMENTATIONS_DIR = pickImplementationsDir();
 const DEFAULT_PATTERNS_DIR = pickPatternsDir();
 const DEFAULT_SUB_ANATOMIES_DIR = pickSubAnatomiesDir();
+const DEFAULT_ABOUT_PATH = pickAboutPath();
 
 export function setContentDir(dir: string = DEFAULT_CONTENT_DIR): void {
   // P6-126 / ADR-030 — components reference sub-anatomies via `$ref`. The
@@ -99,4 +115,8 @@ export function setPatternsDir(dir: string = DEFAULT_PATTERNS_DIR): void {
 
 export function setSubAnatomiesDir(dir: string = DEFAULT_SUB_ANATOMIES_DIR): void {
   setSubAnatomiesPromise(loadSubAnatomies({ subAnatomiesDir: dir }));
+}
+
+export function setAboutPath(path: string = DEFAULT_ABOUT_PATH): void {
+  setAboutPromise(loadAbout({ aboutPath: path }));
 }

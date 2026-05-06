@@ -14,12 +14,14 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createServer } from '../mcp-server/src/server.js';
 import {
+  setAbout,
   setComponents,
   setImplementations,
   setPatterns,
   setSubAnatomies,
 } from '../mcp-server/src/state.js';
 import {
+  loadAboutFromBundle,
   loadComponentsFromBundle,
   loadImplementationsFromBundle,
   loadPatternsFromBundle,
@@ -29,6 +31,7 @@ import bundleJson from '@uianatomy/shared/content-bundle.json';
 import implBundleJson from '@uianatomy/shared/implementations-bundle.json';
 import patternsBundleJson from '@uianatomy/shared/patterns-bundle.json';
 import subAnatomiesBundleJson from '@uianatomy/shared/sub-anatomies-bundle.json';
+import aboutBundleJson from '@uianatomy/shared/about-bundle.json';
 
 // P6-126 / ADR-030 — content-bundle is pre-resolved at bundle-write time
 // (sub-anatomy `$ref` entries flattened into anatomy[]) so the worker
@@ -41,6 +44,7 @@ setImplementations(
   loadImplementationsFromBundle(implBundleJson as Record<string, Record<string, unknown>>),
 );
 setPatterns(loadPatternsFromBundle(patternsBundleJson as Record<string, unknown>));
+setAbout(loadAboutFromBundle(aboutBundleJson as { markdown: unknown; summary: unknown }));
 
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };

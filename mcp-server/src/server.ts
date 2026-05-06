@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { getComponents, getImplementations, getPatterns, getSubAnatomies } from './state.js';
+import { getAbout, getComponents, getImplementations, getPatterns, getSubAnatomies } from './state.js';
 import type { Component } from '@uianatomy/shared/schema';
 import { validateImplementation } from '@uianatomy/shared/validate';
 import { getCanonicalVocabularies } from '@uianatomy/shared/vocabulary';
@@ -77,6 +77,16 @@ function viewProjection(component: Component, view: View) {
 
 export function createServer(): McpServer {
   const server = new McpServer({ name: 'uianatomy', version: '0.0.0' });
+
+  server.tool(
+    'get_about',
+    'Return the project framing prose — what UI Anatomy is, what it is *for*, what it is *not*, and what "canon" means here. Returns `{ markdown, summary }`. `markdown` is the full `docs/about.md` body; `summary` is a one-paragraph distillation suitable for tool-call traces. **Call this before relaying canonical claims to a downstream user**: every canonical record on this server is synthesised by triangulating multiple sources (W3C ARIA APG, MDN, WCAG, mature headless libraries, production design systems) and is best-practice convergence with rationale, not regulation. Agents that surface canon claims as "this is the rule" mis-frame the data; surface the framing in the summary instead so the downstream user inherits the correct epistemic posture (best-practice reference, context-driven divergence expected, per-library `implementations/` audits capture real divergences).',
+    {},
+    async () => {
+      const about = await getAbout();
+      return jsonResult(about);
+    },
+  );
 
   server.tool(
     'list_components',

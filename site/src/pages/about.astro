@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import { marked } from 'marked';
+// Vite ?raw inlines the file contents at compile time, avoiding the
+// build/runtime path resolution split. docs/about.md is the canonical
+// source; this page is a public surface of the same prose.
+import raw from '../../../docs/about.md?raw';
+
+const SITE_ORIGIN = 'https://uianatomy.dev';
+const url = `${SITE_ORIGIN}/about`;
+const html = marked.parse(raw, { gfm: true, async: false }) as string;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'AboutPage',
+      '@id': `${url}#about`,
+      url,
+      name: 'About — UI Anatomy',
+      inLanguage: 'en-US',
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+      description:
+        'What UI Anatomy is, what it is for, and what it is not — a synthesised best-practice reference, ' +
+        'not a fixed rule book. Three uses (designer/dev reference, implementation audit target, ' +
+        'LLM-queryable knowledge base) and the framing of "canon" as triangulated convergence.',
+      mainEntity: { '@id': `${url}#article` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Components', item: `${SITE_ORIGIN}/` },
+          { '@type': 'ListItem', position: 2, name: 'About', item: url },
+        ],
+      },
+    },
+    {
+      '@type': 'TechArticle',
+      '@id': `${url}#article`,
+      headline: 'About UI Anatomy — what this site is and what it is not',
+      url,
+      inLanguage: 'en-US',
+      description:
+        'UI Anatomy publishes a canonical, library-agnostic reference for UI component anatomy ' +
+        'synthesised from W3C APG, MDN, WCAG, mature headless libraries, and production design systems. ' +
+        'The reference is best-practice convergence, not regulation — context-driven divergence is expected.',
+      author: {
+        '@type': 'Person',
+        name: 'Dominik Pieper',
+        url: 'https://github.com/DominikPieper',
+        sameAs: ['https://github.com/DominikPieper'],
+      },
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+    },
+  ],
+};
+---
+<Base
+  title="About"
+  description="What UI Anatomy is, what it is for, and what it is not. A synthesised best-practice reference for UI component anatomy — triangulated across W3C APG, MDN, WCAG, mature headless libraries, and production design systems. Not a fixed rule book; context-driven divergence is expected."
+  breadcrumb={[{ name: 'Components', href: '/' }, { name: 'About' }]}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="shell about" data-pagefind-body>
+    <Fragment set:html={html} />
+  </article>
+</Base>
+
+<style>
+  .about {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+  .about :global(h1) {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 24px;
+  }
+  .about :global(h2) {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 48px 0 12px;
+  }
+  .about :global(h3) {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 32px 0 8px;
+  }
+  .about :global(p),
+  .about :global(li) {
+    line-height: 1.65;
+  }
+  .about :global(ul),
+  .about :global(ol) {
+    padding-inline-start: 1.25em;
+    margin: 12px 0;
+  }
+  .about :global(li) {
+    margin: 6px 0;
+  }
+  .about :global(hr) {
+    border: 0;
+    border-top: 1px solid var(--border-subtle);
+    margin: 40px 0;
+  }
+  .about :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+  }
+  .about :global(strong) {
+    font-weight: 600;
+  }
+</style>

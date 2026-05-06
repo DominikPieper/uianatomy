@@ -67,11 +67,11 @@ whenToUse:
         mode / display-mode toggles ("List / Grid", "Day /
         Week / Month") without form-field semantics; `Radio
         Group` is a form field whose value submits with the
-        form. SegmentedControl uses `role="tablist"`-style
-        switching; Radio Group uses `role="radiogroup"` with
-        roving-tabindex. The decision test: is the choice a
-        form value (Radio Group) or a UI state (Segmented
-        Control)?
+        form. Both use `role="radiogroup"` with roving-
+        tabindex; the difference is intent — form value
+        (Radio Group) vs UI state (Segmented Control). The
+        decision test: is the choice a form value (Radio
+        Group) or a UI state (Segmented Control)?
     - id: select
       difference: >-
         `Select` houses options behind a popup trigger,
@@ -659,6 +659,58 @@ events:
       vue: >-
         Absent — uses VeeValidate or composables; no canonical
         event emitter.
+
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: standard (radio circle + label) / card (selectable card; visually-hidden input retained for AT).
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md / lg.
+  - figma: Orientation
+    code: orientation
+    kind: enum
+    notes: vertical / horizontal. Drives layout direction; RTL flips horizontal automatically.
+  - figma: Required
+    code: required
+    kind: boolean
+    notes: Sets `aria-required="true"` on the group root; per-radio `required` is derived.
+  - figma: Disabled
+    code: disabled
+    kind: boolean
+    notes: Cascades to all children; per-radio override allowed.
+  - figma: Invalid
+    code: invalid
+    kind: boolean
+    notes: Pairs `aria-invalid="true"` on the group with the visual error treatment.
+  - figma: Value
+    code: value
+    kind: text
+    notes: >-
+      Controlled selected value. The single radio whose `value`
+      matches is checked; siblings unchecked.
+  - figma: Name
+    code: name
+    kind: text
+    notes: Shared HTML `name` attribute on every child input — drives native mutex.
+  - figma: Legend
+    code: children of `<legend>`
+    kind: text
+    notes: Group label. Visually-hidden when surrounding context already labels the group.
+  - figma: Description
+    code: description
+    kind: text
+    notes: Optional supporting prose, programmatically linked via `aria-describedby` on the group.
+  - figma: Error Message
+    code: errorMessage
+    kind: text
+    notes: Visibility bound to invalid state.
+  - figma: Indicator
+    code: indicator
+    kind: slot
+    notes: Decorative — filled dot inside the selected radio; empty in siblings.
 
 formIntegration:
   nativeElement: input

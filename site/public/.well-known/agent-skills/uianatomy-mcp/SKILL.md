@@ -7,7 +7,9 @@ description: Query the UI Anatomy MCP server for canonical UI component anatomy,
 
 UI Anatomy publishes a canonical, library-agnostic reference for common UI components (Button, Card, Modal, Tabs, Combobox, Drawer, …). Each component declares its **anatomy** (slots and regions), **axes** (variants, properties, states, transitions), **mismatches** between Figma and code, **common mistakes**, **cross-framework mapping**, **tokens**, **motion**, **responsive** notes, **events**, and **when to use vs. when to avoid**.
 
-The MCP server exposes this knowledge as 26 tools.
+**Read these as best practices, not fixed rules.** Each canonical record is *synthesised* from triangulating multiple sources — W3C ARIA APG, MDN, WCAG, mature headless libraries (Radix UI, React Aria, Headless UI, Spectrum), and production design systems (Polaris, Carbon, Atlassian, Material 3, GOV.UK). Where they converge, the convergence becomes the canonical default. Where they disagree, the disagreement is named and a recommendation is picked with rationale. The canon is a *reference for reasonable defaults across the industry*, not a regulation. Context-driven divergence is expected — that is what the per-library audits in `implementations/` exist to capture. When citing the canon to a downstream user, surface this framing: it is not authoritative law, it is convergence with rationale. Call `get_about` for the full project framing prose.
+
+The MCP server exposes this knowledge as 29 tools.
 
 ## Endpoint
 
@@ -80,6 +82,7 @@ const result = await client.callTool({
 
 | Tool | Args | Returns |
 |------|------|---------|
+| `get_about` | — | Project framing prose — what UI Anatomy is, what it is *for*, what it is *not*, and what "canon" means here. **Call this before relaying canonical claims to a user**: it carries the "best-practice convergence, not fixed rule" framing every downstream consumer should inherit. Returns `{ markdown, summary }` — `markdown` is the full `docs/about.md` body; `summary` is a one-paragraph distillation suitable for tool-call traces. |
 | `list_components` | — | All canonical components (id, name, description). |
 | `search_components` | `query: string` | Substring match across id/name/description/slots/variants. |
 | `get_component` | `id: string` | Full canonical schema for one component. |
@@ -176,13 +179,13 @@ Picking between them:
 
 ## First call: load tools
 
-The server returns all 26 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. **Some clients (Claude Code among them) defer per-tool schema-loading regardless** — the agent sees a tool name but cannot invoke it until the schema is fetched, and a direct call fails with `InputValidationError`. Bulk-load the common tools up front to avoid mid-flow latency:
+The server returns all 29 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. **Some clients (Claude Code among them) defer per-tool schema-loading regardless** — the agent sees a tool name but cannot invoke it until the schema is fetched, and a direct call fails with `InputValidationError`. Bulk-load the common tools up front to avoid mid-flow latency:
 
 ```
-ToolSearch query: "select:mcp__uianatomy__list_components,mcp__uianatomy__get_component,mcp__uianatomy__search_components,mcp__uianatomy__list_patterns,mcp__uianatomy__get_pattern,mcp__uianatomy__get_implementations"
+ToolSearch query: "select:mcp__uianatomy__get_about,mcp__uianatomy__list_components,mcp__uianatomy__get_component,mcp__uianatomy__search_components,mcp__uianatomy__list_patterns,mcp__uianatomy__get_pattern,mcp__uianatomy__get_implementations"
 ```
 
-Add per-axis tools (`get_anatomy`, `get_motion`, `get_events`, `get_contracts`, etc.) as the specific audit flow demands. If your client surfaces fewer than 26 tools at the catalogue level (not the schema level), restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+Add per-axis tools (`get_anatomy`, `get_motion`, `get_events`, `get_contracts`, etc.) as the specific audit flow demands. If your client surfaces fewer than 29 tools at the catalogue level (not the schema level), restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 

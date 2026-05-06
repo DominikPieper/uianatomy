@@ -556,6 +556,61 @@ events:
         Absent — uses VeeValidate or composables; no canonical
         event emitter.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: single / group. group is the parent "select all" tri-state pattern.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md / lg.
+  - figma: Checked
+    code: checked
+    kind: boolean
+    notes: >-
+      Controlled state. Radix accepts `boolean | "indeterminate"`;
+      React Aria pairs `isSelected` with `isIndeterminate`. Renders
+      the indicator glyph in the indicator slot.
+  - figma: Indeterminate
+    code: indeterminate
+    kind: boolean
+    notes: >-
+      Runtime-only — set via `inputElement.indeterminate = true` in
+      JS, never as an HTML attribute. Browser surfaces it as
+      `aria-checked="mixed"`. Indicator slot renders the dash glyph.
+  - figma: Required
+    code: required
+    kind: boolean
+    notes: Pairs visual asterisk with the `required` attribute. Both must ship together.
+  - figma: Disabled
+    code: disabled
+    kind: boolean
+  - figma: Invalid
+    code: invalid
+    kind: boolean
+    notes: Pairs `aria-invalid="true"` with the visual error treatment.
+  - figma: Label
+    code: children of `<label>`
+    kind: text
+    notes: Visible label text. Required slot — never omit, hide visually if needed.
+  - figma: Description
+    code: description
+    kind: text
+    notes: Optional supporting prose, programmatically linked via `aria-describedby`.
+  - figma: Error Message
+    code: errorMessage
+    kind: text
+    notes: Visibility bound to invalid state.
+  - figma: Indicator
+    code: indicator
+    kind: slot
+    notes: Decorative — checkmark when checked, dash when indeterminate, empty when unchecked.
+  - figma: Name
+    code: name
+    kind: text
+    notes: Form-field key under which the value submits. Required for form participation.
+
 formIntegration:
   nativeElement: input
   submittedValue: >-

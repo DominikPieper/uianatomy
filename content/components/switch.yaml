@@ -550,6 +550,58 @@ events:
         `@update:modelValue` event for v-model binding;
         `@change` for non-controlled usage.
 
+propertyMap:
+  - figma: Variant
+    code: variant
+    kind: enum
+    notes: standard / with-icons. with-icons adds a check / dash glyph to the thumb for redundant state signal.
+  - figma: Size
+    code: size
+    kind: enum
+    notes: sm / md.
+  - figma: Checked
+    code: checked
+    kind: boolean
+    notes: >-
+      Controlled state. Strictly binary — `aria-checked="mixed"` is
+      invalid for `role="switch"` per APG. Drives thumb position
+      (inline-start when off, inline-end when on).
+  - figma: Required
+    code: required
+    kind: boolean
+    notes: Sets `aria-required="true"`. Form-bound switches require the hidden-input bridge.
+  - figma: Disabled
+    code: disabled
+    kind: boolean
+  - figma: Label
+    code: children of `<label>`
+    kind: text
+    notes: >-
+      Noun describing the controlled behaviour ("Notifications",
+      "Dark mode"). Stays constant across states — on/off conveyed
+      by thumb position plus `aria-checked`, never by label text.
+  - figma: Description
+    code: description
+    kind: text
+    notes: Optional supporting prose, programmatically linked via `aria-describedby`.
+  - figma: Name
+    code: name
+    kind: text
+    notes: >-
+      Form-field key. Form participation requires a hidden
+      `<input type="checkbox" role="switch">` bridge —
+      `<button role="switch">` does not submit any value.
+  - figma: Thumb
+    code: thumb
+    kind: slot
+    notes: >-
+      Decorative — slides between inline-start (off) and inline-end
+      (on). Optional check / dash glyph in with-icons variant.
+  - figma: Track
+    code: track
+    kind: slot
+    notes: Decorative — colour shifts as secondary state reinforcement; thumb position is the primary signal.
+
 formIntegration:
   nativeElement: input
   submittedValue: >-

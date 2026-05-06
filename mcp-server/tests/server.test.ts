@@ -4,12 +4,13 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { createServer } from '../src/server.js';
-import { setContentDir, setImplementationsDir, setPatternsDir, resetCache } from '../src/data.js';
+import { setAboutPath, setContentDir, setImplementationsDir, setPatternsDir, resetCache } from '../src/data.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = resolve(here, '..', '..', 'content', 'components');
 const implementationsDir = resolve(here, '..', '..', 'implementations');
 const patternsDir = resolve(here, '..', '..', 'content', 'patterns');
+const aboutPath = resolve(here, '..', '..', 'docs', 'about.md');
 
 async function connect() {
   const server = createServer();
@@ -31,6 +32,7 @@ describe('mcp server', () => {
     setContentDir(contentDir);
     setImplementationsDir(implementationsDir);
     setPatternsDir(patternsDir);
+    setAboutPath(aboutPath);
   });
 
   afterEach(() => {
@@ -38,6 +40,7 @@ describe('mcp server', () => {
     setContentDir(contentDir);
     setImplementationsDir(implementationsDir);
     setPatternsDir(patternsDir);
+    setAboutPath(aboutPath);
   });
 
   it('lists the registered tools', async () => {
@@ -46,6 +49,7 @@ describe('mcp server', () => {
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
+        'get_about',
         'get_anatomy',
         'get_axes',
         'get_canonical_vocabularies',
@@ -76,6 +80,19 @@ describe('mcp server', () => {
         'validate_implementation',
       ].sort(),
     );
+  });
+
+  it('get_about returns the project framing prose with markdown + summary', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_about', arguments: {} });
+    const parsed = parseJson(result as any);
+    expect(typeof parsed.markdown).toBe('string');
+    expect(parsed.markdown.length).toBeGreaterThan(500);
+    expect(parsed.markdown).toContain('# About UI Anatomy');
+    expect(parsed.markdown).toContain('best practice');
+    expect(typeof parsed.summary).toBe('string');
+    expect(parsed.summary).toContain('best-practice convergence');
+    expect(parsed.summary).toContain('not as a fixed rule book');
   });
 
   it('list_components returns Card', async () => {
@@ -450,6 +467,73 @@ describe('mcp server', () => {
     expect(parsed.a11y.groupRule).toContain('accessible name');
   });
 
+  // P6-150 resolution tests use slot-id fingerprinting because the bundle
+  // strips the non-enumerable `__subAnatomy` provenance (P6-126b: only the
+  // site's content.config.ts lifts it), and resolveAnatomyRefs applies the
+  // $ref-level `parent` only to the first sub-anatomy slot (subsequent
+  // slots live in the sub-anatomy's local row grid). Slot ids
+  // `icon-leading` / `label` / `icon-trailing` are themselves unambiguous
+  // evidence of icon-leading-text resolution.
+  it('Tab resolves icon-leading-text $ref under the tab slot (P6-150)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_component', arguments: { id: 'tabs' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.anatomy.map((s: any) => s.id);
+    // Full 3-slot resolution — Tab uses no `omitted`-overrides
+    expect(ids).toContain('icon-leading');
+    expect(ids).toContain('label');
+    expect(ids).toContain('icon-trailing');
+    // First sub-anatomy slot is parented to the host (tab); rest live in
+    // the sub-anatomy's local grid.
+    const iconLeading = parsed.anatomy.find((s: any) => s.id === 'icon-leading');
+    expect(iconLeading.layout?.parent).toBe('tab');
+  });
+
+  it('Breadcrumb-item resolves icon-leading-text $ref with omitted icon-trailing (P6-150)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component',
+      arguments: { id: 'breadcrumbs' },
+    });
+    const parsed = parseJson(result as any);
+    const ids = parsed.anatomy.map((s: any) => s.id);
+    // First variable-arity exercise: icon-trailing omitted, icon-leading + label resolved
+    expect(ids).toContain('icon-leading');
+    expect(ids).toContain('label');
+    // The omitted slot must be skipped entirely (not just hidden) — but
+    // breadcrumbs already has its own `icon-trailing`-bearing peers
+    // (separator, overflow-collapse) so we filter to the resolved-from-ref
+    // ones via the inline-only set.
+    const iconLeading = parsed.anatomy.find((s: any) => s.id === 'icon-leading');
+    expect(iconLeading.layout?.parent).toBe('link');
+  });
+
+  it('Badge resolves icon-leading-text $ref with content→label rename + omitted icon-trailing (P6-150)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_component', arguments: { id: 'badge' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.anatomy.map((s: any) => s.id);
+    // Sub-anatomy resolution: icon-leading + label present, icon-trailing omitted
+    expect(ids).toContain('icon-leading');
+    expect(ids).toContain('label');
+    expect(ids).not.toContain('icon-trailing');
+    // Old `content` slot id must not exist anymore — sub-anatomy carries `label`
+    expect(ids).not.toContain('content');
+  });
+
+  it('Link resolves icon-leading-text $ref with omitted icon-leading + keeps visited-marker inline (P6-150)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({ name: 'get_component', arguments: { id: 'link' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.anatomy.map((s: any) => s.id);
+    // Trailing-only resolution: icon-leading omitted, label + icon-trailing resolved
+    expect(ids).toContain('label');
+    expect(ids).toContain('icon-trailing');
+    expect(ids).not.toContain('icon-leading');
+    // visited-marker stays inline (decorative root-level slot, not part of icon-leading-text)
+    expect(ids).toContain('visited-marker');
+  });
+
   it('get_sub_anatomy errors on unknown id', async () => {
     const { client } = await connect();
     const result = await client.callTool({
@@ -469,6 +553,7 @@ describe('mcp server', () => {
     expect(parsed.subAnatomies).toContain('action-group');
     expect(parsed.subAnatomies).toContain('close-button');
     expect(parsed.subAnatomies).toContain('header-bar');
+    expect(parsed.subAnatomies).toContain('icon-leading-text');
   });
 
   it('get_changelog errors on unknown component id', async () => {
