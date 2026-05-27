@@ -26,18 +26,26 @@ will not run on 3.9), an `ANTHROPIC_API_KEY` (the run bills the API), and a
 current model — the harness still defaults to the retired
 `claude-3-7-sonnet-20250219`, so pass `-m claude-sonnet-4-6`.
 
+Recommended: run via [`uv`](https://docs.astral.sh/uv/) — it fetches a
+3.12 interpreter and the deps into an ephemeral env, so you need neither a
+`pip install` nor a system Python upgrade (`pip install` against a system
+3.9 fails: `mcp>=1.1.0` resolves to no compatible version).
+
 ```bash
 # from repo root
 pnpm -F @uianatomy/mcp-server build          # produces dist/local.js
-pip install -r mcp-server/eval/requirements.txt   # anthropic, mcp
 export ANTHROPIC_API_KEY=sk-...
 
-python mcp-server/eval/evaluation.py \
+uv run --python 3.12 --with anthropic --with mcp \
+  python mcp-server/eval/evaluation.py \
   -t stdio -c node -a mcp-server/dist/local.js \
   -m claude-sonnet-4-6 \
   -o mcp-server/eval/report.md \
   mcp-server/eval/evaluation.xml
 ```
+
+Without uv, on a Python ≥ 3.10: `pip install -r mcp-server/eval/requirements.txt`
+then invoke `python mcp-server/eval/evaluation.py …` with the same flags.
 
 To run against the deployed Cloudflare Worker instead of stdio:
 
