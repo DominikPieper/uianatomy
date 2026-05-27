@@ -1,0 +1,49 @@
+<evaluation>
+  <!--
+    UI Anatomy MCP server evaluation (mcp-builder skill, reference/evaluation.md).
+    10 read-only, independent, stable, multi-hop questions. Each answer was
+    derived by aggregating across the canon and is a single verifiable value.
+    Answers reflect the canon as of 2026-05-27 (41 components, 33 audits across
+    5 libraries, 2 patterns, 4 sub-anatomies). Re-verify if canon changes.
+  -->
+  <qa_pair>
+    <question>Inspect the events declared by every canonical component via the MCP tools. One component declares more distinct events than any other. Respond with that component's id and nothing else.</question>
+    <answer>table</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Across all Phase-2 library implementation audits exposed by this server, one library has reviewed more distinct canonical components than any other library. Respond with that library's id and nothing else.</question>
+    <answer>radix</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Determine how many distinct canonical components the radix library has published an implementation audit for. Respond with a number only.</question>
+    <answer>12</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Considering every library implementation audit, find the audit(s) that record the highest number of divergences from canon, then report which library owns them. Respond with the library id and nothing else.</question>
+    <answer>react-aria</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Count how many distinct libraries have published an implementation audit for the modal component. Respond with a number only.</question>
+    <answer>3</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Aggregate the accessibility-acceptance contracts across all components composing the login-form pattern. How many distinct axe-core rule ids appear in the resulting union? Respond with a number only.</question>
+    <answer>13</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Among the canonical sub-anatomies registered on this server, exactly one defines fewer slots than all the others. Respond with that sub-anatomy's id and nothing else.</question>
+    <answer>header-bar</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>One canonical component lists, among its alternate names, the term that is also the native HTML overlay element used for modal dialogs. Respond with that component's id and nothing else.</question>
+    <answer>modal</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Consult the canonical vocabularies surface. How many entries are in the master interactiveStates list? Respond with a number only.</question>
+    <answer>6</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In the login-form pattern's composition, a single canonical component fills both the forgot-password recovery role and the sign-up alternate-flow role. Respond with that component's id and nothing else.</question>
+    <answer>link</answer>
+  </qa_pair>
+</evaluation>

@@ -922,3 +922,122 @@ describe('mcp server', () => {
     expect(report.notes.some((n: string) => n.includes('Heuristic'))).toBe(true);
   });
 });
+
+// mcp-builder best-practice conformance (skill reference/mcp_best_practices.md
+// + node_mcp_server.md quality checklist).
+describe('mcp best-practices', () => {
+  beforeAll(() => {
+    setContentDir(contentDir);
+    setImplementationsDir(implementationsDir);
+    setPatternsDir(patternsDir);
+    setAboutPath(aboutPath);
+  });
+
+  afterEach(() => {
+    resetCache();
+    setContentDir(contentDir);
+    setImplementationsDir(implementationsDir);
+    setPatternsDir(patternsDir);
+    setAboutPath(aboutPath);
+  });
+
+  // Tools that return a stable non-null object carry an outputSchema and must
+  // return structuredContent. The rest are content-only by design.
+  const OBJECT_TOOLS = new Set([
+    'get_about',
+    'get_component',
+    'get_components',
+    'get_component_view',
+    'get_axes',
+    'get_framework_map',
+    'get_contracts',
+    'get_canonical_vocabularies',
+    'get_pattern',
+    'get_sub_anatomy',
+    'get_pattern_a11y_aggregate',
+    'validate_implementation',
+  ]);
+
+  it('every tool has a title, a description, and read-only annotations', async () => {
+    const { client } = await connect();
+    const { tools } = await client.listTools();
+    expect(tools.length).toBe(29);
+    for (const t of tools) {
+      expect(t.title, `${t.name} title`).toBeTypeOf('string');
+      expect((t.title as string).length, `${t.name} title non-empty`).toBeGreaterThan(0);
+      expect((t.description ?? '').length, `${t.name} description`).toBeGreaterThan(20);
+      expect(t.annotations, `${t.name} annotations`).toMatchObject({
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      });
+    }
+  });
+
+  it('object-returning tools declare an outputSchema; the rest do not', async () => {
+    const { client } = await connect();
+    const { tools } = await client.listTools();
+    for (const t of tools) {
+      if (OBJECT_TOOLS.has(t.name)) {
+        expect(t.outputSchema, `${t.name} should have outputSchema`).toBeDefined();
+      } else {
+        expect(t.outputSchema, `${t.name} should be content-only`).toBeUndefined();
+      }
+    }
+  });
+
+  it('object-returning tools return structuredContent matching the text content', async () => {
+    const { client } = await connect();
+    const result = (await client.callTool({
+      name: 'get_component',
+      arguments: { id: 'modal' },
+    })) as any;
+    expect(result.structuredContent).toBeDefined();
+    expect(result.structuredContent.id).toBe('modal');
+    // structuredContent and the text block must agree.
+    expect(result.structuredContent).toEqual(parseJson(result));
+  });
+
+  it('strict input schemas reject unknown arguments', async () => {
+    const { client } = await connect();
+    const result = (await client
+      .callTool({ name: 'get_component', arguments: { id: 'modal', bogus: 1 } })
+      .catch((err: unknown) => ({ isError: true, _threw: String(err) }))) as any;
+    expect(result.isError).toBe(true);
+  });
+
+  it('not-found errors name a recovery tool', async () => {
+    const { client } = await connect();
+    const result = (await client.callTool({
+      name: 'get_component',
+      arguments: { id: 'does-not-exist' },
+    })) as any;
+    expect(result.isError).toBe(true);
+    const text = result.content.find((c: any) => c.type === 'text')?.text ?? '';
+    expect(text).toContain('list_components');
+
+    const patternMiss = (await client.callTool({
+      name: 'get_pattern',
+      arguments: { id: 'nope' },
+    })) as any;
+    expect(patternMiss.isError).toBe(true);
+    expect(patternMiss.content.find((c: any) => c.type === 'text')?.text).toContain('list_patterns');
+  });
+
+  it('search_components honours the limit parameter', async () => {
+    const { client } = await connect();
+    const all = parseJson(
+      (await client.callTool({ name: 'search_components', arguments: { query: 'e' } })) as any,
+    );
+    expect(all.length).toBeGreaterThan(2);
+    const limited = parseJson(
+      (await client.callTool({
+        name: 'search_components',
+        arguments: { query: 'e', limit: 2 },
+      })) as any,
+    );
+    expect(limited.length).toBe(2);
+    expect(limited).toEqual(all.slice(0, 2));
+  });
+});
