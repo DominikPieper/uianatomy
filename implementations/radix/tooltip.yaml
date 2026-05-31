@@ -1,0 +1,225 @@
+componentId: tooltip
+libraryId: radix
+componentName: Tooltip
+
+exampleCode: |
+  import * as Tooltip from '@radix-ui/react-tooltip';
+
+  // Provider must wrap the app (or the subtree) once — typically at root level.
+  // delayDuration overrides the 700ms default; skipDelayDuration controls the
+  // grace window for moving between adjacent triggers without re-triggering delay.
+  <Tooltip.Provider delayDuration={700} skipDelayDuration={300}>
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <IconButton aria-label="Settings" />
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content side="top" align="center" sideOffset={6}>
+          Adjust settings
+          <Tooltip.Arrow />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  </Tooltip.Provider>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[container]
+    type: reshaped
+    to: "Tooltip.Root + Tooltip.Portal + Tooltip.Content (with VisuallyHidden role=tooltip child)"
+    rationale: >-
+      The canonical container is one slot bearing both `role="tooltip"` and the
+      floating surface. Radix splits this across four layers: Root owns
+      controlled state and the delay timer, Portal relocates the DOM node to
+      document.body (avoiding stacking-context clipping), Content owns the
+      visible floating surface, and — critically — the `role="tooltip"` is
+      applied to a VisuallyHidden child inside Content, not to Content itself.
+      This means the visible content can be styled freely while the accessible
+      description node is always present in the DOM regardless of CSS. Consumers
+      composing the canonical anatomy must use all four together.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 480–530 (TooltipContentImpl), verified 2026-05-31.
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: Tooltip.Trigger (renders <button> by default; ignores touch pointerType)
+    rationale: >-
+      Canonical trigger is consumer-provided — the tooltip attaches listeners
+      to whatever element the consumer wires. Radix's Tooltip.Trigger renders
+      a `<button>` by default and explicitly skips `pointerType === 'touch'` in
+      its onPointerMove handler (source line ~310: `if (event.pointerType ===
+      'touch') return`). This means Radix Tooltip does NOT open on touch
+      pointer-move — touch users must rely on the focus event path (tap →
+      focus → instant-open via onFocus handler). The canonical mismatch
+      "hover-only" is partially addressed via focus, but touch pointerType
+      is explicitly excluded from the pointer-move reveal path.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 303–316, verified 2026-05-31.
+
+  # ── Axes: properties ─────────────────────────────────────────────────────
+
+  - from: axes.properties[side]
+    type: renamed
+    to: "side on Tooltip.Content — values: top | right | bottom | left"
+    rationale: >-
+      Canonical uses CSS logical property terms (block-start, inline-end,
+      block-end, inline-start) to be direction-agnostic and RTL-aware. Radix
+      uses physical direction values (top / right / bottom / left) inherited
+      from the underlying @radix-ui/react-popper primitive (Floating UI). In
+      RTL layouts this means `side="right"` anchors visually right regardless
+      of text direction — the consumer must reverse the value manually for RTL.
+      Default: "top" (not canonical "block-end").
+      Source: https://www.radix-ui.com/primitives/docs/components/tooltip
+      (Content API table), verified 2026-05-31.
+
+  - from: axes.properties[delay]
+    type: reshaped
+    to: "delayDuration (number, ms) on Tooltip.Provider and Tooltip.Root"
+    rationale: >-
+      Canonical models delay as an enum (instant=0, short=200, base=700,
+      long=1500). Radix exposes raw milliseconds via `delayDuration` on both
+      Provider (global default) and Root (per-instance override). There is no
+      built-in enum mapping — design systems layered on Radix must implement
+      the canonical enum → ms translation themselves. Default: 700ms (matches
+      canonical `base`). Provider also adds `skipDelayDuration` (default 300ms)
+      which has no canonical equivalent: it is the grace window after closing
+      one tooltip within which the next tooltip opens instantly without delay.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 44–62 (TooltipProviderProps), verified 2026-05-31.
+
+  - from: axes.properties[arrow]
+    type: reshaped
+    to: Tooltip.Arrow — optional child component, not a boolean prop
+    rationale: >-
+      Canonical models the arrow as a boolean prop on the tooltip surface.
+      Radix implements it as a composable child component (Tooltip.Arrow) that
+      the consumer includes or omits. This means the arrow's presence, size,
+      and className are entirely consumer-controlled; there is no library-level
+      default. The canonical `arrow: true` default is achievable by always
+      rendering Tooltip.Arrow inside Tooltip.Content.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 555–574 (TooltipArrow), verified 2026-05-31.
+
+  # ── Axes: variants ───────────────────────────────────────────────────────
+
+  - from: axes.variants[inline-help]
+    type: omitted
+    rationale: >-
+      Radix Tooltip has no variant concept at all — it is an unstyled primitive.
+      The canonical `inline-help` variant (icon + tap-to-toggle on mobile,
+      distinct visual treatment) is a design-system layer above Radix. Consumers
+      must compose Tooltip.Root with a custom trigger and CSS to achieve the
+      inline-help visual behaviour.
+      Source: https://www.radix-ui.com/primitives/docs/components/tooltip
+      (no variant prop listed), verified 2026-05-31.
+
+  # ── Axes: states ─────────────────────────────────────────────────────────
+
+  - from: axes.states
+    type: reshaped
+    to: "data-state: closed | delayed-open | instant-open (no opening/closing states)"
+    rationale: >-
+      Canonical defines four data states: closed, opening, open, closing. Radix
+      collapses this to three: `closed`, `delayed-open` (opened after the
+      delayDuration timer), and `instant-open` (opened immediately, e.g. via
+      focus or when skipDelayDuration is in effect). There is no separate
+      `closing` state — the tooltip transitions directly from open to closed
+      when the dismiss trigger fires, leaving exit animation timing entirely to
+      CSS `[data-state="closed"]` selectors. The `opening` state is also absent;
+      the delay phase is not reflected in `data-state` (it remains `closed` until
+      the timer fires).
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 189–191 (stateAttribute useMemo), verified 2026-05-31.
+
+  # ── Extended (Radix additions beyond canonical) ───────────────────────────
+
+  - from: axes.properties[side]
+    type: extended
+    addition: >-
+      Tooltip.Provider: required wrapping component with no canonical equivalent.
+      Props — `delayDuration` (number, default 700), `skipDelayDuration` (number,
+      default 300), `disableHoverableContent` (boolean, default false). The
+      Provider manages a shared delay state so that moving the pointer between
+      multiple triggers within `skipDelayDuration` ms opens each instantly. The
+      `disableHoverableContent` flag opts out of the WCAG 2.1 SC 1.4.13 grace
+      area behaviour (by default Radix implements a pointer-transit polygon that
+      keeps the tooltip open while the pointer moves from trigger to content).
+    rationale: >-
+      The Provider pattern is Radix-specific: it coordinates delay state across
+      sibling tooltips, enabling the "skip delay on quick traversal" UX. The
+      canonical spec has no equivalent coordination primitive — each tooltip is
+      independent. The `disableHoverableContent` flag controls the WCAG 2.1
+      SC 1.4.13 hoverable-content requirement (content stays open when the
+      pointer moves over it); Radix implements this by default via a triangular
+      grace polygon computed from the trigger and content rects.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 29–109 (TooltipProvider + TooltipContentHoverable), verified 2026-05-31.
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: "data-state CSS attribute selectors on Tooltip.Content; no bundled duration tokens"
+    rationale: >-
+      Radix ships no motion durations or easing values. Consumers write CSS
+      transitions/animations on `[data-state="delayed-open"]`,
+      `[data-state="instant-open"]`, and `[data-state="closed"]` using their
+      own design tokens. The canonical `motion.duration.fast` (open) and
+      `motion.duration.instant` (close) are achievable but entirely
+      consumer-side — the library exposes the state attribute, not timing.
+      Source: https://www.radix-ui.com/primitives/docs/components/tooltip
+      (Animation section), verified 2026-05-31.
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix does not implement a reduced-motion behaviour. The data-state
+      attribute still flips on open/close, but no `@media (prefers-reduced-motion)`
+      suppression is bundled. Consumers must apply this CSS rule themselves.
+      The canonical `instant` fallback is achievable at the consumer CSS layer
+      but is not part of the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/tooltip
+      (no reduced-motion docs), verified 2026-05-31.
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: renamed
+    to: onOpenChange (Tooltip.Root prop)
+    rationale: >-
+      One-to-one match in contract. `onOpenChange(open: boolean)` on Tooltip.Root
+      fires when the open state changes. The canonical event payload contract
+      holds. Note: fires on both open and close transitions; does NOT distinguish
+      between `delayed-open` and `instant-open`.
+      Source: github.com/radix-ui/primitives packages/react/tooltip/src/tooltip.tsx
+      lines 153–163 (useControllableState onChange), verified 2026-05-31.
+
+rationale: |
+  Radix Tooltip (@radix-ui/react-tooltip v1.2.8) is a low-level, unstyled
+  primitive that correctly implements the canonical accessibility contract
+  (aria-describedby via VisuallyHidden role=tooltip, focus-trigger via onFocus,
+  Escape dismiss, no interactive content) but diverges substantially on
+  structure and axis shape.
+
+  The dominant structural divergence is the required Tooltip.Provider wrapper,
+  which introduces cross-tooltip delay coordination with no canonical equivalent.
+  The anatomy is split across Root/Portal/Content/Arrow rather than a single
+  container slot, and the ARIA role is applied to a VisuallyHidden inner node
+  rather than the visible surface — an implementation detail invisible to
+  consumers but load-bearing for the aria-describedby contract.
+
+  Axis divergences: physical direction values instead of logical ones (RTL
+  caveat), raw milliseconds instead of the canonical delay enum, and Tooltip.Arrow
+  as a composable child instead of a boolean prop. The data-state model collapses
+  the canonical four-state graph to three values (no separate opening/closing),
+  omitting the intermediate states that exit animations depend on in the canonical
+  motion spec.
+
+  Touch behaviour: Radix explicitly skips pointerType=touch in the pointer-move
+  handler, relying on the focus event for touch reveals. This matches the
+  canonical "tap-to-focus" pattern for touch but means no hover-path reveal
+  on touch; the inline-help variant's tap-to-toggle behaviour is entirely absent
+  as Radix ships no variants.
+
+lastReviewed: '2026-05-31'

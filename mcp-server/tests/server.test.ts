@@ -656,7 +656,7 @@ describe('mcp server', () => {
       arguments: { libraryId: 'radix' },
     });
     const radixRows = parseJson(radixRes as any);
-    expect(radixRows.length).toBe(12);
+    expect(radixRows.length).toBe(15);
     expect(radixRows.every((r: any) => r.libraryId === 'radix')).toBe(true);
     const componentIds = radixRows.map((r: any) => r.componentId).sort();
     expect(componentIds).toEqual([
@@ -669,9 +669,12 @@ describe('mcp server', () => {
       'checkbox',
       'combobox',
       'disclosure',
+      'menu',
       'modal',
+      'popover',
       'select',
       'tabs',
+      'tooltip',
     ]);
   });
 

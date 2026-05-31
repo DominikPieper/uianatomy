@@ -1,0 +1,430 @@
+componentId: popover
+libraryId: headlessui
+componentName: "Popover / PopoverButton / PopoverPanel / PopoverBackdrop / PopoverGroup / CloseButton"
+
+exampleCode: |
+  import {
+    Popover,
+    PopoverButton,
+    PopoverPanel,
+  } from '@headlessui/react';
+
+  export function FilterPopover() {
+    return (
+      <Popover className="relative">
+        <PopoverButton className="rounded border px-3 py-1.5 data-[open]:bg-gray-100">
+          Filters
+        </PopoverButton>
+        <PopoverPanel
+          anchor="bottom start"
+          transition
+          className={[
+            'rounded border bg-white shadow-lg p-4 w-64',
+            'data-[closed]:opacity-0 data-[enter]:duration-150 data-[leave]:duration-100',
+            'transition',
+          ].join(' ')}
+        >
+          {({ close }) => (
+            <div>
+              <p className="text-sm font-medium mb-2">Filter by status</p>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="active" /> Active
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="archived" /> Archived
+              </label>
+              <button
+                onClick={() => close()}
+                className="mt-3 w-full rounded bg-blue-600 text-white px-3 py-1.5 text-sm"
+              >
+                Apply
+              </button>
+            </div>
+          )}
+        </PopoverPanel>
+      </Popover>
+    );
+  }
+
+divergence:
+  # ── Anatomy: trigger renamed to PopoverButton ────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: renamed
+    to: PopoverButton
+    rationale: >-
+      The canonical `trigger` slot is described as consumer-provided — the
+      Popover component wires ARIA onto a user-supplied element. Headless UI
+      ships `PopoverButton` as a first-class component that renders a `<button>`
+      by default and wires `aria-expanded` and `aria-controls` automatically.
+      The practical contract is equivalent (the button toggles the panel) but
+      the implementation is a library primitive rather than a bare consumer
+      element. Source: https://headlessui.com/react/popover (PopoverButton
+      props, 2026-05-31).
+
+  # ── Anatomy: container renamed to PopoverPanel ──────────────────────────────
+
+  - from: anatomy[container]
+    type: renamed
+    to: PopoverPanel
+    rationale: >-
+      The canonical `container` slot is the bounded floating surface. Headless
+      UI names this `PopoverPanel`. It renders a `<div>` by default with no
+      explicit ARIA role — no `role="dialog"` is applied. The canonical
+      recommends `role="dialog"` with `aria-labelledby` for interactive
+      popovers; consumers must add this manually. Source:
+      https://headlessui.com/react/popover (PopoverPanel props, 2026-05-31).
+
+  # ── Anatomy: arrow slot omitted ──────────────────────────────────────────────
+
+  - from: anatomy[arrow]
+    type: omitted
+    rationale: >-
+      Headless UI ships no arrow primitive for Popover. The canonical `arrow`
+      slot is a decorative tip indicator pointing from the panel back to the
+      trigger, whose position auto-tracks via the positioning library. Headless
+      UI's `anchor` API (backed by Floating UI) does not expose an
+      arrow/middleware component for Popover; consumers must author a CSS
+      pseudo-element or absolute-positioned child and derive arrow placement
+      manually from the `anchor.to` side. Source:
+      https://headlessui.com/react/popover (PopoverPanel anchor prop,
+      2026-05-31).
+
+  # ── Anatomy: header slot omitted ────────────────────────────────────────────
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      Headless UI provides no structured header slot. All content inside
+      `PopoverPanel` is free children; the library enforces no header/body/footer
+      subdivision. Consumers who want a labelled header must author it as plain
+      JSX. Source: https://headlessui.com/react/popover (PopoverPanel, 2026-05-31).
+
+  # ── Anatomy: title slot omitted ──────────────────────────────────────────────
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      There is no title slot or component. `PopoverPanel` carries no
+      `aria-labelledby` pointing to a title element; the panel itself has no
+      explicit ARIA role that would require a label. Consumers who apply
+      `role="dialog"` manually must also wire their own `aria-labelledby` to a
+      heading inside the panel. Source: https://headlessui.com/react/popover
+      (PopoverPanel, 2026-05-31).
+
+  # ── Anatomy: body slot omitted ───────────────────────────────────────────────
+
+  - from: anatomy[body]
+    type: omitted
+    rationale: >-
+      Headless UI has no `body` slot primitive. Content is placed directly as
+      children of `PopoverPanel` (or via a render-function child for access to
+      the `close` render prop). The body-as-named-slot contract from the
+      canonical has no counterpart; there is no scroll container or semantic
+      wrapper. Source: https://headlessui.com/react/popover (PopoverPanel,
+      2026-05-31).
+
+  # ── Anatomy: close-button renamed to CloseButton ────────────────────────────
+
+  - from: anatomy[close-button]
+    type: renamed
+    to: CloseButton
+    rationale: >-
+      The canonical `close-button` sub-anatomy slot maps to Headless UI's
+      `CloseButton` component, which closes the nearest ancestor `Popover`
+      when clicked. The library also exposes a `useClose()` hook for the same
+      purpose from deeply nested components. Alternatively, the `close` render
+      prop from `PopoverPanel`'s children function can be called directly.
+      Source: https://headlessui.com/react/popover (CloseButton, useClose,
+      2026-05-31).
+
+  # ── Anatomy: close-label slot omitted ────────────────────────────────────────
+
+  - from: anatomy[close-label]
+    type: omitted
+    rationale: >-
+      The canonical `close-label` sub-anatomy slot is a visually-hidden
+      `<span>` that provides an accessible name for the close button.
+      `CloseButton` in Headless UI renders a plain `<button>` with no
+      enforced accessible-name strategy; consumers must supply the label
+      themselves as button text or `aria-label`. Source:
+      https://headlessui.com/react/popover (CloseButton props, 2026-05-31).
+
+  # ── Axes: variants standard/tip omitted ─────────────────────────────────────
+
+  - from: axes.variants[standard]
+    type: omitted
+    rationale: >-
+      Headless UI Popover has no variant system. The `standard` / `tip`
+      distinction in the canonical maps to whether an arrow is rendered;
+      since Headless UI has no arrow primitive, there is also no variant
+      to select it. Consumers who want a tip-arrow popover must author the
+      arrow slot manually regardless. Source: https://headlessui.com/react/popover
+      (2026-05-31).
+
+  - from: axes.variants[tip]
+    type: omitted
+    rationale: >-
+      No `tip` variant. Headless UI has no arrow component for Popover, so
+      neither `standard` nor `tip` variants exist as API concepts. See
+      `axes.variants[standard]` omission above. Source:
+      https://headlessui.com/react/popover (2026-05-31).
+
+  # ── Axes: side + align reshaped into anchor string ───────────────────────────
+
+  - from: axes.properties[side]
+    type: reshaped
+    to: "anchor prop on PopoverPanel — string form: \"bottom\", \"top\", \"left\", \"right\", \"bottom start\", \"bottom end\", etc."
+    rationale: >-
+      The canonical treats `side` (top/right/bottom/left) and `align`
+      (start/center/end) as separate props. Headless UI collapses both into a
+      single `anchor` string or object on `PopoverPanel`. The string form
+      `"bottom start"` encodes side+align together; the object form `{ to,
+      gap, offset, padding }` separates positioning from spacing. There is no
+      discrete `side` prop. Source: https://headlessui.com/react/popover
+      (PopoverPanel anchor prop, 2026-05-31).
+
+  - from: axes.properties[align]
+    type: reshaped
+    to: "alignment suffix in anchor string — \"bottom start\" / \"bottom end\" / \"top start\" etc."
+    rationale: >-
+      The canonical `align` (start/center/end) is encoded as a suffix in
+      Headless UI's `anchor` string. `"bottom"` means center-aligned;
+      `"bottom start"` means start-aligned. There is no standalone `align`
+      prop. Source: https://headlessui.com/react/popover (PopoverPanel anchor
+      prop, 2026-05-31).
+
+  # ── Axes: dismissible property omitted ───────────────────────────────────────
+
+  - from: axes.properties[dismissible]
+    type: omitted
+    rationale: >-
+      There is no `dismissible` prop. Headless UI always closes `PopoverPanel`
+      on outside-click, Escape, and tab-focus-loss — these light-dismiss
+      handlers are unconditional. The canonical `dismissible: false` variant
+      (which disables outside-click for popovers hosting in-flight commits)
+      has no equivalent; consumers cannot suppress light-dismiss without
+      reimplementing the close logic. Source: https://headlessui.com/react/popover
+      (closing behaviour, 2026-05-31).
+
+  # ── Axes: flip property omitted ──────────────────────────────────────────────
+
+  - from: axes.properties[flip]
+    type: omitted
+    rationale: >-
+      No discrete `flip` prop. Headless UI's `anchor` positioning (backed by
+      Floating UI) performs auto-flip implicitly when the authored side
+      overflows the viewport — consumers cannot opt out of flip nor inspect
+      the resolved side/align after a flip. The `anchor.padding` sub-property
+      controls the viewport clearance threshold that triggers flip, but there
+      is no boolean to disable auto-flip. Source: https://headlessui.com/react/popover
+      (PopoverPanel anchor prop, 2026-05-31).
+
+  # ── Events: openChange reshaped to render prop only ─────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: "open render prop on Popover and PopoverPanel children — no callback prop"
+    rationale: >-
+      The canonical `openChange` is a `(open: boolean) => void` callback that
+      fires after the transition settles on both edges. Headless UI exposes no
+      `onOpenChange`, `onOpen`, or `onClose` callback on `Popover`. The open
+      state is available only as the `open` boolean render prop on `Popover`
+      children and on `PopoverPanel` children (via the `{ open, close }`
+      render-function). Consumers who need to react to state changes must
+      derive them from the render prop (e.g. via a `useEffect` watching a
+      controlled state). Source: https://headlessui.com/react/popover (Popover
+      render props, 2026-05-31).
+
+  # ── Events: dismiss omitted ──────────────────────────────────────────────────
+
+  - from: events[dismiss]
+    type: omitted
+    rationale: >-
+      Headless UI exposes no dismiss event and no reason discrimination
+      (escape / outsideClick / focusOutside / closeButton). Outside-click,
+      Escape, and tab-focus-loss all close the panel silently. Consumers who
+      need reason-discrimination must attach their own `onKeyDown` (Escape),
+      `onPointerDownOutside` emulation, or `onBlur` capture handlers
+      separately and synthesise the reason. Source:
+      https://headlessui.com/react/popover (closing behaviour, 2026-05-31).
+
+  # ── Events: positionChange omitted ──────────────────────────────────────────
+
+  - from: events[positionChange]
+    type: omitted
+    rationale: >-
+      No `positionChange` event or equivalent. After auto-flip, the resolved
+      placement is not surfaced via any callback or exposed attribute. The
+      `data-open` attribute on `PopoverPanel` only reflects open/closed state,
+      not the actual rendered side/align. Consumers cannot programmatically
+      detect whether a flip occurred. Source: https://headlessui.com/react/popover
+      (PopoverPanel data attributes, 2026-05-31).
+
+  # ── Extended: PopoverBackdrop component ─────────────────────────────────────
+
+  - from: anatomy[container]
+    type: extended
+    addition: >-
+      `PopoverBackdrop` — an optional overlay element rendered behind
+      `PopoverPanel`. Accepts `as` (default `div`) and `transition` props.
+      Exposes `data-open`, `data-closed`, `data-enter`, `data-leave`
+      attributes for CSS-driven animation. Consumers position it as
+      `fixed inset-0` to create a click-to-dismiss scrim. The canonical
+      anatomy has no backdrop slot for Popover (backdrop belongs to Modal
+      and modal Drawer).
+    rationale: >-
+      Headless UI designed `PopoverBackdrop` for navigation mega-menu patterns
+      where a translucent overlay dims the page while the popover is open —
+      a pattern the canonical anatomy does not cover. Using a full backdrop on
+      a non-modal popover can blur the line between Popover and Dialog; the
+      canonical's `contracts.nonNegotiable` notes that installing modal
+      behaviour on a Popover is an anti-pattern. Source:
+      https://headlessui.com/react/popover (PopoverBackdrop, 2026-05-31).
+
+  # ── Extended: PopoverGroup component ────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: extended
+    addition: >-
+      `PopoverGroup` — a wrapper that coordinates sibling `Popover` elements.
+      Within a group, tabbing from one popover's button to the next keeps all
+      panels open; tabbing out of the group closes all open panels. This
+      matches the navigation mega-menu pattern (e.g. a top nav with multiple
+      category popovers). Accepts an `as` prop (default `div`).
+    rationale: >-
+      The canonical anatomy covers a single Popover anchored to a single
+      trigger. Grouped sibling coordination is a legitimate extension for
+      navigation patterns, where users expect to switch between open popovers
+      by tabbing rather than having to close one before opening another.
+      Source: https://headlessui.com/react/popover (PopoverGroup, 2026-05-31).
+
+  # ── Extended: anchor prop on PopoverPanel ────────────────────────────────────
+
+  - from: anatomy[container]
+    type: extended
+    addition: >-
+      `anchor` prop on `PopoverPanel` provides first-party Floating UI-backed
+      positioning. String form accepts `"top"`, `"bottom"`, `"left"`, `"right"`
+      with optional `"start"` / `"end"` alignment modifiers. Object form
+      accepts `{ to, gap, offset, padding }`. When `anchor` is set, `portal`
+      auto-enables. CSS custom properties `--button-width`, `--anchor-gap`,
+      `--anchor-offset`, `--anchor-padding` are injected for consumer sizing.
+    rationale: >-
+      The canonical documents floating positioning as a concern of the
+      positioning library (Floating UI / Popper / CSS anchor positioning) but
+      prescribes no specific prop API. Headless UI ships first-party
+      positioning backed by Floating UI to remove the need for consumers to
+      wire a separate library, collapsing `side` + `align` + sideOffset into
+      the single `anchor` string. Source: https://headlessui.com/react/popover
+      (PopoverPanel anchor prop, 2026-05-31).
+
+  # ── Extended: focus prop on PopoverPanel ────────────────────────────────────
+
+  - from: anatomy[container]
+    type: extended
+    addition: >-
+      `focus: boolean` prop on `PopoverPanel` (default `false`). When `true`,
+      Headless UI moves focus to the first focusable element inside the panel
+      on open, and closes the panel if focus leaves. This opt-in auto-focus
+      matches the canonical "form-style popover" behaviour but is a separate
+      prop rather than a consequence of the popover's semantic role.
+    rationale: >-
+      The canonical anatomy notes that focus may move into the popover for
+      form-style use-cases (consumer-configured). Headless UI surfaces this as
+      a first-party prop rather than relying on consumers to manage `autoFocus`
+      on children or call `focus()` imperatively. Without `focus={true}`,
+      focus stays on the trigger after open, matching the canonical
+      default for menu-style and info-style popovers. Source:
+      https://headlessui.com/react/popover (PopoverPanel focus prop, 2026-05-31).
+
+  # ── Extended: modal prop on PopoverPanel ────────────────────────────────────
+
+  - from: anatomy[container]
+    type: extended
+    addition: >-
+      `modal: boolean` prop on `PopoverPanel` (default `false`). When `true`,
+      scroll-locking is enabled on the document body while the panel is open.
+      Does not install a focus trap — focus can still leave the panel. This
+      is distinct from the `focus` prop and from the Modal/Drawer `modal`
+      semantics.
+    rationale: >-
+      The canonical states explicitly that Popover is non-modal and must not
+      install a focus trap. The Headless UI `modal` prop is narrower — it
+      only locks scroll, not focus — so it does not violate the canonical
+      non-modal contract. However, naming a prop `modal` on a canonically
+      non-modal component risks confusion; consumers may expect full modality
+      semantics. The canonical's `contracts.nonNegotiable` warns against
+      focus-trapping; scroll-locking alone is an acceptable trade-off for
+      bottom-sheet-style popovers on mobile. Source:
+      https://headlessui.com/react/popover (PopoverPanel modal prop, 2026-05-31).
+
+  # ── Extended: useClose hook ──────────────────────────────────────────────────
+
+  - from: anatomy[close-button]
+    type: extended
+    addition: >-
+      `useClose()` React hook — returns the `close` function for the nearest
+      ancestor `Popover`. Allows deeply nested components (e.g. an item inside
+      a virtualised list within the panel) to imperatively close the popover
+      without prop-drilling the `close` render prop. Accepts an optional ref
+      argument to redirect focus after close.
+    rationale: >-
+      The canonical anatomy exposes close behaviour via the close-button slot
+      only. Headless UI's hook form is an ergonomic extension for consumers
+      building panels with complex nested content that shouldn't take a close
+      callback as a prop. Source: https://headlessui.com/react/popover
+      (useClose hook, 2026-05-31).
+
+  # ── A11y gap: aria-haspopup not set on PopoverButton ────────────────────────
+
+  - from: anatomy[trigger]
+    type: omitted
+    rationale: >-
+      The canonical `trigger` slot requires `aria-haspopup="dialog"` (or
+      `"menu"` for menu-style popovers). Headless UI's `PopoverButton` sets
+      `aria-expanded` and `aria-controls` but does NOT set `aria-haspopup`.
+      Screen reader users therefore receive no hint about the nature of the
+      revealed surface before activating the button. This is a known gap in
+      Headless UI's Popover implementation; consumers must add
+      `aria-haspopup="dialog"` manually via the `as` prop or by passing it
+      directly to `PopoverButton`. Source: github.com/tailwindlabs/headlessui
+      popover.tsx (aria attributes on PopoverButton, fetched 2026-05-31);
+      https://headlessui.com/react/popover (PopoverButton props, 2026-05-31).
+
+rationale: |
+  Headless UI React Popover is an unstyled disclosure-style floating panel
+  primitive. It honours the core non-modal Popover contract (outside-click,
+  Escape, and tab-focus-loss all close the panel; no focus trap by default)
+  but diverges from the canonical anatomy in several consistent ways aligned
+  with the library's design philosophy.
+
+  The divergences cluster into four groups:
+
+  1. Flattened anatomy — Headless UI provides no structured header/body/footer
+     subdivision, no title slot, no arrow primitive, and no close-label slot.
+     Content is free children of PopoverPanel. Consumers who want labelled,
+     sectioned panels with visible close affordances must author all structure
+     manually, including ARIA relationships (role="dialog", aria-labelledby).
+
+  2. Collapsed positioning API — The canonical separate `side` and `align`
+     props are collapsed into Headless UI's single `anchor` string/object.
+     The `flip` and `dismissible` boolean props have no equivalents;
+     auto-flip is unconditional and light-dismiss cannot be suppressed.
+
+  3. Event model — No callback API for state changes. The `open` boolean is
+     available only as a render prop; there is no `onOpenChange`, and no
+     dismiss event with reason discrimination. Consumers must derive state
+     changes from the render prop or controlled state.
+
+  4. Extensions beyond the canonical — `PopoverGroup` coordinates sibling
+     popovers for navigation menus; `PopoverBackdrop` adds an optional scrim;
+     `focus` prop auto-moves focus into the panel on open; `modal` prop
+     adds scroll-locking (not a focus trap); `useClose` hook enables
+     imperative close from deeply nested children. None of these have
+     canonical equivalents.
+
+  The `aria-haspopup` omission on `PopoverButton` is the most significant
+  accessibility gap vs. the canonical contract; consumers must add it manually.
+
+lastReviewed: '2026-05-31'

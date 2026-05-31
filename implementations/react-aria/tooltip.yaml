@@ -1,0 +1,326 @@
+componentId: tooltip
+libraryId: react-aria
+componentName: Tooltip
+
+exampleCode: |
+  import {
+    TooltipTrigger,
+    Tooltip,
+    OverlayArrow,
+    Button,
+  } from 'react-aria-components';
+
+  // Standard usage — hover + focus, 1500 ms warmup delay, OverlayArrow
+  <TooltipTrigger delay={1500} closeDelay={500}>
+    <Button aria-label="Edit">
+      <PencilIcon />
+    </Button>
+    <Tooltip placement="top" offset={6}>
+      <OverlayArrow>
+        <svg width={8} height={8} viewBox="0 0 8 8">
+          <path d="M0 0 L4 4 L8 0" />
+        </svg>
+      </OverlayArrow>
+      Edit this item
+    </Tooltip>
+  </TooltipTrigger>
+
+  // Focus-only (keyboard or programmatic focus, no hover)
+  <TooltipTrigger trigger="focus">
+    <Button>Save</Button>
+    <Tooltip placement="bottom">Saves all changes immediately</Tooltip>
+  </TooltipTrigger>
+
+  // Controlled open state
+  <TooltipTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Button>Info</Button>
+    <Tooltip>Additional information about this field</Tooltip>
+  </TooltipTrigger>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: >-
+      First child of <TooltipTrigger> — wrapped in FocusableProvider internally;
+      aria-describedby is applied by useTooltipTrigger and forwarded via
+      FocusableProvider rather than wired by the consumer on the element directly
+    rationale: >-
+      The canonical `trigger` slot requires the consumer to wire the element and
+      attach the `aria-describedby` relationship themselves. React Aria inverts
+      this: `<TooltipTrigger>` is a compound parent that wraps the trigger child
+      in an internal `FocusableProvider`, applies `aria-describedby` automatically
+      through `useTooltipTrigger`, and manages the hover/focus event listeners.
+      The consumer provides the element as a React child — not as a ref or id
+      reference — so the wiring is implicit rather than explicit. The structural
+      shape is a parent-wraps-trigger tree rather than a sibling-plus-wire model.
+      Source: packages/react-aria-components/src/Tooltip.tsx (fetched 2026-05-31);
+      packages/react-aria/src/tooltip/useTooltipTrigger.ts (fetched 2026-05-31)
+
+  - from: anatomy[container]
+    type: renamed
+    to: Tooltip
+    rationale: >-
+      The canonical anatomy names the floating tooltip panel the `container` slot.
+      React Aria names the corresponding component `<Tooltip>`. It renders a
+      `<div>` with `role="tooltip"` (applied by `useTooltip` in
+      packages/react-aria/src/tooltip/useTooltip.ts), is portalled via
+      `<OverlayContainer>` (renders into document.body by default), and handles
+      positioning through `useOverlayPosition`. The semantic function is identical;
+      only the component name differs.
+      Source: packages/react-aria-components/src/Tooltip.tsx (fetched 2026-05-31);
+      packages/react-aria/src/tooltip/useTooltip.ts (fetched 2026-05-31)
+
+  - from: anatomy[arrow]
+    type: renamed
+    to: OverlayArrow
+    rationale: >-
+      The canonical `arrow` slot is a decorative tip indicator. React Aria ships
+      `<OverlayArrow>` — a shared sub-component also used by Popover and Dialog —
+      rather than a tooltip-specific arrow element. `<OverlayArrow>` renders its
+      consumer-provided SVG children and receives `arrowProps` (position styles)
+      and `placement` from the parent `<Tooltip>` via context. The consumer must
+      supply the SVG path for the triangle; React Aria does not ship a default
+      triangle glyph. The component is optional but it is a named sub-component,
+      not a CSS pseudo-element or slot prop.
+      Source: packages/react-aria-components/src/Tooltip.tsx — OverlayArrowContext
+      (fetched 2026-05-31); https://react-aria.adobe.com/Tooltip (fetched 2026-05-31)
+
+  # ── Axes — Variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[inline-help]
+    type: omitted
+    rationale: >-
+      React Aria Tooltip ships no `variant` prop or `inline-help` concept. The
+      library is behaviour-only; visual distinctions between standard and
+      inline-help tooltip styles are a consumer responsibility (class names,
+      CSS custom properties, or a wrapper component). No API surface in
+      `TooltipTriggerComponentProps` or `TooltipProps` corresponds to the
+      canonical `variant` axis.
+      Source: packages/react-aria-components/src/Tooltip.tsx — TooltipProps
+      interface (fetched 2026-05-31)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[side]
+    type: reshaped
+    to: "placement: 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | ... (physical Placement type)"
+    rationale: >-
+      The canonical `side` property uses logical CSS direction values
+      (`block-start`, `inline-end`, `block-end`, `inline-start`) that are
+      RTL-aware. React Aria's `placement` prop on `<Tooltip>` uses physical
+      direction names (`top`, `bottom`, `left`, `right`) inherited from the
+      `Placement` type in `react-aria/useOverlayPosition`. There is no logical-
+      direction variant in the type definition. RTL handling for placement is
+      not automatic — consumers must supply `left`/`right` or swap them manually
+      in RTL contexts. The prop default is `'top'`.
+      Source: packages/react-aria-components/src/Tooltip.tsx — placement default
+      comment (fetched 2026-05-31)
+
+  - from: axes.properties[align]
+    type: reshaped
+    to: "crossOffset: number (default 0) — numeric pixel offset on the cross axis"
+    rationale: >-
+      The canonical `align` property is a semantic enum (`start`, `center`,
+      `end`) controlling alignment along the perpendicular axis. React Aria
+      exposes no alignment enum; instead it provides `crossOffset: number`
+      (a pixel offset from the default centered position) on `<Tooltip>`.
+      Achieving `start` or `end` alignment requires calculating the appropriate
+      pixel offset relative to the trigger dimensions, which the consumer must
+      do manually. The `offset` prop controls main-axis distance (analogous to
+      canonical `sideOffset`, not to `align`).
+      Source: packages/react-aria-components/src/Tooltip.tsx — TooltipInner
+      useOverlayPosition call (fetched 2026-05-31)
+
+  - from: axes.properties[delay]
+    type: reshaped
+    to: "delay: number (default 1500 ms) — numeric milliseconds on TooltipTrigger"
+    rationale: >-
+      The canonical `delay` property is a semantic enum (`instant`, `short`,
+      `base`, `long`) that maps to library-specific millisecond values. React
+      Aria exposes `delay` as a raw number prop (milliseconds) on
+      `<TooltipTrigger>` with a hardcoded default of `1500` ms
+      (`TOOLTIP_DELAY = 1500` in `useTooltipTriggerState`). Focus reveals
+      always bypass the delay and show immediately (the `open(immediate: true)`
+      path in `useTooltipTrigger`). The canonical semantic enum is absent;
+      consumers work with raw millisecond values.
+      Source: packages/react-stately/src/tooltip/useTooltipTriggerState.ts —
+      TOOLTIP_DELAY constant and delay prop default (fetched 2026-05-31)
+
+  - from: axes.properties[arrow]
+    type: reshaped
+    to: >-
+      Presence of <OverlayArrow> child inside <Tooltip> — optional child
+      component, not a boolean prop
+    rationale: >-
+      The canonical `arrow` axis is a boolean prop (`arrow: boolean`) that
+      toggles the arrow slot. React Aria has no arrow boolean prop on
+      `<Tooltip>`. The arrow is rendered by including an `<OverlayArrow>`
+      element as a child of `<Tooltip>` — its presence or absence is structural
+      (the consumer adds or omits the JSX element), not declarative (a prop
+      on the parent). There is no `showArrow`, `hasArrow`, or equivalent boolean
+      on `<Tooltip>` or `<TooltipTrigger>`.
+      Source: packages/react-aria-components/src/Tooltip.tsx — OverlayArrowContext
+      (fetched 2026-05-31)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `closeDelay: number` (default 500 ms) on `<TooltipTrigger>` — duration
+      after pointer-leave before the tooltip hides when dismissing via hover.
+      Keyboard blur dismisses immediately (`immediate = true`), bypassing
+      `closeDelay`. Maps to the `TOOLTIP_COOLDOWN = 500` constant in
+      `useTooltipTriggerState`.
+    rationale: >-
+      The canonical `performance.closeDelay` threshold documents a 100 ms
+      grace period as the canonical convention, but there is no `closeDelay`
+      prop in the canonical axes. React Aria makes this a first-class prop
+      with a 500 ms default (5× the canonical suggestion) to match Spectrum
+      design guidelines. The difference matters: at 500 ms the tooltip lingers
+      noticeably longer than the canonical 100 ms convention, which reduces
+      flicker on dense trigger layouts but increases perceived latency to
+      dismiss.
+      Source: packages/react-stately/src/tooltip/useTooltipTriggerState.ts —
+      TOOLTIP_COOLDOWN constant and closeDelay prop default (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `trigger: 'hover' | 'focus'` on `<TooltipTrigger>` (default `'hover'`).
+      When set to `'focus'`, the tooltip only opens on keyboard focus — hover
+      events are suppressed in `onHoverStart`. The default `'hover'` mode opens
+      on both hover (after delay) and focus (immediately).
+    rationale: >-
+      The canonical axes have no `trigger` mode prop — the canonical contract
+      mandates reveal on both pointer-enter and focus always. React Aria adds
+      a focus-only mode for cases where hover reveal is undesirable (e.g. on
+      controls that already have hover styling), making hover suppression
+      explicit rather than requiring the consumer to override event handlers.
+      This is a React Aria extension without a canonical equivalent.
+      Source: packages/react-aria/src/tooltip/useTooltipTrigger.ts —
+      trigger === 'focus' guard in onHoverStart/onHoverEnd (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `shouldCloseOnPress: boolean` (default `true`) on `<TooltipTrigger>`.
+      When `true`, pressing or clicking the trigger immediately closes the
+      tooltip. Set to `false` to keep the tooltip visible when the trigger is
+      activated (e.g. a toggle button that should preserve the tooltip).
+    rationale: >-
+      The canonical axes have no equivalent press-dismiss toggle. React Aria
+      adds it to handle the edge case where the trigger's primary action and
+      the tooltip reveal are intentionally co-present. Without this prop the
+      only option would be to manage open state in a controlled pattern.
+      Source: packages/react-aria/src/tooltip/useTooltipTrigger.ts —
+      shouldCloseOnPress destructure (fetched 2026-05-31)
+
+  # ── Global warm-up / cool-down timer (structural divergence) ─────────────
+
+  - from: axes.states.data[opening]
+    type: reshaped
+    to: >-
+      Global warm-up timer shared across all TooltipTrigger instances on the
+      page; once any tooltip has opened (globalWarmedUp = true), subsequent
+      tooltips open immediately without the delay. After the last tooltip closes,
+      a cool-down period (max(TOOLTIP_COOLDOWN, closeDelay) = 500 ms) resets
+      globalWarmedUp to false.
+    rationale: >-
+      The canonical `opening` state is per-instance: the delay timer fires for
+      each individual trigger. React Aria implements a singleton global warm-up
+      state (`globalWarmedUp`, `globalWarmUpTimeout`, `globalCooldownTimeout`
+      module-level variables in `useTooltipTriggerState`) that all tooltip
+      instances share. This matches Spectrum UX guidelines: hovering between
+      multiple tooltips quickly should feel instant after the first reveal.
+      The canonical does not model this cross-instance warm-up / cool-down
+      dynamic.
+      Source: packages/react-stately/src/tooltip/useTooltipTriggerState.ts —
+      globalWarmedUp, globalWarmUpTimeout, globalCooldownTimeout (fetched 2026-05-31)
+
+  # ── Touch behaviour ───────────────────────────────────────────────────────
+
+  - from: axes.states.interactive[hover]
+    type: reshaped
+    to: >-
+      Touch interactions do not open the tooltip. The hover handler guards
+      with `getInteractionModality() === 'pointer'` so touch-based hover events
+      are suppressed. Tooltips are only available via pointer (mouse/stylus)
+      hover or keyboard focus in React Aria.
+    rationale: >-
+      The canonical states that touch devices use long-press (~500 ms) as the
+      canonical fallback and the inline-help variant switches to tap-to-toggle
+      automatically. React Aria explicitly does not show tooltips on touch
+      screen interactions (documented on https://react-aria.adobe.com/Tooltip
+      and enforced via the modality guard in `useTooltipTrigger`). Touch users
+      on mobile browsers receive no tooltip, contrasting with the canonical
+      long-press fallback model. This is a deliberate library choice to avoid
+      unreliable touch-hover simulation.
+      Source: packages/react-aria/src/tooltip/useTooltipTrigger.ts —
+      getInteractionModality() === 'pointer' guard (fetched 2026-05-31);
+      https://react-aria.adobe.com/Tooltip (fetched 2026-05-31)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: >-
+      onOpenChange(isOpen: boolean) on <TooltipTrigger>, not on <Tooltip>.
+      Also available on standalone <Tooltip> (via OverlayTriggerProps) when
+      used without a TooltipTrigger.
+    rationale: >-
+      The canonical `openChange` event is defined at the component level
+      without specifying which sub-component owns it. React Aria places
+      `onOpenChange` on `<TooltipTrigger>` (via `TooltipTriggerProps` extending
+      `OverlayTriggerProps`) because the open/close logic is managed by
+      `useTooltipTriggerState` in the trigger — not in the `<Tooltip>` itself.
+      The `<Tooltip>` also accepts `isOpen` / `defaultOpen` directly for
+      standalone use (without `<TooltipTrigger>`), in which case `onOpenChange`
+      is available on the `<Tooltip>`. The callback signature is
+      `(isOpen: boolean) => void` — identical to the canonical payload.
+      Source: packages/react-stately/src/tooltip/useTooltipTriggerState.ts —
+      TooltipTriggerProps extends OverlayTriggerProps (fetched 2026-05-31)
+
+rationale: |
+  React Aria Tooltip is a behaviour-only compound primitive split across
+  two components — `<TooltipTrigger>` (owns delay, warm-up, open state, and
+  event wiring) and `<Tooltip>` (owns positioning, portal, role="tooltip", and
+  animation). The visual anatomy (tokens, variant styles, arrow SVG) is
+  entirely the consumer's responsibility.
+
+  The five deepest divergences from the canon are:
+
+  1. Global warm-up / cool-down singleton — unlike the canonical per-instance
+     delay model, React Aria implements a module-level shared timer
+     (globalWarmedUp) so that hovering between multiple triggers feels instant
+     after the first 1500 ms warmup. This is a structural divergence: the
+     canonical opening/closing states are per-tooltip; in React Aria they are
+     governed by a cross-instance state machine.
+
+  2. Touch suppression — the canonical documents long-press as the touch
+     fallback. React Aria explicitly does NOT show tooltips on touch
+     interactions (modality guard in useTooltipTrigger). Touch users on mobile
+     receive no tooltip.
+
+  3. Physical placement vs logical side — placement uses physical names
+     (top/bottom/left/right) rather than the canonical logical direction values
+     (block-start/inline-end/block-end/inline-start). RTL symmetry must be
+     handled by the consumer.
+
+  4. delay is numeric ms (default 1500) not a semantic enum — the canonical
+     delay enum (instant/short/base/long) is absent. React Aria's default of
+     1500 ms matches the canonical `long` value, not the `base` 700 ms that
+     the canonical performance section recommends as the default.
+
+  5. closeDelay default 500 ms vs canonical 100 ms — React Aria's post-hover
+     dismiss grace period is 5× the canonical convention, intentionally matching
+     Spectrum guidelines at the cost of slower perceived dismiss on dense UIs.
+
+  The rename surface (isDisabled, isOpen, defaultOpen, onOpenChange, trigger,
+  delay, closeDelay, shouldCloseOnPress) follows React Aria's is*/on*/allows*
+  naming scheme. The ARIA contract (role="tooltip", aria-describedby wired
+  automatically, no focus entry into tooltip) is fully canonical-compliant.
+
+lastReviewed: '2026-05-31'

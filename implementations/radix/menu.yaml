@@ -1,0 +1,383 @@
+componentId: menu
+libraryId: radix
+componentName: DropdownMenu
+
+exampleCode: |
+  import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger asChild>
+      <button>Open menu</button>
+    </DropdownMenu.Trigger>
+
+    <DropdownMenu.Portal>
+      <DropdownMenu.Content sideOffset={4}>
+
+        <DropdownMenu.Item onSelect={() => console.log('new-tab')}>
+          Open in new tab
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Separator />
+
+        <DropdownMenu.CheckboxItem
+          checked={bookmarked}
+          onCheckedChange={setBookmarked}
+        >
+          <DropdownMenu.ItemIndicator>✓</DropdownMenu.ItemIndicator>
+          Bookmarked
+        </DropdownMenu.CheckboxItem>
+
+        <DropdownMenu.Separator />
+
+        <DropdownMenu.RadioGroup value={sort} onValueChange={setSort}>
+          <DropdownMenu.Label>Sort by</DropdownMenu.Label>
+          <DropdownMenu.RadioItem value="name">
+            <DropdownMenu.ItemIndicator>●</DropdownMenu.ItemIndicator>
+            Name
+          </DropdownMenu.RadioItem>
+          <DropdownMenu.RadioItem value="date">
+            <DropdownMenu.ItemIndicator>●</DropdownMenu.ItemIndicator>
+            Date
+          </DropdownMenu.RadioItem>
+        </DropdownMenu.RadioGroup>
+
+        <DropdownMenu.Separator />
+
+        <DropdownMenu.Sub>
+          <DropdownMenu.SubTrigger>More options</DropdownMenu.SubTrigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.SubContent>
+              <DropdownMenu.Item onSelect={() => console.log('copy-link')}>
+                Copy link
+              </DropdownMenu.Item>
+            </DropdownMenu.SubContent>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Sub>
+
+        <DropdownMenu.Arrow />
+      </DropdownMenu.Content>
+    </DropdownMenu.Portal>
+  </DropdownMenu.Root>
+
+divergence:
+  # ── Anatomy: root ──────────────────────────────────────────────────────────
+  - from: anatomy[root]
+    type: reshaped
+    to: DropdownMenu.Root + DropdownMenu.Portal + DropdownMenu.Content
+    rationale: >-
+      The canonical `root` slot is the single `role="menu"` surface. Radix
+      DropdownMenu splits this across three components: Root owns controlled-
+      open state and the `onOpenChange` callback; Portal handles DOM relocation
+      so the menu escapes stacking contexts (z-index / overflow issues); Content
+      owns `role="menu"` and all positioning / keyboard logic. A consumer must
+      compose all three to replicate the canonical root slot. This matches the
+      Radix pattern established across Dialog, Popover, and Select.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu
+
+  # ── Anatomy: no standalone root label wiring ──────────────────────────────
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      DropdownMenu.Content exposes `loop` (boolean, default false) — when true,
+      keyboard focus wraps from last item back to first and vice versa. Canonical
+      `wrapNavigation` maps to this prop. Also exposes `forceMount` (boolean)
+      to keep the content in the DOM while closed (useful for CSS exit
+      animations). Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#content
+    rationale: >-
+      The canonical root slot does not model portal-level forceMount or the
+      `loop` / no-loop toggle at the content level. Radix exposes both because
+      Content is the primary mounting boundary and keyboard-focus container.
+
+  # ── Anatomy: menuitem ─────────────────────────────────────────────────────
+  - from: anatomy[menuitem]
+    type: renamed
+    to: DropdownMenu.Item
+    rationale: >-
+      Same interactive role (`role="menuitem"`). Radix uses "Item" as its
+      compound-component term across all collection primitives (Select, Tabs,
+      ContextMenu). The `onSelect` callback is Item's primary interaction event
+      (fires on Enter / Space / click). The `disabled` prop sets both HTML
+      `disabled` and `aria-disabled="true"` on the underlying element; disabled
+      items remain in the DOM and in the roving-tabindex sequence.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Anatomy: menuitemcheckbox ─────────────────────────────────────────────
+  - from: anatomy[menuitemcheckbox]
+    type: renamed
+    to: DropdownMenu.CheckboxItem
+    rationale: >-
+      Same role (`role="menuitemcheckbox"`) with `aria-checked` wired from the
+      `checked` prop. Radix uses "CheckboxItem" as the compound name. The
+      `checked` prop accepts `boolean | 'indeterminate'` matching the canonical
+      `aria-checked="true|false|mixed"` contract. The `onCheckedChange`
+      callback fires on toggle; the menu does not close on activation by default
+      for checkbox items (mirrors canonical closeOnSelect=false for toggle
+      items). Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#checkboxitem
+
+  # ── Anatomy: menuitemradio ────────────────────────────────────────────────
+  - from: anatomy[menuitemradio]
+    type: renamed
+    to: DropdownMenu.RadioItem
+    rationale: >-
+      Same role (`role="menuitemradio"`) with `aria-checked` derived from the
+      RadioGroup's `value` prop. RadioItem requires a `value` prop; RadioGroup
+      owns `value` + `onValueChange` for controlled radio state. The canonical
+      menuitemradio contract (one checked per group, mutually exclusive) is
+      fully honoured. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#radioitem
+
+  # ── Anatomy: group ────────────────────────────────────────────────────────
+  - from: anatomy[group]
+    type: reshaped
+    to: DropdownMenu.Group (generic grouping) + DropdownMenu.RadioGroup (radio scoping)
+    rationale: >-
+      Canonical `group` is a single `role="group"` slot used for both visual
+      grouping and radio scoping. Radix splits into two components: Group (no
+      required role assignment in docs — used for visual and keyboard
+      organisation) and RadioGroup (wraps RadioItems with `value` + `onValueChange`
+      for mutually-exclusive selection). RadioGroup does not explicitly expose
+      `aria-labelledby`; consumers must add it if a visible label is needed for
+      SR group context. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#radiogroup
+
+  # ── Anatomy: separator ────────────────────────────────────────────────────
+  - from: anatomy[separator]
+    type: renamed
+    to: DropdownMenu.Separator
+    rationale: >-
+      Same role and semantic (`role="separator"`). Radix uses "Separator" as the
+      compound name. Not focusable — the roving-tabindex skips Separator
+      correctly. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#separator
+
+  # ── Anatomy: submenu-trigger ──────────────────────────────────────────────
+  - from: anatomy[submenu-trigger]
+    type: renamed
+    to: DropdownMenu.SubTrigger
+    rationale: >-
+      Same concept — a menuitem that opens a nested menu. Radix uses SubTrigger
+      (inside a Sub container). SubTrigger carries `role="menuitem"`,
+      `aria-haspopup="menu"`, and `aria-expanded` managed by Radix automatically.
+      The `textValue` prop provides the typeahead string when the trigger's text
+      content alone is not suitable. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#subtrigger
+
+  # ── Anatomy: submenu ──────────────────────────────────────────────────────
+  - from: anatomy[submenu]
+    type: reshaped
+    to: DropdownMenu.Sub + DropdownMenu.SubContent
+    rationale: >-
+      Canonical `submenu` is a single nested `role="menu"` slot. Radix splits it
+      into Sub (the stateful container owning open/close lifecycle and
+      aria-expanded wiring) and SubContent (the rendered surface with
+      `role="menu"`). This mirrors the Root/Content split at the top level.
+      SubContent accepts the same positioning props as Content (side, align,
+      sideOffset, avoidCollisions). Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#sub
+
+  # ── Anatomy: icon slot ────────────────────────────────────────────────────
+  - from: anatomy[icon]
+    type: omitted
+    rationale: >-
+      Radix Item has no dedicated icon sub-component. Leading icons are authored
+      as free children (e.g. a plain `<svg aria-hidden="true">`) inside
+      DropdownMenu.Item; Radix applies no special slot wiring, accessibility
+      handling, or decorative marker. The canonical icon slot's `aria-hidden`
+      contract must be applied manually by the consumer.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Anatomy: shortcut slot ────────────────────────────────────────────────
+  - from: anatomy[shortcut]
+    type: omitted
+    rationale: >-
+      Radix Item has no shortcut sub-component and does not wire
+      `aria-keyshortcuts` on the item element. Keyboard shortcut text is
+      authored as a free child (`<kbd>`) inside Item; `aria-keyshortcuts` on
+      the parent Item must be set manually by the consumer. The canonical
+      shortcut slot's programmatic association is unimplemented at the Radix
+      layer. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Anatomy: extended — Label, ItemIndicator, Arrow ───────────────────────
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      DropdownMenu.Label — a non-interactive, non-focusable element used as a
+      visual group heading inside the menu. No `role` documented; renders as a
+      `<div>` by default. Does not carry `aria-labelledby` from the containing
+      Group or RadioGroup automatically — consumers must wire this if SR group
+      context is required.
+      DropdownMenu.ItemIndicator — renders only when the parent CheckboxItem or
+      RadioItem is checked. Provides a convenient mounting point for the check
+      glyph or radio-filled icon without needing conditional CSS; the canonical
+      anatomy carries the checkmark as a design concern inside the
+      menuitemcheckbox slot. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#itemindicator
+      DropdownMenu.Arrow — an optional SVG arrow rendered inside Content to
+      visually connect the menu to its Trigger. No canonical equivalent; purely
+      a presentational enhancement. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#arrow
+    rationale: >-
+      Radix extends the canonical anatomy with three presentational/convenience
+      sub-components not present in the canon: Label (group heading), ItemIndicator
+      (checked-state glyph mount), and Arrow (positioning caret). All are optional.
+
+  # ── Axes: primary mapping note (DropdownMenu vs standalone Menu) ──────────
+  - from: axes.variants[horizontal]
+    type: omitted
+    rationale: >-
+      DropdownMenu.Content exposes `[data-orientation]` reflecting "vertical" or
+      "horizontal" but does not accept an `orientation` prop — the orientation
+      is always vertical for dropdown menus (the keyboard model uses
+      ArrowDown/ArrowUp). The canonical `horizontal` variant (used for
+      menubar-style surfaces) is not supported by DropdownMenu. Radix ships a
+      separate Menubar primitive (`@radix-ui/react-menubar`) for
+      `role="menubar"` + horizontal keyboard navigation; that is a distinct
+      package and component, not a variant of DropdownMenu.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#content
+
+  # ── Axes: size property ───────────────────────────────────────────────────
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix DropdownMenu is an unstyled primitive and ships no `size` prop.
+      Width, padding, and typographic scale of items are entirely consumer-
+      controlled via CSS classNames on Content and Item. The canonical `sm | md`
+      size axis is a design-system convention layered above the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu
+
+  # ── Axes: typeahead property ──────────────────────────────────────────────
+  - from: axes.properties[typeahead]
+    type: reshaped
+    to: >-
+      Always-on typeahead via Item's `textValue` prop; no explicit boolean
+      toggle on Content. Each Item's typeahead string defaults to its text
+      content; `textValue` overrides it for items with non-text children (icons,
+      custom renderers).
+    rationale: >-
+      The canonical `typeahead` property is a boolean toggle. Radix implements
+      typeahead as a non-negotiable always-on behaviour (matches canonical
+      default of `true`). There is no opt-out prop on Content to disable
+      typeahead. Consumers that need to disable typeahead in Radix must suppress
+      `textValue` and ensure items have no text-node children — an indirect
+      workaround, not a first-class option.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Axes: wrapNavigation property ─────────────────────────────────────────
+  - from: axes.properties[wrapNavigation]
+    type: renamed
+    to: 'loop prop on DropdownMenu.Content (boolean, default: false)'
+    rationale: >-
+      Canonical `wrapNavigation` (default true — wrap is on) maps to Radix's
+      `loop` prop on Content. The defaults are inverted: canonical defaults to
+      wrapping on, Radix defaults to wrapping off (`loop={false}`). Consumers
+      who want the canonical default behaviour must explicitly pass `loop={true}`
+      to DropdownMenu.Content.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#content
+
+  # ── Axes: closeOnSelect property ──────────────────────────────────────────
+  - from: axes.properties[closeOnSelect]
+    type: reshaped
+    to: >-
+      Per-item `onSelect` callback — calling `event.preventDefault()` inside
+      `onSelect` on an Item suppresses close. CheckboxItem and RadioItem do not
+      close the menu on activation by default (no `event.preventDefault()`
+      needed). No top-level boolean toggle on Content.
+    rationale: >-
+      Canonical models `closeOnSelect` as a single boolean that covers all items.
+      Radix exposes per-item control: action Items close on activation by default
+      (preventing close requires `event.preventDefault()` in `onSelect`);
+      CheckboxItem and RadioItem never close the menu on activation. This
+      per-item granularity is more flexible but does not map to a single
+      top-level boolean. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Events: itemActivate ──────────────────────────────────────────────────
+  - from: events[itemActivate]
+    type: renamed
+    to: 'onSelect callback on DropdownMenu.Item (signature: event => void)'
+    rationale: >-
+      Canonical `itemActivate` fires when a menuitem is activated. Radix's
+      per-item `onSelect(event: Event)` is the direct equivalent. The canonical
+      payload `{ itemId, originalEvent }` does not exist as a structured object;
+      Radix passes the raw DOM Event. Consumer maps `event.currentTarget` to
+      item identity. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#item
+
+  # ── Events: valueChange ───────────────────────────────────────────────────
+  - from: events[valueChange]
+    type: reshaped
+    to: >-
+      onCheckedChange on CheckboxItem (signature: checked => void) +
+      onValueChange on RadioGroup (signature: value => void)
+    rationale: >-
+      Canonical `valueChange` is a single event covering both checkbox-toggle
+      and radio-selection changes, with a `groupId` field to identify radio
+      groups. Radix splits into two separate callbacks: `onCheckedChange` per
+      CheckboxItem for boolean toggle, and `onValueChange` on RadioGroup for
+      string radio selection. The canonical unified payload `{ itemId, checked,
+      groupId }` must be reconstructed by the consumer from the two separate
+      event surfaces. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#checkboxitem
+
+  # ── Events: submenuToggle ─────────────────────────────────────────────────
+  - from: events[submenuToggle]
+    type: renamed
+    to: 'onOpenChange on DropdownMenu.Sub (signature: open => void)'
+    rationale: >-
+      Canonical `submenuToggle` with payload `{ submenuId, isOpen }` maps to
+      Radix's `onOpenChange(open: boolean)` on Sub. The `submenuId` field from
+      the canonical payload is not provided; consumers must track submenu
+      identity from the React component tree context.
+      Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#sub
+
+  # ── Extended: open-state event ────────────────────────────────────────────
+  - from: events[itemActivate]
+    type: extended
+    addition: >-
+      DropdownMenu.Root exposes `onOpenChange(open: boolean)` — fires whenever
+      the top-level menu opens or closes. The canonical menu anatomy does not
+      model this as a named event because the standalone `menu` primitive does
+      not own a trigger; DropdownMenu bundles the trigger, so open/close is an
+      observable lifecycle event. Source: https://www.radix-ui.com/primitives/docs/components/dropdown-menu#root
+    rationale: >-
+      The canonical `menu` component is a standalone surface without a built-in
+      trigger — open/close lifecycle is the parent's concern. DropdownMenu
+      combines trigger + menu, making `onOpenChange` a natural extension at the
+      Root level.
+
+  # ── Primary mapping note ──────────────────────────────────────────────────
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      Radix ships two additional packages that cover related canonical menu
+      use-cases: `@radix-ui/react-context-menu` (right-click / long-press
+      triggered menu) and `@radix-ui/react-menubar` (horizontal
+      `role="menubar"` surface). Both share the same sub-component vocabulary
+      (Item, CheckboxItem, RadioItem, Group, etc.) but with context-appropriate
+      Root/Trigger wrappers. The canonical `menu` audit focuses on
+      DropdownMenu as the primary button-triggered menu primitive.
+    rationale: >-
+      The canonical `menu` description notes composability as context-menu,
+      embedded surface, or dropdown — Radix splits these into three packages.
+      ContextMenu and Menubar are separate audits if needed; all divergence rows
+      in this file describe DropdownMenu behaviour.
+
+rationale: |
+  Radix DropdownMenu is a low-level unstyled primitive that fully implements the
+  APG Menu Button pattern: role="menu" on Content, role="menuitem" on Items,
+  role="menuitemcheckbox" on CheckboxItem, role="menuitemradio" on RadioItem,
+  aria-haspopup + aria-expanded on SubTrigger, roving tabindex, and always-on
+  typeahead. It diverges from the canonical standalone `menu` anatomy in
+  three structural ways.
+
+  First, the canonical single `root` slot is spread across Root + Portal +
+  Content — the split is a deliberate Radix pattern to separate state, DOM
+  placement, and rendered surface. Second, the canonical `horizontal` variant is
+  absent — DropdownMenu is always vertical; horizontal menus require the separate
+  `@radix-ui/react-menubar` package. Third, the canonical top-level boolean props
+  (`typeahead`, `wrapNavigation`, `closeOnSelect`) are reshaped: typeahead is
+  always-on, wrapNavigation becomes Content's `loop` prop (with an inverted
+  default), and closeOnSelect is per-item `event.preventDefault()` in `onSelect`.
+
+  Radix extends the canonical anatomy with Label (group heading), ItemIndicator
+  (checked-state glyph), and Arrow (positioning caret) — all optional
+  presentational additions. Events are reshaped from canonical unified payloads
+  into per-sub-component callbacks; consumers must synthesise canonical payload
+  shapes from multiple Radix event surfaces.
+
+  The overall assessment: Radix DropdownMenu achieves full APG keyboard-model
+  compliance and correct ARIA role hierarchy; the canonical design-system
+  conventions (size scale, orientation variant, unified event payloads, boolean
+  feature toggles) are absent as expected for an unstyled primitive.
+
+lastReviewed: '2026-05-31'

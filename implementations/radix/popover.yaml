@@ -1,0 +1,307 @@
+componentId: popover
+libraryId: radix
+componentName: Popover
+
+exampleCode: |
+  import * as Popover from '@radix-ui/react-popover';
+  import { Cross2Icon } from '@radix-ui/react-icons';
+
+  <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Trigger asChild>
+      <Button>Open settings</Button>
+    </Popover.Trigger>
+
+    <Popover.Portal>
+      <Popover.Content
+        side="bottom"
+        align="start"
+        sideOffset={8}
+        avoidCollisions
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="PopoverContent"
+      >
+        {/* body content — forms, prose, lists */}
+        <form>
+          <label>
+            Width
+            <input type="number" defaultValue={300} />
+          </label>
+        </form>
+
+        <Popover.Close asChild>
+          <button aria-label="Close">
+            <Cross2Icon />
+          </button>
+        </Popover.Close>
+
+        <Popover.Arrow className="PopoverArrow" />
+      </Popover.Content>
+    </Popover.Portal>
+  </Popover.Root>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: renamed
+    to: Popover.Trigger
+    rationale: >-
+      Direct match. Radix renders the trigger as `Popover.Trigger` and
+      automatically wires `aria-haspopup`, `aria-expanded`, and
+      `aria-controls` to `Popover.Content`. The `asChild` prop delegates
+      rendering to the consumer's own button (the canonical pattern);
+      without `asChild`, Radix renders a plain `<button>`.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#trigger
+      (verified 2026-05-31, @radix-ui/react-popover 1.1.15).
+
+  - from: anatomy[container]
+    type: reshaped
+    to: "Popover.Root + Popover.Portal + Popover.Content"
+    rationale: >-
+      The canonical container is one slot that owns both the floating surface
+      and the ARIA role. Radix splits this across three components: Root owns
+      controlled-state (`open`, `onOpenChange`) and the `modal` escape hatch;
+      Portal owns the DOM relocation into `document.body` (or a custom
+      container); Content owns the rendered panel, `role="dialog"` (implicit
+      via the Dialog WAI-ARIA pattern), and the positioning props (`side`,
+      `align`, `sideOffset`, `avoidCollisions`). Consumers composing the
+      canonical anatomy use all three together.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover
+      (verified 2026-05-31).
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      Radix Popover has no header sub-component. Unlike `@radix-ui/react-dialog`
+      which ships `Dialog.Title` (wired to `aria-labelledby`), Radix Popover
+      ships no equivalent `Popover.Title`. A title and header layout are entirely
+      a consumer responsibility: the consumer renders a heading element inside
+      `Popover.Content` and wires `aria-labelledby` manually if needed. The
+      canonical header-bar region (title + close button row) maps to an
+      unsupported consumer-composed `<div>`.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover
+      (verified 2026-05-31; no Popover.Title or Popover.Header component listed).
+
+  - from: anatomy[title]
+    type: omitted
+    rationale: >-
+      Radix Popover exports no `Popover.Title` sub-component. The Dialog package
+      ships `Dialog.Title` (which auto-wires `aria-labelledby`), but Popover does
+      not replicate it. Consumers who need a labelled popover must render their own
+      heading and call `aria-labelledby` manually on `Popover.Content`.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover
+      (verified 2026-05-31).
+
+  - from: anatomy[body]
+    type: reshaped
+    to: free children of Popover.Content
+    rationale: >-
+      The canonical body is a discrete slot with its own semantic and token
+      budget. Radix has no `Popover.Body` or `Popover.Description` for Popover
+      (unlike `Dialog.Description` in the Dialog package). All body content is
+      free children of `Popover.Content`; no semantic wrapper, no
+      `aria-describedby` wiring, and no padding or typography tokens are applied
+      by the library. Consumers own the layout and accessible-description
+      relationship entirely.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  - from: anatomy[close-button]
+    type: renamed
+    to: Popover.Close
+    rationale: >-
+      Functional match. `Popover.Close` renders a `<button>` that closes the
+      popover on click. The `asChild` prop delegates to the consumer's own button
+      (for icon-button variants with custom accessible names). Like `Dialog.Close`,
+      the component provides no default accessible name — the consumer must supply
+      `aria-label` or a visually-hidden `<span>` inside their button.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#close
+      (verified 2026-05-31).
+
+  - from: anatomy[close-label]
+    type: omitted
+    rationale: >-
+      Radix Popover ships no managed accessible-name slot for the close button.
+      The canonical `close-label` is a visually-hidden `<span>` whose text
+      ("Close" or "Close popover") is surfaced to assistive technology. With
+      Radix, the consumer is responsible for placing the hidden span or using
+      `aria-label` on the button they pass via `asChild`; the library makes no
+      provision for it.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#close
+      (verified 2026-05-31).
+
+  - from: anatomy[arrow]
+    type: renamed
+    to: Popover.Arrow
+    rationale: >-
+      Near-direct match. `Popover.Arrow` renders an SVG polygon pointing toward
+      the trigger and tracks the trigger's bounding box automatically via Floating
+      UI internals. Unlike the canonical arrow slot (which is agnostic to
+      dimensions), Radix Arrow accepts explicit `width` (default 10) and `height`
+      (default 5) props and must be placed inside `Popover.Content` — it is not
+      in `Popover.Portal` directly. The `asChild` prop allows replacing the SVG
+      with a custom element.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#arrow
+      (verified 2026-05-31).
+
+  # ── Variants ─────────────────────────────────────────────────────────────
+
+  - from: axes.variants[tip]
+    type: omitted
+    rationale: >-
+      Radix has no `tip` variant. The canonical `tip` variant always renders the
+      arrow; the `standard` variant never renders it. In Radix, the arrow is an
+      unconditional optional sub-component (`Popover.Arrow`) — the consumer
+      chooses to include it or not regardless of any variant prop. There is no
+      variant enum on Radix Popover that gates the arrow's presence.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover
+      (verified 2026-05-31).
+
+  # ── Properties ───────────────────────────────────────────────────────────
+
+  - from: axes.properties[dismissible]
+    type: reshaped
+    to: "onPointerDownOutside / onEscapeKeyDown / onFocusOutside callbacks on Popover.Content (call event.preventDefault() to suppress)"
+    rationale: >-
+      The canonical `dismissible: boolean` is a single switch covering
+      outside-click, Escape, and focus-outside dismissal paths. Radix does not
+      expose a unified flag — `Popover.Content` receives three separate callbacks
+      (`onPointerDownOutside`, `onEscapeKeyDown`, `onFocusOutside`) and a consumer
+      suppresses any dismissal path by calling `event.preventDefault()` inside the
+      relevant handler. Recovering the canonical boolean requires wiring all three.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  - from: axes.properties[flip]
+    type: renamed
+    to: "avoidCollisions (boolean, default true) on Popover.Content"
+    rationale: >-
+      The canonical `flip: boolean` controls whether the popover flips to the
+      opposite side on viewport collision. Radix names this `avoidCollisions`
+      (default `true`) on `Popover.Content`. The semantics are identical. Radix
+      also exposes `collisionBoundary` and `collisionPadding` props for finer
+      control, and the `sticky` prop for shift-without-flip behaviour — these are
+      extensions beyond the canonical boolean.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: renamed
+    to: "onOpenChange (Popover.Root prop)"
+    rationale: >-
+      One-to-one match. `onOpenChange(open: boolean)` on `Popover.Root` fires
+      when the popover opens or closes. The canonical event payload contract holds.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#root
+      (verified 2026-05-31).
+
+  - from: events[dismiss]
+    type: reshaped
+    to: "onPointerDownOutside / onEscapeKeyDown / onFocusOutside callbacks on Popover.Content; no unified reason enum"
+    rationale: >-
+      The canonical `dismiss` event carries `{ reason: 'escape' | 'outsideClick' |
+      'closeButton' | 'focusOutside' }`. Radix does not surface a unified dismiss
+      event — escape fires `onEscapeKeyDown`, pointer-down-outside fires
+      `onPointerDownOutside`, focus-outside fires `onFocusOutside`, and close-button
+      click is a regular click event on the consumer's `Popover.Close` button.
+      Recovering the canonical reason vocabulary requires listening on three
+      separate `Popover.Content` callbacks and synthesising the union at the
+      consumer layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  - from: events[positionChange]
+    type: reshaped
+    to: "data-side and data-align attributes on Popover.Content (reflect actual rendered placement after flip/shift)"
+    rationale: >-
+      The canonical `positionChange` event emits `{ side, align }` reflecting the
+      actual rendered placement after auto-flip and shift. Radix does not fire a
+      discrete event — instead, `Popover.Content` exposes `[data-side]` and
+      `[data-align]` DOM attributes that update reactively when the placement
+      changes (e.g. from `bottom` to `top` after flip). Consumers needing to react
+      programmatically must observe these attribute changes via `MutationObserver`
+      or use Floating UI's `onFloatingChange` at a lower layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  # ── Extensions (Radix adds beyond canonical) ─────────────────────────────
+
+  - from: anatomy[container]
+    type: extended
+    addition: "Popover.Anchor — an optional separate positioning reference element that decouples the floating-anchor from the toggle trigger"
+    rationale: >-
+      The canonical anatomy has no concept of a separate anchor element — the
+      trigger always serves as both the toggle activator and the positioning
+      reference. Radix adds `Popover.Anchor` as an opt-in sub-component that
+      overrides the positioning reference without affecting the toggle behaviour.
+      This is useful when the popover should be anchored to a larger container
+      (e.g. a table row) while being toggled by a button inside that row.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#anchor
+      (verified 2026-05-31).
+
+  - from: axes.properties[dismissible]
+    type: extended
+    addition: "modal (boolean, default false) on Popover.Root — enables modal behaviour (focus trap, pointer-events blocked on rest of page)"
+    rationale: >-
+      The canonical Popover is always non-modal; there is no `modal` axis. Radix
+      adds a `modal` prop on `Popover.Root` (default `false`) that, when `true`,
+      installs a focus trap and blocks pointer events on the rest of the page —
+      turning the Popover into a semantically undeclared modal. This is a canonical
+      anti-pattern (the canonical contracts section forbids installing a focus trap
+      on a Popover), but Radix exposes the escape hatch. Consumers should use
+      `@radix-ui/react-dialog` instead when modality is required.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#root
+      (verified 2026-05-31).
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: "data-state='open' | 'closed' CSS attribute selectors on Popover.Content; plus CSS custom properties --radix-popover-content-transform-origin for enter/exit animations"
+    rationale: >-
+      Radix does not ship motion duration tokens. Consumers write CSS transitions
+      on `[data-state='open']` and `[data-state='closed']` on `Popover.Content`
+      with their own duration values. The `--radix-popover-content-transform-origin`
+      CSS custom property is exposed so that scale-from-anchor animations originate
+      at the trigger's bounding box. Canonical `motion.durations.open` / `close`
+      / `flip` are achievable but values are entirely consumer-side.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover#content
+      (verified 2026-05-31).
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix does not implement a reduced-motion fallback. The `data-state`
+      attribute still toggles between `open` and `closed` — but no animation is
+      suppressed automatically. Consumers must apply
+      `@media (prefers-reduced-motion: reduce)` in their CSS to satisfy the
+      canonical `instant` fallback requirement.
+      Source: https://www.radix-ui.com/primitives/docs/components/popover
+      (verified 2026-05-31).
+
+rationale: |
+  Radix Popover is a low-level, unstyled floating primitive that covers the
+  canonical Popover's portal, positioning, and light-dismiss contract well, but
+  deliberately omits design-system layering. The most significant divergences:
+
+  1. The canonical container is reshaped into Root + Portal + Content, following
+     the same pattern as Radix Dialog. Root owns state, Portal owns DOM relocation,
+     Content owns the rendered surface and positioning props.
+
+  2. Radix Popover ships no title sub-component (contrast with Dialog.Title).
+     The canonical header-bar anatomy (title + close row) is entirely
+     consumer-composed inside Popover.Content. This is the largest accessibility
+     gap — `aria-labelledby` on the popover panel requires manual wiring.
+
+  3. Dismiss control is reshaped from a single `dismissible: boolean` into three
+     separate callbacks on Content, consistent with how Radix Dialog handles
+     the same canonical property.
+
+  4. The canonical `tip` variant is not modelled — Radix treats the arrow as an
+     optional sub-component unconditionally, not as a variant gate.
+
+  5. The `modal` prop on Root is a canonical anti-pattern escape hatch; consumers
+     should use @radix-ui/react-dialog when modality is required.
+
+lastReviewed: '2026-05-31'

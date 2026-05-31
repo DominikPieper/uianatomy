@@ -1,0 +1,465 @@
+componentId: popover
+libraryId: react-aria
+componentName: Popover
+
+exampleCode: |
+  import {
+    Button,
+    Dialog,
+    DialogTrigger,
+    Heading,
+    OverlayArrow,
+    Popover,
+  } from 'react-aria-components';
+
+  // Standard popover with Dialog for full accessibility contract
+  <DialogTrigger>
+    <Button>Open settings</Button>
+    <Popover placement="bottom start" offset={8} shouldFlip>
+      <OverlayArrow>
+        <svg width={12} height={12} viewBox="0 0 12 12">
+          <path d="M0 0 L6 6 L12 0" />
+        </svg>
+      </OverlayArrow>
+      <Dialog aria-labelledby="settings-title">
+        <Heading id="settings-title" slot="title">Settings</Heading>
+        <p>Popover body content here.</p>
+      </Dialog>
+    </Popover>
+  </DialogTrigger>
+
+  // Without arrow (standard, no tip)
+  <DialogTrigger>
+    <Button>Filter</Button>
+    <Popover placement="bottom" offset={8}>
+      <Dialog aria-labelledby="filter-title">
+        <Heading id="filter-title" slot="title">Filters</Heading>
+        <Switch defaultSelected>Wi-Fi</Switch>
+        <Switch>Bluetooth</Switch>
+      </Dialog>
+    </Popover>
+  </DialogTrigger>
+
+  // Standalone with triggerRef (no DialogTrigger wrapper)
+  function Example() {
+    const [isOpen, setOpen] = useState(false);
+    const triggerRef = useRef(null);
+    return (
+      <>
+        <Button ref={triggerRef} onPress={() => setOpen(true)}>Open</Button>
+        <Popover
+          triggerRef={triggerRef}
+          isOpen={isOpen}
+          onOpenChange={setOpen}
+          placement="right"
+          isKeyboardDismissDisabled={false}
+        >
+          <Dialog aria-label="Quick actions">
+            <p>Content here.</p>
+          </Dialog>
+        </Popover>
+      </>
+    );
+  }
+
+divergence:
+  # ── Anatomy — Trigger ─────────────────────────────────────────────────────
+
+  - from: anatomy[trigger]
+    type: reshaped
+    to: >-
+      First child of <DialogTrigger> (or any element referenced via triggerRef=).
+      DialogTrigger uses useOverlayTrigger({type:'dialog'}) internally to wire
+      aria-haspopup="dialog", aria-expanded, and aria-controls onto the trigger
+      element. The trigger is not a named slot — it is the first (non-Popover)
+      child of DialogTrigger, or a standalone element when using triggerRef.
+    rationale: >-
+      React Aria expresses the trigger relationship through the DialogTrigger
+      compound wrapper rather than a named slot prop. The consumer places any
+      pressable element (Button, Link, etc.) as a sibling of Popover inside
+      DialogTrigger; the library spreads triggerProps (aria-haspopup="dialog",
+      aria-expanded, aria-controls) automatically via useOverlayTrigger. This
+      gives the same ARIA output as the canonical contract but through a
+      composition boundary rather than a slot API. For standalone use, consumers
+      pass triggerRef directly and manage isOpen/onOpenChange themselves.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31),
+      https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Dialog.tsx (fetched 2026-05-31)
+
+  # ── Anatomy — Container ───────────────────────────────────────────────────
+
+  - from: anatomy[container]
+    type: reshaped
+    to: >-
+      <Popover> renders a <div> that auto-assigns role="dialog" when no nested
+      [role=dialog] child is detected and the popover is not isNonModal. When a
+      <Dialog> child is present (the recommended pattern), <Dialog> carries
+      role="dialog" as a <section> and the <Popover> div itself has no role.
+      Accessible name comes from aria-labelledby on Dialog pointing at a nested
+      Heading, or from aria-label on Dialog directly.
+    rationale: >-
+      React Aria splits the positioning/overlay surface (Popover div) from the
+      dialog semantics (Dialog section). The Popover div handles portal mounting,
+      floating positioning via @react-aria/overlays, and light-dismiss. Dialog
+      carries the ARIA dialog role with its accessible-name contract. This split
+      lets the same Popover positioning primitive serve both dialog popovers and
+      non-dialog overlays (e.g. ComboBox listbox) without baking role="dialog"
+      unconditionally onto the container. When used without a nested Dialog the
+      Popover div self-promotes to role="dialog" as a fallback.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31),
+      https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Popover.tsx (fetched 2026-05-31)
+
+  # ── Anatomy — Arrow ───────────────────────────────────────────────────────
+
+  - from: anatomy[arrow]
+    type: renamed
+    to: OverlayArrow
+    rationale: >-
+      The canonical slot is named `arrow`; React Aria names the sub-component
+      `OverlayArrow`. OverlayArrow renders a wrapper div (class react-aria-OverlayArrow)
+      whose children — typically an inline SVG — auto-rotate to match the actual
+      rendered placement (data-placement). The canonical arrow is optional and
+      decorative; OverlayArrow matches that contract. Consumers omit OverlayArrow
+      entirely for the standard (no-tip) variant. React Aria does not ship a
+      built-in SVG shape; the consumer provides the SVG child.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  # ── Anatomy — Header / title ──────────────────────────────────────────────
+
+  - from: anatomy[header]
+    type: omitted
+    rationale: >-
+      React Aria Popover ships no dedicated header-bar sub-component. The
+      header-bar (including title + close-button slots) from the canonical
+      header-bar sub-anatomy is entirely absent as a structured slot. Consumers
+      compose heading and close affordances inside a <Dialog> child using
+      arbitrary markup — a <Heading slot="title"> for the accessible name and a
+      consumer-authored close Button. No grid-layout header container, no token
+      bindings for header spacing, and no explicit header region are provided by
+      the library.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: anatomy[title]
+    type: reshaped
+    to: >-
+      <Heading slot="title"> inside a <Dialog> child — an arbitrary heading
+      element wired to Dialog's aria-labelledby context via the slot="title"
+      prop. No dedicated Title sub-component; the slot prop on Heading is a
+      React Aria context mechanism.
+    rationale: >-
+      The canonical title slot is a structured anatomy entry on the popover with
+      its own figma/code/a11y metadata. React Aria instead provides a Dialog
+      context that looks for a child element with slot="title" and automatically
+      wires aria-labelledby on the Dialog to that element's id. The heading level
+      is consumer-chosen (Heading renders the appropriate h1-h6). No standalone
+      Title sub-component exists in react-aria-components for Popover.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Dialog.tsx (fetched 2026-05-31)
+
+  # ── Anatomy — Body ────────────────────────────────────────────────────────
+
+  - from: anatomy[body]
+    type: omitted
+    rationale: >-
+      React Aria Popover provides no dedicated body slot or sub-component.
+      Content is arbitrary JSX children of the Popover (or of a nested Dialog).
+      The canonical body slot carries layout metadata (row, span, padding tokens)
+      and a semantic hint (prose-or-form-or-list); React Aria places no
+      structural constraint on the inner content beyond whatever Dialog's
+      children context provides. Consumers are responsible for all body layout,
+      padding tokens, and scroll behaviour.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  # ── Anatomy — Close-button ────────────────────────────────────────────────
+
+  - from: anatomy[close-button]
+    type: omitted
+    rationale: >-
+      React Aria ships no built-in close-button slot or sub-component for Popover.
+      Dialog's render-prop API exposes a close() function to children, allowing
+      consumers to wire a Button to it. No close-button is rendered by default.
+      The canonical close-button (with visually-hidden label and Escape fallback)
+      is entirely a consumer responsibility. Escape always dismisses the Popover
+      unless isKeyboardDismissDisabled=true; a visible close button is optional
+      and consumer-composed.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Dialog.tsx (fetched 2026-05-31)
+
+  # ── Axes — Variants ───────────────────────────────────────────────────────
+
+  - from: axes.variants[standard]
+    type: reshaped
+    to: >-
+      No variant prop. Standard appearance (no arrow) is achieved by omitting
+      <OverlayArrow> from the Popover children. React Aria has no variant enum.
+    rationale: >-
+      The canonical `variant: standard | tip` axis is expressed implicitly in
+      React Aria: the tip visual is achieved by including <OverlayArrow> as a
+      Popover child; the standard appearance is the default when OverlayArrow
+      is absent. There is no variant prop. This means the variant is not
+      statically inspectable from the component API — it is a structural
+      composition choice.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.variants[tip]
+    type: reshaped
+    to: >-
+      Adding <OverlayArrow> as a child of <Popover>. OverlayArrow auto-rotates
+      to match data-placement. No variant prop to toggle.
+    rationale: >-
+      See rationale for variants[standard] above — React Aria collapses
+      the tip/standard distinction to presence or absence of the OverlayArrow
+      sub-component rather than a named variant enum value.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  # ── Axes — Properties ─────────────────────────────────────────────────────
+
+  - from: axes.properties[side]
+    type: reshaped
+    to: >-
+      placement prop of type Placement — a richer union than the canonical four
+      sides. Valid values include 'top' | 'bottom' | 'left' | 'right' | 'start'
+      | 'end' plus compound forms 'bottom start' | 'bottom end' | 'top start'
+      | 'top end' | 'left top' | 'left bottom' | 'right top' | 'right bottom'
+      | 'start top' | 'start bottom' | 'end top' | 'end bottom'. Default is
+      'bottom'.
+    rationale: >-
+      The canonical `side` prop is a simple four-value enum (top/right/bottom/left).
+      React Aria encodes both side and alignment in a single `placement` prop using
+      the Floating UI / @react-aria/overlays Placement type. This richer type covers
+      the logical directions (start/end) and compound placements that specify both
+      side and cross-axis alignment in one string. There is no separate `align` prop
+      on Popover; alignment is expressed through the placement string or adjusted
+      numerically via crossOffset.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties[align]
+    type: reshaped
+    to: >-
+      Encoded inside the placement prop as compound values ('bottom start',
+      'bottom end', 'bottom' for center) or adjusted numerically via the
+      crossOffset prop (number, default 0).
+    rationale: >-
+      The canonical `align: start | center | end` is a separate prop. React Aria
+      collapses it into the `placement` string (e.g. 'bottom start' = side:bottom,
+      align:start) or delegates to `crossOffset` for pixel-level shifts. There is
+      no standalone `align` enum prop. This is a concrete structural difference
+      from the canonical API surface.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties[dismissible]
+    type: reshaped
+    to: >-
+      Two separate props: (1) isKeyboardDismissDisabled (boolean, default false)
+      disables Escape key dismissal only. (2) Outside-click dismissal is always
+      active and is not exposed as a toggleable prop on Popover directly — it is
+      handled by the overlay infrastructure automatically.
+    rationale: >-
+      The canonical `dismissible: boolean` is a single toggle controlling all
+      light-dismiss paths (Escape + outside-click + focus-outside). React Aria
+      splits this: Escape can be disabled via isKeyboardDismissDisabled; outside
+      pointer interaction is governed by isNonModal (which controls AT interaction,
+      not pointer dismiss). There is no single prop matching the canonical
+      `dismissible: false` semantics. Consumers needing to prevent outside-click
+      dismissal must compose a custom overlay or use a Modal instead.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties[flip]
+    type: renamed
+    to: shouldFlip
+    rationale: >-
+      One-to-one semantic match. The canonical `flip: boolean` and React Aria
+      `shouldFlip: boolean` both control whether the popover auto-repositions to
+      the opposite side when the authored placement overflows the viewport.
+      Default is true in both cases. Only the name differs, following React Aria's
+      'should*' predicate prefix for boolean configuration props.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      offset (number, default 8) — main-axis distance in pixels between the
+      Popover and its anchor element. No canonical equivalent; the canonical
+      container token uses spacing.compact abstractly without an explicit
+      numeric offset prop.
+    rationale: >-
+      React Aria exposes the floating positioning offset as a first-class numeric
+      prop, consistent with its underlying @react-aria/overlays positioning engine.
+      The canonical documents the default offset as 8px in layout metadata but
+      provides no API hook to override it declaratively.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      crossOffset (number, default 0) — cross-axis offset in pixels, adjusting
+      the popover along the perpendicular axis to the placement side. Provides
+      pixel-level align adjustment beyond what compound placement strings express.
+    rationale: >-
+      No canonical equivalent. React Aria provides crossOffset as an escape hatch
+      for cases where compound placement values ('bottom start') do not achieve
+      the required visual alignment — for example when a pixel nudge is needed
+      without changing the logical alignment.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      containerPadding (number, default 12) — minimum distance in pixels between
+      the Popover and the viewport edge when computing flip and shift adjustments.
+    rationale: >-
+      No canonical equivalent. React Aria exposes this to prevent the popover
+      from touching the viewport boundary after auto-flip or shift, which is
+      important for readability on small screens. The canonical documents
+      viewport-collision flip behaviour but not a numeric boundary-clearance API.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      isNonModal (boolean) — when true, elements outside the Popover may be
+      interacted with by assistive technologies. When false (default for dialog
+      popovers), content outside is hidden from AT while the Popover is open.
+      Recommended only for combobox-style use cases where outside interaction
+      is required.
+    rationale: >-
+      The canonical contract states popovers are non-modal (focus is not trapped,
+      Tab leaves the popover freely) but does not model the AT-visibility of
+      background content as a toggleable prop. React Aria distinguishes focus-trap
+      modality (never applied to Popover) from AT-visibility modality (controlled
+      by isNonModal). For most dialog popovers, isNonModal defaults to false
+      (background hidden from AT) while focus is still allowed to leave — a
+      nuanced split the canonical does not surface as an API dimension.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      isKeyboardDismissDisabled (boolean, default false) — disables Escape key
+      dismissal. When true, an alternative keyboard close path must be provided
+      (e.g. a close Button wired to Dialog's close() render prop).
+    rationale: >-
+      The canonical `dismissible` prop conflates Escape and outside-click dismiss;
+      React Aria surfaces Escape suppression independently. This matters when a
+      consumer needs outside-click dismiss to remain active (pointer users can
+      dismiss) while preventing accidental Escape dismissal of a popover hosting
+      in-flight form state. The canonical has no equivalent granularity.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      arrowBoundaryOffset (number, default 0) — minimum distance in pixels
+      between the OverlayArrow and the edge of the Popover container, preventing
+      the arrow from overhanging the rounded corner.
+    rationale: >-
+      Implementation detail of the arrow positioning system. The canonical arrow
+      slot notes that arrow position auto-tracks the trigger but does not expose
+      an edge-clearance numeric prop. React Aria surfaces this because rounded
+      corners and small popovers require a minimum inset to keep the arrow visually
+      on the container face.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      maxHeight (number, optional) — maximum block-size of the Popover in pixels.
+      When content exceeds this height the overlay scrolls internally.
+    rationale: >-
+      The canonical notes the body "scrolls internally only when content exceeds
+      the popover's max-height" but does not expose a numeric prop to set this.
+      React Aria provides maxHeight as a first-class prop passed through to the
+      underlying overlay element.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  # ── Events ────────────────────────────────────────────────────────────────
+
+  - from: events[openChange]
+    type: reshaped
+    to: >-
+      onOpenChange(isOpen: boolean) — same name and same boolean payload as
+      canonical. However, React Aria exposes it both on <DialogTrigger> (for
+      the controlled/uncontrolled wrapper pattern) and directly on <Popover>
+      (for standalone triggerRef usage). The dismiss reason vocabulary
+      ({ reason: 'escape' | 'outsideClick' | 'closeButton' | 'focusOutside' })
+      is not included in the payload.
+    rationale: >-
+      The canonical openChange fires after the transition settles with a boolean.
+      React Aria's onOpenChange fires on state transition intent (not after
+      animation completes) and carries only the boolean. The canonical dismiss
+      event (with reason discrimination) is absent; React Aria does not emit a
+      unified dismiss reason event. The source event is available internally but
+      not surfaced to the consumer via onOpenChange or a separate callback.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: events[dismiss]
+    type: omitted
+    rationale: >-
+      React Aria Popover does not emit a unified dismiss event with reason
+      discrimination ({ reason: 'escape' | 'outsideClick' | 'closeButton' |
+      'focusOutside' }). Consumers needing to distinguish dismiss paths must
+      intercept lower-level events (onKeyDown for Escape, pointer handlers for
+      outside-click) themselves. The canonical notes that React Aria's
+      useOverlayTrigger exposes onClose(event) at the hook layer, but this is
+      not surfaced on the react-aria-components Popover or DialogTrigger API.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+  - from: events[positionChange]
+    type: reshaped
+    to: >-
+      data-placement attribute on the Popover div reflects the actual rendered
+      placement after auto-flip. No discrete positionChange event or callback
+      is emitted. Consumers can observe data-placement via a MutationObserver
+      or read the CSS custom property if needed.
+    rationale: >-
+      The canonical positionChange event carries { side, align } after flip.
+      React Aria surfaces the actual placement as the data-placement CSS
+      attribute only — no JavaScript event callback. This is sufficient for
+      styling (flip animations, arrow rotation) but insufficient for consumers
+      needing to re-anchor satellite UI via JavaScript when the placement changes.
+      Source: https://react-aria.adobe.com/Popover (fetched 2026-05-31)
+
+rationale: |
+  React Aria Popover is a positioning and overlay-management primitive that
+  owns the floating placement, portal mounting, and light-dismiss contract,
+  while delegating dialog semantics, accessible naming, and all slot anatomy
+  to consumer composition (Dialog, Heading, OverlayArrow, close Button).
+
+  The five deepest structural divergences from the canon are:
+
+  1. No slot anatomy for header / title / body / close-button — React Aria
+     Popover provides a blank container. All interior structure is composed by
+     the consumer using Dialog + Heading + arbitrary children. The canonical
+     header-bar sub-anatomy with title, close-button, and spacing tokens is
+     entirely absent as a library API.
+
+  2. Variant axis collapsed to OverlayArrow presence — the canonical
+     variant: standard | tip enum is expressed as the presence or absence of the
+     <OverlayArrow> sub-component. The variant is a structural composition
+     choice, not a prop, making it invisible to static API inspection.
+
+  3. side + align collapsed into placement compound string — the canonical
+     separates side (top/right/bottom/left) from align (start/center/end) as
+     orthogonal props. React Aria encodes both in a single placement string
+     (e.g. 'bottom start') with 22 valid values, plus a numeric crossOffset for
+     pixel-level adjustments.
+
+  4. dismissible split into two props — the canonical single `dismissible`
+     boolean is split into isKeyboardDismissDisabled (Escape only) in React Aria,
+     with outside-click dismissal always active. There is no single prop to
+     disable all light-dismiss paths simultaneously, mirroring how the dismiss
+     event is also absent.
+
+  5. Container role is conditional, not declarative — the Popover div
+     auto-assigns role="dialog" only when no nested [role=dialog] child exists.
+     The canonical container is always role="dialog". When consumers use the
+     recommended Dialog-inside-Popover pattern, the role lives on the Dialog
+     section, not the positioning container, creating a two-element ARIA
+     boundary that the canonical models as one.
+
+  The naming surface follows React Aria's 'should*' / 'is*' prefix convention
+  (shouldFlip for flip, isKeyboardDismissDisabled for dismissible-Escape). The
+  underlying ARIA output (aria-haspopup="dialog", aria-expanded, aria-controls,
+  data-placement, role="dialog" on Dialog) is canonical-compliant at the
+  AT-visible DOM level.
+
+lastReviewed: '2026-05-31'

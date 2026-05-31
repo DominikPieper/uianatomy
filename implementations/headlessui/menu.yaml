@@ -1,0 +1,354 @@
+componentId: menu
+libraryId: headlessui
+componentName: "Menu / MenuButton / MenuItems / MenuItem / MenuSection / MenuHeading / MenuSeparator"
+
+exampleCode: |
+  import {
+    Menu, MenuButton, MenuItems, MenuItem,
+    MenuSection, MenuHeading, MenuSeparator,
+  } from '@headlessui/react';
+
+  export function ActionsMenu() {
+    return (
+      <Menu>
+        <MenuButton className="rounded border px-3 py-1.5 data-open:bg-gray-100">
+          Actions
+        </MenuButton>
+
+        <MenuItems
+          anchor="bottom start"
+          className="w-52 rounded shadow-lg bg-white ring-1 ring-black/5 focus:outline-none"
+        >
+          <MenuSection>
+            <MenuHeading className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500">
+              File
+            </MenuHeading>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  className={`flex w-full px-3 py-1.5 text-sm ${focus ? 'bg-blue-500 text-white' : 'text-gray-900'}`}
+                >
+                  New file
+                </button>
+              )}
+            </MenuItem>
+            <MenuItem disabled>
+              {({ focus, disabled }) => (
+                <button
+                  className={`flex w-full px-3 py-1.5 text-sm ${disabled ? 'opacity-40 cursor-not-allowed' : focus ? 'bg-blue-500 text-white' : 'text-gray-900'}`}
+                >
+                  Import (unavailable)
+                </button>
+              )}
+            </MenuItem>
+          </MenuSection>
+
+          <MenuSeparator className="my-1 border-t border-gray-100" />
+
+          <MenuSection>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  className={`flex w-full px-3 py-1.5 text-sm ${focus ? 'bg-blue-500 text-white' : 'text-gray-900'}`}
+                >
+                  Delete
+                </button>
+              )}
+            </MenuItem>
+          </MenuSection>
+        </MenuItems>
+      </Menu>
+    );
+  }
+
+divergence:
+  # ── Architecture: combined trigger + items ────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      Two-part split: Menu (Fragment wrapper, no DOM element) plus MenuItems
+      (renders role="menu"). Menu always includes a MenuButton trigger — there
+      is no API path to render MenuItems without Menu wrapping a MenuButton.
+    rationale: >-
+      The canonical menu anatomy is the standalone surface (role="menu" alone,
+      composable with any trigger including right-click or programmatic open).
+      Headless UI's Menu is a combined dropdown pattern: the Menu root wires
+      MenuButton open/close state to MenuItems visibility. There is no exported
+      standalone MenuItems component that works without a MenuButton — the open
+      state is entirely driven by MenuButton interaction. Context-menu
+      (right-click triggered) and embedded-action-list use-cases cannot be
+      composed from Headless UI Menu without either forking the component or
+      wrapping a hidden MenuButton. Source:
+      https://headlessui.com/react/menu (Menu props, 2026-05-31).
+
+  # ── Anatomy: no submenu-trigger or submenu slots ─────────────────────────────
+
+  - from: anatomy[submenu-trigger]
+    type: omitted
+    rationale: >-
+      Headless UI Menu ships no submenu-trigger variant or nested Menu
+      composition API. The library is explicitly single-level: there is no
+      documented pattern for ArrowRight opening a nested role="menu", no
+      aria-haspopup="menu" management, and no aria-expanded wiring for nested
+      menus. Consumers who need submenus must compose two separate Menu
+      instances with bespoke state management — none of the canonical APG
+      submenu keyboard model (ArrowRight opens, ArrowLeft closes) is wired
+      automatically. Source: https://headlessui.com/react/menu (no submenu
+      section present, 2026-05-31); source file confirms no SubmenuTrigger
+      export: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/menu/menu.tsx
+      (2026-05-31).
+
+  - from: anatomy[submenu]
+    type: omitted
+    rationale: >-
+      Follows directly from the omission of submenu-trigger. No nested
+      role="menu" composition is supported. Headless UI does not ship a
+      Sub or SubTrigger component for Menu (unlike Radix DropdownMenu.Sub).
+      Source: https://headlessui.com/react/menu (2026-05-31).
+
+  # ── Anatomy: no menuitemcheckbox or menuitemradio ─────────────────────────────
+
+  - from: anatomy[menuitemcheckbox]
+    type: omitted
+    rationale: >-
+      Headless UI MenuItem always renders role="menuitem". There is no
+      MenuItemCheckbox or equivalent that renders role="menuitemcheckbox"
+      with aria-checked. Consumers who need toggle-state menu items must
+      render a plain MenuItem and manually wire role="menuitemcheckbox" plus
+      aria-checked via the `as` prop or by rendering a raw element inside the
+      MenuItem render-prop. The library provides no built-in component,
+      no aria-checked management, and no close-on-select=false default for
+      toggle items. Source:
+      https://headlessui.com/react/menu (MenuItem props — no checked/role
+      variant, 2026-05-31); source file role assignment at line 793 confirms
+      role="menuitem" is hardcoded:
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/menu/menu.tsx
+      (2026-05-31).
+
+  - from: anatomy[menuitemradio]
+    type: omitted
+    rationale: >-
+      Same root cause as menuitemcheckbox omission. No MenuItemRadio or
+      MenuRadioGroup component is exported. Role="menuitemradio" with
+      aria-checked and group-scoped mutual-exclusion is entirely absent.
+      Consumers must author from scratch. Source:
+      https://headlessui.com/react/menu (2026-05-31).
+
+  # ── Anatomy: group reshaped to MenuSection + MenuHeading ─────────────────────
+
+  - from: anatomy[group]
+    type: reshaped
+    to: >-
+      MenuSection (renders div, no role="group") + MenuHeading (renders header
+      element). MenuSection carries no ARIA role by default; MenuHeading
+      carries no aria-labelledby wiring to a MenuSection.
+    rationale: >-
+      The canonical group slot requires role="group" with aria-labelledby for
+      SR scoping of menuitemradio groups and semantic grouping of related
+      menuitems. Headless UI's MenuSection renders a plain div with no
+      role="group" and no aria-labelledby. MenuHeading renders a <header>
+      element that is visually a section label but has no programmatic
+      association with MenuSection via aria-labelledby. For menuitemradio
+      groups (which require role="group" for correct SR scoping) this is a
+      gap; for purely visual grouping of menuitems it is acceptable.
+      Consumers who need the group semantic must set role="group" and
+      aria-labelledby manually via the `as` prop. Source:
+      https://headlessui.com/react/menu (MenuSection, MenuHeading props,
+      2026-05-31).
+
+  # ── Anatomy: separator present but no role="separator" by default ─────────────
+
+  - from: anatomy[separator]
+    type: reshaped
+    to: >-
+      MenuSeparator renders a div (default `as="div"`) with no role="separator"
+      applied by the library. Consumers must either pass `as` with a semantic
+      element or add role="separator" themselves.
+    rationale: >-
+      The canonical separator slot documents role="separator" for programmatic
+      section-boundary signalling to AT. Headless UI's MenuSeparator is a
+      layout convenience: it renders a plain div with no ARIA role wired
+      automatically. Consumers who rely on MenuSeparator for accessible
+      separation must add `role="separator"` manually. The component is not
+      focusable (no tabIndex), so the roving-tabindex-skip requirement is
+      satisfied; only the role is absent. Source:
+      https://headlessui.com/react/menu (MenuSeparator props, 2026-05-31).
+
+  # ── Anatomy: no icon or shortcut slots ───────────────────────────────────────
+
+  - from: anatomy[icon]
+    type: omitted
+    rationale: >-
+      Headless UI ships no icon slot component. All icon rendering is delegated
+      to the consumer's render-prop children inside MenuItem. The library is
+      intentionally unstyled and provides no slot for a leading icon with
+      aria-hidden wiring. Consumers render icons directly in the MenuItem
+      render-prop and manage aria-hidden themselves. Source:
+      https://headlessui.com/react/menu (MenuItem render prop API, 2026-05-31).
+
+  - from: anatomy[shortcut]
+    type: omitted
+    rationale: >-
+      No shortcut slot component is exported. Keyboard shortcut text ("Ctrl+S")
+      must be authored by consumers inside the MenuItem render-prop. There is
+      no built-in mechanism to wire aria-keyshortcuts on the parent menuitem;
+      consumers must set it manually. Source:
+      https://headlessui.com/react/menu (2026-05-31).
+
+  # ── Axes: no horizontal orientation variant ────────────────────────────────────
+
+  - from: axes.variants[horizontal]
+    type: omitted
+    rationale: >-
+      Headless UI Menu has no orientation prop and does not support
+      aria-orientation="horizontal". MenuItems renders role="menu" with
+      vertical arrow-key navigation hardcoded — ArrowDown/Up navigate items;
+      there is no ArrowLeft/Right navigation mode for horizontal menu layout.
+      Source: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/menu/menu.tsx
+      (no orientation parameter, 2026-05-31).
+
+  # ── Axes: no size property ────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Headless UI is intentionally unstyled; it ships no size prop (sm/md).
+      All sizing is the consumer's responsibility via className or CSS custom
+      properties. Source: https://headlessui.com/react/menu (2026-05-31).
+
+  # ── Axes: no wrapNavigation property ─────────────────────────────────────────
+
+  - from: axes.properties[wrapNavigation]
+    type: omitted
+    rationale: >-
+      The canonical wrapNavigation boolean controls whether ArrowDown on the
+      last item wraps to the first. Headless UI's arrow-key navigation wraps
+      by default with no opt-out prop. Consumers cannot disable wrapping.
+      Source: https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/menu/menu.tsx
+      (keyboard handler, 2026-05-31).
+
+  # ── Axes: no closeOnSelect property ──────────────────────────────────────────
+
+  - from: axes.properties[closeOnSelect]
+    type: omitted
+    rationale: >-
+      The canonical closeOnSelect boolean controls whether activating a
+      menuitem closes the menu. Headless UI always closes MenuItems on
+      MenuItem activation; there is no opt-out. The MenuItem render prop
+      exposes a close() function allowing manual close from a custom handler,
+      but there is no closeOnSelect=false API to keep the menu open after
+      item activation (relevant for toggle-state items). Source:
+      https://headlessui.com/react/menu (MenuItem render prop — close function,
+      2026-05-31).
+
+  # ── Axes: typeahead present but always-on, no property ───────────────────────
+
+  - from: axes.properties[typeahead]
+    type: reshaped
+    to: >-
+      Typeahead is always enabled with no opt-out prop. A-Z key input when
+      the menu is open focuses the first matching item by its text content.
+    rationale: >-
+      The canonical typeahead property is a boolean that consumers can toggle
+      off. Headless UI ships typeahead as an unconditional behaviour: there is
+      no typeahead={false} prop. This is a feature reduction from the canonical
+      model (consumers cannot disable typeahead) but a correct implementation
+      of the APG first-character search contract. Source:
+      https://headlessui.com/react/menu (keyboard interactions — A-Z, 2026-05-31).
+
+  # ── Extended: anchor-based floating positioning ───────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `anchor` prop on MenuItems provides built-in floating positioning via
+      Floating UI. Accepts a string ("bottom", "bottom start", "top end",
+      etc.) or an object `{ to, gap, offset, padding }`. When anchor is set,
+      portal is auto-enabled and MenuItems renders in a portal. CSS custom
+      properties `--button-width`, `--anchor-gap`, `--anchor-offset`, and
+      `--anchor-padding` are injected for consumer sizing. The `modal` prop
+      (default true) enables scroll locking and inerting of other page elements
+      when the menu is open.
+    rationale: >-
+      The canonical anatomy does not prescribe a floating positioning API;
+      that is left to implementors. Headless UI ships first-party positioning
+      to remove the need for a third-party positioning library. The modal=true
+      default adds scroll locking and background inerting which the canonical
+      menu pattern (a standalone list surface) does not require — context menus
+      and embedded action lists do not need scroll locking. Source:
+      https://headlessui.com/react/menu (MenuItems props — anchor, portal,
+      modal, 2026-05-31).
+
+  # ── Extended: transition prop ─────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `transition` boolean prop on MenuItems enables CSS transition support
+      via data attributes (data-closed, data-enter, data-leave). When true,
+      Headless UI manages enter/leave transition state so consumers can write
+      CSS transitions without a separate Transition wrapper component. Also
+      compatible with Framer Motion via AnimatePresence.
+    rationale: >-
+      The canonical menu anatomy documents motion via a durations/easing token
+      map but prescribes no specific transition API. Headless UI's transition
+      prop is a library-specific convenience that maps the open/close lifecycle
+      to CSS class hooks. No canonical equivalent exists; this is a purely
+      additive API surface. Source: https://headlessui.com/react/menu
+      (MenuItems props — transition, 2026-05-31).
+
+  # ── Extended: static and unmount props ────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `static` boolean prop (default false) on MenuItems bypasses the
+      library's internal open/close state — the panel is always rendered
+      regardless of open state. `unmount` boolean prop (default true) controls
+      whether MenuItems is removed from the DOM when closed (true) or kept
+      in DOM as display:none (false). Both props are for advanced consumers
+      who manage visibility externally or need to pre-render for performance.
+    rationale: >-
+      The canonical anatomy has no equivalent lifecycle-override props. static
+      and unmount address the trade-off between mount/unmount cost and
+      pre-render cost: large menus (many items) may benefit from unmount=false
+      to avoid re-mount on every open. The canonical performance section
+      recommends pre-mounting with aria-hidden for fast open; Headless UI
+      exposes the control explicitly. Source: https://headlessui.com/react/menu
+      (MenuItems props — static, unmount, 2026-05-31).
+
+rationale: |
+  Headless UI React Menu (@headlessui/react, currently v2.x) is a combined
+  dropdown-menu primitive — it always pairs a MenuButton trigger with a
+  MenuItems panel. This is a structural departure from the canonical
+  standalone Menu surface that can be composed with any trigger.
+
+  The divergences cluster into four groups:
+
+  1. Combined-pattern architecture — Menu always requires MenuButton; there
+     is no standalone role="menu" surface usable for context menus or
+     embedded action lists without a Button trigger. This aligns with what
+     the canonical vocabularyDrift entry for Headless UI notes explicitly.
+
+  2. Missing role variants — No menuitemcheckbox, menuitemradio, or submenu
+     hierarchy. Headless UI Menu is single-level, action-only. Consumers
+     needing toggle-state items or nested menus must escalate to Radix
+     DropdownMenu or author bespoke wiring.
+
+  3. Group/separator semantic gaps — MenuSection renders no role="group";
+     MenuSeparator renders no role="separator". Both are layout-only
+     without the ARIA roles the canonical anatomy requires for SR scoping.
+
+  4. Extended API — anchor-based floating positioning (backed by Floating UI),
+     transition lifecycle hooks, and static/unmount lifecycle overrides add
+     API surface with no canonical equivalent. The modal=true default on
+     MenuItems (scroll locking + background inerting) is stricter than the
+     canonical menu pattern warrants for context menus.
+
+  The ARIA contract for the core case is correctly implemented: MenuItems
+  renders role="menu", MenuItem renders role="menuitem", aria-disabled is
+  used for disabled items (not DOM removal), and typeahead (A-Z) is present.
+  aria-activedescendant is wired for keyboard focus tracking.
+
+lastReviewed: '2026-05-31'

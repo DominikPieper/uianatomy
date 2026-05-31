@@ -1,0 +1,377 @@
+componentId: menu
+libraryId: react-aria
+componentName: Menu
+
+exampleCode: |
+  import {
+    MenuTrigger,
+    Menu,
+    MenuItem,
+    MenuSection,
+    SubmenuTrigger,
+    Header,
+    Separator,
+    Keyboard,
+    Button,
+    Popover,
+    Text,
+  } from 'react-aria-components';
+
+  // Basic action menu (no selection)
+  <MenuTrigger>
+    <Button aria-label="Actions">Open menu</Button>
+    <Popover>
+      <Menu onAction={(key) => console.log(key)}>
+        <MenuItem id="new">New file</MenuItem>
+        <MenuItem id="open">Open</MenuItem>
+        <Separator />
+        <MenuItem id="save">
+          Save <Keyboard>⌘S</Keyboard>
+        </MenuItem>
+        <MenuItem id="save-as">
+          Save As… <Keyboard>⌘⇧S</Keyboard>
+        </MenuItem>
+        <Separator />
+        <MenuItem id="delete" isDisabled>Delete</MenuItem>
+      </Menu>
+    </Popover>
+  </MenuTrigger>
+
+  // Single-select (menuitemradio)
+  <Menu selectionMode="single" defaultSelectedKeys={['date']}>
+    <MenuSection aria-label="Sort by">
+      <MenuItem id="name">Name</MenuItem>
+      <MenuItem id="date">Date modified</MenuItem>
+      <MenuItem id="size">Size</MenuItem>
+    </MenuSection>
+  </Menu>
+
+  // Multi-select (menuitemcheckbox)
+  <Menu selectionMode="multiple" defaultSelectedKeys={['line-numbers']}>
+    <MenuSection>
+      <Header>View options</Header>
+      <MenuItem id="line-numbers">Show line numbers</MenuItem>
+      <MenuItem id="wrap">Wrap long lines</MenuItem>
+    </MenuSection>
+  </Menu>
+
+  // Submenu via SubmenuTrigger
+  <MenuTrigger>
+    <Button>File</Button>
+    <Popover>
+      <Menu onAction={(key) => console.log(key)}>
+        <MenuItem id="new">New</MenuItem>
+        <SubmenuTrigger>
+          <MenuItem id="share">Share</MenuItem>
+          <Popover>
+            <Menu>
+              <MenuItem id="email">Email</MenuItem>
+              <MenuItem id="link">Copy link</MenuItem>
+            </Menu>
+          </Popover>
+        </SubmenuTrigger>
+      </Menu>
+    </Popover>
+  </MenuTrigger>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[menuitemcheckbox]
+    type: reshaped
+    to: >-
+      MenuItem with selectionMode="multiple" on the parent Menu or MenuSection —
+      React Aria automatically applies role="menuitemcheckbox" and aria-checked
+      to each MenuItem when the enclosing Menu/MenuSection has selectionMode="multiple".
+      There is no separate sub-component for toggle items.
+    rationale: >-
+      The canonical documents `menuitemcheckbox` as a distinct anatomy slot —
+      a separate item type the author explicitly chooses. React Aria collapses
+      the choice into the `selectionMode` prop on the container: authors declare
+      the collection's selection semantics once, and the library derives the
+      correct ARIA roles for every item. This unifies the API surface (one
+      MenuItem sub-component handles all three item roles) at the cost of
+      losing the explicit per-item role declaration the canonical anatomy
+      provides. The AT-visible contract (role="menuitemcheckbox", aria-checked)
+      is still produced correctly.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: anatomy[menuitemradio]
+    type: reshaped
+    to: >-
+      MenuItem with selectionMode="single" on the parent Menu or MenuSection —
+      React Aria automatically applies role="menuitemradio" and aria-checked to
+      each MenuItem when the enclosing container has selectionMode="single".
+      No separate RadioGroup wrapper is required; MenuSection with aria-label
+      provides the group scope.
+    rationale: >-
+      Same container-driven role derivation as menuitemcheckbox. The canonical
+      requires an explicit `role="group"` container with `aria-labelledby` for
+      radio groups; React Aria satisfies this via MenuSection (which renders
+      `role="group"`) with either a `<Header>` child or an `aria-label` prop.
+      The grouping contract is met, but the author never writes `menuitemradio`
+      explicitly — the selectionMode value drives it.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: anatomy[group]
+    type: renamed
+    to: MenuSection
+    rationale: >-
+      The canonical `group` slot maps to `role="group"` with `aria-labelledby`.
+      React Aria names the sub-component `MenuSection`, which renders
+      `role="group"`. The accessible name is provided either by a `<Header>`
+      child (React Aria wires the labelledby relationship automatically) or
+      by an explicit `aria-label` prop — the docs mandate one of the two.
+      Functionally equivalent to the canonical group slot; the API name differs.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: anatomy[submenu-trigger]
+    type: reshaped
+    to: >-
+      SubmenuTrigger wrapper component that takes a MenuItem (trigger) as its
+      first child and a Popover+Menu (submenu) as its second child. The trigger
+      MenuItem automatically receives aria-haspopup="menu" and aria-expanded.
+      No separate sub-component named "submenu-trigger" exists.
+    rationale: >-
+      The canonical documents `submenu-trigger` as a distinct anatomy slot —
+      a menuitem variant with trailing chevron that carries aria-haspopup and
+      aria-expanded. React Aria encapsulates the trigger/submenu pair inside
+      `<SubmenuTrigger>` — the inner MenuItem gains the correct ARIA attributes
+      automatically; the author does not set aria-haspopup or aria-expanded
+      manually. This reduces boilerplate but means the trigger item is not a
+      named slot the author selects independently; it is inferred from being
+      the first child of SubmenuTrigger.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: anatomy[submenu]
+    type: reshaped
+    to: >-
+      Nested Popover+Menu inside SubmenuTrigger. The submenu is a full Menu
+      instance (same component as the root menu) wrapped in a Popover for
+      floating positioning, placed as the second child of SubmenuTrigger.
+    rationale: >-
+      The canonical documents `submenu` as a distinct structural slot anchored
+      to the submenu-trigger. React Aria realises the submenu as a Popover+Menu
+      pair — reusing the same Popover sub-component used for the root menu
+      trigger, ensuring consistent floating-ui positioning and portal mechanics.
+      The Popover wraps the Menu for positioning; the Menu carries role="menu"
+      and the APG keyboard model. The pair is co-required inside SubmenuTrigger.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: anatomy[shortcut]
+    type: renamed
+    to: Keyboard
+    rationale: >-
+      The canonical `shortcut` slot is named to match its semantic purpose
+      (keyboard-shortcut text trailing the menuitem label). React Aria ships
+      a `<Keyboard>` sub-component (imported from `react-aria-components`)
+      that renders in the "end" grid area of the MenuItem. The canonical
+      recommends rendering shortcut text inside `<kbd>` and wiring
+      aria-keyshortcuts on the parent; the React Aria `<Keyboard>` component
+      handles the visual positioning but does not automatically set
+      aria-keyshortcuts — consumers must add that attribute to the MenuItem
+      if needed.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  # ── Axes — Variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[horizontal]
+    type: omitted
+    rationale: >-
+      React Aria Menu has no `orientation` prop and no horizontal-menu variant.
+      The APG documents horizontal menus (for menubar-style surfaces) as a valid
+      aria-orientation="horizontal" variant; React Aria does not implement this.
+      Horizontal menu surfaces require a separate MenuBar component (not yet
+      shipped as of 2026-05-31 in react-aria-components) or a consumer-built
+      composition. The canonical `horizontal` variant is entirely absent from
+      the React Aria Menu API.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      React Aria Menu ships no `size` prop. The library is unstyled by design;
+      size distinctions (sm / md) are a consumer responsibility expressed via
+      CSS custom properties or class names. ADR-001 notes that React Aria
+      decouples behaviour from visual sizing throughout its API surface.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties[typeahead]
+    type: omitted
+    rationale: >-
+      React Aria Menu always enables typeahead — there is no boolean prop to
+      disable it. The `textValue` prop on MenuItem supplies the accessible name
+      used for typeahead matching when the item content is not plain text. The
+      canonical `typeahead` property (a positive-default boolean the consumer
+      can flip off) has no equivalent; typeahead is non-negotiable in the
+      React Aria implementation.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties[wrapNavigation]
+    type: renamed
+    to: shouldFocusWrap
+    rationale: >-
+      The canonical `wrapNavigation: boolean` (positive-default) corresponds
+      exactly to React Aria's `shouldFocusWrap: boolean` on the `<Menu>` component.
+      Both control whether ArrowDown on the last item wraps to first and ArrowUp
+      on the first wraps to last. The concept is one-to-one; only the prop name
+      differs. React Aria's should* prefix is consistent across its collection
+      components.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties[closeOnSelect]
+    type: renamed
+    to: shouldCloseOnSelect
+    rationale: >-
+      The canonical `closeOnSelect: boolean` maps directly to React Aria's
+      `shouldCloseOnSelect: boolean` on `<Menu>`. Both control whether the menu
+      closes after a MenuItem is activated. The should* prefix is React Aria's
+      naming convention for boolean behaviour props; the underlying semantics
+      are identical.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `selectionMode: 'none' | 'single' | 'multiple'` on `<Menu>` and
+      `<MenuSection>`. Controls ARIA role derivation for items (`menuitem` /
+      `menuitemradio` / `menuitemcheckbox`), visual selection indicators,
+      and whether `onSelectionChange` fires. Per-section override is supported,
+      allowing mixed selection semantics within one menu.
+    rationale: >-
+      The canonical anatomy documents `menuitem`, `menuitemcheckbox`, and
+      `menuitemradio` as separate slots the author composes explicitly. React
+      Aria unifies all three under a single `MenuItem` sub-component and derives
+      the role from `selectionMode`, consistent with its ListBox / GridList
+      convention. This enables runtime selection-mode switching without
+      restructuring the compound tree. The canonical has no equivalent prop;
+      the role choice is structural (distinct slots) rather than a runtime
+      property.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `trigger: 'press' | 'longPress'` on `<MenuTrigger>`. Controls the gesture
+      required to open the menu from the trigger button. `'press'` (default)
+      opens on normal click/tap/Enter; `'longPress'` opens on long-press (useful
+      for secondary-action menus on mobile, e.g. context menus behind a
+      press-and-hold gesture). Keyboard: Alt+ArrowDown opens a longPress menu.
+    rationale: >-
+      The canonical Menu documents the menu surface itself without specifying
+      the trigger gesture — MenuButton (a distinct canonical pattern) handles
+      trigger mechanics. React Aria ships MenuTrigger as a co-required wrapper
+      around the Menu, so trigger-gesture control lands on the same package.
+      The canonical has no equivalent axis; the longPress mode is a mobile
+      UX affordance not addressed in the canonical anatomy.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `delay: number` (default `200`) on `<SubmenuTrigger>`. Controls the hover
+      dwell time in milliseconds before the submenu opens when the user hovers
+      over the submenu-trigger MenuItem. Zero disables the delay (immediate
+      open on hover). Does not affect keyboard navigation (ArrowRight opens
+      the submenu immediately regardless of delay).
+    rationale: >-
+      The canonical submenu-trigger slot documents ArrowRight / Enter / Space
+      as the open triggers but does not specify hover-dwell behaviour or expose
+      it as a configurable axis. React Aria adds `delay` because the 200ms
+      default is important for accessibility — it prevents accidental submenu
+      opening while the pointer passes through the trigger item on the way to
+      another item. The canonical does not address pointer-hover dwell timing.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `escapeKeyBehavior: 'clearSelection' | 'none'` on `<Menu>`. Controls
+      whether pressing Escape clears the current selection before closing the
+      menu. Default `'clearSelection'` resets `selectedKeys` to empty on Escape;
+      `'none'` preserves the selection and only closes the menu.
+    rationale: >-
+      The canonical keyboard contract documents Escape as "closes the menu and
+      returns focus to the trigger" without addressing selection-clearing
+      semantics. React Aria surfaces this trade-off explicitly because menus
+      used as persistent selection controls (multi-select filter menus) benefit
+      from preserving selection across close/re-open cycles.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[itemActivate]
+    type: renamed
+    to: 'onAction(key)'
+    rationale: >-
+      The canonical `itemActivate` event (payload `{ itemId, originalEvent }`)
+      maps to React Aria's `onAction(key: Key)` callback, available on both
+      `<Menu>` (fires for any item) and `<MenuItem>` (fires for that specific
+      item only). React Aria follows the on* callback convention. The payload
+      is the item's `id` key rather than a full event object; the originalEvent
+      discriminator is not exposed. The canonical `itemId` maps to the React
+      Aria `key`.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: events[valueChange]
+    type: renamed
+    to: onSelectionChange
+    rationale: >-
+      The canonical `valueChange` event (payload `{ itemId, checked, groupId }`)
+      covers both menuitemcheckbox toggles and menuitemradio activations.
+      React Aria surfaces this as `onSelectionChange(keys: Selection)` on
+      `<Menu>` or per `<MenuSection>`. The payload is a `Selection` object
+      (a Set-like of selected keys) rather than an individual checked-state
+      delta — callers derive the checked state from the new selection set.
+      The `groupId` concept is absent because React Aria scopes selection per
+      MenuSection automatically.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+  - from: events[submenuToggle]
+    type: omitted
+    rationale: >-
+      React Aria Menu exposes no discrete per-submenu open/close event
+      analogous to the canonical `submenuToggle` (payload `{ submenuId, isOpen }`).
+      The top-level `onOpenChange` on `<MenuTrigger>` fires for the root menu
+      only. Individual submenu open/close state is managed internally by
+      `SubmenuTrigger` with no consumer-observable event emitted. Consumers
+      needing submenu-toggle analytics must use the `isDisabled` or controlled
+      `isOpen` pattern on the inner Popover.
+      Source: https://react-aria.adobe.com/Menu (fetched 2026-05-31)
+
+rationale: |
+  React Aria Menu is a behaviour-only compound primitive that owns the full
+  APG keyboard contract (typeahead, roving-tabindex, submenu ArrowRight/ArrowLeft
+  lifecycle, Home/End, Escape) while leaving visual styling entirely to the
+  consumer.
+
+  The three deepest structural divergences from the canon are:
+
+  1. Role derivation from selectionMode rather than distinct slots —
+     the canonical documents menuitemcheckbox and menuitemradio as separate
+     anatomy slots the author selects explicitly. React Aria derives the ARIA
+     role from the container's selectionMode prop, collapsing the three item
+     types into one MenuItem sub-component. The AT-visible contract is correct;
+     the authoring model is fundamentally different.
+
+  2. Horizontal menu variant absent — React Aria Menu has no orientation prop
+     and no horizontal-menu implementation. The APG documents horizontal menus
+     as a valid pattern (aria-orientation="horizontal" with ArrowLeft/ArrowRight
+     navigation); React Aria does not ship it.
+
+  3. SubmenuTrigger wraps trigger + submenu together — the canonical treats
+     submenu-trigger and submenu as paired but separate anatomy slots. React
+     Aria encapsulates both inside a single SubmenuTrigger wrapper, which
+     automatically wires aria-haspopup and aria-expanded on the inner MenuItem.
+     The ARIA contract is correct; the structural split is absent.
+
+  The rename surface (shouldFocusWrap, shouldCloseOnSelect, onAction,
+  onSelectionChange, isDisabled) follows React Aria's should*/on*/is* naming
+  scheme uniformly applied across the library. The library does not expose
+  typeahead as a configurable prop — it is always active.
+
+lastReviewed: '2026-05-31'
