@@ -5,6 +5,16 @@
 **Supersedes:** none (additive)
 **Related:** [ADR-001](./001-canon-first.md) (canon-first), [ADR-004](./004-data-separation.md) (data separation), [ADR-013](./013-implementation-schema.md) (divergence pattern reused), [ADR-020](./020-slot-kind.md) (slot kind)
 
+> **2026-05-31 amendment (P6-165).** This ADR is also the home of the
+> **[sub-anatomy registry](#sub-anatomy-registry)** — the canonical index of every
+> sub-anatomy. The original convention (each new sub-anatomy gets its own ADR)
+> produced one ADR per *application* of this mechanism (ADR-032 close-button,
+> ADR-033 header-bar, ADR-034 icon-leading-text), which read as process overhead
+> rather than architectural decisions. New convention: **a new sub-anatomy is a
+> registry row below, not a new ADR.** ADRs 032–034 are folded in (status changed,
+> bodies kept as detailed historical rationale). Mint a new ADR only when the
+> sub-anatomy *mechanism itself* changes (e.g. an `extended` override arm).
+
 ## Context
 
 Five components in `content/components/` re-declare a button-group slot with near-identical structure but inconsistent slot-ids and partial divergence on accessibility rules:
@@ -124,10 +134,25 @@ Toast's `action` is `slotKind: interactive` with `code.semantic: button` (singul
 - `mcp-server/src/data.ts` + `server.ts` — load sub-anatomies, two new tools, search/vocabulary extensions.
 - `docs/schema.md` — section for sub-anatomy.
 
+## Sub-anatomy registry
+
+The canonical index of every sub-anatomy. **A new sub-anatomy is a row here, not a
+new ADR** (P6-165). Each body lives at `content/sub-anatomies/<id>.yaml` — that file
+plus this row are the source of truth; the per-instance ADRs (032–034) remain only as
+detailed historical rationale. Add a row when a new sub-anatomy lands; mint an ADR only
+if the sub-anatomy *mechanism* changes.
+
+| id | slots | consumers | rationale (one line) | detail |
+|----|-------|-----------|----------------------|--------|
+| `action-group` | `primary-action`, `secondary-action`, `tertiary-action` | Card, Alert, Modal, Drawer (footer) | One canonical commit/dismiss/defer button cluster; DOM order + RTL mirroring + destructive-focus live once. | this ADR (Decision) |
+| `close-button` | `close-button`, `close-icon`, `close-label` | Modal, Drawer, Popover, Alert, Banner, Toast | Icon-only dismiss affordance; canonical `close` name + `close-label` makes the WCAG 4.1.2 accessible-name dependency structural. | [ADR-032](./032-close-button-sub-anatomy.md) |
+| `header-bar` | `header`, `title` | Modal, Drawer, Popover | Top wrapper region grouping a heading and dismiss affordances on overlay surfaces. | [ADR-033](./033-header-bar-sub-anatomy.md) |
+| `icon-leading-text` | `icon-leading`, `label`, `icon-trailing` | Button, List-item, Tab, Breadcrumb-item, Badge, Link | Leading/trailing icon around a text label; `aria-hidden` icons + label drives the host's accessible name. `omitted`-override exercised for partial-arity adopters. | [ADR-034](./034-icon-leading-text-sub-anatomy.md) |
+
 ## Phase-2 follow-ups
 
 - **P6-126b** — provenance UI badge in `AnatomyTable.astro` ("from action-group" tag on slots resolved from a sub-anatomy ref). Reads `__subAnatomy.id` from each slot. Deferred to keep the data-model PR focused.
-- **Future sub-anatomies** — `header-bar` (Modal+Drawer share a header pattern), `close-button` (dismiss-button on Alert/Toast vs close-button on Modal/Drawer), `icon-leading-text` (Alert/Toast/Badge severity-glyph + content). Each requires its own ADR documenting scope. Not on the immediate roadmap.
+- **Future sub-anatomies** — add a row to the [sub-anatomy registry](#sub-anatomy-registry) above (no new ADR). The originally-anticipated `header-bar` / `close-button` / `icon-leading-text` all landed and are now registry rows.
 
 ## Alternatives considered
 

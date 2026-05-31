@@ -1,9 +1,16 @@
 # ADR 034: Icon-leading-text as fourth canonical sub-anatomy
 
-**Status:** Accepted
+**Status:** Folded into the [ADR-030](./030-sub-anatomy.md#sub-anatomy-registry) sub-anatomy registry (2026-05-31, backlog P6-165)
 **Date:** 2026-05
 **Supersedes:** none (additive — fourth instance of the [ADR-030](./030-sub-anatomy.md) sub-anatomy mechanism)
 **Related:** [ADR-001](./001-canon-first.md) (canon-first), [ADR-020](./020-slot-kind.md) (slot kind), [ADR-030](./030-sub-anatomy.md) (sub-anatomy mechanism), [ADR-032](./032-close-button-sub-anatomy.md) (close-button), [ADR-033](./033-header-bar-sub-anatomy.md) (header-bar)
+
+> **2026-05-31 (P6-165).** Authoring one ADR per concrete sub-anatomy proved to be
+> process overhead — each is an *application* of the ADR-030 mechanism, not a new
+> architectural decision. The canonical index now lives in the
+> [sub-anatomy registry](./030-sub-anatomy.md#sub-anatomy-registry) in ADR-030;
+> new sub-anatomies get a registry row there, not a new ADR. This file stays as the
+> detailed historical rationale for the `icon-leading-text` instance.
 
 > **Update 2026-05-05 — P6-150 landed.** The deferred follow-up named in this ADR (Tab + Breadcrumb-item canon-expansion + Badge / Link partial-arity adoption) shipped on the same day as the original ADR. icon-leading-text is now the reuse-roster of **6 consumers** (Button, List-item, Tab, Breadcrumb-item, Badge, Link); the `omitted`-override is exercised three times (Breadcrumb-item drops `icon-trailing`, Badge drops `icon-trailing`, Link drops `icon-leading`). The "no `omitted` override exercised in this rollout" line under Rationale was the state at ADR-acceptance time and remains accurate as a historical record.
 

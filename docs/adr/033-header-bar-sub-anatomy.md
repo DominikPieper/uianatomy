@@ -1,9 +1,16 @@
 # ADR 033: Header-bar as third canonical sub-anatomy
 
-**Status:** Accepted
+**Status:** Folded into the [ADR-030](./030-sub-anatomy.md#sub-anatomy-registry) sub-anatomy registry (2026-05-31, backlog P6-165)
 **Date:** 2026-05
 **Supersedes:** none (additive — third instance of the [ADR-030](./030-sub-anatomy.md) sub-anatomy mechanism)
 **Related:** [ADR-001](./001-canon-first.md) (canon-first), [ADR-020](./020-slot-kind.md) (slot kind), [ADR-030](./030-sub-anatomy.md) (sub-anatomy mechanism), [ADR-032](./032-close-button-sub-anatomy.md) (close-button — co-mount)
+
+> **2026-05-31 (P6-165).** Authoring one ADR per concrete sub-anatomy proved to be
+> process overhead — each is an *application* of the ADR-030 mechanism, not a new
+> architectural decision. The canonical index now lives in the
+> [sub-anatomy registry](./030-sub-anatomy.md#sub-anatomy-registry) in ADR-030;
+> new sub-anatomies get a registry row there, not a new ADR. This file stays as the
+> detailed historical rationale for the `header-bar` instance.
 
 ## Context
 
