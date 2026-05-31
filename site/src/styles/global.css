@@ -1049,21 +1049,6 @@ th {
 .component-alt-names__alias {
   font-style: italic;
 }
-.hero-since {
-  display: inline-block;
-  margin-inline-start: 12px;
-  padding: 2px 8px;
-  vertical-align: middle;
-  font-family: var(--font-mono);
-  font-size: 0.32em;
-  font-weight: 500;
-  letter-spacing: 0;
-  border: 1px solid color-mix(in oklab, var(--accent-cool, #4070c0) 35%, transparent);
-  background: color-mix(in oklab, var(--accent-cool, #4070c0) 12%, transparent);
-  color: color-mix(in oklab, var(--accent-cool, #4070c0) 70%, var(--fg));
-  border-radius: 4px;
-}
-
 .component-description {
   font-size: var(--text-step-1);
   color: var(--fg-muted);

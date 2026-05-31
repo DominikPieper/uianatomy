@@ -54,7 +54,6 @@ describe('mcp server', () => {
         'get_axes',
         'get_canonical_vocabularies',
         'get_contracts',
-        'get_changelog',
         'get_common_mistakes',
         'get_component',
         'get_component_view',
@@ -279,13 +278,6 @@ describe('mcp server', () => {
     expect(parsed.use.length).toBeGreaterThan(0);
     expect(parsed.avoid.length).toBeGreaterThan(0);
     expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item', 'table']);
-  });
-
-  it('get_changelog returns null for components without versioning metadata', async () => {
-    const { client } = await connect();
-    const result = await client.callTool({ name: 'get_changelog', arguments: { id: 'card' } });
-    const parsed = parseJson(result as any);
-    expect(parsed).toBeNull();
   });
 
   it('list_patterns returns confirmation-flow row', async () => {
@@ -554,12 +546,6 @@ describe('mcp server', () => {
     expect(parsed.subAnatomies).toContain('close-button');
     expect(parsed.subAnatomies).toContain('header-bar');
     expect(parsed.subAnatomies).toContain('icon-leading-text');
-  });
-
-  it('get_changelog errors on unknown component id', async () => {
-    const { client } = await connect();
-    const result = await client.callTool({ name: 'get_changelog', arguments: { id: 'nope' } });
-    expect((result as any).isError).toBe(true);
   });
 
   it('returns an error result for unknown component id', async () => {
@@ -961,7 +947,7 @@ describe('mcp best-practices', () => {
   it('every tool has a title, a description, and read-only annotations', async () => {
     const { client } = await connect();
     const { tools } = await client.listTools();
-    expect(tools.length).toBe(29);
+    expect(tools.length).toBe(28);
     for (const t of tools) {
       expect(t.title, `${t.name} title`).toBeTypeOf('string');
       expect((t.title as string).length, `${t.name} title non-empty`).toBeGreaterThan(0);

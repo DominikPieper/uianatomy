@@ -99,7 +99,6 @@ const result = await client.callTool({
 | `get_transitions` | `id: string` | State-machine transitions (`from` / `to` / `trigger`). `null` if absent. |
 | `get_events` | `id: string` | Events array (name, payload, per-framework notes). `null` if absent. |
 | `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
-| `get_changelog` | `id: string` | Versioning metadata: `since` (semver) plus `changelog` array of `{ version, date, summary }`. `null` when neither is declared. |
 | `get_canonical_vocabularies` | — | Master canonical vocabularies (`spacing`, `radius`, `color`, `elevation`, `typography`, `motion: { durations, easing }`, `breakpoint`, `propertyVocab`, `propertyBounded`, `interactiveStates`) that YAML values must draw from. Same source the consistency-test enforces. Use to resolve a value like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or to surface allowed enum values to a downstream UI. |
 | `get_contracts` | `id: string` | Return the contracts block for a component **or** a pattern (single-tool dispatch by id). Returns `{ id, kind: "component" \| "pattern", contracts }`. `contracts.nonNegotiable[]` is hard-binding rules with `source: 'apg' \| 'wcag' \| 'html-spec' \| 'platform' \| 'canon'`, optional `sourceRef`, and a `consequence` describing what breaks on violation. `contracts.vocabularyDrift[]` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts; errors on unknown id. |
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
@@ -163,7 +162,7 @@ Pair with `get_mismatches({ id })` and `get_common_mistakes({ id })` to surface 
 
 ## When to use which tool
 
-`get_component({ id })` returns the full canonical record. Many of the per-axis tools (`get_anatomy`, `get_axes`, `get_motion`, `get_events`, `get_when_to_use`, `get_tokens`, `get_responsive`, `get_transitions`, `get_framework_map`, `get_mismatches`, `get_common_mistakes`, `get_changelog`) are subsets of that same record. They are **not redundant** — they exist for two reasons:
+`get_component({ id })` returns the full canonical record. Many of the per-axis tools (`get_anatomy`, `get_axes`, `get_motion`, `get_events`, `get_when_to_use`, `get_tokens`, `get_responsive`, `get_transitions`, `get_framework_map`, `get_mismatches`, `get_common_mistakes`) are subsets of that same record. They are **not redundant** — they exist for two reasons:
 
 1. **Bandwidth.** Heavy components (Modal, Combobox) emit ~30 KB of JSON when fully serialized. An agent that only needs `axes` to decide a variant pays ~3 KB instead of the whole record. Multiply by N round-trips and the difference matters for context-window budgets.
 2. **Discovery.** A focused tool name (`get_motion`) signals intent in tool-call traces; `get_component` followed by an unscoped slice is harder to read in transcripts and harder for the agent to plan around.

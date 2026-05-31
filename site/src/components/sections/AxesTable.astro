@@ -1,13 +1,9 @@
 ---
 import type { Component } from '@uianatomy/shared/schema';
 import { formatPropertyType } from '@uianatomy/shared/format';
-import VersionBadges from './VersionBadges.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
 const { axes } = component;
-const variantDeprecation = new Map(
-  (axes.variantDeprecations ?? []).map((d) => [d.name, d]),
-);
 ---
 <div class="axes">
   <div class="axes__group">
@@ -15,12 +11,10 @@ const variantDeprecation = new Map(
     <p>Structurally different versions of the component.</p>
     <div class="variant-list">
       {axes.variants.map((v) => {
-        const dep = variantDeprecation.get(v.name);
         const aliases = v.alternativeNames ?? [];
         return (
-          <span class:list={['chip-wrap', { 'is-deprecated': !!dep }]}>
+          <span class="chip-wrap">
             <code class="chip">{v.name}</code>
-            <VersionBadges deprecated={dep ? { since: dep.since, reason: dep.reason, replacement: dep.replacement } : undefined} />
             {aliases.length > 0 && (
               <span class="variant-aliases">aka {aliases.join(' · ')}</span>
             )}
@@ -38,10 +32,9 @@ const variantDeprecation = new Map(
         <thead><tr><th>Property</th><th>Type</th></tr></thead>
         <tbody>
           {axes.properties.map((p) => (
-            <tr class:list={[{ 'is-deprecated': !!p.deprecated }]}>
+            <tr>
               <td>
                 <code>{p.name}</code>
-                <VersionBadges since={p.since} deprecated={p.deprecated} />
               </td>
               <td><code>{formatPropertyType(p)}</code></td>
             </tr>
@@ -113,15 +106,5 @@ const variantDeprecation = new Map(
     font-style: italic;
     color: var(--ink-muted);
     font-size: 0.85em;
-  }
-  .chip-wrap.is-deprecated .chip {
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
-    opacity: 0.7;
-  }
-  tr.is-deprecated td:first-child code {
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
-    opacity: 0.75;
   }
 </style>

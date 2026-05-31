@@ -431,23 +431,12 @@ export function createServer(): McpServer {
     },
   );
 
-  server.registerTool(
-    'get_changelog',
-    {
-      title: 'Get Changelog',
-      description:
-        'Return the versioning block (since + changelog entries) for a component. Returns null when the component declares no version metadata (today no canonical component declares either; this surface activates when a component lands its first published rename / mistake-correction / canonical-name-change and the editor bumps `since` + appends a changelog entry per docs/methodology.md). Each changelog entry is { version (semver), date (ISO YYYY-MM-DD), summary }. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      if (!c.since && !c.changelog) return jsonResult(null);
-      return jsonResult({ since: c.since ?? null, changelog: c.changelog ?? [] });
-    },
-  );
+  // get_changelog parked 2026-05-31 (backlog P6-163): the versioning subsystem
+  // (ADR-023) has 0/41 adoption — the tool returned null for every component
+  // and only inflated the advertised tool surface. Schema fields (since /
+  // changelog / deprecated) stay dormant; re-add this tool when a component
+  // lands its first real published change. get_component still exposes the
+  // fields verbatim if ever populated.
 
   server.registerTool(
     'get_when_to_use',

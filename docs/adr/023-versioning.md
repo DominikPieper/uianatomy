@@ -1,7 +1,17 @@
 # ADR 023: Optional Versioning Metadata for Canonical Components
 
-**Status:** Accepted
+**Status:** Accepted (dormant — live surface parked 2026-05-31, backlog P6-163)
 **Date:** 2026-05
+
+> **2026-05-31 amendment (P6-163).** After 0/41 components populated `since` /
+> `changelog` / `deprecated` / `variantDeprecations` in the ~1 month since
+> landing, the *live surface* was parked to stop carrying an unexercised
+> lifecycle: the `get_changelog` MCP tool and the site render
+> (`VersionBadges`, `ChangelogSection`, hero `since` pill, per-slot/variant
+> deprecation badges) were removed. The **schema fields stay** (optional,
+> dormant) and this ADR + the `docs/schema.md` Versioning section remain the
+> design record. Re-add the tool + render when the first component lands a
+> real published change. The decision below is preserved as authored.
 
 ## Context
 
