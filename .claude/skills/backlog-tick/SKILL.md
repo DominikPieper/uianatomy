@@ -7,6 +7,15 @@ description: Maintain docs/backlog.md as the single source of workflow truth —
 
 The backlog at `docs/backlog.md` is the single source of truth for "what is open, what is next, what was just finished" (`docs/CLAUDE.md`). This skill enforces the maintenance loop mechanically so it stops drifting.
 
+> **Lean reset (2026-05-31, backlog P6-163…167).** The backlog was rewritten from
+> 72KB of essay-length done-entries to a lean one-line-per-entry file. **Done-entries
+> are ONE line** (title · outcome · date · files); implementation detail goes in the
+> commit message, not here. **Do not maintain counts (tests/tools/pages) in prose** —
+> they drift; derive them from the test-runner / `grep`. New ids = highest-seen + 1
+> within the bucket (scan `backlog-archive.md` only to avoid an id collision; IDs need
+> uniqueness, nothing more). These rules override any "match the corpus depth" guidance
+> that survives below.
+
 ## When to use
 
 **Auto-trigger on completion phrases:**
@@ -36,49 +45,43 @@ In both cases — flip or append, do not wait to be asked. `docs/CLAUDE.md` is e
 Every entry follows this shape (extracted from the corpus):
 
 ```markdown
-[ ] **PX-NN Title** — one-line summary. Datei: <path>.
-[x] **PX-NN Title** — outcome description with affected surfaces. <verb-phrase>. Erledigt YYYY-MM-DD. Dateien: `<path>`, `<path>`, …
+[ ] **PX-NN Title** — one-line summary of what to do. Datei: <path>.
+[x] **PX-NN Title** — one-line outcome (what changed + key surfaces). Erledigt YYYY-MM-DD. Dateien: `<path>`, `<path>`, …
 ```
 
 Rules:
 
 - **Status legend**: `[ ]` open · `[~]` in progress · `[x]` done. No other glyphs.
-- **PX-NN id**: `P` + priority bucket digit (0..6) + `-` + sequential number within bucket. New ids are `max(NN) + 1` within the same bucket.
+- **PX-NN id**: `P` + priority bucket digit (0..6) + `-` + sequential number within bucket. New ids are `highest-seen + 1` within the bucket — scan `docs/backlog-archive.md` too, but only to avoid a collision. IDs need uniqueness, nothing more.
 - **Title bold**: wrap in `**`.
 - **Em-dash separator**: `—` between title and description, not `-`.
 - **Datei: vs Dateien:**: singular when one file, plural when multiple. Backticks around paths.
-- **Date format**: `YYYY-MM-DD` (full date, not month-precision like ADRs use). Today is `2026-05-03` per project convention; convert relative dates the user gives.
-- **Outcome prose**: one paragraph max. Name the schema/render/test/MCP touchpoints the change crossed. The corpus is rich (see P1-9, P2-15, P6-65 for high-quality precedents) — match that depth.
+- **Date format**: `YYYY-MM-DD` (full date). Use the current date; convert relative dates the user gives.
+- **Outcome = one line.** Name the headline change and the surfaces it crossed (schema / render / test / MCP) in a single sentence. The *why* and the blow-by-blow belong in the commit message — git already holds them. Do **not** restate test/tool/page counts in prose; they drift.
 - **Language**: German is the default for outcome prose; English fragments mixed in are fine. Code identifiers stay verbatim.
 
 ## Steps
 
 ### Step 1: Read the backlog
 
-`docs/backlog.md` is large (≥ 500 lines). Read enough context to:
+`docs/backlog.md` is lean (~one line per entry). Read it to:
 
 - Find the item being completed (search by id or title fragment)
 - Find the priority bucket where new items would go
-- Find the "Empfohlener Pfad" line (usually at the top or just below the legend)
+- Find the "Empfohlener Pfad" section (just below the legend)
 
 ### Step 2: Flip the box
 
-Change `[ ]` → `[x]` on the matching item. Then **rewrite the description** to be the outcome, not the spec:
+Change `[ ]` → `[x]` on the matching item. Then **rewrite the description** to be the outcome, not the spec — in **one line**:
 
 - Old (open): "P6-72 mistake.severity tier — `mistakeSeveritySchema` als REQUIRED enum. Datei: `shared/src/schema.ts`."
-- New (done): "P6-72 mistake.severity tier — `mistakeSeveritySchema = z.enum(['blocker','major','minor'])` als REQUIRED field auf mistakeSchema (component- UND pattern-mistakes). 133 entries handgeklassiert. MistakesList sortiert desc, severity-badge per row. Erledigt 2026-05-03. Dateien: `shared/src/schema.ts`, `content/components/*.yaml`, `content/patterns/*.yaml`, `site/src/components/sections/MistakesList.astro`, `shared/tests/schema.test.ts`."
+- New (done): "P6-72 mistake.severity tier — `mistakeSeveritySchema` REQUIRED enum (`blocker/major/minor`) auf component- + pattern-mistakes; MistakesList sortiert + Badge per Row. Erledigt 2026-05-03. Dateien: `shared/src/schema.ts`, `content/components/*.yaml`, `site/src/components/sections/MistakesList.astro`."
 
-The done description names: schema sketch (when applicable), file count, render touchpoint, test guard, completion date, file list.
+The done line names the headline change + the surfaces it crossed + the date + the files. No counts, no blow-by-blow — that lives in the commit.
 
 ### Step 3: Update "Empfohlener Pfad"
 
-If the just-completed item was named in "Empfohlener Pfad", update the line to reflect the new next-item.
-
-The convention from the corpus (project_state 2026-05-03):
-
-> `Empfohlener Pfad latest (commit history 2026-05-02 → 2026-05-03): … P6-66 (✓) → Atelier-feedback v2 quick-wins bundle (P6-67/69/71/75/79/81/82, ✓) → P6-65 propertyMap-kind ADR-025 (✓) → MCP-tools-bundle (P6-80 + P6-83, ✓) → content-audit-bundle (P6-68 + P6-76 + P6-77, ✓) → P6-72 mistake.severity (✓) → P6-86 vsRelated bidirectional backfill (✓)`
-
-Mark with `(✓)` after the just-completed id; promote the next-named item to the head of the path if it shifts.
+If the just-completed item was named in "Empfohlener Pfad", update it so the **Next** line names the new next-item. Keep it short — the recommended-path section names what to do next, not a `(✓)`-chain of history and not a count. Move closed items into a short "Erledigt <date>" line if useful; the narrative belongs to git, not this section.
 
 If "Empfohlener Pfad" doesn't mention the item, no edit needed there.
 
@@ -114,10 +117,10 @@ A stale backlog is worse than no backlog (`docs/CLAUDE.md`). The maintenance loo
 
 ## Conventions specific to this repo
 
-- **Tone**: terse and information-dense. The done-prose corpus runs ~3-4 lines per item with high signal. Don't pad.
-- **File lists**: comma-separated with backticks. Wildcards (`*`) are OK for mass-migrations: `content/components/*.yaml (24 files)`.
+- **Tone**: terse and information-dense. A done-entry is **one line** — headline change + surfaces + date + files. Don't pad, don't write a paragraph.
+- **File lists**: comma-separated with backticks. Wildcards (`*`) are OK for mass-migrations: `content/components/*.yaml`.
 - **Schema fields**: name them with backtick + Zod type when relevant (`` `axeCoreVersion?: semver` ``).
-- **Counts**: cite (24 components, 133 entries, 6 events) — they're how reviewers audit scope.
+- **No counts in prose**: do not write "24 components / 133 entries / 300 tests" — they rot. Scope is recoverable from the diff / test-runner; cite a number only when it *is* the outcome (e.g. "Tool-Count 28→20").
 - **Cross-refs**: when an item closes by way of an ADR, name the ADR (`ADR-025 supersedes ADR-015`) and link if useful (`Datei: docs/adr/025-property-map-kind.md`).
 - **Multiple items closed by one commit**: list each separately, do not bundle. Keeps the file's regex search useful.
 
