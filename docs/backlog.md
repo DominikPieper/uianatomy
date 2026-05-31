@@ -22,12 +22,14 @@ Site, Build/Deploy) solide; Hauptbefund war *build/record-ahead-of-demand* +
 *Source-of-truth driftet von Realität*. Die 4 Quick-Wins (P6-159…162) + der
 P4-27-Merge sind gelandet → die Source-of-truth-Drift ist geschlossen.
 
-**Erledigt 2026-05-31:** Cut-Liste-Surface-Reduktion P6-163 (Versioning geparkt)
-+ P6-164 (9 Slice-Tools → `get_component_section`, Tool-Count 28→20).
+**Erledigt 2026-05-31 (Review-Run + komplette Code-Cut-Liste):** Quick-Wins
+P6-159…162, P4-27-Merge, + Cut-Items P6-163 (Versioning geparkt), P6-164
+(9 Slice-Tools → `get_component_section`, 28→20 Tools), P6-165 (Sub-Anatomy-ADRs
+→ Registry), P6-166 (`/compare` entdupliziert, −309 Zeilen + latenter Bug gefixt).
 
-**Next:** P6-165 (Sub-Anatomy-ADRs 032/033/034 zu ADR-030-Registry demoten, S,
-Doc-only) als schneller Cut-Abschluss, dann die größte Produkt-Lücke:
-Implementations-Coverage (P6-168, nur 14/41 Komponenten, L).
+**Next:** Übrig in der Cut-Liste nur noch P6-167 (Skills/Audit-Zeremonie
+überdenken — meta, Judgment). Dann die größte Produkt-Lücke: Implementations-
+Coverage (P6-168, nur 14/41 Komponenten, L) + Canon-Content-Gaps P6-169…173.
 
 ---
 
@@ -48,7 +50,7 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 - [x] **P6-163 Versioning-Subsystem (ADR-023) geparkt** — Live-Surface entfernt (0/41 Adoption): `get_changelog`-MCP-Tool + 2 Tests raus (Tool-Count 29→28); Render entfernt (`VersionBadges.astro` + `ChangelogSection.astro` gelöscht, hero-since-Pill + Slot-/Variant-/Property-Deprecation-Badges aus ComponentPageShell/Figma+CodeSlotTable/AxesTable + `.hero-since`-CSS). Advertising-Surfaces bereinigt (SKILL.md-Tool-Table + per-axis-Liste, integrate.astro). Schema-Felder bleiben dormant; ADR-023 auf „Accepted (dormant)" + Amendment-Note; Changelog-Eintrag `2026-05-31-park-versioning.md`. 298 tests grün (225+73), build clean. Erledigt 2026-05-31. Dateien: `mcp-server/src/{server.ts,tests}`, `site/src/components/**`, `site/src/styles/global.css`, `site/src/pages/integrate.astro`, `site/public/.well-known/.../SKILL.md`, `docs/adr/023-versioning.md`, `site/src/content/changelog/2026-05-31-park-versioning.md`.
 - [x] **P6-164 9 Single-Field-MCP-Slice-Tools in `get_component_section` kollabiert** — bandwidth-preserving: neues `get_component_section(id, sections[])` gibt nur angefragte Sektionen zurück (3KB-Vorteil bleibt, P6-82/P6-115-Rationale gewahrt). Entfernt 9 Tools (`get_axes`/`get_common_mistakes`/`get_framework_map`/`get_tokens`/`get_motion`/`get_responsive`/`get_transitions`/`get_events`/`get_when_to_use`). Behalten: `get_anatomy` + `get_mismatches` (Shortcuts), `get_contracts` (special: component-OR-pattern). **Tool-Count 28→20.** Tests umgeschrieben (jetzt 75), 2 unused outputSchema-Imports raus. Advertising-Surfaces bereinigt + entkoppelte „N tools"-Counts aus SKILL.md/integrate.astro (P6-160-Erweiterung). 300 tests grün, build clean. Erledigt 2026-05-31. Dateien: `mcp-server/src/server.ts`, `mcp-server/tests/server.test.ts`, `site/public/.well-known/.../SKILL.md`, `site/src/pages/integrate.astro`.
 - [x] **P6-165 Per-Instanz-Sub-Anatomy-ADRs (032/033/034) zu ADR-030-Registry demoted** — neue „## Sub-anatomy registry"-Sektion in ADR-030 (Tabelle: id/slots/consumers/rationale/detail-link für action-group + close-button + header-bar + icon-leading-text) + Konventions-Statement „neue Sub-Anatomie = Registry-Row, kein neuer ADR; ADR nur wenn Mechanismus sich ändert". ADRs 032/033/034 auf Status „Folded into ADR-030 registry" + Banner; Bodies bleiben als historische Detail-Rationale. ADR-030 „Phase-2 follow-ups"-Zeile (vormals „Each requires its own ADR") aktualisiert. Doc-only (ADRs sind keine Site-Routes). Erledigt 2026-05-31. Dateien: `docs/adr/{030,032,033,034}-*.md`.
-- [ ] **P6-166 Client-seitiges `/compare`-Re-Render entduplizieren** — `compare.astro` baut ~190 Zeilen HTML von Hand nach, die `CompareDiff.astro` deklarativ erzeugt (duplizierte `optionalLabels`-Map, `escape()`-Helper, Matrix-Table) → zwei Kopien einer View per Hand im Gleichschritt. Entweder static `?a=&b=`-Route ohne Live-Re-Render, oder eine geteilte diff-to-HTML-Funktion in `@uianatomy/shared`. Genau die Dual-Maintenance, vor der CLAUDE.md warnt. Datei: `site/src/pages/compare.astro`, `site/src/components/compare/`.
+- [x] **P6-166 `/compare`-Re-Render entdupliziert (1 geteilte Funktion)** — neue `site/src/lib/compareDiffHtml.ts` (`renderDiffHtml` + `escapeHtml`) ist single source of truth für das Diff-Markup; `CompareDiff.astro` (333→14 Zeilen) und das Client-Script in `compare.astro` (347→218) nutzen beide dieselbe Funktion → kein Gleichschritt-Risiko mehr. Compare-Diff-Styles von scoped `<style>` nach global.css verschoben — **fixt latenten Bug**: client-injiziertes HTML war nach Re-Render unstyled (scoped-Attr fehlte). Static-Route-Alternative verworfen (Site ist static, kein SSR; ?a=&b= braucht Client-Fetch). Netto −309 Zeilen. 225 shared tests grün, build clean, gebaute compare-page + bundled CSS verifiziert. Erledigt 2026-05-31. Dateien: `site/src/lib/compareDiffHtml.ts` (neu), `site/src/components/compare/CompareDiff.astro`, `site/src/pages/compare.astro`, `site/src/styles/global.css`.
 - [ ] **P6-167 `backlog-tick`-Skill + Dual-File-ID-Ritual überdenken** — Skill (141 Zeilen) automatisiert die Heavyweight-Backlog-Zeremonie, die dieser Rewrite gerade wegvereinfacht; bei 1-Zeilen-Format verliert es den Großteil seines Jobs. Dual-File-PX-NN-Collision-Scan über 72KB+215KB ist reiner Overhead — IDs brauchen nur Eindeutigkeit (highest-seen+1 oder date+slug). Auch `canon-auditor` evaluieren (P6-151 war 4/8 False-Positives → Audit-Zeremonie erzeugt evtl. mehr Verifikations- als Spar-Arbeit). Dateien: `.claude/skills/backlog-tick`, `.claude/skills/canon-auditor`.
 
 ---

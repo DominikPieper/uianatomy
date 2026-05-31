@@ -1686,6 +1686,100 @@ details > *:not(summary) {
   outline-offset: 2px;
 }
 
+/* Compare diff — global (not a scoped Astro <style>) so the /compare client
+   re-render, which injects HTML built by the shared renderDiffHtml(), is
+   styled identically to the build-time render. See P6-166. */
+.compare-diff {
+  margin: var(--s-8) 0;
+}
+.compare-diff__vs {
+  background: var(--paper-100);
+  border-left: 3px solid var(--accent-active);
+  padding: var(--s-4) var(--s-5);
+  margin: 0 0 var(--s-6);
+  border-radius: var(--r-2);
+}
+.compare-diff__quote {
+  margin: 0;
+  line-height: var(--lh-loose);
+  color: var(--ink-700);
+}
+.compare-diff__quote + .compare-diff__quote {
+  margin-top: var(--s-3);
+}
+.compare-diff__grid {
+  display: grid;
+  gap: var(--s-6);
+}
+.compare-diff__row {
+  border-top: var(--bw-hair) solid var(--rule);
+  padding-top: var(--s-5);
+}
+.compare-diff__h3 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  font-weight: 500;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-500);
+  margin: 0 0 var(--s-3);
+}
+.compare-diff__row dl {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr;
+  gap: var(--s-2) var(--s-5);
+  margin: 0;
+}
+.compare-diff__row dt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  color: var(--ink-500);
+}
+.compare-diff__row dd {
+  margin: 0;
+  color: var(--ink-900);
+  line-height: var(--lh-loose);
+  font-size: var(--fs-14);
+  overflow-wrap: anywhere;
+}
+.compare-diff__row dd code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--paper-100);
+  padding: 1px 6px;
+  border-radius: var(--r-2);
+  margin-right: 2px;
+}
+.compare-diff__matrix {
+  width: 100%;
+  border-collapse: collapse;
+}
+.compare-diff__matrix th,
+.compare-diff__matrix td {
+  text-align: left;
+  padding: var(--s-2) var(--s-3);
+  border-bottom: var(--bw-hair) solid var(--rule);
+  font-size: var(--fs-14);
+}
+.compare-diff__matrix th[scope='row'] {
+  font-family: var(--font-mono);
+  color: var(--ink-500);
+  font-weight: 400;
+}
+.compare-diff__matrix td.is-diff {
+  background: color-mix(in oklab, var(--accent-active) 12%, transparent);
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .compare-diff__row dl {
+    grid-template-columns: 1fr;
+    gap: var(--s-1) 0;
+  }
+  .compare-diff__row dt {
+    margin-top: var(--s-2);
+  }
+}
+
 /* Reduced motion — WCAG 2.3.3. A reference about good UI must itself honour
    the user's OS-level motion preference: neutralise every transition,
    animation, smooth-scroll, and the cross-document view transition. Keeps a

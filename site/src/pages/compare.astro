@@ -80,6 +80,7 @@ const ROSTER = components
   <script>
     import { computeCompareDiff } from '@uianatomy/shared/compare';
     import type { Component } from '@uianatomy/shared/schema';
+    import { renderDiffHtml, escapeHtml } from '../lib/compareDiffHtml';
 
     interface RosterEntry { id: string; name: string }
 
@@ -108,14 +109,6 @@ const ROSTER = components
       return res.json();
     }
 
-    function escape(s: string): string {
-      return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
     function applySide(side: 'a' | 'b', c: Component): void {
       const titleLink = document.querySelector<HTMLAnchorElement>(`[data-compare-link="${side}"]`);
       if (titleLink) {
@@ -124,128 +117,6 @@ const ROSTER = components
       }
       const desc = document.querySelector<HTMLElement>(`[data-compare-desc="${side}"]`);
       if (desc) desc.textContent = c.description;
-    }
-
-    function renderCodeList(items: string[]): string {
-      return items.map((id) => `<code>${escape(id)}</code>`).join(' ');
-    }
-
-    function renderDl(rows: Array<[string, string]>): string {
-      if (rows.length === 0) return '';
-      return `<dl>${rows.map(([dt, dd]) => `<dt>${escape(dt)}</dt><dd>${dd}</dd>`).join('')}</dl>`;
-    }
-
-    function renderDiffHTML(diff: ReturnType<typeof computeCompareDiff>): string {
-      const optionalLabels: Record<string, string> = {
-        motion: 'motion',
-        responsive: 'responsive',
-        transitions: 'state transitions',
-        events: 'events',
-        formIntegration: 'form integration',
-        a11yAcceptance: 'a11y acceptance',
-        performance: 'performance thresholds',
-      };
-
-      const vsBlock =
-        diff.vsRelated.aMentionsB || diff.vsRelated.bMentionsA
-          ? `<div class="compare-diff__vs"><h3 class="compare-diff__h3">From the canon</h3>${
-              diff.vsRelated.aMentionsB
-                ? `<p class="compare-diff__quote"><strong>${escape(diff.names.a)}</strong> on <strong>${escape(diff.names.b)}</strong>: <em>${escape(diff.vsRelated.aMentionsB)}</em></p>`
-                : ''
-            }${
-              diff.vsRelated.bMentionsA
-                ? `<p class="compare-diff__quote"><strong>${escape(diff.names.b)}</strong> on <strong>${escape(diff.names.a)}</strong>: <em>${escape(diff.vsRelated.bMentionsA)}</em></p>`
-                : ''
-            }</div>`
-          : '';
-
-      const anatomyRows: Array<[string, string]> = [];
-      if (diff.anatomy.requiredOnlyInA.length > 0)
-        anatomyRows.push([`Required only in ${diff.names.a}`, renderCodeList(diff.anatomy.requiredOnlyInA)]);
-      if (diff.anatomy.requiredOnlyInB.length > 0)
-        anatomyRows.push([`Required only in ${diff.names.b}`, renderCodeList(diff.anatomy.requiredOnlyInB)]);
-      if (diff.anatomy.optionalOnlyInA.length > 0)
-        anatomyRows.push([`Optional only in ${diff.names.a}`, renderCodeList(diff.anatomy.optionalOnlyInA)]);
-      if (diff.anatomy.optionalOnlyInB.length > 0)
-        anatomyRows.push([`Optional only in ${diff.names.b}`, renderCodeList(diff.anatomy.optionalOnlyInB)]);
-      if (diff.anatomy.shared.length > 0)
-        anatomyRows.push(['Slot ids in both', renderCodeList(diff.anatomy.shared)]);
-
-      const variantRows: Array<[string, string]> = [];
-      if (diff.variants.onlyInA.length > 0)
-        variantRows.push([`Only in ${diff.names.a}`, escape(diff.variants.onlyInA.join(', '))]);
-      if (diff.variants.onlyInB.length > 0)
-        variantRows.push([`Only in ${diff.names.b}`, escape(diff.variants.onlyInB.join(', '))]);
-      if (diff.variants.shared.length > 0)
-        variantRows.push(['Shared', escape(diff.variants.shared.join(', '))]);
-
-      const propRows: Array<[string, string]> = [];
-      if (diff.properties.onlyInA.length > 0)
-        propRows.push([`Only in ${diff.names.a}`, escape(diff.properties.onlyInA.join(', '))]);
-      if (diff.properties.onlyInB.length > 0)
-        propRows.push([`Only in ${diff.names.b}`, escape(diff.properties.onlyInB.join(', '))]);
-      if (diff.properties.sharedDifferentKind.length > 0) {
-        const lines = diff.properties.sharedDifferentKind
-          .map(
-            (p) =>
-              `<div><code>${escape(p.name)}</code> — ${escape(diff.names.a)}: <em>${escape(p.aKind)}</em> · ${escape(diff.names.b)}: <em>${escape(p.bKind)}</em></div>`,
-          )
-          .join('');
-        propRows.push(['Same name, different kind', lines]);
-      }
-      if (diff.properties.sharedSameKind.length > 0)
-        propRows.push(['Same name and kind', escape(diff.properties.sharedSameKind.join(', '))]);
-
-      const intRows: Array<[string, string]> = [];
-      if (diff.interactiveStates.onlyInA.length > 0)
-        intRows.push([`Only in ${diff.names.a}`, escape(diff.interactiveStates.onlyInA.join(', '))]);
-      if (diff.interactiveStates.onlyInB.length > 0)
-        intRows.push([`Only in ${diff.names.b}`, escape(diff.interactiveStates.onlyInB.join(', '))]);
-      if (diff.interactiveStates.shared.length > 0)
-        intRows.push(['Shared', escape(diff.interactiveStates.shared.join(', '))]);
-
-      const dataRows: Array<[string, string]> = [];
-      if (diff.dataStates.onlyInA.length > 0)
-        dataRows.push([`Only in ${diff.names.a}`, escape(diff.dataStates.onlyInA.join(', '))]);
-      if (diff.dataStates.onlyInB.length > 0)
-        dataRows.push([`Only in ${diff.names.b}`, escape(diff.dataStates.onlyInB.join(', '))]);
-      if (diff.dataStates.shared.length > 0)
-        dataRows.push(['Shared', escape(diff.dataStates.shared.join(', '))]);
-
-      const matrixRows = (Object.keys(optionalLabels) as Array<keyof typeof diff.optionalBlocks>)
-        .map((key) => {
-          const row = diff.optionalBlocks[key];
-          const diffClass = row.a !== row.b ? ' class="is-diff"' : '';
-          return `<tr><th scope="row">${optionalLabels[key]}</th><td${diffClass}>${row.a ? '✓' : '—'}</td><td${diffClass}>${row.b ? '✓' : '—'}</td></tr>`;
-        })
-        .join('');
-
-      const axeRows: Array<[string, string]> = [];
-      if (diff.axeRules.onlyInA.length > 0)
-        axeRows.push([`Only in ${diff.names.a}`, renderCodeList(diff.axeRules.onlyInA)]);
-      if (diff.axeRules.onlyInB.length > 0)
-        axeRows.push([`Only in ${diff.names.b}`, renderCodeList(diff.axeRules.onlyInB)]);
-      if (diff.axeRules.shared.length > 0)
-        axeRows.push(['Shared', renderCodeList(diff.axeRules.shared)]);
-
-      return `
-        <section class="compare-diff" aria-labelledby="compare-diff-heading">
-          <h2 id="compare-diff-heading" class="section-rule">Diff</h2>
-          ${vsBlock}
-          <div class="compare-diff__grid">
-            ${anatomyRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Anatomy slots</h3>${renderDl(anatomyRows)}</div>` : ''}
-            ${variantRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Variants</h3>${renderDl(variantRows)}</div>` : ''}
-            ${propRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Properties</h3>${renderDl(propRows)}</div>` : ''}
-            ${intRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Interactive states</h3>${renderDl(intRows)}</div>` : ''}
-            ${dataRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">Data states</h3>${renderDl(dataRows)}</div>` : ''}
-            <div class="compare-diff__row">
-              <h3 class="compare-diff__h3">Schema sections declared</h3>
-              <table class="compare-diff__matrix"><thead><tr><th></th><th>${escape(diff.names.a)}</th><th>${escape(diff.names.b)}</th></tr></thead><tbody>${matrixRows}</tbody></table>
-            </div>
-            ${axeRows.length > 0 ? `<div class="compare-diff__row"><h3 class="compare-diff__h3">axe-core rules</h3>${renderDl(axeRows)}</div>` : ''}
-          </div>
-        </section>
-      `;
     }
 
     async function refresh(): Promise<void> {
@@ -264,11 +135,11 @@ const ROSTER = components
         const host = document.querySelector<HTMLElement>(`[data-compare-anatomy="${side}"]`);
         if (host) {
           const c = side === 'a' ? aData : bData;
-          host.innerHTML = `<p class="compare-page__anatomy-stub"><a href="/components/${escape(c.id)}">Open ${escape(c.name)} for full anatomy diagram →</a></p>`;
+          host.innerHTML = `<p class="compare-page__anatomy-stub"><a href="/components/${escapeHtml(c.id)}">Open ${escapeHtml(c.name)} for full anatomy diagram →</a></p>`;
         }
       }
       const mount = document.querySelector<HTMLElement>('[data-compare-diff-mount]');
-      if (mount) mount.innerHTML = renderDiffHTML(computeCompareDiff(aData, bData));
+      if (mount) mount.innerHTML = renderDiffHtml(computeCompareDiff(aData, bData));
     }
 
     void refresh();
