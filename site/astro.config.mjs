@@ -82,7 +82,10 @@ export default defineConfig({
     }),
     brokenLinks({
       checkExternalLinks: false,
-      throwError: false,
+      // Fail the build on an internal broken link. The site is a reference;
+      // a dead internal anchor shipping silently is worse than a hard build
+      // failure that surfaces in CI / local build.
+      throwError: true,
     }),
   ],
   vite: {

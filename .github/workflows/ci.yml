@@ -51,11 +51,17 @@ jobs:
       # Build runs the full pipeline: prebuild scripts (MCP server card,
       # agent-skills index), astro build, postbuild markdown rename,
       # astro-llms-md (.md sidecars + llms.txt), astro-og-canvas (71 PNGs),
-      # astro-broken-links-checker (fails the step if a real broken link
-      # appears, since `throwError` is currently false the check warns —
-      # but the consistency vitest already enforces vsRelated cross-refs).
+      # astro-broken-links-checker (throwError: true — a real internal broken
+      # link now fails this step instead of merely warning).
       - name: Build
         run: pnpm -r build
+
+      # Cloudflare auto-deploys from main, so a Worker-bundling regression
+      # would otherwise only surface at the deploy runner, outside any PR
+      # signal. A dry-run bundles worker/index.ts against site/dist without
+      # uploading or needing credentials, gating the deploy path in CI.
+      - name: Worker deploy dry-run
+        run: pnpm exec wrangler deploy --dry-run
 
       - name: Upload broken-links log on warning
         if: always()
