@@ -60,16 +60,8 @@ const TOOL_GROUPS = [
       ['get_component', 'id', 'Full canonical schema for one component.'],
       ['get_component_view', 'id, view', 'Designer / dev / bridge projection.'],
       ['get_anatomy', 'id', 'Slot and region definitions.'],
-      ['get_axes', 'id', 'Variants, properties, states.'],
       ['get_mismatches', 'id', 'Documented Figma ↔ code misalignments.'],
-      ['get_common_mistakes', 'id', 'Documented implementation errors and the fix.'],
-      ['get_framework_map', 'id', 'Cross-framework expression (web / React / Angular / Vue).'],
-      ['get_tokens', 'id', 'Per-slot token bindings (spacing / radius / color / elevation / typography).'],
-      ['get_motion', 'id', 'Motion block (durations, easing, reduced-motion fallback). Null when absent.'],
-      ['get_responsive', 'id', 'Responsive breakpoints. Null when absent.'],
-      ['get_transitions', 'id', 'State-machine transitions (from / to / trigger). Null when absent.'],
-      ['get_events', 'id', 'Events array (name, payload, per-framework notes). Null when absent.'],
-      ['get_when_to_use', 'id', 'Use / avoid prose plus related-component differentiators.'],
+      ['get_component_section', 'id, sections', 'One or more named sections in one round-trip: anatomy / axes / mismatches / mistakes / frameworkMap / tokens / motion / responsive / transitions / events / whenToUse.'],
     ],
   },
   {
@@ -104,7 +96,7 @@ const jsonLd = {
       '@id': `${url}#article`,
       headline: 'Integrate UI Anatomy in your agent or codebase',
       description:
-        'How to wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK — plus what the 22 tools can do.',
+        'How to wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK — plus what the tools can do.',
       url,
       inLanguage: 'en-US',
       author: {
@@ -128,7 +120,7 @@ const jsonLd = {
 ---
 <Base
   title="Integrate"
-  description="Wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK. 22 tools, public, no auth."
+  description="Wire the UI Anatomy MCP server into Claude Code, Claude Desktop, Cursor, Windsurf, or a direct TypeScript SDK. Public, no auth."
   breadcrumb={[{ name: 'Components', href: '/' }, { name: 'Integrate' }]}
   jsonLd={jsonLd}
 >
@@ -138,7 +130,7 @@ const jsonLd = {
       <h1 class="integrate__title">Use UI Anatomy from your agent</h1>
       <p class="integrate__lede">
         The canon ships as an MCP server (<code>https://uianatomy.dev/mcp</code>) and as an
-        agent-skill. Public, no auth, 22 tools. Drop the skill into any project and wire the
+        agent-skill. Public, no auth. Drop the skill into any project and wire the
         MCP server with one JSON snippet.
       </p>
       <p class="integrate__cta">
@@ -189,7 +181,7 @@ const jsonLd = {
 
     <section class="integrate__section" id="tools" aria-labelledby="tools-h">
       <h2 id="tools-h" class="integrate__h2">What you get</h2>
-      <p>22 tools across three groups. Every tool returns JSON; null is the canonical "not declared" answer.</p>
+      <p>Read-only tools across three groups. Every tool returns JSON; null is the canonical "not declared" answer.</p>
 
       {TOOL_GROUPS.map((group) => (
         <div class="integrate__group">
@@ -219,8 +211,7 @@ const jsonLd = {
       <h3 class="integrate__h3">"How is a Modal structured?"</h3>
       <ol>
         <li><code>get_anatomy({"{ id: 'modal' }"})</code> — slots with required/optional, purpose, layout hints.</li>
-        <li><code>get_axes({"{ id: 'modal' }"})</code> — variants and states.</li>
-        <li><code>get_transitions({"{ id: 'modal' }"})</code> — closed → opening → open → closing → closed.</li>
+        <li><code>get_component_section({"{ id: 'modal', sections: ['axes', 'transitions'] }"})</code> — variants + states and closed → opening → open → closing → closed.</li>
       </ol>
 
       <h3 class="integrate__h3">"How does Radix Dialog diverge from canonical Modal?"</h3>

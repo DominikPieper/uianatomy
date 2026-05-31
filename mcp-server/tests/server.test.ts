@@ -51,26 +51,18 @@ describe('mcp server', () => {
       [
         'get_about',
         'get_anatomy',
-        'get_axes',
         'get_canonical_vocabularies',
         'get_contracts',
-        'get_common_mistakes',
         'get_component',
+        'get_component_section',
         'get_component_view',
         'get_components',
-        'get_events',
-        'get_framework_map',
         'get_implementations',
         'get_mismatches',
-        'get_motion',
         'get_pattern',
         'get_pattern_a11y_aggregate',
         'get_patterns_for_component',
-        'get_responsive',
         'get_sub_anatomy',
-        'get_tokens',
-        'get_transitions',
-        'get_when_to_use',
         'list_components',
         'list_implementations',
         'list_patterns',
@@ -202,82 +194,134 @@ describe('mcp server', () => {
     expect(parsed.staleAfter).toBe(90);
   });
 
-  it('get_tokens returns slot-keyed token entries for Button', async () => {
+  it('get_component_section returns slot-keyed token entries for Button', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_tokens', arguments: { id: 'button' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'button', sections: ['tokens'] },
+    });
     const parsed = parseJson(result as any);
-    expect(Array.isArray(parsed)).toBe(true);
-    const root = parsed.find((s: any) => s.slotId === 'root');
+    expect(Array.isArray(parsed.tokens)).toBe(true);
+    const root = parsed.tokens.find((s: any) => s.slotId === 'root');
     expect(root?.tokens?.color?.background).toBe('color.accent.bg');
   });
 
-  it('get_motion returns the modal motion block', async () => {
+  it('get_component_section returns the modal motion block', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'modal' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'modal', sections: ['motion'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed.easing).toBe('motion.easing.standard');
-    expect(parsed.reducedMotionFallback).toBe('instant');
+    expect(parsed.motion.easing).toBe('motion.easing.standard');
+    expect(parsed.motion.reducedMotionFallback).toBe('instant');
   });
 
-  it('get_motion returns null for components without motion', async () => {
+  it('get_component_section returns null motion for components without motion', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_motion', arguments: { id: 'link' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'link', sections: ['motion'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed).toBeNull();
+    expect(parsed.motion).toBeNull();
   });
 
-  it('get_responsive returns the modal breakpoints', async () => {
+  it('get_component_section returns the modal breakpoints', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_responsive', arguments: { id: 'modal' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'modal', sections: ['responsive'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed.breakpoints[0].at).toBe('breakpoint.sm');
+    expect(parsed.responsive.breakpoints[0].at).toBe('breakpoint.sm');
   });
 
-  it('get_responsive returns null for Button', async () => {
+  it('get_component_section returns null responsive for Button', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_responsive', arguments: { id: 'button' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'button', sections: ['responsive'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed).toBeNull();
+    expect(parsed.responsive).toBeNull();
   });
 
-  it('get_transitions returns Modal transitions', async () => {
+  it('get_component_section returns Modal transitions', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_transitions', arguments: { id: 'modal' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'modal', sections: ['transitions'] },
+    });
     const parsed = parseJson(result as any);
-    expect(Array.isArray(parsed)).toBe(true);
-    expect(parsed.length).toBe(4);
-    expect(parsed[0].from).toBe('closed');
+    expect(Array.isArray(parsed.transitions)).toBe(true);
+    expect(parsed.transitions.length).toBe(4);
+    expect(parsed.transitions[0].from).toBe('closed');
   });
 
-  it('get_transitions returns null for Card', async () => {
+  it('get_component_section returns null transitions for Card', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_transitions', arguments: { id: 'card' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'card', sections: ['transitions'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed).toBeNull();
+    expect(parsed.transitions).toBeNull();
   });
 
-  it('get_events returns Combobox events with three entries', async () => {
+  it('get_component_section returns Combobox events with three entries', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_events', arguments: { id: 'combobox' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'combobox', sections: ['events'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed.length).toBe(3);
-    expect(parsed.map((e: any) => e.name)).toContain('selectionChange');
+    expect(parsed.events.length).toBe(3);
+    expect(parsed.events.map((e: any) => e.name)).toContain('selectionChange');
   });
 
-  it('get_events returns null for Link', async () => {
+  it('get_component_section returns null events for Link', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_events', arguments: { id: 'link' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'link', sections: ['events'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed).toBeNull();
+    expect(parsed.events).toBeNull();
   });
 
-  it('get_when_to_use returns Card whenToUse with vsRelated ids', async () => {
+  it('get_component_section returns Card whenToUse with vsRelated ids', async () => {
     const { client } = await connect();
-    const result = await client.callTool({ name: 'get_when_to_use', arguments: { id: 'card' } });
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'card', sections: ['whenToUse'] },
+    });
     const parsed = parseJson(result as any);
-    expect(parsed.use.length).toBeGreaterThan(0);
-    expect(parsed.avoid.length).toBeGreaterThan(0);
-    expect(parsed.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item', 'table']);
+    expect(parsed.whenToUse.use.length).toBeGreaterThan(0);
+    expect(parsed.whenToUse.avoid.length).toBeGreaterThan(0);
+    expect(parsed.whenToUse.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item', 'table']);
+  });
+
+  it('get_component_section returns multiple sections in one call', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'modal', sections: ['axes', 'frameworkMap', 'mistakes'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.axes.variants.length).toBeGreaterThan(0);
+    expect(parsed.frameworkMap).toBeTruthy();
+    expect(Array.isArray(parsed.mistakes)).toBe(true);
+    expect(parsed.motion).toBeUndefined();
+  });
+
+  it('get_component_section errors on unknown component id', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'nope', sections: ['axes'] },
+    });
+    expect((result as any).isError).toBe(true);
   });
 
   it('list_patterns returns confirmation-flow row', async () => {
@@ -750,10 +794,10 @@ describe('mcp server', () => {
     });
     const parsed = parseJson(result as any);
     const motionResult = await client.callTool({
-      name: 'get_motion',
-      arguments: { id: 'modal' },
+      name: 'get_component_section',
+      arguments: { id: 'modal', sections: ['motion'] },
     });
-    const motion = parseJson(motionResult as any);
+    const motion = parseJson(motionResult as any).motion;
     expect(parsed.motion.easing).toContain(motion.easing);
     for (const v of Object.values(motion.durations as Record<string, string>)) {
       expect(parsed.motion.durations).toContain(v);
@@ -934,8 +978,6 @@ describe('mcp best-practices', () => {
     'get_component',
     'get_components',
     'get_component_view',
-    'get_axes',
-    'get_framework_map',
     'get_contracts',
     'get_canonical_vocabularies',
     'get_pattern',
@@ -947,7 +989,7 @@ describe('mcp best-practices', () => {
   it('every tool has a title, a description, and read-only annotations', async () => {
     const { client } = await connect();
     const { tools } = await client.listTools();
-    expect(tools.length).toBe(28);
+    expect(tools.length).toBe(20);
     for (const t of tools) {
       expect(t.title, `${t.name} title`).toBeTypeOf('string');
       expect((t.title as string).length, `${t.name} title non-empty`).toBeGreaterThan(0);

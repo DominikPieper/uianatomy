@@ -8,13 +8,11 @@ import { READ_ONLY } from './annotations.js';
 import { CHARACTER_LIMIT } from './constants.js';
 import {
   aboutOutput,
-  axesOutput,
   canonicalVocabulariesOutput,
   componentOutput,
   componentsBulkOutput,
   componentViewOutput,
   contractsOutput,
-  frameworkMapOutput,
   patternA11yAggregateOutput,
   patternOutput,
   subAnatomyOutput,
@@ -274,24 +272,6 @@ export function createServer(): McpServer {
   );
 
   server.registerTool(
-    'get_axes',
-    {
-      title: 'Get Axes',
-      description:
-        'Return only variants/properties/states for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      outputSchema: axesOutput,
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return objectResult(c.axes as unknown as Record<string, unknown>);
-    },
-  );
-
-  server.registerTool(
     'get_mismatches',
     {
       title: 'Get Figma↔Code Mismatches',
@@ -308,150 +288,91 @@ export function createServer(): McpServer {
     },
   );
 
+  // get_component_section collapses what were 9 single-field slice tools
+  // (get_axes / get_common_mistakes / get_framework_map / get_tokens /
+  // get_motion / get_responsive / get_transitions / get_events /
+  // get_when_to_use) into one parameterised tool (backlog P6-164). It keeps
+  // the bandwidth win the slice tools were designed for (P6-82/P6-115 — fetch
+  // a few KB instead of the ~30 KB full record) while shrinking the advertised
+  // tool surface. `get_anatomy` + `get_mismatches` stay as named shortcuts;
+  // `get_contracts` stays separate (it dispatches component OR pattern).
+  //
+  // get_changelog parked separately (P6-163, ADR-023): 0/41 adoption.
+
   server.registerTool(
-    'get_common_mistakes',
+    'get_component_section',
     {
-      title: 'Get Common Mistakes',
+      title: 'Get Component Section(s)',
       description:
-        'Return only the documented common implementation mistakes for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
+        'Return one or more named sections of a component in a single round-trip — the bandwidth-friendly alternative to fetching the full record via `get_component`. Pass `sections` as a list; the result is an object keyed by the requested section names. `motion`/`responsive`/`transitions`/`events`/`whenToUse` are null when the component declares none. `tokens` returns only slots that bind tokens (`[{ slotId, tokens }]`). For anatomy-only or mismatch-only needs prefer the `get_anatomy` / `get_mismatches` shortcuts; for contracts use `get_contracts` (it also covers patterns).',
+      inputSchema: z.strictObject({
+        id: componentIdField,
+        sections: z
+          .array(
+            z.enum([
+              'anatomy',
+              'axes',
+              'mismatches',
+              'mistakes',
+              'frameworkMap',
+              'tokens',
+              'motion',
+              'responsive',
+              'transitions',
+              'events',
+              'whenToUse',
+            ]),
+          )
+          .min(1)
+          .describe('Which component sections to return. Result is keyed by these names.'),
+      }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ id, sections }) => {
       const map = await getComponents();
       const c = map.get(id);
       if (!c) return notFound(id);
-      return jsonResult(c.mistakes);
-    },
-  );
-
-  server.registerTool(
-    'get_framework_map',
-    {
-      title: 'Get Framework Map',
-      description:
-        'Return the cross-framework expression map for a component. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      outputSchema: frameworkMapOutput,
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return objectResult(c.frameworkMap as unknown as Record<string, unknown>);
-    },
-  );
-
-  server.registerTool(
-    'get_tokens',
-    {
-      title: 'Get Token Bindings',
-      description:
-        'Return the per-slot token bindings (spacing/radius/color/elevation/typography) for a component. Slots without tokens are omitted from the result. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      const slotsWithTokens = c.anatomy
-        .filter((s) => s.tokens !== undefined)
-        .map((s) => ({ slotId: s.id, tokens: s.tokens }));
-      return jsonResult(slotsWithTokens);
-    },
-  );
-
-  server.registerTool(
-    'get_motion',
-    {
-      title: 'Get Motion',
-      description:
-        'Return the motion block (durations/easing/reducedMotionFallback) for a component. Returns null when the component declares no motion. Slice tool — use for narrow round-trip needs (e.g. motion-only review across multiple components). For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return jsonResult(c.motion ?? null);
-    },
-  );
-
-  server.registerTool(
-    'get_responsive',
-    {
-      title: 'Get Responsive',
-      description:
-        'Return the responsive block (breakpoints) for a component. Returns null when the component declares no responsive behaviour. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return jsonResult(c.responsive ?? null);
-    },
-  );
-
-  server.registerTool(
-    'get_transitions',
-    {
-      title: 'Get State Transitions',
-      description:
-        'Return the state-machine transitions (from/to/trigger) for a component. Returns null when the component declares no transitions. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return jsonResult(c.axes.states.transitions ?? null);
-    },
-  );
-
-  server.registerTool(
-    'get_events',
-    {
-      title: 'Get Events',
-      description:
-        'Return the events array (name/payload/per-framework notes) for a component. Returns null when the component declares no events. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return jsonResult(c.events ?? null);
-    },
-  );
-
-  // get_changelog parked 2026-05-31 (backlog P6-163): the versioning subsystem
-  // (ADR-023) has 0/41 adoption — the tool returned null for every component
-  // and only inflated the advertised tool surface. Schema fields (since /
-  // changelog / deprecated) stay dormant; re-add this tool when a component
-  // lands its first real published change. get_component still exposes the
-  // fields verbatim if ever populated.
-
-  server.registerTool(
-    'get_when_to_use',
-    {
-      title: 'Get When-To-Use',
-      description:
-        'Return the whenToUse block (use/avoid prose plus per-related differentiators) for a component. Returns null when the component declares no whenToUse. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
-      inputSchema: z.strictObject({ id: componentIdField }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      const map = await getComponents();
-      const c = map.get(id);
-      if (!c) return notFound(id);
-      return jsonResult(c.whenToUse ?? null);
+      const pick: Record<string, unknown> = {};
+      for (const s of sections) {
+        switch (s) {
+          case 'anatomy':
+            pick.anatomy = c.anatomy;
+            break;
+          case 'axes':
+            pick.axes = c.axes;
+            break;
+          case 'mismatches':
+            pick.mismatches = c.mismatches;
+            break;
+          case 'mistakes':
+            pick.mistakes = c.mistakes;
+            break;
+          case 'frameworkMap':
+            pick.frameworkMap = c.frameworkMap;
+            break;
+          case 'tokens':
+            pick.tokens = c.anatomy
+              .filter((slot) => slot.tokens !== undefined)
+              .map((slot) => ({ slotId: slot.id, tokens: slot.tokens }));
+            break;
+          case 'motion':
+            pick.motion = c.motion ?? null;
+            break;
+          case 'responsive':
+            pick.responsive = c.responsive ?? null;
+            break;
+          case 'transitions':
+            pick.transitions = c.axes.states.transitions ?? null;
+            break;
+          case 'events':
+            pick.events = c.events ?? null;
+            break;
+          case 'whenToUse':
+            pick.whenToUse = c.whenToUse ?? null;
+            break;
+        }
+      }
+      return jsonResult(pick);
     },
   );
 

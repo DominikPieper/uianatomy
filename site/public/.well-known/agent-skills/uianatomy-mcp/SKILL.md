@@ -9,7 +9,7 @@ UI Anatomy publishes a canonical, library-agnostic reference for common UI compo
 
 **Read these as best practices, not fixed rules.** Each canonical record is *synthesised* from triangulating multiple sources — W3C ARIA APG, MDN, WCAG, mature headless libraries (Radix UI, React Aria, Headless UI, Spectrum), and production design systems (Polaris, Carbon, Atlassian, Material 3, GOV.UK). Where they converge, the convergence becomes the canonical default. Where they disagree, the disagreement is named and a recommendation is picked with rationale. The canon is a *reference for reasonable defaults across the industry*, not a regulation. Context-driven divergence is expected — that is what the per-library audits in `implementations/` exist to capture. When citing the canon to a downstream user, surface this framing: it is not authoritative law, it is convergence with rationale. Call `get_about` for the full project framing prose.
 
-The MCP server exposes this knowledge as 29 tools.
+The MCP server exposes this knowledge as a set of read-only tools (listed below).
 
 ## Endpoint
 
@@ -89,16 +89,8 @@ const result = await client.callTool({
 | `get_components` | `ids: string[]` | Bulk-fetch full canonical records. Returns `{ components, missing }` — `components` is the resolved set in request order (deduplicated), `missing` is the sorted list of unresolved ids. Use when the agent already knows the id set (comparing 3 components, hydrating a pattern's composition list); avoids N round-trips. |
 | `get_component_view` | `id: string`, `view: "designer" \| "dev" \| "bridge"` | Role-specific projection of the component. `designer` keeps Figma-side hints + tokens + motion + responsive + property-map + i18n. `dev` keeps code-side hints + framework-map + events + form-integration + a11y-acceptance + performance. `bridge` keeps mismatches + common-mistakes + everything cross-cutting. |
 | `get_anatomy` | `id: string` | Slot/region definitions only. |
-| `get_axes` | `id: string` | Variants, properties, and states only. |
 | `get_mismatches` | `id: string` | Documented Figma ↔ code misalignments. |
-| `get_common_mistakes` | `id: string` | Documented implementation errors and the fixes. |
-| `get_framework_map` | `id: string` | Cross-framework expression mapping (web components / React / Angular signals / Vue). |
-| `get_tokens` | `id: string` | Per-slot token bindings (`spacing`, `radius`, `color`, `elevation`, `typography`). Returns `null` when the component declares none. |
-| `get_motion` | `id: string` | Motion block (durations, easing, reduced-motion fallback). `null` if absent. |
-| `get_responsive` | `id: string` | Responsive breakpoints. `null` if absent. |
-| `get_transitions` | `id: string` | State-machine transitions (`from` / `to` / `trigger`). `null` if absent. |
-| `get_events` | `id: string` | Events array (name, payload, per-framework notes). `null` if absent. |
-| `get_when_to_use` | `id: string` | `use` / `avoid` prose plus related-component differentiators. |
+| `get_component_section` | `id: string`, `sections: string[]` | One or more named sections in a single round-trip — the bandwidth-friendly slice. Valid sections: `anatomy`, `axes`, `mismatches`, `mistakes`, `frameworkMap`, `tokens`, `motion`, `responsive`, `transitions`, `events`, `whenToUse`. Result is an object keyed by the requested names; `motion`/`responsive`/`transitions`/`events`/`whenToUse` are `null` when absent; `tokens` returns only token-bearing slots (`[{ slotId, tokens }]`). |
 | `get_canonical_vocabularies` | — | Master canonical vocabularies (`spacing`, `radius`, `color`, `elevation`, `typography`, `motion: { durations, easing }`, `breakpoint`, `propertyVocab`, `propertyBounded`, `interactiveStates`) that YAML values must draw from. Same source the consistency-test enforces. Use to resolve a value like `responsive.breakpoints[].at: "breakpoint.sm"` against the master list, or to surface allowed enum values to a downstream UI. |
 | `get_contracts` | `id: string` | Return the contracts block for a component **or** a pattern (single-tool dispatch by id). Returns `{ id, kind: "component" \| "pattern", contracts }`. `contracts.nonNegotiable[]` is hard-binding rules with `source: 'apg' \| 'wcag' \| 'html-spec' \| 'platform' \| 'canon'`, optional `sourceRef`, and a `consequence` describing what breaks on violation. `contracts.vocabularyDrift[]` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts; errors on unknown id. |
 | `list_patterns` | — | Every canonical pattern (compositions of canonical components) with `id`, `name`, `description`, the unique `componentId` set composed, and `lastReviewed`. |
@@ -114,18 +106,17 @@ const result = await client.callTool({
 **"How is a Modal structured?"**
 
 1. `get_anatomy({ id: "modal" })` → list of slots with required/optional, purpose, layout hints.
-2. `get_axes({ id: "modal" })` → variants and states.
-3. `get_transitions({ id: "modal" })` → `closed → opening → open → closing → closed`.
+2. `get_component_section({ id: "modal", sections: ["axes", "transitions"] })` → variants + states and `closed → opening → open → closing → closed` in one call.
 
 **"What can go wrong implementing Tabs?"**
 
-1. `get_common_mistakes({ id: "tabs" })` → documented errors with rationale.
+1. `get_component_section({ id: "tabs", sections: ["mistakes"] })` → documented errors with rationale.
 2. `get_mismatches({ id: "tabs" })` → Figma ↔ code traps.
 
 **"Find a component for filtered selection"**
 
 1. `search_components({ query: "filter" })` → ranked candidates.
-2. `get_when_to_use({ id: "combobox" })` → `use`, `avoid`, comparisons with related components.
+2. `get_component_section({ id: "combobox", sections: ["whenToUse"] })` → `use`, `avoid`, comparisons with related components.
 
 **"How does Radix' Dialog diverge from canonical Modal?"**
 
@@ -142,9 +133,9 @@ const result = await client.callTool({
 Useful when reviewing a vendor library API description, a design-system RFC, or any prose specification you want to score against canonical anatomy.
 
 1. `list_components` → identify the canonical component(s) the spec covers (search by name, alias, or `search_components({ query })`).
-2. For each match: `get_anatomy({ id })`, `get_axes({ id })`, `get_events({ id })`, `get_a11y_acceptance` (via `get_component_view({ view: "dev" })`). The canon is your audit checklist.
+2. For each match: `get_anatomy({ id })` plus `get_component_section({ id, sections: ["axes", "events"] })`, and a11y acceptance via `get_component_view({ view: "dev" })`. The canon is your audit checklist.
 3. Walk the spec section by section — for each canonical slot / variant / event, confirm or flag the spec's coverage. Capture gaps as a divergence list (`omitted` / `renamed` / `extended` / `reshaped`); the same vocabulary the Phase-2 implementation audits use.
-4. Pair with `get_mismatches({ id })` and `get_common_mistakes({ id })` to surface canonical pitfalls the spec should also account for.
+4. Pair with `get_mismatches({ id })` and `get_component_section({ id, sections: ["mistakes"] })` to surface canonical pitfalls the spec should also account for.
 
 This complements `validate_implementation`, which scores generated code; spec-parity scores prose intent.
 
@@ -158,33 +149,34 @@ The compact 5-step form. Use this when scoring a vendor library API description,
 4. Diff axes, variants, slots, events between the spec and the canonical record.
 5. Output a mismatch table grouped by severity — critical (missing required slot / event / state), drift (renamed value, wrong polarity), naming (alias not declared).
 
-Pair with `get_mismatches({ id })` and `get_common_mistakes({ id })` to surface canonical pitfalls the spec should also account for. The longer walkthrough in *Typical agent flows* above expands each step; the compact form here is the recipe to recall in-flow.
+Pair with `get_mismatches({ id })` and `get_component_section({ id, sections: ['mistakes'] })` to surface canonical pitfalls the spec should also account for. The longer walkthrough in *Typical agent flows* above expands each step; the compact form here is the recipe to recall in-flow.
 
 ## When to use which tool
 
-`get_component({ id })` returns the full canonical record. Many of the per-axis tools (`get_anatomy`, `get_axes`, `get_motion`, `get_events`, `get_when_to_use`, `get_tokens`, `get_responsive`, `get_transitions`, `get_framework_map`, `get_mismatches`, `get_common_mistakes`) are subsets of that same record. They are **not redundant** — they exist for two reasons:
+`get_component({ id })` returns the full canonical record (~30 KB for heavy components like Modal / Combobox). When you only need part of it, fetch a slice instead — it keeps the round-trip a few KB and signals intent in the trace:
 
-1. **Bandwidth.** Heavy components (Modal, Combobox) emit ~30 KB of JSON when fully serialized. An agent that only needs `axes` to decide a variant pays ~3 KB instead of the whole record. Multiply by N round-trips and the difference matters for context-window budgets.
-2. **Discovery.** A focused tool name (`get_motion`) signals intent in tool-call traces; `get_component` followed by an unscoped slice is harder to read in transcripts and harder for the agent to plan around.
+- `get_component_section({ id, sections: [...] })` — one or more sections in a single call. Valid sections: `anatomy`, `axes`, `mismatches`, `mistakes`, `frameworkMap`, `tokens`, `motion`, `responsive`, `transitions`, `events`, `whenToUse`.
+- `get_anatomy({ id })` / `get_mismatches({ id })` — named shortcuts for the two highest-traffic slices.
+- `get_contracts({ id })` — hard-binding rules; also dispatches patterns.
 
 Picking between them:
 
 - **Building a new instance from scratch / migrating a library wrapper** → `get_component` once, use the full record as a checklist.
-- **Answering one targeted question** ("does Modal have transitions?", "what tokens does Button use?") → the matching per-axis tool. One round-trip, one slice.
-- **Comparing 3+ components** → loop `get_component` per id; the per-axis tools repeat metadata you already have.
+- **Answering one targeted question** ("does Modal have transitions?", "what tokens does Button use?") → `get_component_section({ id, sections: ['transitions'] })`. One round-trip, just the slice; pass several section names to batch them.
+- **Comparing 3+ components** → loop `get_component` (or `get_components({ ids })`) per id; slices repeat metadata you already have.
 - **Surfacing role-specific context to a downstream agent** → `get_component_view({ id, view })`. Designer / dev / bridge projections drop everything outside that role.
 
 `get_pattern` is **not** a subset of any component — patterns are independent records (compositions on top of canonical components). Always use `get_pattern` / `list_patterns` / `get_patterns_for_component` for pattern queries.
 
 ## First call: load tools
 
-The server returns all 29 tools in a single `tools/list` response — no progressive disclosure, no lazy loading. **Some clients (Claude Code among them) defer per-tool schema-loading regardless** — the agent sees a tool name but cannot invoke it until the schema is fetched, and a direct call fails with `InputValidationError`. Bulk-load the common tools up front to avoid mid-flow latency:
+The server returns its full tool list in a single `tools/list` response — no progressive disclosure, no lazy loading. **Some clients (Claude Code among them) defer per-tool schema-loading regardless** — the agent sees a tool name but cannot invoke it until the schema is fetched, and a direct call fails with `InputValidationError`. Bulk-load the common tools up front to avoid mid-flow latency:
 
 ```
 ToolSearch query: "select:mcp__uianatomy__get_about,mcp__uianatomy__list_components,mcp__uianatomy__get_component,mcp__uianatomy__search_components,mcp__uianatomy__list_patterns,mcp__uianatomy__get_pattern,mcp__uianatomy__get_implementations"
 ```
 
-Add per-axis tools (`get_anatomy`, `get_motion`, `get_events`, `get_contracts`, etc.) as the specific audit flow demands. If your client surfaces fewer than 29 tools at the catalogue level (not the schema level), restart the session and verify the MCP server connection is live; the server itself never withholds tools.
+Add slice tools (`get_anatomy`, `get_mismatches`, `get_component_section`, `get_contracts`, etc.) as the specific audit flow demands. If your client surfaces fewer tools at the catalogue level than the table above lists (not the schema level), restart the session and verify the MCP server connection is live; the server itself never withholds tools.
 
 ## Library implementations (Phase 2)
 
