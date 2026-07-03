@@ -929,55 +929,45 @@ i18n:
 contracts:
   nonNegotiable:
     - rule: >-
-        The progressbar element carries an accessible
-        name via `aria-label` or `aria-labelledby`.
-        Implementations that ship unlabeled
-        progressbars violate WCAG 4.1.2 — AT users
-        hear the percentage with no semantic context.
+        The progressbar element carries an accessible name
+        via `aria-label` or `aria-labelledby` — never
+        unlabeled.
       source: wcag
       sourceRef: 'WCAG 4.1.2 Name, Role, Value'
       consequence: >-
-        Without a label, SR users hear
-        "progressbar, 43 percent" with no indication
-        of what is at 43 percent. The percentage
-        alone communicates nothing — uploads,
-        downloads, syncs, and form-saves all sound
-        identical. The user cannot tell which task is
-        progressing or whether multiple progressbars
-        are reporting different operations.
+        An unlabeled progressbar fails Name-Role-Value: AT
+        users receive a role and a value with no way to
+        identify which operation it belongs to, and cannot
+        disambiguate multiple concurrent progressbars on
+        the same page. See mistake `progress-no-label`.
     - rule: >-
-        Determinate progress reports
-        `aria-valuemin`, `aria-valuemax`, and
-        `aria-valuenow`. Indeterminate progress
-        OMITS `aria-valuenow` entirely (does not set
-        it to 0 or the last known value).
+        Determinate progress reports `aria-valuemin`,
+        `aria-valuemax`, and `aria-valuenow`. Indeterminate
+        progress OMITS `aria-valuenow` entirely — never
+        sets it to `0` or a stale last-known value.
       source: apg
       sourceRef: 'WAI-ARIA progressbar role + aria-valuenow guidance'
       consequence: >-
-        Without the omit-rule, indeterminate progress
-        announces a stale value ("0 percent" or "43
-        percent") while the actual state is "we
-        don't know". SR users mistrust the value or
-        misread the operation as stuck. The omit
-        rule is what canonical APG-compliant
-        progressbars do; the absence of
-        `aria-valuenow` is the busy-state signal.
+        A present-but-stale `aria-valuenow` misrepresents
+        an unknown state as a measured one, so AT users
+        trust a number that does not correspond to
+        reality. Omission is the only signal APG defines
+        for "busy, fraction unknown." See mistake
+        `progress-indeterminate-with-valuenow`.
     - rule: >-
         Indeterminate animation respects
-        `prefers-reduced-motion: reduce` — the
-        canonical fallback is a static busy
-        indicator (stripe pattern, single-frame
-        pulse, or non-animated shape with
-        `aria-valuetext="Working"`).
+        `prefers-reduced-motion: reduce` by falling back
+        to a static (non-continuously-animating) busy
+        indicator.
       source: wcag
       sourceRef: 'WCAG 2.3.3 Animation from Interactions'
       consequence: >-
-        Without the fallback, users with vestibular
-        sensitivity or animation-fatigue experience
-        sustained discomfort during long operations.
-        WCAG 2.3.3 is AAA but the canonical
-        contract treats it as required because the
-        cost of compliance is one CSS media query.
+        An indeterminate animation with no reduced-motion
+        fallback imposes unavoidable, indefinite motion on
+        users with vestibular or motion-triggered
+        conditions for the entire duration of the
+        underlying operation. See mistake
+        `progress-no-reduced-motion`.
     - rule: >-
         The progressbar element is non-interactive —
         no `tabindex`, no role conflicts. The

@@ -285,17 +285,30 @@ mismatches:
       placeholder strings for design illustration; the algorithm
       lives in code with the `name` prop driving it.
 
-  - figma: Avatar size hard-coded as a px value
-    code: Size driven by a token (`xs / sm / md / lg / xl`)
+  - figma: Avatar image asset uploaded as a pre-cropped square, subject
+      manually centred by the designer
+    code: '`<img>` with `object-fit: cover` cropping the source image''s
+      native, often non-square, aspect ratio at render time'
     consequence: >-
-      Designers set `width: 24px` directly on the avatar frame;
-      developers bind size to a token. When the size scale rebalances,
-      the Figma file lags and the shipped avatar visually disagrees
-      with the surrounding text.
+      Designers place an art-directed square crop in the Figma frame —
+      the subject's face perfectly centred by eye; developers receive
+      the raw, uncropped photo from a CMS, user upload, or third-party
+      URL (Gravatar, OAuth profile photo) and let `object-fit: cover`
+      crop it to the circle or square container at render time.
+      `object-fit: cover` centres the crop geometrically, with no
+      knowledge of where the face sits — a portrait-orientation source
+      photo gets its subject's head clipped or shifted off-centre. The
+      Figma mock always looks correctly framed; the shipped avatar
+      frequently does not.
     correct: >-
-      Bind size to a token in both surfaces. Figma's size component-
-      property maps to `xs / sm / md / lg / xl`; code uses the same
-      enum.
+      Treat the Figma pre-cropped asset as a design-time approximation,
+      not a contract on the runtime crop. Where the image pipeline
+      supports it, request a face-aware or focal-point-aware crop from
+      the serving CDN (Cloudinary, Imgix, Gravatar's `?d=`/crop params)
+      at upload or serve time rather than relying on plain
+      `object-fit: cover`. When no smart-crop service is available,
+      document `object-position` as an explicit per-avatar override
+      point instead of assuming default centring is sufficient.
 
 mistakes:
   - id: avatar-no-fallback-order

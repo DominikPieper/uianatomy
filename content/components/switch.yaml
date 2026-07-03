@@ -19,9 +19,9 @@ intro: >-
   submits") and by the absence of the indeterminate (mixed) state.
   The reference documents the four canonical slots, the noun-not-
   verb label rule, the form-integration bridge (no native HTML
-  input exists for switch — components must mirror state into a
-  hidden `<input type="checkbox">` or controlled value), and the
-  divergence from Checkbox and SegmentedControl.
+  switch input — see the input slot's anatomy for the bridge
+  pattern), and the divergence from Checkbox and
+  SegmentedControl.
 
 alternateNames:
   - 'Toggle'
@@ -187,12 +187,16 @@ anatomy:
     required: true
     purpose: >-
       The interactive control bearing `role="switch"` plus
-      `aria-checked`. May be a hidden native `<input
-      type="checkbox" role="switch">` (so the form receives the
-      value and the browser provides the role) or a custom
-      `<button role="switch">` with explicit aria-checked
-      management. Receives keyboard focus; Space and Enter
-      toggle the state per APG.
+      `aria-checked`. No native `<input type="switch">` exists
+      in HTML (the experimental `switch` attribute on
+      `<input type="checkbox">` has limited browser support —
+      see vocabularyDrift), so the canonical markup is one of
+      two shapes: a hidden native `<input type="checkbox"
+      role="switch">` (form receives the value; the role
+      overrides the announcement) or a custom `<button
+      role="switch">` with explicit `aria-checked` management.
+      Receives keyboard focus; Space and Enter toggle the state
+      per APG.
     slotKind: interactive
     layout:
       row: 1
@@ -208,15 +212,10 @@ anatomy:
     a11y:
       hint: >-
         `role="switch"` is mandatory — a `<button>` without the
-        role is announced as "button" not "switch". Native
-        HTML has no `<input type="switch">` (the experimental
-        `switch` attribute is limited browser support); the
-        canonical pattern is `<input type="checkbox"
-        role="switch">` for form integration or `<button
-        role="switch" aria-checked="true|false">` for
-        custom-rendered switches. `aria-checked="mixed"` is
-        INVALID for switches — the role only accepts true /
-        false per APG.
+        role is announced as "button" not "switch" (the purpose
+        above covers why one of the two markup shapes is
+        required). `aria-checked="mixed"` is INVALID for
+        switches — the role only accepts true / false per APG.
     tokens:
       color:
         border: color.border.focus
@@ -368,22 +367,19 @@ mismatches:
       RadioGroup, not a Switch.
 
   - figma: Switch shipped without a hidden form-bridge input
-    code: Native HTML has no `<input type="switch">`; bridge required for form participation
+    code: No native switch input exists (see the input anatomy slot) — a form-bound switch needs the hidden-checkbox or controlled bridge
     consequence: >-
       Designers do not consider form submission; developers
       know that `<button role="switch">` does not submit any
-      value to the form. Without a hidden `<input
-      type="checkbox" role="switch">` mirror or a controlled
-      bridge in JS, the switch's state is lost on form
-      submission. Settings panes that "save on submit" lose
-      every switch value silently.
+      value to the form. Without the hidden-checkbox or
+      controlled bridge (see anatomy: input), the switch's
+      state is lost on form submission. Settings panes that
+      "save on submit" lose every switch value silently.
     correct: >-
-      Document the form-bridge as canonical when the switch
-      is form-bound. Either render `<input type="checkbox"
-      role="switch">` (the native checkbox provides form
-      participation, the role overrides the announcement) or
-      mirror state into a hidden checkbox via JS plus
-      controlled-prop bridge. Settings that take effect
+      Document the form-bridge as canonical when the switch is
+      form-bound — render the hidden-checkbox shape from
+      anatomy: input, or mirror state via a controlled-prop
+      bridge (see formIntegration). Settings that take effect
       immediately without form submission omit the bridge.
 
 mistakes:
@@ -588,9 +584,9 @@ propertyMap:
     code: name
     kind: text
     notes: >-
-      Form-field key. Form participation requires a hidden
-      `<input type="checkbox" role="switch">` bridge —
-      `<button role="switch">` does not submit any value.
+      Form-field key. Requires the hidden-input bridge (see
+      anatomy: input; formIntegration) to reach `FormData` —
+      omitting it is mistake `switch-no-form-bridge`.
   - figma: Thumb
     code: thumb
     kind: slot
@@ -605,14 +601,12 @@ propertyMap:
 formIntegration:
   nativeElement: input
   submittedValue: >-
-    When form-bound, the switch is implemented as `<input
-    type="checkbox" role="switch">` so native form-submission
-    rules apply — the `value` attribute submits as `<name>=<value>`
+    When form-bound, the switch renders the hidden-checkbox
+    shape from anatomy: input, so native form-submission rules
+    apply — the `value` attribute submits as `<name>=<value>`
     when the switch is on; off-state switches do not submit
     (consistent with Checkbox semantics). Default submitted
     value is `"on"` per HTML spec when no `value` is set.
-    Custom `<button role="switch">` implementations need a
-    hidden checkbox bridge or controlled-state form-binding.
   requiredAttr: true
   validation: >-
     For form-bound switches, the native Constraint Validation
@@ -712,62 +706,55 @@ a11yAcceptance:
 contracts:
   nonNegotiable:
     - rule: >-
-        The label is a noun describing the controlled
-        behaviour and stays constant across both states.
-        Implementations that ship "On" / "Off" or "Enabled" /
-        "Disabled" labels violate the APG constant-label rule.
-        The on/off semantic is conveyed by the track-and-
-        thumb visual plus the input's `role="switch"` and
-        `aria-checked`.
+        The label's accessible-name string is byte-identical in
+        the `off` and `on` states — test: diff the label text
+        across a toggle; any difference is a violation,
+        regardless of which state words were used.
       source: apg
       sourceRef: 'APG: Switch pattern'
       consequence: >-
-        Without the constant noun label, users cannot identify
-        what the switch controls. SR users hear "switch, On,
-        on" — circular and meaningless. The label is the
-        canonical accessible name; state words duplicate the
-        role + `aria-checked` announcement and break the
-        identification contract.
+        A per-state label collapses the identification string
+        and the state signal into one announcement (mistake
+        `switch-label-is-state`); the design-time root cause is
+        Figma variants named after the state instead of the
+        controlled noun (see mismatches).
     - rule: >-
-        Switch is strictly binary — `aria-checked` accepts
-        only `true` and `false`. The mixed (indeterminate)
-        value is INVALID for `role="switch"` per APG. Tri-
-        state semantics belong to `Checkbox`.
+        `aria-checked` on `role="switch"` is a two-value
+        enumeration — `"true"` or `"false"` only. `"mixed"` is
+        not a member of the set, unlike `role="checkbox"` where
+        it is valid. Test: assert the attribute is one of the
+        two literals at every transition.
       source: apg
       sourceRef: 'APG: Switch role binary states'
       consequence: >-
-        Without this rule, implementations ship third
-        "indeterminate" or "mixed" visuals that violate the
-        ARIA spec. AT receives invalid attribute values and
-        announces unpredictably (some SR fall back to
-        "checked" silently; others read "mixed" but the role
-        does not support it). The misuse is a category error
-        — Switch is not Checkbox.
+        A third value is an ARIA spec violation with undefined
+        AT behaviour, not a supported tri-state (mistake
+        `switch-aria-checked-mixed`); the design-time root cause
+        is modelling Switch variants after Checkbox's tri-state
+        set (see mismatches).
     - rule: >-
-        Form-bound switches render a hidden `<input
-        type="checkbox" role="switch">` (or controlled-state
-        bridge to a native checkbox) so form submission
-        carries the value. Implementations using `<button
-        role="switch">` without a form bridge lose state
-        silently on submit.
+        A form-bound switch's value is readable from `FormData`
+        on submit — satisfied by a form-associated element (a
+        hidden `<input type="checkbox" role="switch">` or the
+        ElementInternals API; see anatomy: input) and violated
+        by a bare `<button role="switch">` with no such
+        association.
       source: html-spec
       sourceRef: 'HTML form-submission via input checkbox'
       consequence: >-
-        Without the bridge, switches inside `<form>` produce
-        no submission data. Users save settings that do not
-        persist; the bug is silent and only surfaces in
-        downstream behaviour ("my preferences keep
-        resetting"). Native HTML has no `<input
-        type="switch">` so the bridge is the canonical
-        pattern.
+        Without the association, the switch's on/off state is
+        silently absent from the submitted form data (mistake
+        `switch-no-form-bridge`); the design-time root cause is
+        a Figma spec that omits the hidden-bridge annotation
+        (see mismatches).
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: '`role="switch"` (with `aria-checked` true | false)'
       note: >-
-        WAI-ARIA switch role. Native HTML has no equivalent
-        input type — the experimental `switch` attribute on
-        checkbox has limited browser support. The canonical
-        web wire is `<input type="checkbox" role="switch">`.
+        WAI-ARIA switch role, layered onto `<input
+        type="checkbox">` since HTML has no native equivalent
+        (see anatomy: input for the bridge markup; the HTML
+        entry below for the experimental native attribute).
     - system: HTML
       theirTerm: '`<input type="checkbox" switch>` (experimental)'
       note: >-

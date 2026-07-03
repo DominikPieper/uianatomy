@@ -32,9 +32,10 @@ whenToUse:
     async filter.
   avoid: >-
     For free-text input with no constrained set of values — that is
-    `Input` or `SearchInput`. For a fixed short list (≤7) where
-    typeahead adds no value — `Select`. For multi-tag input where
-    the set is open-ended and tags are user-created — `TagInput`.
+    `Input` or `SearchInput`. For a fixed short list (under ~10
+    options) where typeahead adds no value — `Select`. For
+    multi-tag input where the set is open-ended and tags are
+    user-created — `TagInput`.
   vsRelated:
     - id: select
       difference: >-
@@ -634,13 +635,10 @@ formIntegration:
     free-input variants, the canonical value of the selected option
     for strict mode.
   submittedValue: >-
-    Strict mode submits the selected option's canonical value (id /
-    token from the listbox), NOT the display label visible to the
-    user. Multi-select variants submit one FormData entry per
-    selected value (multiple entries with the same `name` key,
-    matching `<select multiple>` native behaviour). Creatable
-    variants submit user-created strings verbatim. Free-input
-    variants submit the typed string directly.
+    Strict mode's selected option carries the canonical value (id /
+    token), not the display label — see `formData` below for the
+    full mechanics (multi-select entries, creatable and free-input
+    variants).
   requiredAttr: true
   formData: >-
     Single-select strict mode submits the selected option's *canonical

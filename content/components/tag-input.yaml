@@ -318,21 +318,28 @@ mismatches:
       multiple tags on commit. Splitter characters are
       consumer-configurable but the default is `[,;\n]`.
 
-  - figma: Tag overflow drawn as truncating with ellipsis at the end of the input
-    code: Tags wrap to multiple rows; the input grows in block-size to accommodate
+  - figma: Tag component defines only default / hover / disabled states — no "selected" variant
+    code: A selected tag renders with a distinct visual treatment (background / border / ring shift) driven by `aria-selected` or `data-selected`, entered via Backspace or ArrowLeft
     consequence: >-
-      Designers draw tag overflow as horizontal-truncate (the
-      input has fixed inline-size and tags clip). Implementations
-      following the design hide tags beyond a count; users
-      cannot see what they have selected. Or developers ignore
-      the design and ship multi-row wrap; the design and
-      production diverge.
+      Designers model tag states around pointer interaction
+      (hover, disabled) and omit "selected" because tag selection
+      is a keyboard-only concept in the two-step Backspace-removal
+      model — there is no mouse gesture that produces it, so it
+      never surfaces during visual design review. Developers
+      building strictly from the Figma component library ship the
+      keyboard selection logic (aria-selected toggles correctly)
+      but with no matching visual state; a tag becomes "selected"
+      internally yet looks identical to every other tag, leaving
+      sighted keyboard users unable to tell which tag a following
+      Backspace or Delete will remove.
     correct: >-
-      Tags wrap naturally to multiple rows; the input grows in
-      block-size. The wrapped layout is canonical because tags
-      represent committed values that must remain visible. For
-      space-constrained contexts, document `maxTags` plus a
-      "+N more" affordance — but never silent clipping.
+      Add a "selected" variant to the Figma tag component
+      (background / border / ring shift, visually distinct from
+      hover) so the two-step keyboard removal model has a visible
+      counterpart. Code drives the variant from `aria-selected` /
+      `data-selected` — the same state already exposed to screen
+      readers — so the visual and programmatic selection states
+      never diverge.
 
 mistakes:
   - id: taginput-no-keyboard-token-removal
@@ -623,13 +630,10 @@ formIntegration:
     matching `<select multiple>` native behaviour. Or the
     consumer wires form-state via React Hook Form / Vue v-model.
   submittedValue: >-
-    Multi-value commits as multiple FormData entries with the
-    same `name` key — one entry per tag, matching `<select
-    multiple>` and `<input multiple>` native behaviours. Backend
-    consumes via PHP-style `name[]` collection or via
-    duplicate-key iteration. Avoid comma-joining tags into a
-    single FormData entry — backends would have to re-split,
-    losing the canonical multi-value semantic.
+    Multiple FormData entries under the same `name` key, one
+    per committed tag — see `formData` below for the full
+    mechanics (serialization shape, backend collection, and the
+    comma-join pitfall).
   requiredAttr: true
   formData: >-
     Multi-value commits as multiple FormData entries with the
@@ -789,16 +793,20 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        Backspace pressed in an empty input removes the last
-        committed tag and re-focuses the input.
+        Backspace pressed in an empty input is a two-step
+        removal: the first press selects (highlights) the last
+        committed tag without removing it; the second press
+        removes the selected tag and returns focus to the input.
+        Removing on the first press is non-canonical.
       source: apg
       sourceRef: 'APG: Combobox keyboard interaction (carry-over to chip-input)'
       consequence: >-
         The most-overlooked APG-aligned behaviour for this
-        component and the most-frequently broken. Without it,
-        keyboard-only users have no way to remove tags after they
-        commit — the only path is mouse-clicking the per-chip
-        remove button.
+        component and the most-frequently broken. Without the
+        select-then-remove step, keyboard-only users either have
+        no way to remove tags after they commit (mouse-only
+        remove button) or risk accidental deletion from a single
+        stray Backspace with no confirmation step.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Chip input

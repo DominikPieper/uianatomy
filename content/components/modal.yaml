@@ -565,12 +565,8 @@ formIntegration:
     `<form method="dialog">` to submit-and-close in a single user
     action.
   submittedValue: >-
-    Modal contributes nothing to FormData directly. The
-    `<form method="dialog">` pattern is special: the form's submitter
-    button populates `dialog.returnValue` (a string read via
-    `dialogElement.returnValue` after close) instead of issuing a
-    network request. Forms inside the dialog submit normally via
-    their own `<form>` element.
+    Modal contributes nothing to FormData directly — see `formData`
+    below for the full `<form method="dialog">` returnValue mechanics.
   requiredAttr: false
   formData: >-
     Forms inside the dialog submit normally via their own `<form>`.

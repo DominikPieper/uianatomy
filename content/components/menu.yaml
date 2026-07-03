@@ -1188,22 +1188,20 @@ performance:
 contracts:
   nonNegotiable:
     - rule: >-
-        The menu carries `role="menu"` and every
-        interactive child carries `role="menuitem"`,
+        Every interactive descendant of the `root`
+        menu carries `role="menuitem"`,
         `role="menuitemcheckbox"`, or
-        `role="menuitemradio"`. The role hierarchy
-        is consistent — menu contains menuitems and
-        groups; groups contain menuitemradios.
+        `role="menuitemradio"`; no interactive
+        descendant may render with an unset or
+        generic role. Non-interactive descendants
+        (`separator`, `group-label`) carry no
+        interactive role.
       source: apg
       sourceRef: 'WAI-ARIA menu role and required children'
       consequence: >-
-        Without the role hierarchy, AT announces
-        the root as a menu but children as plain
-        list-items — SR users hear "menu, list,
-        list-item, Save" instead of "menu,
-        menuitem, Save". The canonical APG menu
-        pattern is fundamentally broken without
-        consistent roles.
+        AT collapses the menu/menuitem role
+        hierarchy to generic list semantics — see
+        mistake `menuitem-no-role`.
 
     - rule: >-
         Arrow-key navigation moves focus between
@@ -1225,57 +1223,57 @@ contracts:
         with misleading `role="menu"`.
 
     - rule: >-
-        Submenus open via ArrowRight (or
-        Enter / Space) on the submenu-trigger
-        menuitem; close via ArrowLeft / Escape.
-        The submenu-trigger carries
-        `aria-haspopup="menu"` plus `aria-expanded`
-        reflecting the submenu's open state.
+        Every `submenu-trigger` carries
+        `aria-haspopup="menu"` and a live
+        `aria-expanded` value. ArrowRight (or
+        Enter / Space) on a focused
+        submenu-trigger opens its paired
+        `submenu` and moves focus to that
+        submenu's first item; ArrowLeft or Escape
+        on a focused submenu item closes that
+        submenu and returns focus to its trigger.
       source: apg
       sourceRef: 'APG: Menu pattern submenu interaction'
       consequence: >-
-        Without the canonical submenu keyboard
-        model, keyboard users cannot navigate
-        nested menu hierarchies. Mouse-click-only
-        submenu activation excludes keyboard +
-        AT users from the canonical APG affordance.
+        Keyboard and AT users cannot discover or
+        traverse nested menu hierarchies — the
+        submenu becomes reachable by mouse only.
+        See mistake `menu-submenu-no-aria-haspopup`.
 
     - rule: >-
-        Typeahead is canonical for menus with more
-        than ~7 menuitems — printable characters
-        buffer and move focus to the next menuitem
+        When the `typeahead` property is true (the
+        canonical default), every printable
+        keystroke extends a buffer that resets
+        after ~500ms of inactivity, and focus
+        moves to the next `menuitem`,
+        `menuitemcheckbox`, or `menuitemradio`
         whose accessible name starts with the
-        buffered string. Reset buffer after ~500ms
-        of inactivity.
+        buffered string (case-insensitive).
       source: apg
       sourceRef: 'APG: Menu pattern keyboard support — first-character search'
       consequence: >-
-        Without typeahead, long menus require
-        users to arrow through every item to
-        reach a target. For file menus or large
-        action lists, the friction makes the menu
-        impractical for keyboard users. APG
-        documents typeahead as canonical menu
-        keyboard support; mature menu libraries
-        ship it by default.
+        A menu that declares `typeahead: true` but
+        does not implement the buffer/match/reset
+        behavior silently fails keyboard users
+        typing to search. (The ~7-item threshold
+        for defaulting typeahead on is a design
+        heuristic, not this rule's concern — see
+        mistake `menu-no-typeahead`.)
 
     - rule: >-
-        Disabled menuitems retain DOM presence
-        with `aria-disabled="true"` plus
-        visually-disabled treatment. Removing
-        disabled items from the menu (or hiding
-        them entirely) breaks the stable-menu-
-        structure expectation users build.
+        A disabled menuitem stays mounted in the
+        DOM and in the roving-tabindex sequence
+        with `aria-disabled="true"`; it is never
+        removed or hidden, arrow-key navigation
+        may still land on it, and its activation
+        handler is suppressed via
+        `event.preventDefault`.
       source: canon
       consequence: >-
-        Without the rule, the menu's structure
-        shifts between renders — users encounter
-        different item counts and positions
-        across state changes. The stable-
-        structure discipline is canonical;
-        disabled items remain visible and
-        announced, just with the disabled state
-        plus reason.
+        Menu item count and position shift across
+        renders, breaking the stable-structure
+        expectation users build. See mistake
+        `menu-disabled-not-aria-disabled`.
 
   vocabularyDrift:
     - system: WAI-ARIA

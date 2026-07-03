@@ -203,23 +203,30 @@ mismatches:
       underline only when they carry sufficient non-color
       affordances (button-styled buttons, distinct background).
 
-  - figma: A "link styled as button" variant drawn alongside actual buttons
-    code: A `<a class="button">` with button visual treatment but anchor semantics
+  - figma: >-
+      Hover and visited are two independent, freely-combinable
+      state toggles on the component — the file can preview
+      "hover" and "visited" together as one visual
+    code: >-
+      CSS pseudo-classes resolve by source order among equal-
+      specificity selectors (the LVHA rule: `:link`, `:visited`,
+      `:hover`, `:active`, in that declaration order); a `:hover`
+      rule declared before `:visited` in the stylesheet loses to
+      `:visited` for a link that is both visited and hovered
     consequence: >-
-      Designers and developers diverge on whether the element is a
-      Link or a Button — they look identical visually but their
-      keyboard contracts differ (Enter only on `<a>`, Enter + Space
-      on `<button>`), middle-click behavior differs, and form
-      participation differs. The Figma file does not encode the
-      semantic choice.
+      The Figma combination renders exactly as designed because the
+      tool has no notion of cascade order — every state
+      intersection is just a layer toggle. In the browser, a
+      stylesheet that declares `:hover` before `:visited` silently
+      drops the hover treatment on any link the user has already
+      visited. The divergence only surfaces on the visited+hover
+      intersection, which QA rarely exercises because it requires
+      clicking through a link before re-testing hover on it.
     correct: >-
-      Treat the semantic question (does this navigate, or does it
-      perform an in-page action?) as the canonical distinguisher. A
-      "link styled as a button" remains a Link with anchor
-      semantics; a button-styled `<a>` does not get Spacebar
-      activation. Document the variant explicitly as
-      `variant: button-styled` so the visual treatment is named and
-      the semantic choice stays clear.
+      Declare `:link`, `:visited`, `:hover`, `:active` in that
+      source order (or give hover a durably higher specificity, e.g.
+      a CSS layer or `:hover:not(:active)`), and add a QA step that
+      hovers a pre-visited link rather than only a fresh one.
 
   - figma: External link icon drawn as a separate static glyph next to the label
     code: A `::after` pseudo-element on `[target="_blank"]` or a slot-based icon driven by the `external` property
@@ -515,46 +522,44 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        The element is `<a href="…">`. `role="link"` on a `<div>`
-        or `<span>` is a last-resort ARIA fallback that loses
-        native browser affordances (middle-click open-in-new-tab,
-        right-click copy-link, status-bar URL preview, focus,
-        keyboard activation).
+        Any control with link semantics renders as a real
+        `<a href="…">`. Substituting `role="link"` on a `<div>` or
+        `<span>` is never the default path — it is a last-resort
+        fallback, and only ever a fallback.
       source: html-spec
       sourceRef: 'HTML anchor element semantics'
       consequence: >-
-        Clickable-div pattern is invisible to AT-link-list
-        navigation, breaks middle-click and copy-link, and ships
-        without keyboard handling. The visual treatment is not
-        the contract; the element is.
+        The `link-clickable-div` mistake catalogues the concrete
+        breakage this rule forecloses: no native focus, no
+        middle-click/copy-link, no keyboard activation without
+        bespoke handlers, and invisibility to AT link-list
+        navigation.
     - rule: >-
-        `target="_blank"` always pairs with
-        `rel="noopener noreferrer"` AND a visual external-link
-        indicator AND an accessible-name suffix announcing the
-        new-tab behaviour ("opens in new tab", visible or
-        visually-hidden).
+        `target="_blank"` never ships alone: `rel="noopener
+        noreferrer"`, a visible external-link indicator, and an
+        accessible-name suffix disclosing the new-tab behaviour are
+        a single atomic unit — present together or the exemption
+        does not apply.
       source: html-spec
       sourceRef: 'HTML rel attribute + WCAG 3.2.5 (Change on Request)'
       consequence: >-
-        Without `rel`, the new tab can manipulate the parent via
-        `window.opener` (tabnabbing). Without the indicator and
-        announcement, the user cannot predict that activation
-        opens elsewhere; the back-button trail is broken from
-        their perspective.
+        The `link-external-no-rel-or-indication` mistake documents
+        the two independent failure modes this rule closes:
+        `window.opener` tabnabbing when `rel` is missing, and an
+        unpredictable context change when the indicator and
+        announcement are missing.
     - rule: >-
-        Link text describes the destination meaningfully out of
-        context. "Click here" and "Read more" are non-canonical;
-        when visual design demands short link text adjacent to
-        descriptive prose, `aria-labelledby` assembles the full
-        accessible name from both the prose and the link text.
+        A link's accessible name is self-descriptive out of
+        context. Generic boilerplate ("click here", "read more",
+        "here") never stands as the entire accessible name.
       source: wcag
       sourceRef: 'WCAG 2.4.4 — Link Purpose (In Context) / G91'
       consequence: >-
-        SR users navigating the link list hear detached
-        "click here" entries with no destination cue; the link
-        is unidentifiable as a navigation target. The same list
-        is the canonical SR navigation surface for sighted-link
-        scanning.
+        The `link-uninformative-text` mistake documents the
+        concrete SR link-list failure this rule prevents;
+        `aria-labelledby` is the sanctioned escape hatch when
+        visual design constrains the visible text to something
+        shorter than a self-descriptive name.
   vocabularyDrift:
     - system: Material Design 3
       theirTerm: 'Links (typography role)'
@@ -581,14 +586,10 @@ contracts:
 
 notes: >-
   Link is one of the few canonical components whose anatomy is
-  effectively the native HTML element. The structure / variant /
-  property axis exists primarily to capture the design-system
-  decisions layered on top of `<a>`: visual variants for the
-  inline / standalone / button-styled treatments, and properties
-  for external and download (which gate native attributes plus
-  visual indicators). Most divergence between implementations
-  lives in how the `external` and `download` properties wire up
-  announcements and metadata — not in the underlying element.
+  effectively the native HTML element — the schema's structure /
+  variant / property axes exist mainly to name the design-system
+  decisions layered on top of `<a>`, not to describe a bespoke
+  widget.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/practices/links/

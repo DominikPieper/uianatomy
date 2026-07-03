@@ -760,43 +760,51 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        Popover is non-modal. Tab moves focus through the
-        popover content and then out into the rest of the page.
-        No focus trap. Light-dismiss (Escape + outside-click +
-        focus-outside) handles closure.
+        Popover installs no focus trap: Tab and Shift+Tab move
+        focus into, through, and back out of the popover content
+        into surrounding document order exactly as they would if
+        the popover were not intercepting keyboard navigation.
+        Closure is triggered by Escape, an outside pointer-down,
+        or focus leaving both the popover and its trigger — never
+        by a trap-and-require-explicit-close model.
       source: canon
       consequence: >-
-        Installing a focus trap turns Popover into a
-        non-announcing Modal — Tab cycles inside, users cannot
-        reach the rest of the page without dismissing first, and
-        the surface lies about its modality. If genuine modality
-        is needed, redesign as Modal or modal Drawer.
+        Breaking either half reproduces a known failure mode:
+        trapping focus reduces Popover to an unannounced Modal
+        (mistake `popover-as-modal`); omitting the dismiss
+        handlers leaves users unable to close the surface without
+        re-activating the trigger (mistake
+        `popover-no-light-dismiss`).
     - rule: >-
-        The popover renders via a portal at the document root
-        (or a dedicated overlay container) — not as a DOM child
-        of its trigger. Native `<dialog popover>` and
-        `popover="auto"` auto-portal in Baseline 2024+ browsers.
+        The popover container is not a descendant of any layout
+        subtree the trigger participates in — it mounts at the
+        document root (a portal, a dedicated overlay container,
+        or the native `popover="auto"` attribute) so no ancestor's
+        `overflow`, `transform`, or stacking context can clip or
+        misstack it.
       source: html-spec
       sourceRef: 'HTML Popover API + portal/Teleport for legacy'
       consequence: >-
-        Rendering inline traps the popover under any ancestor's
-        `overflow: hidden`; z-index cannot rescue it because the
-        clipping is at paint time. A Card, a scrollable list, or
-        an off-screen sidebar all silently clip popovers their
-        children render.
+        Rendering inline reproduces mistake
+        `popover-z-index-clipping` — the panel is silently
+        clipped by the first ancestor with `overflow: hidden`,
+        and no `z-index` value recovers it because the clipping
+        happens at paint time, not stacking time.
     - rule: >-
-        The trigger carries `aria-haspopup` (`"dialog"` for
-        content popovers, `"menu"` for menu popovers),
-        `aria-expanded` toggled with open state, and
-        `aria-controls` referencing the popover container's id.
+        The trigger element carries three ARIA attributes at all
+        times: a static `aria-haspopup` (`"dialog"` for content
+        popovers, `"menu"` for menu-style popovers), `aria-expanded`
+        kept in sync with the popover's open/closed state on every
+        transition, and `aria-controls` holding the popover
+        container's `id`.
       source: apg
       sourceRef: 'APG: Dialog (Modal) + Disclosure patterns — trigger semantics'
       consequence: >-
-        Without these attributes, SR users have no signal that
-        the trigger reveals additional content, no signal that
-        the surface is open or closed, and no programmatic path
-        from trigger to popover. The relationship becomes
-        sighted-pointer-only.
+        Omitting any one reproduces mistake
+        `popover-no-aria-expanded` — screen-reader users lose the
+        signal that the trigger reveals content, whether it is
+        currently revealed, and the programmatic link between
+        trigger and panel.
   vocabularyDrift:
     - system: HTML
       theirTerm: 'popover attribute / popover="auto"'
@@ -850,4 +858,4 @@ sources:
   - https://atlassian.design/components/popup/examples
   - https://m3.material.io/components/menus/overview
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-07-03'

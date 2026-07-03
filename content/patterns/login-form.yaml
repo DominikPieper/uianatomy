@@ -432,7 +432,10 @@ frameworkSkeletons:
 contracts:
   nonNegotiable:
     - rule: >-
-        Email input carries `autocomplete="username"`; password
+        Email input carries `autocomplete="email"` for the
+        canonical email-only login; `autocomplete="username"` is
+        reserved for dual-identifier flows where the same field
+        accepts either an email or a username/phone. Password
         input carries `autocomplete="current-password"`. New-
         password forms (registration, change-password) use
         `autocomplete="new-password"` instead.

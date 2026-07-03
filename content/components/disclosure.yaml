@@ -3,24 +3,23 @@ name: Disclosure
 description: >-
   A single collapsible region with one toggle — a button that
   expands or collapses an associated content panel. The atomic
-  unit of disclosure: Accordion is a list of disclosures grouped
-  with shared keyboard navigation, but a standalone Disclosure has
-  no peers and no group semantics. Used for "show more" patterns
-  in prose, expandable details rows, optional advanced settings,
-  inline help expansion, and any single named region whose content
-  is disclosable on demand.
+  unit of disclosure: a standalone Disclosure has no peers or
+  group semantics (see `whenToUse.vsRelated` for the Accordion
+  boundary). Used for "show more" patterns in prose, expandable
+  details rows, optional advanced settings, inline help
+  expansion, and any single named region whose content is
+  disclosable on demand.
 
 intro: >-
   Disclosure is the smallest collapsible-region pattern in the
   canon — a single trigger that expands or collapses one
-  associated panel. Standalone Disclosure has no peers and no
-  group semantics; Accordion is conceptually a list of
-  Disclosures with shared keyboard navigation. The pattern lives
-  in show-more sections, expandable detail rows, optional
-  advanced settings, and inline help. The reference documents
-  the three-slot anatomy, the aria-expanded contract that drives
-  both visual and assistive-tech state, and the
-  anchor-link-into-collapsed-content edge case.
+  associated panel, with no peers and no group semantics (the
+  Accordion relationship is detailed in `whenToUse.vsRelated`).
+  The pattern lives in show-more sections, expandable detail
+  rows, optional advanced settings, and inline help. The
+  reference documents the three-slot anatomy, the aria-expanded
+  contract that drives both visual and assistive-tech state, and
+  the anchor-link-into-collapsed-content edge case.
 alternateNames:
   - 'Collapse'
   - 'Details'
@@ -180,21 +179,32 @@ axes:
           `hidden` or `display: none`.
 
 mismatches:
-  - figma: A "Show more" link drawn for inline disclosure in body prose
-    code: A `<button>` toggling visibility of inline content
+  - figma: >-
+      Panel content is left visible inside the frame for design
+      review and handoff, while the trigger's icon is drawn in
+      its collapsed orientation (down chevron / plus glyph) — a
+      common authoring convenience so editors can see and edit
+      the content without expanding it
+    code: >-
+      Implementation renders the panel unhidden on first mount,
+      mirroring the frame's visible content rather than the
+      `defaultExpanded` property the component spec calls for
+      (typically `false` for "show more" patterns)
     consequence: >-
-      Designers may use link-styling for "Show more" affordances
-      (looks like other inline links in prose). Implementations
-      following the Figma file ship `<a>` with click handlers —
-      semantically wrong (anchors navigate, disclosures toggle),
-      breaks middle-click expectations, and SR users hear
-      "link" with no toggle-state cue.
+      Every disclosure on the page loads pre-expanded regardless
+      of authored intent, defeating the "reduce noise" purpose
+      the pattern exists for. The visible-but-collapsed-icon
+      state also contradicts `aria-expanded="false"` on the
+      trigger — sighted and SR users perceive conflicting
+      signals about whether the region is open.
     correct: >-
-      Use `<button>` with disclosure semantics
-      (`aria-expanded`, `aria-controls`). Visual styling may
-      converge with link styling (underlined, accent colour) but
-      the underlying element is a button. Document the
-      visual-vs-semantic distinction in mismatches.
+      `defaultExpanded` (or its Figma boolean property) is the
+      single source of truth for initial panel visibility,
+      independent of whatever the canvas shows for authoring
+      convenience. Design files should mark review-only visible
+      content explicitly (a "content preview" annotation or
+      layer note) so implementers don't copy canvas visibility
+      as runtime behaviour.
 
   - figma: Disclosure drawn with chevron rotation but no panel-height transition
     code: Both chevron rotation AND panel height-transition animate together
@@ -220,29 +230,36 @@ mismatches:
       wrapper; SR users navigating by heading miss the
       collapsible region's existence.
     correct: >-
-      For standalone disclosures representing document content
+      Wrap the trigger in a heading element of the appropriate
+      level for standalone disclosures over document content
       regions (an FAQ entry, a settings section, a CSV import
-      step), wrap the trigger in a heading element of the
-      appropriate level. For inline disclosures in prose ("Show
-      more" inside a paragraph), the trigger is not heading-
-      wrapped. Document the variant-driven structural choice.
+      step); leave inline-prose triggers unwrapped. Canonical
+      rule and rationale live on the trigger slot's `a11y.hint`
+      in `anatomy`.
 
-  - figma: Disclosure used for a single Accordion-of-one-item
-    code: A standalone Disclosure component, not Accordion
+  - figma: >-
+      Mockup shows only two static frames — trigger-collapsed
+      and trigger-expanded-with-panel-visible — with no
+      indication of where keyboard focus sits after the toggle
+      click
+    code: >-
+      Implementation moves keyboard focus to the first focusable
+      element inside the panel immediately after it expands,
+      copying the focus-into-revealed-region pattern used for
+      Modal and Drawer
     consequence: >-
-      Designers compose an Accordion with a single item for
-      visual consistency with multi-item accordions elsewhere
-      on the page. Developers ship an Accordion with one item;
-      the user sees a collapsible region but the surrounding
-      ARIA structure is wrong (no list semantics for a single
-      item, no shared keyboard navigation that Accordion
-      provides for multiple items).
+      Keyboard users who just activated the trigger are
+      unexpectedly relocated into the panel body mid-task; the
+      trigger itself loses focus, so collapsing again requires
+      Shift+Tab back to the trigger first. Screen-reader users
+      lose their place relative to the toggle they just operated.
     correct: >-
-      A single collapsible region is a Disclosure, not an
-      Accordion-of-one. Use Disclosure when there's only one
-      collapsible region; use Accordion when there are
-      multiple disclosures grouped with shared keyboard
-      navigation (ArrowDown / Up between triggers).
+      Focus remains on the trigger after toggling in either
+      direction — Disclosure is non-blocking and does not manage
+      focus into the revealed region the way Modal or Drawer do.
+      The panel's content simply joins the tab order immediately
+      after the trigger; Tab reaches it in natural document
+      order with no auto-focus call.
 
 mistakes:
   - id: disclosure-no-aria-expanded
@@ -427,7 +444,7 @@ propertyMap:
   - figma: Variant
     code: variant
     kind: enum
-    notes: Maps inline / standalone. Drives heading-wrapping (standalone wraps trigger in heading; inline does not).
+    notes: Maps inline / standalone; drives the trigger's heading-wrapping rule — see anatomy's trigger slot `a11y.hint`.
   - figma: Default Expanded
     code: defaultExpanded
     kind: boolean
@@ -531,41 +548,36 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        `aria-expanded` on the trigger is the single source of
-        truth for the open/closed state. CSS modifiers and icon
-        rotation derive from `[aria-expanded="true"]`; never
-        from a parallel `data-expanded` attribute or visual cue
-        alone.
+        Every CSS selector, JS conditional, and icon-rotation
+        binding for expanded/collapsed styling reads
+        `[aria-expanded="true"]` (or the equivalent DOM
+        property) as its sole state authority — no parallel
+        `data-expanded` attribute, no visual-only signal.
       source: apg
       sourceRef: 'APG: Disclosure pattern — aria-expanded'
       consequence: >-
-        When the icon rotates but `aria-expanded` is missing or
-        stuck, sighted users perceive the state but SR users
-        hear "button" with no state cue. The icon is
-        decorative; the attribute carries the meaning.
+        See mistakes `disclosure-no-aria-expanded` and
+        `disclosure-icon-only-state-cue` for the observed
+        failure modes when this is violated.
     - rule: >-
-        The trigger is a `<button type="button">`, never an
-        `<a>` element. Visual treatment may match link styling;
-        the underlying element is a button.
+        The trigger's tag name is `button` with
+        `type="button"`; it is never an `<a>` element,
+        regardless of visual treatment.
       source: html-spec
       sourceRef: 'HTML button vs anchor semantics'
       consequence: >-
-        Anchors navigate; disclosures toggle. Middle-click on an
-        anchor-as-trigger opens an empty page; copy-link
-        captures `#`. The semantic distinction matters for
-        keyboard, AT, and browser-feature parity.
+        See mistake `disclosure-as-link` for the observed
+        failure mode when this is violated.
     - rule: >-
-        `aria-controls` on the trigger references the panel's
-        id; the panel's `aria-labelledby` references the
-        trigger's id. The bidirectional relationship is wired
-        even when trigger and panel are visually adjacent.
+        The trigger's `aria-controls` value equals the panel's
+        `id`, and the panel's `aria-labelledby` value equals the
+        trigger's `id` — both resolvable, never inferred from
+        DOM adjacency alone.
       source: apg
       sourceRef: 'APG: Disclosure pattern — aria-controls'
       consequence: >-
-        Without `aria-controls`, SR users know the state but
-        cannot navigate from trigger to disclosed content
-        directly. The relationship becomes implicit (visual
-        proximity) instead of explicit (programmatic).
+        See mistake `disclosure-no-aria-controls` for the
+        observed failure mode when this is violated.
   vocabularyDrift:
     - system: Radix
       theirTerm: Collapsible
@@ -593,8 +605,7 @@ notes: >-
   Disclosure is the smallest disclosure-pattern component in
   the canon — three slots, single transition graph, single
   event. APG defines it as the fundamental disclosure pattern;
-  Accordion is conceptually a list-of-Disclosures with shared
-  keyboard nav.
+  see `whenToUse.vsRelated` for the Accordion relationship.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/
@@ -616,4 +627,4 @@ sources:
     verifiedAt: '2026-05-05'
   - https://inclusive-components.design/collapsible-sections/
 
-lastReviewed: '2026-05-05'
+lastReviewed: '2026-07-03'

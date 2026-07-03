@@ -209,36 +209,38 @@ mismatches:
       size by default and falls back to explicit per-host
       overrides only when documented.
 
-  - figma: Icon colour drawn as a fixed hex
-    code: Colour driven by `currentColor` inheriting from the host text colour
+  - figma: A direction-bearing icon (chevron, back-arrow) drawn as two separate components — one pointing left, one pointing right — so mock-ups can drop in whichever one matches LTR or RTL
+    code: A single glyph in the registry with a `dir`-aware CSS transform (`scaleX(-1)`) applied at render time to icons flagged direction-bearing
     consequence: >-
-      Designers fix a black or grey hue in the Figma frame;
-      developers ship `fill="currentColor"` so the colour
-      inherits from the host. The two diverge any time the host
-      text colour is not the default; theming (light / dark)
-      breaks the design-fidelity claim.
+      The Figma library doubles its component count for every
+      direction-bearing icon and drifts from the single-glyph
+      registry model the rest of the icon system relies on.
+      Designers also tend to over-apply the two-variant pattern to
+      direction-neutral icons (search, settings) that should never
+      flip, because the Figma file gives no signal for which icons
+      are actually direction-bearing.
     correct: >-
-      Use `currentColor` for fill and stroke in both Figma
-      icon-set tokens and code. The icon colour follows the
-      host text colour automatically; explicit colour overrides
-      go through a documented `color` prop, not by hard-coding
-      a hex.
+      Model each glyph once in both surfaces. Flag direction-bearing
+      icons with a registry-level property (`mirrorable: true`);
+      Figma and code both derive the RTL rendering from that single
+      flag plus the ambient `dir` value, rather than shipping a
+      second drawn asset per direction.
 
-  - figma: Meaningful icon drawn without an accompanying label
-    code: A bare `<svg>` with no `role="img"` and no `aria-label`
+  - figma: Icon artwork drawn on a shared keyline grid (e.g. a smaller live area inside a fixed frame, with circular glyphs sized fractionally larger than square ones so every icon reads as the same optical weight)
+    code: SVG assets exported with the `viewBox` auto-cropped to each path's tight bounding box, discarding the keyline padding that made the optical sizing work
     consequence: >-
-      Designers draw an icon that genuinely carries meaning (a
-      "lock" indicating account locked, a "warning" indicating
-      a risk) but provide no label. Developers ship the SVG as
-      decorative; SR users encounter the locked / warning
-      glyph without any AT signal.
+      Two icons that sit identically inside the same keyline frame in
+      Figma end up with different `viewBox` aspect ratios once
+      auto-cropped, so at the same `size` token a circular icon
+      (info, help) renders visibly smaller or larger than a square
+      one (grid, apps) — the optical-size correction designers built
+      into the artwork is silently lost in the export step.
     correct: >-
-      Distinguish meaningful from decorative at design time. The
-      Figma component property "meaningful" toggles the
-      accessible-name field. Code reads the prop to either set
-      `aria-hidden="true"` (decorative) or `role="img"` plus
-      `aria-label` (meaningful). The two surfaces share the same
-      flag.
+      Export the keyline frame as the canonical `viewBox` for every
+      icon in the registry, even where the visible path does not
+      touch every edge. Tooling preserves the full frame rather than
+      auto-cropping, so a given `size` step occupies the same visual
+      footprint regardless of the glyph's underlying shape.
 
 mistakes:
   - id: icon-meaningful-no-label
@@ -424,43 +426,39 @@ a11yAcceptance:
 contracts:
   nonNegotiable:
     - rule: >-
-        Decorative icons set `aria-hidden="true"` and no role.
-        Meaningful icons set `role="img"` plus `aria-label` and
-        no `aria-hidden`. Never both — the combination is a
-        contradiction.
+        The icon root carries exactly one of two aria states:
+        `aria-hidden="true"` with no role, or `role="img"` plus
+        `aria-label`. The two are mutually exclusive and jointly
+        exhaustive — no third state, no simultaneous combination.
       source: apg
       sourceRef: 'WAI-ARIA aria-hidden + role=img patterns'
       consequence: >-
-        Without the binary distinction, browsers and SR resolve
-        the combined attributes inconsistently. Some surfaces
-        announce the label twice (once via role=img, once via
-        the host); others ignore the icon entirely. The contract
-        gives every consumer a deterministic announcement.
+        This is the invariant that mistakes `icon-meaningful-no-label`,
+        `icon-decorative-not-hidden`, and `icon-conflicting-aria-roles`
+        each check a different way of violating; see those entries
+        for the specific failure mode and fix.
     - rule: >-
-        SVG `fill` and `stroke` are bound to `currentColor` so
-        token-colour flows through CSS `color` inheritance.
-        Hard-coded hex values in the SVG are reserved for
-        brand-glyph cases documented at the host level.
+        `fill` and `stroke` on the icon's vector paths resolve to
+        `currentColor`. A literal hex or named colour value is
+        permitted only as a documented brand-glyph exception
+        declared at the host component — never as the default.
       source: html-spec
       sourceRef: 'HTML inline SVG with currentColor keyword (W3C SVG + CSS Color)'
       consequence: >-
-        Hard-coded hex breaks theming and forces icon-by-icon
-        edits when the palette shifts. `currentColor` is the
-        cheapest way to keep icons in step with their host text
-        across light / dark / brand-swap themes without
-        per-icon overrides.
+        See mistake `icon-color-not-currentcolor` for the
+        theming-breakage this prevents.
     - rule: >-
-        Icon-only buttons / links / badges (no visible label)
-        carry the accessible name on the host element via
-        `aria-label`, never on the icon itself. The icon stays
-        decorative; the host carries the meaning.
+        An icon that is the sole content of an interactive host
+        (icon-only button, link, or dot-only badge) never carries
+        its own `aria-label`; the host owns the accessible name and
+        the icon stays `aria-hidden="true"` regardless of the
+        icon's semantic meaningfulness elsewhere.
       source: canon
       consequence: >-
-        Putting `aria-label` on the icon when it sits inside a
-        button creates a name-from-content collision —
-        SR-output may include both labels in unpredictable
-        order. The host is the activator; the host owns the
-        name.
+        Enforces the composition boundary in `whenToUse.vsRelated`
+        (id: button) — labelling both the icon and the host produces
+        a name-from-content collision that SR vendors resolve
+        inconsistently.
   vocabularyDrift:
     - system: HTML
       theirTerm: 'svg / img'
@@ -493,4 +491,4 @@ sources:
   - https://www.radix-ui.com/icons
   - https://lucide.dev/
 
-lastReviewed: '2026-05-03'
+lastReviewed: '2026-07-03'

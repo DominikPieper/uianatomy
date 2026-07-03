@@ -538,10 +538,9 @@ mismatches:
       ArrowRight / ArrowLeft, AND optionally a button
       wrapper for icon-click activation. Without
       explicit anatomy, the activation model is
-      ambiguous and implementations may ship one
-      pattern (mouse-click chevron only) without the
-      keyboard model (ArrowRight / ArrowLeft on
-      parent row), breaking keyboard accessibility.
+      ambiguous — see mistake
+      `treegrid-arrow-not-tree-keyboard-model` for
+      the keyboard-specific failure this produces.
     correct: >-
       Document the row-expander as decorative
       `aria-hidden="true"` AND document the
@@ -562,10 +561,10 @@ mismatches:
       indent + chevron-direction; developers must add
       `aria-level` per row and `aria-expanded` on
       parent rows for the AT semantic. Without
-      explicit anatomy, the hierarchy may ship as
-      visual-only — sighted users see nesting, AT
-      users hear a flat row-list. The most common
-      treegrid implementation failure.
+      explicit anatomy, the hierarchy ships as
+      visual-only — see mistake
+      `treegrid-no-aria-level` for the resulting
+      AT-visible failure.
     correct: >-
       Document `aria-level` and `aria-expanded` as
       first-class row attributes in the row slot's
@@ -1302,13 +1301,10 @@ contracts:
       source: apg
       sourceRef: 'APG: TreeGrid pattern aria-level requirement'
       consequence: >-
-        Without `aria-level`, the entire
-        hierarchical semantic is invisible to AT.
-        SR users hear "row 1, row 2, row 3" with
-        no indication of which rows are children
-        of which parents. The treegrid degrades
-        to a flat grid with misleading
-        `role="treegrid"`.
+        Without `aria-level`, the hierarchical
+        semantic is invisible to AT — see mistake
+        `treegrid-no-aria-level` for the resulting
+        failure mode.
 
     - rule: >-
         Parent rows (rows with descendants) carry
@@ -1340,35 +1336,61 @@ contracts:
       source: apg
       sourceRef: 'APG: TreeGrid pattern keyboard interaction'
       consequence: >-
-        Without the tree-keyboard handlers,
-        keyboard users cannot expand / collapse
-        rows via keyboard — they must mouse-
-        click the chevron, breaking keyboard
-        accessibility. The defining tree-
-        navigation affordance is gone.
+        Without the tree-keyboard handlers, see
+        mistake
+        `treegrid-arrow-not-tree-keyboard-model`
+        for the resulting failure. This is the
+        defining affordance that distinguishes
+        TreeGrid's keyboard model from Grid's —
+        losing it undermines the escalation
+        rationale documented in `vsRelated`.
 
     - rule: >-
-        Inherits Grid's contracts: roving-
-        tabindex (one cell at a time carries
-        `tabindex="0"`), 2D arrow-key
+        TreeGrid inherits Grid's keyboard-model
+        and role-hierarchy contracts in full —
+        roving-tabindex, 2D arrow-key
         navigation, F2 / Enter / Escape edit-
-        mode lifecycle, role-hierarchy
-        consistency (cells inside
-        `role="treegrid"` carry `role="gridcell"`
-        / `role="columnheader"` /
-        `role="rowheader"`), virtualized-aware
-        ARIA attributes (`aria-rowcount` /
-        `aria-rowindex`).
+        mode lifecycle, and the gridcell /
+        columnheader / rowheader role
+        hierarchy. See Grid's own
+        `contracts.nonNegotiable` for the
+        atomic, independently-testable
+        statement of each; TreeGrid does not
+        relax or modify any of them. The
+        role-hierarchy failure mode is also
+        documented locally as mistake
+        `treegrid-cell-not-gridcell-role`.
       source: apg
       sourceRef: 'APG: TreeGrid extends Grid pattern'
       consequence: >-
-        Without inheriting Grid's contracts,
-        the treegrid loses the foundation
-        keyboard model that the tree-navigation
-        extends. The full APG-canonical
-        keyboard model is the union of Grid's
-        plus the tree-extension; partial
-        implementations fail one or both.
+        Without inheriting Grid's contracts in
+        full, the treegrid loses the foundation
+        that the ArrowRight / ArrowLeft tree-
+        navigation builds on top of — see the
+        Grid pattern's contracts (and, for the
+        role-hierarchy case, the cross-
+        referenced mistake) for what each
+        specific omission breaks.
+
+    - rule: >-
+        Virtualized treegrids recompute
+        `aria-rowcount` / `aria-rowindex`
+        against the currently-visible row set
+        as expansion state changes — the count
+        is NOT the total of all rows including
+        collapsed children. This extends
+        Grid's generic virtualization contract
+        with the expansion-state dependency
+        unique to trees.
+      source: canon
+      consequence: >-
+        See mistake
+        `treegrid-no-aria-rowcount-virtualized`
+        for the resulting failure — AT users
+        would otherwise perceive different
+        row-counts at different expansion
+        states with no indication of the
+        underlying truth.
 
     - rule: >-
         Visual indent per row derives from

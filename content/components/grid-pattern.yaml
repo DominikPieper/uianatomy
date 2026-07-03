@@ -1403,12 +1403,10 @@ contracts:
     - system: HTML
       theirTerm: '<table role="grid">'
       note: >-
-        Native HTML `<table>` plus explicit
-        `role="grid"` is the canonical hybrid —
-        retains the structural HTML semantics
-        while signaling the interactive
-        keyboard model. `<div role="grid">` is
-        the fallback for non-tabular layouts.
+        No native HTML equivalent — `role="grid"`
+        is an ARIA overlay on `<table>` (or
+        `<div>`, per anatomy.root); HTML itself
+        has no "grid" element or concept.
     - system: AG Grid
       theirTerm: AgGridReact / AgGridAngular / AgGridVue
       note: >-
@@ -1434,14 +1432,10 @@ contracts:
     - system: TanStack Table
       theirTerm: 'createColumnHelper + useReactTable (read-only)'
       note: >-
-        TanStack Table provides headless table
-        logic (sorting, filtering, virtualization)
-        but does not implement the grid keyboard
-        model. Pair TanStack Table with React
-        Aria's grid hooks for canonical
-        Grid-pattern compliance, or escalate to
-        AG Grid for full grid-pattern feature
-        coverage.
+        Naming has no grid-role vocabulary at all —
+        "table" naming throughout, not "grid" /
+        "gridcell" (see frameworkMap.react for the
+        pairing implication).
     - system: Material 3
       theirTerm: '— (no formal Grid pattern component)'
       note: >-
@@ -1465,17 +1459,11 @@ contracts:
     - system: Glide Data Grid
       theirTerm: 'Canvas-based DataGrid (React)'
       note: >-
-        Canvas-based grid implementation
-        (renders cells via `<canvas>` rather
-        than DOM). High performance for very
-        large grids (100k+ rows) but requires
-        explicit canvas-accessibility-tree
-        wiring for AT support. Canonical
-        WAI-ARIA grid-pattern compliance is
-        implementation-specific — Glide
-        documents an `accessibility` prop
-        that wires `aria-` attributes for the
-        focused cell.
+        "DataGrid" naming vs canonical "Grid"; no
+        DOM `role="grid"` / `gridcell` attributes
+        exist to diverge from in the first place —
+        see frameworkMap.react for the rendering
+        implication.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/grid/
@@ -1489,14 +1477,5 @@ sources:
   - https://www.ag-grid.com/javascript-data-grid/accessibility/
   - https://react-spectrum.adobe.com/react-aria/Table.html
   - https://tanstack.com/table/latest
-
-notes: >-
-  APG escalation from Table — apply only when interactive
-  cells justify the steeper keyboard model (decision rule
-  lives in the Table vsRelated entry plus the
-  grid-when-table-suffices mistake). Production React
-  escalates to AG Grid for full coverage; React Aria is the
-  headless alternative. Roving-tabindex is the single
-  highest-load-bearing implementation detail.
 
 lastReviewed: '2026-05-04'

@@ -315,22 +315,29 @@ mismatches:
       Tabs for parallel views; Stepper for sequential
       progression.
 
-  - figma: Step indicator drawn but no accessibility for "step N of M"
-    code: Each step carries visually-hidden "Step 2 of 5" text in addition to the indicator number
+  - figma: Step description drawn as a plain text layer under the label with no visual link to the step
+    code: step-description referenced via `aria-describedby` on the step's interactive element so it composes into the SR announcement
     consequence: >-
-      Designers compose mocks with the indicator showing
-      "2" inside a circle. Implementations following the
-      design ship the visual indicator only; SR users hear
-      the indicator number announced as a digit but
-      without context — they do not know how many steps
-      remain or which step is current.
+      Designers add step-description as an ordinary sibling
+      text node beneath the step label — visually adjacent
+      but with no indicated relationship. Implementations
+      following the design literally render it as inert
+      paragraph text with no `aria-describedby` link to the
+      step's button or list item. SR users who tab to the
+      step hear only the label ("Shipping"); the supporting
+      description ("Enter delivery details") is silently
+      skipped because nothing associates it with the step's
+      accessible name.
     correct: >-
-      Pair the visual indicator with visually-hidden text
-      composing the position into the step's accessible
-      name: "Step 2 of 5, Shipping, current". The
-      visually-hidden text composes via `aria-describedby`
-      or directly inside the step container. The indicator
-      number itself can be `aria-hidden`.
+      Give step-description a stable `id` and reference it
+      via `aria-describedby` on the step's interactive
+      element. The description composes into the SR
+      announcement immediately after the label and current-
+      step state. This is a distinct accessibility wire-up
+      from the "step N of M" position text — each piece of
+      supporting content (description, position) requires
+      its own explicit ARIA association that a static Figma
+      mock cannot express.
 
   - figma: Sequential and non-linear stepper drawn as the same component
     code: 'A `linear: boolean` property that gates whether the user may click prior or future steps'

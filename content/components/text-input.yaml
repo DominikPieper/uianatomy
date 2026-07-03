@@ -360,21 +360,24 @@ mismatches:
   - figma: Error message drawn as red text below the input
     code: An error message rendered via `aria-describedby` plus `aria-invalid`
     consequence: >-
-      Designers draw red error text. Implementations following
-      the design at the visual layer ship error text that has
-      no programmatic relationship to the input — SR users hear
-      the input's label and type, but never hear the error
-      reason. Visual users see "Email address — Invalid format";
-      SR users hear "Email address, edit text" with no clue why
-      the field is rejected.
+      Figma's interactive-component variants can toggle the error
+      text's visibility on a click or hover trigger, and that demo
+      convinces reviewers the state is "wired" — but no design tool
+      exposes `aria-describedby` or `aria-invalid` as a first-class
+      property, so a convincing visual toggle proves nothing about
+      the accessibility tree. Implementations that faithfully copy
+      the visual toggle still ship error text with no programmatic
+      relationship to the input: SR users hear the input's label
+      and type, but never hear the error reason.
     correct: >-
-      The error message node has an `id`; the input's
-      `aria-describedby` lists that id (alongside any persistent
-      description); the input's `aria-invalid="true"` flags the
-      error state. The error node should be `role="alert"` or
-      `aria-live="polite"` so dynamic validation announces.
-      Document: visual error + ARIA wiring + invalid attribute,
-      always together.
+      Treat the Figma toggle demo as proof of visual behaviour
+      only, never of accessible wiring — that pairing has to be
+      established in code review, not inferred from the file.
+      Give the error node an `id`, reference it from the input's
+      `aria-describedby` (alongside any persistent description),
+      and set `aria-invalid="true"` on the input. See
+      mistakes[missing-aria-invalid] for the runtime fix and its
+      cross-modal announcement requirements.
 
   - figma: Input variants drawn with different layouts (outlined vs filled vs underlined)
     code: A single `<input>` primitive with variant-driven styling
@@ -675,6 +678,7 @@ a11yAcceptance:
     - aria-input-field-name
     - aria-required-attr
     - aria-valid-attr-value
+    - autocomplete-valid
     - color-contrast
     - label
     - label-content-name-mismatch
@@ -923,74 +927,61 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        A `<label for="<input-id>">` element exists in the DOM
-        for every field. Visually-hidden via sr-only is allowed;
-        replacement with `placeholder` is not. Placeholder is
-        reserved for example values, not for field identity.
+        Every field's accessible name (per the browser accname
+        computation) resolves from a real `<label for="<input-id>">`
+        or `aria-labelledby` — never from `placeholder` alone.
+        Independently testable: query the input's computed
+        accessible name; it must be non-empty and must not be
+        sourced from the `placeholder` attribute when no
+        `<label>` / `aria-labelledby` is present.
       source: html-spec
       sourceRef: 'HTML label element + WCAG 1.3.1 / 3.3.2'
       consequence: >-
-        Placeholder-as-label vanishes the field's identity once
-        the user starts typing; SR users never hear it (most AT
-        does not announce placeholder as accessible name); users
-        tabbing away and back lose orientation. Research
-        consistently shows placeholder reduces successful form
-        completion.
+        See mistakes[placeholder-as-label] for the failure mode
+        and fix; this contract is the independently-checkable
+        invariant behind that mistake.
     - rule: >-
-        When the field is in error: `aria-invalid="true"` on the
-        input, `aria-describedby` referencing the error message
-        node, and the error node carries `role="alert"` (or
-        `aria-live="polite"` for async announcements). Visual
-        error + ARIA error + invalid attribute ship together.
+        `input.getAttribute('aria-invalid') === 'true'` holds if
+        and only if the field currently fails validation, and
+        whenever true, `aria-describedby` includes the `id` of a
+        node carrying `role="alert"` or `aria-live="polite"`.
+        Independently testable: assert the boolean equivalence
+        between visual invalid-state and the `aria-invalid` value.
       source: apg
       sourceRef: 'APG: Form patterns + WCAG 3.3.1 (Error Identification)'
       consequence: >-
-        Red border without `aria-invalid` is sighted-only;
-        SR users perceive a normal field. The cross-modal
-        contract — every visual cue has an AT cue — is the
-        foundation of accessible forms.
+        See mistakes[missing-aria-invalid] for the failure mode
+        and fix; this contract is the invariant that failure mode
+        violates.
     - rule: >-
-        Visible required indicators (asterisk, "(required)"
-        suffix) are paired with the `required` attribute on the
-        input. The HTML attribute implies `aria-required="true"`
-        and triggers browser-native constraint validation.
+        A visible required indicator (asterisk, "(required)"
+        suffix) is present in the label if and only if the input
+        carries the `required` attribute — a bidirectional 1:1
+        mapping, independently checkable per field without
+        reference to any other contract.
       source: html-spec
       sourceRef: 'HTML required attribute + WCAG 3.3.2 (Labels or Instructions)'
       consequence: >-
-        Visual-only required loses browser validation, leaves
-        SR users unaware the field is mandatory, and shifts
-        all empty-required detection to the server. Worse: SR
-        may pronounce the asterisk as "asterisk" without any
-        required-state announcement.
+        See mistakes[required-without-attribute] for the failure
+        mode and fix; this contract is the bidirectional invariant
+        it violates (indicator implies attribute, and vice versa).
     - rule: >-
-        `autocomplete` is set to the field's semantic intent
-        (`email`, `username`, `current-password`, `new-password`,
-        `street-address`, `tel`, `cc-number`, etc.). Sitewide
-        `autocomplete="off"` is reserved for genuinely
-        autofill-hostile fields (one-time codes, captcha,
-        security-question answers).
+        Every field mapped to a WHATWG Autofill field category
+        (name, email, address, tel, cc-*, current-password,
+        new-password, etc.) carries a matching, spec-valid
+        `autocomplete` token; `autocomplete="off"` is reserved for
+        fields with no matching category. Partially independently
+        testable: axe-core's `autocomplete-valid` flags malformed
+        tokens, but a syntactically-valid `off` on a field that
+        should carry a real category is not axe-detectable and
+        needs manual/semantic review.
       source: html-spec
       sourceRef: 'HTML autocomplete attribute (WHATWG) + WCAG 1.3.5 (Identify Input Purpose)'
       consequence: >-
-        Disabling autofill sitewide breaks password managers
-        and platform autofill; user experience degrades for
-        the 80%+ of users who rely on autofill. Worse, WCAG
-        1.3.5 explicitly requires `autocomplete` for canonical
-        personal-data fields at AA conformance.
-    - rule: >-
-        Validation cadence is progressive: validate on blur
-        (user finishes the field), clear errors on input
-        (user corrects), surface errors at submit only as a
-        fallback for fields the user skipped. Browser-native
-        constraint validation (`type="email"`, `pattern`,
-        `min`/`max`) handles format checks at the right moment.
-      source: canon
-      consequence: >-
-        Submit-only validation produces forms where users get
-        bounced back to a field they typed minutes earlier;
-        long forms become exhausting; abandonment rates rise.
-        Inline-on-input validation overcorrects in the other
-        direction by yelling at users mid-typing.
+        See mistakes[wrong-autocomplete] for the failure mode and
+        fix; this contract is the invariant it violates. WCAG
+        1.3.5 requires `autocomplete` for canonical personal-data
+        fields at AA conformance.
   vocabularyDrift:
     - system: Material 3
       theirTerm: 'Text fields (filled / outlined)'
@@ -1024,14 +1015,6 @@ contracts:
         plus surrounding `<Label>`, `<Description>`,
         `<ErrorMessage>`. Same composite contract, different
         granularity.
-
-notes: >-
-  TextInput is the canonical form primitive — many composite
-  components (SearchInput, Combobox, TagInput, NumberInput,
-  PasswordInput as conventional sub-types) layer on top of it.
-  The canonical anatomy here documents the universal field
-  contract; specialised inputs document their additions in
-  their own canonical YAMLs.
 
 sources:
   - https://www.w3.org/TR/wai-aria-practices-1.2/#textbox

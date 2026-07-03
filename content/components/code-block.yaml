@@ -1133,13 +1133,4 @@ sources:
     library: prism
     verifiedAt: '2026-05-05'
 
-notes: >-
-  Read-only content presentation; events limited to optional
-  copy observation. The block-vs-inline variant split reflects
-  the structural HTML choice (`<pre><code>` vs bare `<code>`),
-  not styling. The Shiki-emits-aria-hidden vs Prism-does-not
-  divergence in vocabularyDrift is the most-consequential
-  implementation choice; text-side line-numbers are the
-  recurring clipboard regression.
-
 lastReviewed: '2026-05-04'

@@ -265,6 +265,7 @@ axes:
     - { name: dismissible, kind: primitive, of: boolean }
     - { name: hasAction, kind: primitive, of: boolean }
     - { name: hasIcon, kind: primitive, of: boolean }
+    - { name: hasTitle, kind: primitive, of: boolean }
   states:
     interactive:
       - hover

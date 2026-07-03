@@ -364,10 +364,9 @@ formIntegration:
     contribute to FormData. The canonical reference treats `name` as a
     passthrough to the underlying `<button>`.
   submittedValue: >-
-    Only the activating submit button's `[name]=[value]` pair is
-    appended (not all buttons in the form). Multi-action forms
-    distinguish via shared key — `<button name="action" value="save">`
-    plus `<button name="action" value="discard">`. Default value is
+    The activating submit button's `[name]=[value]` pair — see
+    `formData` below for the full mechanics (only the activator
+    submits, multi-action forms via shared key). Default value is
     empty string when no `value` attribute is set.
   requiredAttr: false
   formData: >-

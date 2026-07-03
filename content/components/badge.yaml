@@ -60,10 +60,11 @@ whenToUse:
       difference: >-
         `Icon` is the SVG-glyph primitive that may sit inside a
         Badge as the icon-leading slot (severity glyph, status
-        cue). The Icon is decorative when paired with a visible
-        Badge label, meaningful when the Badge is dot-only — in
-        the latter case the accessible name moves to the Badge
-        root via `aria-label`.
+        cue). The Icon stays decorative (`aria-hidden="true"`)
+        whether or not the Badge shows a visible label — for
+        dot-only or icon-only Badges the accessible name moves to
+        the Badge root via `aria-label` instead, never onto the
+        Icon itself.
 
 anatomy:
   - id: root
@@ -86,11 +87,11 @@ anatomy:
       semantic: span-or-mark
     a11y:
       hint: >-
-        Root carries the badge's accessible name when content alone
-        does not (icon-only or dot variants). For changing counts,
-        set `aria-live="polite"` on the root or on the content slot.
-        For decorative dot variants pair `role="presentation"` with
-        a sibling visually-hidden text label.
+        Root carries the badge's accessible name via `aria-label`
+        when content alone does not supply one (icon-only or dot
+        variants) — the icon-leading glyph, if present, stays
+        `aria-hidden="true"`. For changing counts, set
+        `aria-live="polite"` on the root or on the content slot.
     tokens:
       spacing:
         padding: spacing.tight
@@ -114,8 +115,9 @@ anatomy:
           Polaris, Carbon, and Material 3 ship Badge with an optional
           leading status-glyph (severity icon, status dot, category
           marker). Hidden from AT when paired with a visible label —
-          the badge's meaning lives in the label or the host
-          `aria-label` for dot/icon-only variants, never on the icon.
+          the badge's meaning lives in the label or, for dot/icon-
+          only variants, in the `aria-label` on the badge root —
+          never on the icon.
         layout:
           row: 2
           col: 1
@@ -128,10 +130,10 @@ anatomy:
         rationale: >-
           The visible label or count. Short status words ("New",
           "Beta", "3"). Drives the badge's accessible name unless
-          `dot: true` collapses the slot and the host carries an
-          `aria-label`. Semibold weight + `text.xs` size per the
-          status-glyph density convention; counts use the same
-          treatment so live-region announcements read verbatim.
+          `dot: true` collapses the slot and the badge root carries
+          an `aria-label` instead. Semibold weight + `text.xs` size
+          per the status-glyph density convention; counts use the
+          same treatment so live-region announcements read verbatim.
         layout:
           row: 2
           col: 2
@@ -285,10 +287,10 @@ mistakes:
       the icon meaning. Verbose announcement, no added information.
     fix: >-
       Decorative icons paired with a visible label set
-      `aria-hidden="true"`. Only when the icon is the entire badge
-      content (dot or icon-only variant) does it carry the
-      accessible name — moved to the badge root via `aria-label`,
-      not onto the icon itself.
+      `aria-hidden="true"`. When the icon is the entire badge
+      content (dot or icon-only variant), the icon stays
+      `aria-hidden="true"` too — the badge root instead carries the
+      accessible name via `aria-label`, never the icon.
 
 frameworkMap:
   webComponents:
@@ -339,8 +341,9 @@ responsive:
       change: >-
         Below this width, badges hosted inside list-rows or nav-
         items collapse the content slot and render as a dot
-        variant. The full count moves to `aria-label` so SR users
-        retain the value while the visible footprint shrinks.
+        variant. The full count moves to `aria-label` on the badge
+        root so SR users retain the value while the visible
+        footprint shrinks.
 
 propertyMap:
   - figma: Variant
@@ -400,9 +403,11 @@ a11yAcceptance:
     - trigger: SR enters a host with a badge child
       expected: >-
         SR reads the host's accessible name followed by the
-        badge's accessible name in DOM order. Decorative dot
-        badges with `role="presentation"` are skipped; iconic
-        badges with `aria-label` read their label.
+        badge's accessible name in DOM order. Dot and icon-only
+        badges carry their accessible name via `aria-label` on the
+        badge root, so SR announces that label right after the
+        host's name; badges with visible label content announce
+        the label text instead.
     - trigger: Live count updates
       expected: >-
         SR announces the new count value via the polite live
@@ -445,14 +450,15 @@ contracts:
         misrepresent the surface to SR users.
     - rule: >-
         Decorative-only badges (dot variant or icon-only without
-        meaningful content) carry `role="presentation"` plus a
-        sibling visually-hidden text label in the host's
-        accessible name. The badge's meaning lives in the label,
-        not in the visual.
+        meaningful content) carry the accessible name on the badge
+        root via `aria-label` (e.g. `aria-label="Unread"`,
+        `aria-label="Verified"`). Any icon-leading glyph stays
+        `aria-hidden="true"` — the badge's meaning lives in the
+        root's accessible name, not in the visual.
       source: apg
-      sourceRef: 'APG: presentation role + visually-hidden text patterns'
+      sourceRef: 'WAI-ARIA aria-label on non-text (dot / icon-only) content patterns'
       consequence: >-
-        Without the host-level label, SR users encounter an
+        Without the root-level label, SR users encounter an
         unannotated dot or icon and lose the metadata the badge
         was supposed to carry. The decoration is sighted-only
         and the dot becomes invisible to AT.

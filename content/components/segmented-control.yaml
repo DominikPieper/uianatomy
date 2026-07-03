@@ -630,9 +630,9 @@ contracts:
       theirTerm: Content Switcher
 
 notes: >-
-  The canonical name matches Apple HIG and Material 3 vocabulary.
-  The role-vs-pattern distinction (radiogroup vs tablist) is the
-  most-overlooked semantic decision in implementations.
+  The canonical name matches Apple HIG vocabulary. Material 3
+  uses a different term ("Segmented Buttons") for the same
+  pattern — not a canonical match.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/radio/

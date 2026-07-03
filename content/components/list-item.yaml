@@ -396,7 +396,7 @@ mismatches:
       antipattern. Move them to the action slot as a single
       action button (typically more-options menu) or split
       the row into multiple list items. Document this as
-      mistake `listitem-secondary-as-link`.
+      mistake `listitem-secondary-text-as-link`.
 
 mistakes:
   - id: listitem-not-in-list

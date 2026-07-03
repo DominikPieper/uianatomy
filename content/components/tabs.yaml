@@ -591,13 +591,12 @@ performance:
     threshold: 7
     unit: tabs
     rationale: >-
-      Above ~7 tabs the tablist overflows the viewport on common
-      desktop widths and the cognitive load of "remembering which tab
-      has what" exceeds tab-list usefulness. Split into a navigation
-      hierarchy or a search interface above this threshold; tab-row
-      overflow with horizontal scroll is a recovery pattern, not a
-      design target. Mirrors the existing whenToUse "≤7 panels"
-      guidance.
+      Tab-count is a cheap structural proxy for tablist overflow —
+      no layout measurement is required to evaluate the threshold
+      at build or lint time. The `7` ceiling matches
+      `whenToUse.avoid`; crossing it should trigger the
+      horizontal-scroll recovery pattern, not a wrapped or
+      truncated tablist.
   - name: lazyPanelRender
     metric: panel-payload-size
     threshold: 100
@@ -719,61 +718,59 @@ a11yAcceptance:
 contracts:
   nonNegotiable:
     - rule: >-
-        Tablist uses the roving-tabindex pattern: only the
-        selected tab carries `tabindex="0"`, all others carry
-        `tabindex="-1"`. Arrow keys (Left/Right horizontal,
-        Up/Down vertical) move focus and update the roving
-        index; Tab enters and exits the tablist as a single
-        stop.
+        Exactly one tab carries `tabindex="0"` at any time — the
+        selected tab — and every other tab carries
+        `tabindex="-1"`. Left/Right (horizontal) or Up/Down
+        (vertical) arrow keys move focus among tabs and update
+        which tab holds `tabindex="0"`; Tab itself enters and
+        exits the tablist as a single stop.
       source: apg
       sourceRef: 'APG: Tabs pattern — Keyboard interaction'
       consequence: >-
-        Without roving tabindex, Tab walks through every tab
-        plus the panels below; SR users hear "tab 1 of N"
-        announcements that conflict with document order. The
-        canonical "tablist is one stop, arrows navigate inside"
-        contract is broken from the keyboard perspective.
+        Verify by querying `tabindex` across all tabs after any
+        selection change — the count of `tabindex="0"` must be
+        exactly one. See mistake `tabs-no-arrow-keys` for what
+        breaks when this is skipped.
     - rule: >-
-        `aria-selected` on each tab is the single source of
-        truth for selection state. CSS modifiers and the
-        indicator animation derive from `[aria-selected="true"]`
-        — never from a parallel `data-selected` attribute that
-        has to stay in sync.
+        `aria-selected` is the sole source of truth for tab
+        selection. No other attribute (e.g. a parallel
+        `data-selected`) may encode selection state; all
+        selection-dependent styling and the indicator position
+        derive from `[aria-selected="true"]`.
       source: apg
       sourceRef: 'APG: Tabs pattern — aria-selected'
       consequence: >-
-        When selection lives only in `data-selected`, AT
-        reports every tab as unselected; the visual selection
-        is a sighted-only signal. The contract that "the
-        attribute is the meaning, the visual derives from it"
-        applies here as it does for `aria-expanded` on
-        Disclosure / Accordion.
+        Verify that exactly one tab has `aria-selected="true"`
+        and that no CSS selector or JS branch reads a different
+        attribute for the same decision. See mistake
+        `tabs-state-as-data-attribute-only` for what breaks when
+        a parallel attribute is introduced.
     - rule: >-
-        Each tab carries `aria-controls` referencing its
-        tabpanel's id; each tabpanel carries `aria-labelledby`
-        referencing its tab's id. The bidirectional relationship
-        is wired even when tabs and panels are visually
-        adjacent.
+        Every tab's `aria-controls` resolves to an existing
+        tabpanel id, and that tabpanel's `aria-labelledby`
+        resolves back to the same tab's id — the relationship
+        holds in both directions for every tab/panel pair,
+        regardless of visual adjacency.
       source: apg
       sourceRef: 'APG: Tabs pattern — aria-controls and aria-labelledby'
       consequence: >-
-        Without `aria-labelledby` on the panel, SR users
-        navigating the page out-of-order land on a panel with
-        no signal of which tab owns it. Without `aria-controls`
-        on the tab, there is no programmatic path from tab to
-        panel for AT and assistive navigation features.
+        Verify by resolving both id references for every
+        tab/panel pair; either direction missing fails the
+        contract. See mistake `tabs-panel-not-labelled` for what
+        breaks when the panel side is dropped.
     - rule: >-
-        Disabled tabs use `aria-disabled="true"` — never the
-        HTML `disabled` attribute. The disabled tab remains
-        focusable and announceable; activation (Enter / Space)
-        is the operation that becomes a no-op.
+        A disabled tab carries `aria-disabled="true"`, never the
+        HTML `disabled` attribute, and keeps its place in the
+        roving-tabindex sequence so arrow keys can still move
+        focus to it; only its activation (Enter / Space) is a
+        no-op.
       source: apg
       sourceRef: 'APG: Tabs pattern — Managing disabled tabs'
       consequence: >-
-        HTML `disabled` removes the tab from the focus order;
-        arrow-key navigation jumps over it without warning,
-        leaving keyboard users stranded mid-traversal and
-        SR users with no announcement that the tab exists.
+        Verify by arrow-keying through the tablist — a disabled
+        tab must still receive focus and never be silently
+        skipped. See mistake `tabs-disabled-but-not-skipped` for
+        what breaks when native `disabled` is used instead.
   vocabularyDrift:
     - system: APG
       theirTerm: Tabs

@@ -747,10 +747,12 @@ contracts:
       source: apg
       sourceRef: 'APG: Breadcrumb pattern'
       consequence: >-
-        Without the landmark, SR users cannot jump to the trail
-        via landmark navigation — the "you are here" signal
-        becomes invisible to AT. Sighted-only orientation breaks
-        the canonical accessibility contract.
+        AT users lose landmark-based access to the trail
+        entirely — landmark navigation is the primary discovery
+        mechanism for screen-reader users scanning a page's
+        regions, and a bare `<ol>` or an ambiguous label removes
+        breadcrumbs from that list. See mistake
+        `breadcrumbs-no-nav-landmark`.
     - rule: >-
         The last item carries `aria-current="page"` and is NOT
         rendered as `<a href>`. Static text via `<span>` or
@@ -760,11 +762,11 @@ contracts:
       source: apg
       sourceRef: 'APG: Breadcrumb pattern'
       consequence: >-
-        Without the rule, activating the current item reloads
-        the page (lost scroll, lost form state, no progress).
-        AT users hear "link, current page" — a contradiction
-        that confuses the navigation model. The current page
-        is not a navigation target.
+        Activating the current item triggers a same-page
+        navigation that reloads the document, discarding scroll
+        position and any unsaved in-page state — for a
+        destination the user is already viewing. See mistake
+        `breadcrumbs-current-is-link`.
     - rule: >-
         Separators are decorative — `aria-hidden="true"` or
         rendered via CSS pseudo-elements. Implementations that
@@ -773,11 +775,11 @@ contracts:
       source: apg
       sourceRef: 'APG: Breadcrumb pattern'
       consequence: >-
-        Without the rule, SR reads "Home slash Settings slash
-        Account slash Email" — the slash adds no value but
-        lengthens every announcement. AT users learn to tune
-        out the noise, eroding trust in the trail's semantic
-        clarity.
+        Every trail announcement grows by one spoken token per
+        exposed separator with no corresponding semantic gain —
+        a four-item trail forces AT users to parse three extra
+        words of pure noise on every visit. See mistake
+        `breadcrumbs-separator-readable`.
   vocabularyDrift:
     - system: Material 3
       theirTerm: '—'

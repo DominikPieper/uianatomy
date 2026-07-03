@@ -267,55 +267,61 @@ axes:
           treatment returns to default.
 
 mismatches:
-  - figma: A tile drawn with substantial body text and a header
-    code: A Tile component with minimal label only
+  - figma: Badge instance positioned with a manual x/y pixel offset from one corner, not bound to a logical-position component property
+    code: Badge slot anchored via `inset-inline-end` / `inset-block-start`, position driven by a corner enum
     consequence: >-
-      Designers may compose tiles with rich text content,
-      multiple lines of body, and headers. Implementations
-      following the design ship a Card semantically — the tile
-      becomes content-led, not image-led. The grid loses its
-      gallery-feel; the canonical reference is misapplied.
+      Designers nudge the badge instance to a corner using
+      absolute Figma coordinates, which look correct in the LTR
+      mock. Developers who copy the pixel offset literally
+      hard-code a physical corner; under RTL mirroring the badge
+      stays glued to the same physical corner instead of flipping
+      to the opposite logical corner, so verified-checkmarks and
+      status pills end up on the wrong side of mirrored layouts.
     correct: >-
-      Tile is image-led with minimal supporting text. If the
-      surface needs a hierarchical title+body+media composition,
-      use Card. The decision test: is the user scanning for
-      visual content (Tile, gallery) or for textual hierarchy
-      (Card, feed)?
+      Model badge position as a Figma component property (an
+      enum of the four logical corners) rather than a
+      free-floating layer, and bind code exclusively to
+      `inset-inline-*` / `inset-block-*`. Neither surface should
+      carry a hand-authored physical-pixel offset for the badge.
 
-  - figma: Selected tile drawn with a subtle border colour change
-    code: Selected tile with border + filled inner overlay + visible checkbox
+  - figma: Selectable-variant frame shows the checkbox as a single "hover" state variant, implying it is hidden by default
+    code: 'Checkbox rendered with `opacity: 0` by default and `opacity: 1` only on `:hover` / `:focus-within`'
     consequence: >-
-      Designers use a subtle border colour for selection.
-      Implementations following the design ship colour-only
-      selection — fails WCAG 1.4.1 (Use of Color), and the
-      visible-checkbox affordance is missing so selection
-      discoverability breaks (users may not realise tiles are
-      selectable).
+      A static Figma frame cannot depict a hover-triggered reveal
+      directly, so designers approximate it with a "hover"
+      variant of the checkbox; developers read that variant as
+      "hidden until hover" and ship a genuinely hover-only
+      checkbox. On touch and other no-hover inputs the checkbox
+      never becomes visible, so users get no visible cue that the
+      tile grid is selectable at all — the canonical
+      discoverability affordance silently disappears exactly
+      where it is needed most.
     correct: >-
-      Selected state is communicated via three layers: the
-      tile root (border + inner-overlay tint), the visible
-      checkbox at one corner (checked state), and the
-      `aria-selected="true"` accessible state. Each layer is
-      reinforcement; remove any one and the others still
-      communicate selection.
+      Default the checkbox to visible for `(hover: none)` inputs
+      and reserve opacity-on-hover for hover-capable pointers
+      only, matching the responsive rule that hover-reveal
+      selection becomes always-visible at and below
+      `breakpoint.sm`. Author two explicit Figma frames —
+      default-visible (touch) and hover-reveal (mouse) — instead
+      of one ambiguous "hover" variant.
 
-  - figma: Text label drawn directly on image without a contrast scrim
-    code: Text label rendered with WCAG-passing contrast via overlay scrim
+  - figma: Grid mock shows every tile filled with a successfully-loaded, curated image
+    code: Media slot must additionally render a loading skeleton, a broken-image fallback, and the grid must render a zero-tiles empty state
     consequence: >-
-      Designers compose text-on-image mocks against
-      idealised dark or light backgrounds. Implementations
-      following the design ship arbitrary user-uploaded
-      images; some have low-contrast regions and the label
-      text becomes unreadable. WCAG 1.4.3 (Contrast Minimum)
-      fails for those images.
+      Because the design file only shows the populated happy
+      path, implementations frequently ship with no dedicated
+      broken-image treatment — a failed `<img>` load falls back
+      to the browser's native broken-image icon at intrinsic
+      size, which breaks the aspect-ratio box and misaligns the
+      grid — and no empty-grid messaging, so a zero-result
+      gallery renders as a blank space with no explanation.
     correct: >-
-      For text-on-image labels (label inside the tile,
-      overlaying media), always include the overlay scrim.
-      Document in the canonical reference that the overlay is
-      a contrast-affordance, not a stylistic choice. Allow
-      implementations to skip the overlay only for
-      separated-caption labels (label below media, no
-      overlap).
+      Document loading-skeleton, broken-image-fallback, and
+      grid-level empty states as required companions to the
+      happy-path tile, each sized to the tile's aspect-ratio box
+      so the grid stays regular regardless of load state. Include
+      at least one Figma frame per state in the handoff so it is
+      not silently dropped during implementation.
 
   - figma: Aspect ratio drawn at fixed pixels rather than as a ratio property
     code: Aspect ratio modelled as a property with logical values
@@ -729,18 +735,29 @@ whenToUse:
 contracts:
   nonNegotiable:
     - rule: >-
-        Tile is image-led — visual media is the primary content
-        surface. Content-led layouts (text-dominant, headline +
-        body) belong on Card; the two are not visually
-        interchangeable.
-      source: canon
+        Selected state on a `selectable` tile is never
+        colour-only: shipping code must combine a non-colour
+        visual change on the tile root, `aria-selected="true"`
+        on the root (or the `role="option"` / `role="gridcell"`
+        element), and a visible checkbox carrying its own
+        `aria-checked`. An implementation missing any one of the
+        three layers fails this contract regardless of colour
+        contrast ratios.
+      source: wcag
+      sourceRef: 'WCAG 1.4.1 Use of Color'
       consequence: >-
-        Tile-as-Card layouts (text-dominant tiles with optional
-        thumbnail) erode the canonical visual hierarchy and the
-        SR navigation rhythm. The image-led-vs-content-led
-        distinction is the most-load-bearing canonical decision
-        for this component and the most-overlooked in
-        implementations.
+        A colour-only change is invisible to colour-vision-
+        deficient users and silent to screen readers even when
+        `aria-selected` is present, because sighted users have
+        no way to discover a tile grid is selectable without the
+        checkbox affordance. The three layers are independently
+        verifiable — a DOM query for the checkbox plus
+        `aria-selected`, and a check that the visual delta
+        survives a colour-desaturation filter — which makes this
+        contract auditable in code review or an automated a11y
+        test, unlike the purely categorical Tile-vs-Card
+        judgment call (see `mistakes[tile-as-card]` for that
+        distinction).
   vocabularyDrift:
     - system: Material 3
       theirTerm: Carousel / Cards / Image list
@@ -770,4 +787,4 @@ sources:
   - https://polaris.shopify.com/components/images-and-icons/thumbnail
   - https://react-spectrum.adobe.com/react-aria/GridList.html
 
-lastReviewed: '2026-05-04'
+lastReviewed: '2026-07-03'

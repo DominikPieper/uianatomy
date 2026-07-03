@@ -1349,9 +1349,12 @@ contracts:
         Click-handlers on non-button elements are invisible
         to keyboard and AT users — Tab does not focus them,
         Space and Enter do nothing, AT announces no role.
-        WCAG 4.1.2 violation; axe-core flags `aria-allowed-
-        attr` and `aria-required-attr` when `aria-sort`
-        appears on non-button elements.
+        WCAG 4.1.2 violation. This specific failure mode is
+        not reliably axe-core-detectable: a `<span>` / `<div>`
+        with only a click handler carries no ARIA markup for
+        any rule to catch, so no `aria-*` rule fires. Catching
+        it requires manual keyboard-navigation testing or code
+        review, not automated scanning.
     - rule: >-
         Bulk-selection header checkbox uses
         `aria-checked="mixed"` plus the native

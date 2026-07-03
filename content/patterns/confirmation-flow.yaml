@@ -119,10 +119,14 @@ mistakes:
       autofocus the first focusable element by default.
     fix: >-
       Explicitly set initial focus to the Cancel button for
-      destructive confirmations. In Radix Dialog, set
-      `initialFocus={cancelRef}`; in Headless UI, `:initialFocus`
-      slot prop; in CDK, `autoFocus: 'cancelButton'`. Reserve
-      Confirm-as-default for non-destructive confirmations only.
+      destructive confirmations. In Radix AlertDialog, handle
+      `onOpenAutoFocus` on `AlertDialog.Content`, call
+      `event.preventDefault()`, and focus the Cancel ref manually
+      (Radix has no `initialFocus` prop); in Headless UI, pass the
+      Cancel ref via the Dialog's `:initialFocus` prop; in CDK,
+      apply the `cdkFocusInitial` directive to the Cancel button
+      element. Reserve Confirm-as-default for non-destructive
+      confirmations only.
   - id: vague-title
     severity: major
     title: Title that asks a question without naming the consequence

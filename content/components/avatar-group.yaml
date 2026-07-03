@@ -138,10 +138,10 @@ anatomy:
       The +N tile that surfaces the count of collapsed members
       beyond `max`. Visually styled to match the size and shape of
       the avatar slots (circle in stack, square or rounded in grid),
-      with the literal "+N" text or "+N more" label. When the group
-      is interactive (the indicator opens a member-list popover), it
-      renders as `<button>`; when static, it renders as a labelled
-      span. Activates when total count > `max`.
+      with the literal "+N" text or "+N more" label. Activates when
+      total count > `max`; the rendered element (button or span) is
+      a function of the `interactive` property — see the a11y hint
+      below and `contracts.nonNegotiable`.
     slotKind: interactive
     layout:
       row: 2
@@ -155,12 +155,13 @@ anatomy:
       semantic: button-or-span
     a11y:
       hint: >-
-        When interactive, `<button>` with `aria-label="N more
-        members"` (or "+N more") plus `aria-expanded` reflecting the
-        popover state. When static, `<span>` with the visible "+N"
-        text and a visually-hidden "more members" suffix. Never rely
-        on the literal "+N" alone — SR users without context cannot
-        decode the plus sign.
+        `<button aria-label="N more members">` when interactive
+        (`aria-expanded` mirrors the popover state — see mistake
+        `avatar-group-overflow-not-button-when-interactive` for the
+        div-with-onClick failure mode); a `<span>` with a visually-
+        hidden "more members" suffix when static. Never rely on the
+        literal "+N" alone — SR users without context cannot decode
+        the plus sign.
     tokens:
       radius:
         corner: radius.full
@@ -256,36 +257,46 @@ mismatches:
       overlap. Figma component variants enforce both layouts as
       first-class.
 
-  - figma: Overflow indicator drawn as static text "+5"
-    code: Overflow indicator rendered as `<button>` with `aria-label`
+  - figma: Overlapping avatars separated by a hard-coded white stroke
+    code: 'Separation ring implemented as `box-shadow: 0 0 0 2px var(--surface-bg)` (or a border in the same color)'
     consequence: >-
-      Designers ship "+5" as a text label; developers ship a button
-      with `aria-label="5 more members"`. The visual element looks
-      static but behaves as a focusable, clickable target. Designers
-      do not draw the focus ring or hover state; developers ship them
-      anyway, leading to design / implementation drift on focus
-      affordance.
+      Designers apply a literal white stroke to each avatar shape so
+      the overlap reads as distinct circles rather than a fused
+      blob. Developers cannot hard-code white — the ring has to
+      match whatever surface the group sits on (card background,
+      sunken row, dark-mode surface) or the cutout illusion breaks
+      and shows a visible white halo. Component instances dropped
+      onto a non-white Figma frame silently keep the white stroke
+      because the stroke is a static fill, not a background-relative
+      token.
     correct: >-
-      Document the overflow indicator as `<button>` whenever the
-      group is interactive (opens a popover). Figma carries the
-      button-state variants (default / hover / focused / active) so
-      the focus ring is part of the design. Static overflow (no
-      popover) is the rare case — document it separately as a
-      labelled `<span>`.
+      Document the separation ring as a token reference to the
+      current surface background (`color.surface.bg` or the nearest
+      ancestor surface token), not a literal color. Figma variants
+      should demonstrate the ring on at least two different surface
+      colors (default and sunken) so the "the ring equals the
+      background, not white" rule is visible in the design file
+      itself, not just implied by a single white-background mockup.
 
-  - figma: Stack overlap direction hard-coded as left-overlaps-right
-    code: Overlap direction follows `inset-inline-start` (logical, RTL-aware)
+  - figma: No zero-member variant exists in the component set
+    code: '`total = 0` (or empty `children`) unmounts the group entirely — no container, no `role="group"`, nothing rendered'
     consequence: >-
-      Designers ship a fixed overlap direction (left avatar on top);
-      developers use logical inline properties that flip under RTL.
-      In RTL contexts the LTR Figma file ships with the reverse
-      visual order, but the logical-property code agrees with the
-      RTL reading direction. The two surfaces visually disagree.
+      Design tools require at least one child instance to exist in
+      a component or variant, so Figma component sets skip the
+      zero-member case outright — every documented variant shows at
+      least one avatar. Developers who mirror "always render the
+      container" literally ship a `role="group"` region with an
+      empty `aria-label` and no children when a document briefly has
+      zero collaborators, which SR users encounter as a group that
+      announces itself and then contains nothing.
     correct: >-
-      Document the overlap direction as logical — `overflowDirection`
-      `end` means the last DOM-order avatar sits on top in LTR and
-      on the bottom in RTL. Figma shows both LTR and RTL frames;
-      code uses logical properties uniformly.
+      Document the empty state as a render contract, not a visual
+      one: `total = 0` renders no container at all (the host layout
+      collapses the slot), distinct from the `partial` state where
+      at least one avatar is present. Figma cannot show "absence of
+      a frame" as a variant, so the empty-state rule lives in the
+      canonical spec text and in `axes.states.data`, not in the
+      component set.
 
   - figma: Max count baked into Figma as a fixed-instance count
     code: '`max` prop drives the runtime bound; total count comes from `total` prop or children length'
@@ -571,45 +582,47 @@ a11yAcceptance:
 contracts:
   nonNegotiable:
     - rule: >-
-        The container carries `role="group"` plus `aria-label`
-        describing the group. Without either, SR users hear a
-        sequence of individual avatar names without the "this is a
-        group" semantic. The label should include the total member
-        count when the overflow indicator does not surface it
-        independently.
+        The container element carries both `role="group"` and a
+        non-empty `aria-label` naming the group. Neither attribute
+        alone satisfies the contract — `aria-label` on a role-less
+        element is inert, and an unlabelled `role="group"` is an
+        anonymous region. Testable as a single query:
+        `[role="group"][aria-label]:not([aria-label=""])` on the
+        container.
       source: apg
       sourceRef: 'WAI-ARIA role=group plus accessible-name pattern'
       consequence: >-
-        Without the role and label, the group is a sighted-only
-        composition. AT users encounter ambiguous avatar
-        sequences — the membership boundary, the count, and the
-        group's purpose all collapse into a flat list of names.
+        A container missing either half cannot be told apart from
+        an unordered run of unrelated images by assistive
+        technology — see mistake `avatar-group-no-group-role` for
+        the concrete failure mode and fix.
     - rule: >-
-        Counts beyond `max` collapse into a single overflow
-        indicator with the literal surplus ("+N"). The indicator
-        is non-optional whenever total count > `max`. Implementations
-        that hide surplus avatars without the indicator
-        communicate a smaller membership than reality.
+        The overflow indicator's presence is a pure function of
+        `total` and `max`: rendered whenever `total > max`, absent
+        whenever `total <= max`. There is no third, independently-
+        authored state — an implementation cannot hide surplus
+        avatars while also omitting the indicator.
       source: canon
       consequence: >-
-        Without the indicator, users perceive the group as smaller
-        than it is. The collapsed members lose representation;
-        the membership count becomes lossy.
+        Violating this makes the group under-report its own
+        membership — see mistake
+        `avatar-group-counts-beyond-max-silent-collapse` for the
+        concrete failure mode and fix.
     - rule: >-
-        The overflow indicator is `<button>` whenever it opens a
-        popover (interactive group). It carries `aria-expanded`
-        reflecting the popover state and `aria-controls`
-        referencing the popover. Static groups (no popover) render
-        the indicator as a labelled `<span>`. Implementations that
-        ship a `<div>` with onClick lose keyboard activation,
-        focus order, and disclosure semantics.
+        The overflow indicator's element type is a pure function of
+        the `interactive` property: `<button>` carrying
+        `aria-expanded` and `aria-controls` when `interactive` is
+        true, a labelled `<span>` when `interactive` is false. A
+        `<div>` (with or without a click handler) is not a valid
+        rendering for either state.
       source: apg
       sourceRef: 'APG: Disclosure pattern'
       consequence: >-
-        Without the button semantic, keyboard users cannot reach
-        the popover. AT users cannot perceive that the indicator
-        is interactive — `aria-expanded` is the canonical signal
-        for "this control toggles disclosed content".
+        A `<div>`-based indicator is unreachable by keyboard and
+        exposes no disclosure semantics to assistive technology —
+        see mistake
+        `avatar-group-overflow-not-button-when-interactive` for the
+        concrete failure mode and fix.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Avatar

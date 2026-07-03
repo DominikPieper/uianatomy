@@ -407,18 +407,25 @@ mistakes:
     severity: blocker
     title: Input has no programmatically-associated label
     description: >-
-      The input renders with adjacent text but no `<label for>`,
-      no wrapping `<label>`, and no `aria-labelledby`. SR users
-      hear "checkbox, not checked" without the field meaning;
-      pointer users may have a working hit-target by accident
-      but keyboard / AT users cannot identify the field.
+      The input renders with adjacent text, a placeholder-styled
+      span, or a nearby paragraph carrying the field's meaning,
+      but has no `<label for>`, no wrapping `<label>`, and no
+      `aria-labelledby`. SR users hear "checkbox, not checked"
+      with no field meaning attached — sighted users can read
+      the nearby text, but the accessible-name computation
+      resolves to empty. Pointer users may have a working
+      hit-target by accident; keyboard and AT users cannot
+      identify the field at all.
     fix: >-
       Wrap the input in `<label>` (the input becomes a child of
       the label) or pair the input with `<label for="<id>">` as
-      a sibling. Either form establishes the canonical
-      association. Never substitute placeholder text, adjacent
-      paragraphs, or visual proximity — the AT contract is
-      programmatic.
+      a sibling — either form establishes the canonical
+      association. Move any adjacent explanation prose that is
+      not the field's core meaning into the description slot,
+      linked via `aria-describedby`, rather than leaving it as
+      unlinked paragraph text. Never substitute placeholder
+      text, adjacent paragraphs, or visual proximity for the
+      label — the AT contract is programmatic.
 
   - id: checkbox-mixed-not-set-on-partial
     severity: blocker
@@ -455,22 +462,27 @@ mistakes:
       automated hit-target audits — the visual square is
       misleading.
 
-  - id: checkbox-placeholder-as-label
-    severity: major
-    title: Field meaning lives in placeholder text or adjacent paragraph
+  - id: checkbox-custom-missing-space-toggle
+    severity: blocker
+    title: Custom-rendered checkbox does not respond to the Space key
     description: >-
-      The checkbox has no associated label; the field meaning
-      is in adjacent paragraph text (or, more rarely, in
-      placeholder-styled text near the input). SR users hear
-      "checkbox" with no semantic. Sighted users can read the
-      adjacent text but the programmatic accessible name is
-      empty.
+      A checkbox built from a non-native element (`<div
+      role="checkbox">` or a bare `<button>` without an
+      underlying `<input type="checkbox">`) wires only a click
+      handler. Keyboard users who Tab to the control and press
+      Space see no state change — the control reports
+      `role="checkbox"` and a plausible `aria-checked` value but
+      is otherwise inert from the keyboard. Mouse-only
+      interaction leaves keyboard and switch-device users unable
+      to operate the field at all.
     fix: >-
-      Author a `<label>` with the field meaning. Adjacent
-      explanation prose belongs in the description slot,
-      programmatically linked via `aria-describedby`. The
-      label is the canonical accessible name; the description
-      is supplementary.
+      Add a `keydown` listener for Space that calls
+      `event.preventDefault()` (to suppress page scroll) and
+      routes to the same state-update path as the click handler.
+      Prefer rendering the native `<input type="checkbox">` —
+      Space-key handling is free — and reserve the custom
+      `<button role="checkbox">` path for cases where native
+      styling constraints force it.
 
   - id: checkbox-color-only-state
     severity: major
@@ -742,19 +754,18 @@ a11yAcceptance:
 contracts:
   nonNegotiable:
     - rule: >-
-        The input has a programmatically-associated label —
-        either `<label for="<id>">` or a wrapping `<label>`.
-        Adjacent prose, placeholder text, and visual proximity
-        do not satisfy the contract. The label is the canonical
-        accessible name.
+        The input's accessible name resolves from a programmatic
+        label association (`<label for="<id>">` or a wrapping
+        `<label>`) — never from adjacent text, placeholder
+        styling, or visual proximity alone.
       source: apg
       sourceRef: 'APG: Checkbox pattern'
       consequence: >-
-        Without the association, SR users hear "checkbox, not
-        checked" with no field meaning. The programmatic
-        contract is what AT relies on; visual layout is
-        sighted-only and breaks under voice navigation, mobile
-        SR, and accessibility tooling.
+        Failure mode and fix are detailed in mistake
+        `checkbox-no-label-assoc` and in the "label drawn as
+        inline text disconnected from the input" mismatch —
+        this contract states the invariant those two entries
+        test against.
     - rule: >-
         Parent group-checkbox reflects the mixed (indeterminate)
         state when its child set is partial. Set
@@ -772,18 +783,17 @@ contracts:
         contradictory state on parent activation. The tri-state
         contract is a canonical APG requirement.
     - rule: >-
-        Hit-target is ≥ 24×24 CSS pixels (WCAG 2.5.8 Level AA;
-        AAA threshold is 44×44). The visual square may be
-        smaller, but the clickable region — typically the
-        wrapping label — must meet the threshold.
+        The effective hit-target (input plus wrapping label and
+        padding) is ≥ 24×24 CSS pixels, independent of the
+        painted visual-square size.
       source: wcag
       sourceRef: 'WCAG 2.5.8 Target Size (Minimum)'
       consequence: >-
-        Below the threshold, mobile users and users with motor-
-        control limitations cannot reliably activate the
-        checkbox. The visual square is misleading — designers
-        often paint 16×16 squares thinking that is the target.
-        Verify the effective hit-target, not the painted size.
+        Failure mode and fix are detailed in mistake
+        `checkbox-target-too-small` and in the "hit-target
+        painted as the 16×16 visual square" mismatch — this
+        contract states the invariant those two entries test
+        against.
   vocabularyDrift:
     - system: HTML
       theirTerm: '`<input type="checkbox">`'

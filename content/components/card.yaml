@@ -280,9 +280,10 @@ mismatches:
   - figma: Variants for hover / focus / active / disabled
     code: CSS pseudo-classes (:hover, :focus-visible, :active) and aria/disabled attributes
     consequence: >-
-      Variant explosion in Figma (3 variants × 4 states × 2 orientations =
-      24+ component variants), and the developer cannot map a Figma
-      "hover variant" to a CSS pseudo-class without manual translation.
+      Variant explosion in Figma (3 variants × 4 states × 2 orientations ×
+      2 densities = 48+ component variants), and the developer cannot map
+      a Figma "hover variant" to a CSS pseudo-class without manual
+      translation.
     correct: >-
       Treat interactive states as a separate spec (a "states" sheet or
       component property documentation) — not as Figma variants. Variants
@@ -603,13 +604,12 @@ performance:
 contracts:
   nonNegotiable:
     - rule: >-
-        When the whole card is interactive, the activator is a
-        single real `<a href>` (navigation) or `<button>`
-        (in-page action) — never a `<div onclick>` and never
-        `role="button"` on the card root. Nested actions remain
-        reachable via the pseudo-element overlay pattern (the
-        title's anchor extends a `::before` pseudo over the card,
-        nested buttons sit on a higher stacking context).
+        When `interactive: true`, the card's activator is a single
+        real `<a href>` (navigation) or `<button>` (in-page action)
+        — never a `<div onclick>` and never `role="button"` on the
+        card root. See mistakes `card-as-link-nested-buttons` and
+        `clickable-card-no-keyboard` for the overlay-pattern
+        construction that keeps nested actions reachable.
       source: html-spec
       sourceRef: 'HTML interactive element semantics + WAI-ARIA Authoring Practices'
       consequence: >-
@@ -622,14 +622,15 @@ contracts:
         whole-card-clickable affordance and the nested-actions
         contract.
     - rule: >-
-        Card and Tile and ListItem are not interchangeable.
-        Card is content-led (hierarchical title + body + media +
-        actions); Tile is image-led (visual content primary,
-        text supplementary or absent); ListItem is a horizontal
-        list row with leading icon + primary + secondary +
-        trailing affordances. The decision test is "what is the
-        user scanning for?" — text hierarchy, visual content,
-        or row-of-rows metadata.
+        `Card`, `Tile`, and `ListItem` are distinct canonical ids
+        with non-overlapping required anatomy — Card mandates
+        `title` and `body` as content slots. A composition that
+        drops both in favor of a single dominant image, or
+        reflows into a horizontal leading/primary/secondary/
+        trailing row, is not a Card variant — it is Tile's or
+        ListItem's contract. See `whenToUse.vsRelated` (`tile`,
+        `list-item`) for the full differentiation and decision
+        test.
       source: canon
       consequence: >-
         Mixing the three contracts produces composite components
@@ -640,11 +641,11 @@ contracts:
         list/grid distinction that drives layout choice.
     - rule: >-
         Interactive states (hover / focus-visible / active /
-        disabled) are NOT modelled as Figma variants. Variants
+        disabled) are never modelled as Figma variants; variants
         are reserved for structurally different versions
-        (`elevated` / `outlined` / `flat`); states are
-        documented once and rendered via CSS pseudo-classes and
-        `aria-disabled` / `aria-selected`.
+        (`elevated` / `outlined` / `flat`). See mistake
+        `variant-explosion-from-states` for the variant-matrix
+        failure mode and the states-sheet fix.
       source: canon
       consequence: >-
         Modelling states as variants explodes the matrix
