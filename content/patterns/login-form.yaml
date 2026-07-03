@@ -458,6 +458,13 @@ contracts:
         account" from "wrong password" hands attackers a free
         oracle for valid usernames.
 
+sources:
+  - https://www.w3.org/WAI/tutorials/forms/
+  - https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html
+  - https://www.w3.org/WAI/WCAG21/Understanding/identify-input-purpose.html
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+  - https://pages.nist.gov/800-63-3/sp800-63b.html
+  - https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
 notes: >-
   This is the second canonical pattern after Confirmation Flow.
   Triangulated against APG (textbox + button patterns), HTML spec
@@ -465,9 +472,11 @@ notes: >-
   is-allowed), OWASP ASVS 2.1 (authentication), Polaris Account
   pattern, Material 3 Sign-in Form, and the auth0 / Okta /
   WorkOS engineering blogs on enumeration-resistant login forms.
+  The decision and mistake claims trace to WCAG 3.3.1 / 1.3.5,
+  the autocomplete spec, and NIST/OWASP authentication guidance.
   Library APIs and security guidance evolve; re-validate against
   current docs and threat-modelling discipline before citing in
   production reviews. Sign-up Form, Password Recovery Flow, and
   Magic-Link Login are sibling patterns deferred to follow-up
   work.
-lastReviewed: "2026-05-02"
+lastReviewed: "2026-06-05"

@@ -1,0 +1,445 @@
+componentId: radio-group
+libraryId: react-aria
+componentName: RadioGroup
+
+exampleCode: |
+  import {
+    RadioGroup,
+    Radio,
+    Label,
+    Text,
+    FieldError,
+  } from 'react-aria-components';
+
+  // Controlled with description and validation
+  <RadioGroup
+    value={value}
+    onChange={setValue}
+    isRequired
+    name="contact"
+  >
+    <Label>Preferred contact method</Label>
+    <Radio value="email">Email</Radio>
+    <Radio value="phone">Phone</Radio>
+    <Radio value="sms">SMS</Radio>
+    <Text slot="description">Choose how we should contact you.</Text>
+    <FieldError />
+  </RadioGroup>
+
+  // Uncontrolled with default value
+  <RadioGroup defaultValue="email" name="contact">
+    <Label>Preferred contact method</Label>
+    <Radio value="email">Email</Radio>
+    <Radio value="phone">Phone</Radio>
+  </RadioGroup>
+
+  // Horizontal orientation
+  <RadioGroup orientation="horizontal" name="plan">
+    <Label>Plan</Label>
+    <Radio value="monthly">Monthly</Radio>
+    <Radio value="annual">Annual</Radio>
+  </RadioGroup>
+
+  // Per-radio disabled with group-level error
+  <RadioGroup isInvalid name="tier">
+    <Label>Account tier</Label>
+    <Radio value="free">Free</Radio>
+    <Radio value="pro" isDisabled>Pro (unavailable)</Radio>
+    <FieldError>Please select a tier.</FieldError>
+  </RadioGroup>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      RadioGroup renders a <div> (not <fieldset>) with role="radiogroup"
+      wired by useRadioGroup; aria-labelledby is set automatically to the
+      co-rendered Label element.
+    rationale: >-
+      The canonical root is `<fieldset>` (native grouping, no ARIA needed) or
+      `<div role="radiogroup">` plus `aria-labelledby`. React Aria always renders
+      a `<div>` and applies `role="radiogroup"` plus `aria-labelledby` via
+      `useRadioGroup`, skipping the `<fieldset>` element entirely. The AT-visible
+      contract (group role + accessible name) is identical; the HTML element
+      differs. The `<fieldset>` form-participates natively; React Aria's `<div>`
+      participates via the per-Radio hidden native inputs.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[legend]
+    type: reshaped
+    to: >-
+      <Label> child component (from react-aria-components) rendered as a <span>
+      inside the group <div>; aria-labelledby on the radiogroup root is wired
+      automatically by the library.
+    rationale: >-
+      The canonical `legend` is `<legend>` inside `<fieldset>` — associated
+      natively without ARIA. Because React Aria renders `<div>` not `<fieldset>`,
+      the legend element cannot be used. Instead a `<Label>` child (or the
+      `label` prop on RadioGroup) is rendered and associated via `aria-labelledby`.
+      The accessible-name contract is honoured; the HTML semantics differ.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[radio]
+    type: reshaped
+    to: >-
+      Radio component (public API) internally composed of RadioField (<div>) +
+      RadioButton (<label>); children of Radio supply both the indicator and
+      the per-radio label text via consumer-composed content.
+    rationale: >-
+      The canonical `radio` slot is a repeating item containing input + indicator
+      + label. React Aria ships `Radio` as the public API and internally splits
+      it into `RadioField` (a `<div>` container) wrapping `RadioButton` (a
+      `<label>`). The `<label>` wraps the visually-hidden `<input type="radio">`
+      plus the consumer-supplied indicator content and label text. The compound
+      structure collapses the canonical's three sub-slots (input, indicator,
+      radio-label) into a single `Radio` component boundary whose interior layout
+      is consumer-composed.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05);
+      https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/RadioGroup.tsx (fetched 2026-06-05)
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      VisuallyHidden native <input type="radio"> (internal — rendered inside
+      RadioButton's <label>, not exposed as a named slot or consumer-targetable
+      element).
+    rationale: >-
+      React Aria renders a native `<input type="radio">` wrapped in `VisuallyHidden`
+      for form participation and AT wiring. All interaction (focus, press, keyboard)
+      is managed on the `<label>` root of `RadioButton` via `useRadio` /
+      `usePress`. Consumers cannot reference or style the internal input directly;
+      it is opaque. The ARIA contract (role="radio", aria-checked, roving
+      tabindex) is honoured; the slot boundary is not exposed.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/RadioGroup.tsx (fetched 2026-06-05)
+
+  - from: anatomy[indicator]
+    type: reshaped
+    to: >-
+      Consumer-composed element inside Radio children (no named library-exported
+      indicator slot); styled via [data-selected] on the Radio root or via
+      CSS ::after on a consumer <div class="indicator">.
+    rationale: >-
+      React Aria provides no named indicator slot or exported sub-component for
+      the radio dot. The visual filled-dot is composed by the consumer as a child
+      of `Radio` (e.g., `<div className="radio-indicator" />`) and styled with
+      CSS keyed off `[data-selected]` on the parent. The docs ship a starter-kit
+      example using `::after` pseudo-element on a `.indicator` div. This is
+      purely consumer code; the library contributes `data-selected` as the state
+      signal but not the visual structure.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[radio-label]
+    type: reshaped
+    to: >-
+      children prop (text or JSX nodes) passed to Radio; no named radio-label
+      sub-component exported.
+    rationale: >-
+      The canonical `radio-label` is a distinct named slot. React Aria has no
+      exported `RadioLabel` or named label slot inside `Radio`. The per-radio
+      accessible name comes from the text children of `Radio` (which are rendered
+      inside the `<label>` element of `RadioButton`). When children is a render
+      function, it receives `RadioRenderProps`. The association is correct (label
+      text is inside the `<label>` that wraps the hidden input); the slot boundary
+      is absent.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[description]
+    type: reshaped
+    to: >-
+      Two separate description surfaces: (1) group-level <Text slot="description">
+      (or description prop on RadioGroup) wired via aria-describedby on the group
+      root; (2) per-Radio description prop (string) which maps to a per-item
+      aria-describedby. Both are available without manual wiring.
+    rationale: >-
+      The canonical defines a single group-level `description` slot. React Aria
+      extends this with two distinct description surfaces: the group `<Text slot="description">`
+      (mirrors CheckboxGroup's pattern; aria-describedby on the radiogroup root)
+      and a per-Radio `description` prop for individual-option helper text. The
+      group-level surface matches the canonical; the per-radio surface is an
+      extension. Both are wired automatically without consumer aria-describedby
+      management.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[error-message]
+    type: reshaped
+    to: >-
+      <FieldError> child component (from react-aria-components) inside RadioGroup;
+      displays when group is invalid (isInvalid or validation function fails);
+      aria-describedby on the root is wired automatically.
+    rationale: >-
+      The canonical `error-message` slot is an aria-live region linked via
+      aria-describedby + aria-invalid. React Aria's `<FieldError>` fulfils this
+      role inside `RadioGroup` — it renders when the group is invalid and is
+      associated automatically. Unlike standalone `Checkbox`, a RadioGroup has
+      no standalone variant; `FieldError` always has the group validation context
+      available. The errorMessage prop on RadioGroup is an alternative string/
+      callback form for consumers who prefer not to compose `<FieldError>`.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Axes — Variants ──────────────────────────────────────────────────────
+
+  - from: axes.variants[card]
+    type: omitted
+    rationale: >-
+      React Aria ships no `card` variant. The library is an unstyled behaviour
+      primitive; card-style radio surfaces are a consumer CSS responsibility
+      applied via class names on the `Radio` component with `[data-selected]`
+      driving the card selection state. There is no variant prop or distinct
+      component for this shape.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      React Aria RadioGroup ships no `size` prop. Consistent with the library's
+      unstyled-primitive philosophy (also applied to Checkbox, Menu, Button),
+      size scaling (sm / md / lg) is delegated to consumer CSS via class names
+      or CSS custom properties. The RadioRenderProps type does not include a
+      size field.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties[required]
+    type: renamed
+    to: isRequired (boolean on RadioGroup)
+    rationale: >-
+      One-to-one semantic match. React Aria adopts the `is*` naming convention
+      uniformly for boolean state props across all components. `isRequired` on
+      `RadioGroup` sets `aria-required` on the group root and participates in
+      the native Constraint Validation API when `validationBehavior="native"`.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties[disabled]
+    type: renamed
+    to: isDisabled (boolean on RadioGroup and Radio)
+    rationale: >-
+      React Aria's `is*` convention. `isDisabled` on `RadioGroup` cascades to
+      all child `Radio` items (renders `aria-disabled="true"` on each
+      RadioButton `<label>` and `[data-disabled]` attribute, while keeping
+      elements focusable — consistent with React Aria's global accessibility-first
+      disabled contract). `isDisabled` on an individual `Radio` overrides
+      per-item without affecting siblings.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties[invalid]
+    type: renamed
+    to: isInvalid (boolean on RadioGroup)
+    rationale: >-
+      One-to-one semantic match. React Aria's `is*` convention. `isInvalid` sets
+      `data-invalid` on the group root and `aria-invalid` on the radiogroup.
+      It can be set manually or derived automatically from the `validate`
+      function when `validationBehavior="aria"`.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties[orientation]
+    type: extended
+    addition: >-
+      `orientation: "vertical" | "horizontal"` on RadioGroup — exposes the
+      canonical orientation axis as a first-class prop. React Aria sets
+      `data-orientation` on the group root and relies on consumer CSS grid/flex
+      to realise the layout direction. The canonical documents orientation as
+      an enum property; React Aria ships exactly that. This entry is listed as
+      extended because React Aria additionally sets `aria-orientation` on the
+      radiogroup element (vertical is the ARIA default and is omitted; horizontal
+      is set explicitly), which the canonical does not document.
+    rationale: >-
+      The canonical orientation property is satisfied one-to-one. The extension
+      is the automatic `aria-orientation="horizontal"` on the radiogroup element
+      when horizontal is selected — this ARIA attribute is not addressed in the
+      canonical anatomy, but it is the correct WAI-ARIA attribute for non-default
+      orientation of a radiogroup and aids AT navigation.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `isReadOnly (boolean)` on RadioGroup — the group is visually active and
+      focusable but the user cannot change the selection; the current value
+      submits in forms. Sets `data-readonly` on the group root and `aria-readonly`
+      on the radiogroup element. Individual Radio items reflect the read-only
+      state via `data-readonly` on the RadioButton label.
+    rationale: >-
+      The canonical has no read-only axis for RadioGroup — it documents only
+      `disabled` as the inert state, following HTML's model where
+      `<input type="radio">` has no `readonly` attribute. React Aria adopts
+      the broader ARIA model (`aria-readonly` on a radiogroup) as it does for
+      Checkbox and other form components, treating read-only (can focus, cannot
+      change, submits) as distinct from disabled (cannot interact, may be
+      excluded from form).
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `validationBehavior: "native" | "aria"` on RadioGroup — controls whether
+      the Constraint Validation API ("native", default) or ARIA-only validation
+      ("aria") is used. "native" prevents form submission when isRequired and no
+      value is selected; "aria" sets aria-invalid without blocking submission,
+      suitable for custom validation flows managed by React Hook Form or similar.
+    rationale: >-
+      The canonical documents `aria-required` and `aria-invalid` on the root but
+      does not address the split between native browser Constraint Validation and
+      ARIA-only validation as a consumer-configurable axis. React Aria exposes
+      this trade-off explicitly because the default ("native") can conflict with
+      form libraries that manage their own submission gating. The canonical has
+      no equivalent prop.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      `validate: (value: string) => true | ValidationError` on RadioGroup — a
+      declarative validation function that runs on every value change. Returns
+      `true` for valid or a string / string[] for invalid with a message.
+      Replaces the imperative `validityChange` event model; validity is derived
+      reactively and surfaced via `<FieldError>`.
+    rationale: >-
+      The canonical `validityChange` event fires `{ valid, message }` imperatively.
+      React Aria replaces the event with a declarative `validate` function prop
+      (consistent with its Checkbox, TextField, and other form-component APIs).
+      The trade-off shifts from event-handler validation to reactive computed
+      validity, removing the need for consumers to manually set `isInvalid` on
+      async validation results.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Axes — States ────────────────────────────────────────────────────────
+
+  - from: axes.states.data[selected]
+    type: extended
+    addition: >-
+      React Aria surfaces the selected state as `data-selected` attribute on the
+      Radio component root (RadioButton `<label>`) in addition to the ARIA
+      `aria-checked="true"` on the hidden input. Consumers key CSS off
+      `[data-selected]` rather than `:checked`, which cannot target an ancestor
+      of the visually-hidden input.
+    rationale: >-
+      Because the visual element is the `<label>` (not the `<input>`), the CSS
+      `:checked` pseudo-class on the input cannot cascade to the visible
+      indicator. React Aria adds `data-selected` on the `<label>` root as the
+      canonical styling hook. The AT-visible contract (aria-checked) is unchanged;
+      `data-selected` is additive for styling only.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.states.interactive[hover]
+    type: extended
+    addition: >-
+      React Aria exposes `data-hovered` on each Radio root (via `useHover`
+      internally), enabling pointer-device hover styling without relying on CSS
+      `:hover`, which has known false-positive behaviour on touch devices.
+    rationale: >-
+      Consistent with React Aria's hover-normalisation strategy applied across
+      all interactive components (Checkbox, Button, MenuItem). `data-hovered`
+      reflects true pointer hover (not touch emulation). The canonical documents
+      `hover` as an interactive state; React Aria surfaces it as `data-hovered`
+      in addition to CSS `:hover`, making cross-device hover feedback reliable.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: axes.states.interactive[focus-visible]
+    type: extended
+    addition: >-
+      React Aria exposes separate `data-focused` (any focus) and
+      `data-focus-visible` (keyboard-visible focus) attributes on the Radio
+      root, matching the CSS `:focus-visible` intent but usable on ancestor
+      elements for indicator ring styling.
+    rationale: >-
+      The canonical documents `focus-visible` as a single interactive state.
+      React Aria splits this into two attributes: `data-focused` for programmatic
+      or pointer focus (used to suppress rings on mouse click) and
+      `data-focus-visible` for keyboard-driven focus (used to show the ring).
+      This mirrors the WHATWG `:focus-visible` semantics but on data attributes
+      so they are available on the `<label>` ancestor where the focus ring is
+      rendered visually, not only on the hidden `<input>`.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[valueChange]
+    type: reshaped
+    to: "onChange(value: string)"
+    rationale: >-
+      The canonical `valueChange` event carries
+      `{ value: string, previousValue: string | null }`. React Aria's `onChange`
+      fires with a single `string` (the new selected value) — no `previousValue`
+      in the payload. Consumers needing the previous value must capture it from
+      their own state. The prop name differs (canonical `onValueChange` per the
+      react framework note; React Aria uses `onChange`).
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: events[validityChange]
+    type: reshaped
+    to: validate prop (function) + validationBehavior ("native" | "aria")
+    rationale: >-
+      The canonical `validityChange` event fires `{ valid: boolean, message: string | null }`
+      when the group's validity changes. React Aria replaces the event model with
+      a declarative approach: a `validate` function prop that returns validity
+      inline, combined with `validationBehavior` to select Constraint Validation
+      or ARIA-only mode. There is no `validityChange` event; validity state is
+      derived reactively and surfaced via `<FieldError>` render props. Consistent
+      with the same reshape applied to Checkbox.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: >-
+      [data-selected] CSS attribute selector on the consumer's Radio or indicator
+      element; no motion duration tokens shipped by the library.
+    rationale: >-
+      React Aria ships no motion duration tokens. Indicator scale animation
+      (dot appearance on selection) and selection-shift transitions are driven
+      by consumer CSS keyed off `[data-selected]` on the Radio root or the
+      consumer's indicator element. The canonical `motion.duration.indicatorScale`
+      and `motion.duration.selectionShift` tokens are achievable but entirely
+      consumer-side.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      React Aria does not implement reduced-motion suppression in JS. Consumers
+      apply `@media (prefers-reduced-motion: reduce)` in their CSS to suppress
+      transitions on `[data-selected]` state changes. The library's data-attribute
+      state machine still updates; motion suppression is entirely a consumer CSS
+      responsibility.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+rationale: |
+  React Aria RadioGroup is a behaviour-only compound primitive that owns the
+  full APG radiogroup keyboard contract (roving tabindex, arrow-key navigation
+  with wrap, Space selection, Home/End) and the ARIA wiring (role="radiogroup",
+  aria-labelledby, aria-describedby, aria-errormessage, aria-required,
+  aria-invalid, aria-readonly, aria-orientation) while leaving visual anatomy,
+  variant shapes (card), size scaling, and motion timing entirely to the consumer.
+
+  The three deepest structural divergences from the canon are:
+
+  1. <div role="radiogroup"> not <fieldset> — React Aria always renders a <div>
+     and sets role="radiogroup" plus aria-labelledby via useRadioGroup, bypassing
+     the native <fieldset>+<legend> form-grouping element. The AT-visible contract
+     is identical; native form participation is delegated to per-Radio hidden
+     inputs rather than the fieldset boundary.
+
+  2. No named indicator, radio-label, or input slots — all interior structure of
+     each Radio is consumer-composed children. The hidden native <input> is
+     opaque. The visual dot (indicator) is a consumer CSS responsibility styled
+     via [data-selected]. This matches the Checkbox implementation pattern.
+
+  3. Declarative validate prop replaces the canonical validityChange event —
+     React Aria adopts a function-prop validation model (returning true or a
+     message string) over the canonical imperative event model, consistent with
+     its approach in Checkbox, TextField, and other form components.
+
+  The rename surface (isRequired, isDisabled, isInvalid, isReadOnly, onChange)
+  follows React Aria's uniform is*/on* naming scheme. The underlying AT-visible
+  ARIA state (aria-required, aria-disabled, aria-invalid, aria-readonly,
+  aria-checked) is canonical-compliant. The per-Radio description prop (in
+  addition to the group-level Text slot) is an extension over the canonical's
+  group-only description.
+
+lastReviewed: '2026-06-05'

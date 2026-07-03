@@ -733,6 +733,33 @@ contracts:
         items, and keyboard navigation breaks on both sides. Reach
         for Popover (`role="dialog"`) when the surface needs to
         host arbitrary content.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Menu Button
+      note: >-
+        APG matches the canonical name and the button + `role="menu"`
+        pattern exactly.
+    - system: Radix
+      theirTerm: DropdownMenu
+      note: >-
+        Radix names the whole trigger+content unit "DropdownMenu"; canon
+        splits the trigger affordance (MenuButton) from the surface (Menu).
+    - system: Material Design 3
+      theirTerm: 'Menu (anchored)'
+      note: >-
+        M3 models the popup as "Menu" and treats the trigger as an ordinary
+        button; the button+menu binding is composed, not a named component.
+    - system: Carbon
+      theirTerm: 'OverflowMenu / MenuButton'
+      note: >-
+        Carbon's `OverflowMenu` is the icon-trigger (⋮) specialization of the
+        same pattern; `MenuButton` is the labelled-trigger form.
+    - system: Atlassian
+      theirTerm: DropdownMenu
+      note: >-
+        ADS names the whole trigger+content unit "DropdownMenu" and supplies
+        the trigger via a render prop; canon separates the trigger affordance
+        (MenuButton) from the surface (Menu).
 
 notes: >-
   MenuButton is the cleanest case of role-driven contract — the

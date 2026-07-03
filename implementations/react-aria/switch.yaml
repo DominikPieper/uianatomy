@@ -1,0 +1,332 @@
+componentId: switch
+libraryId: react-aria
+componentName: Switch
+
+exampleCode: |
+  import {
+    SwitchField,
+    SwitchButton,
+    type SwitchFieldProps,
+  } from 'react-aria-components';
+  import { Text, FieldError } from 'react-aria-components';
+
+  // Controlled switch with description
+  <SwitchField isSelected={enabled} onChange={setEnabled} name="low-power">
+    <SwitchButton>
+      {({ isSelected, isDisabled }) => (
+        <>
+          <div className="track">
+            <div className="thumb" />
+          </div>
+          Low power mode
+        </>
+      )}
+    </SwitchButton>
+    <Text slot="description">Reduces background activity to save battery.</Text>
+    <FieldError />
+  </SwitchField>
+
+  // Uncontrolled switch
+  <SwitchField defaultSelected name="notifications">
+    <SwitchButton>Notifications</SwitchButton>
+  </SwitchField>
+
+  // Disabled switch
+  <SwitchField isDisabled>
+    <SwitchButton>Dark mode</SwitchButton>
+  </SwitchField>
+
+divergence:
+  # ── Anatomy ──────────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      SwitchField (renders a <div>) wrapping SwitchButton (renders a <label>).
+      The canonical root is a single element (either a <label> that wraps
+      everything, or a <div> paired with <label for>). React Aria's current
+      API splits this into two co-required components: SwitchField is the
+      outermost container providing form-validation context, and SwitchButton
+      is the interactive <label> that wraps the track/thumb and label text.
+    rationale: >-
+      React Aria separates the field-level validation context (SwitchField)
+      from the interactive surface (SwitchButton) to align with its broader
+      field-component pattern used across TextField, NumberField, and other
+      form primitives. The split enables FieldError and Text slot="description"
+      to live as siblings of SwitchButton inside SwitchField rather than being
+      composed inside the interactive element, cleanly separating the form-level
+      description/error DOM from the clickable label region. The canonical
+      envisions a single root that acts as both association host and click target;
+      React Aria distributes this responsibility across two elements.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: anatomy[track]
+    type: reshaped
+    to: >-
+      Consumer-composed <div className="track"> inside the SwitchButton
+      children render function. No named track slot is exported by the library.
+    rationale: >-
+      React Aria is an unstyled behaviour primitive. The track is a purely
+      visual element that the consumer renders inside the SwitchButton children
+      function using the exposed render props (isSelected, isDisabled). The
+      official Vanilla CSS and Tailwind starter-kit examples name the element
+      "track" by convention, but this is consumer code — the library does not
+      export a <Track> sub-component, set any track-scoped data attributes, or
+      provide a named slot boundary. Consumers are free to name and shape it as
+      they choose; the library's contract is the data attributes on SwitchButton
+      (data-selected, data-disabled, etc.) which consumers use as CSS selectors
+      to animate the track.
+      Source: https://react-aria.adobe.com/Switch#starter-kit (fetched 2026-06-05)
+
+  - from: anatomy[thumb]
+    type: reshaped
+    to: >-
+      Consumer-composed <div className="thumb"> (or "handle") inside the track
+      div inside SwitchButton children. No named thumb slot is exported.
+    rationale: >-
+      Same reasoning as the track slot: React Aria leaves thumb rendering
+      entirely to the consumer. The starter-kit example uses a <div className="handle">
+      inside the track div; its translation from inline-start (off) to inline-end
+      (on) is driven by CSS keyed off [data-selected] on the SwitchButton root.
+      The library's accessibility contract for thumb state — the ARIA announcement
+      of on/off — is carried by the hidden input's aria-checked, not by any
+      thumb-specific slot or attribute.
+      Source: https://react-aria.adobe.com/Switch#starter-kit (fetched 2026-06-05)
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      VisuallyHidden native <input type="checkbox" role="switch"> rendered
+      internally by SwitchButton. Not exposed as a named slot; the internal
+      input reference is accessible via the inputRef prop on SwitchField for
+      imperative access.
+    rationale: >-
+      React Aria renders a hidden native input for form participation and AT
+      wiring (role="switch", aria-checked), consistent with its pattern in
+      Checkbox. The interactive surface, hit-target, press events, and focus
+      management are all handled on the <label> (SwitchButton) via useSwitch
+      and useToggleState hooks. Consumers cannot style or reference the input
+      directly; it is fully opaque. The canonical input slot's accessibility
+      contract (role="switch", aria-checked, form participation) is honoured
+      internally. The inputRef escape hatch is available for imperative focus
+      or programmatic form interaction.
+      Source: https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components/src/Switch.tsx (fetched 2026-06-05)
+
+  - from: anatomy[label]
+    type: reshaped
+    to: >-
+      children prop on SwitchButton (text or JSX nodes). No <Label>
+      sub-component is used inside a standalone Switch composition.
+    rationale: >-
+      React Aria derives the accessible name from the children passed to
+      SwitchButton, consistent with its Checkbox pattern. When children is a
+      render function it receives SwitchButtonRenderProps (isSelected,
+      isDisabled, isPressed, isFocused, isFocusVisible, isHovered, isReadOnly,
+      isInvalid, isRequired). The label text is placed after the consumer's
+      track/thumb markup inside the children render function. There is no
+      separate named <Label> import for the standalone switch case — Label is
+      for group-level contexts (CheckboxGroup, RadioGroup, etc.).
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: anatomy[description]
+    type: reshaped
+    to: '<Text slot="description"> as a sibling of SwitchButton inside SwitchField'
+    rationale: >-
+      The canonical description slot is associated via aria-describedby on the
+      input. React Aria exposes this through <Text slot="description"> (from
+      react-aria-components) placed as a child of SwitchField, not inside
+      SwitchButton. SwitchField wires the describedby relationship automatically
+      via context. This structural choice keeps the description DOM outside the
+      clickable label region (SwitchButton), matching how the wider React Aria
+      field-component pattern handles helper text in TextField, NumberField, etc.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  # ── Axes — Properties ────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      React Aria Switch ships no size prop. The library is unstyled by design;
+      visual size scaling (sm / md) is a consumer responsibility expressed via
+      CSS custom properties or utility classes applied to SwitchField or
+      SwitchButton. The SwitchFieldProps type does not include a size field.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: axes.properties[disabled]
+    type: renamed
+    to: isDisabled (boolean on SwitchField)
+    rationale: >-
+      One-to-one semantic match with a naming convention difference. React Aria
+      adopts is* uniformly for boolean state props. isDisabled maps to
+      aria-disabled="true" on SwitchButton's <label> root and suppresses press
+      events via the useSwitch hook while keeping the element focusable —
+      consistent with the React Aria global accessibility-first disabled contract
+      applied in Checkbox and Button. HTML disabled on the hidden input is not
+      used; consumers who need to remove the element from the tab order must
+      additionally pass excludeFromTabOrder to SwitchField.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: axes.properties[required]
+    type: renamed
+    to: isRequired (boolean on SwitchField)
+    rationale: >-
+      One-to-one semantic match. React Aria's is* naming convention applied
+      uniformly. isRequired on SwitchField sets aria-required on the hidden
+      input and participates in the native Constraint Validation API when
+      validationBehavior="native" (the default). The form-bridge contract
+      (hidden <input type="checkbox" role="switch">) means the required
+      attribute is wired to the native input, so browser validation fires
+      as expected on form submit.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  # ── Axes — Extended properties ────────────────────────────────────────────
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      isReadOnly (boolean on SwitchField) — the switch is visually interactive
+      and focusable but the user cannot change its state. Sets data-readonly on
+      SwitchButton and aria-readonly on the hidden input. The switch still
+      submits its current value in forms. The canonical has no equivalent;
+      readonly binary fields are rare and the canonical documents only disabled
+      as the inert state.
+    rationale: >-
+      React Aria models read-only as a distinct state from disabled because the
+      ARIA spec distinguishes aria-disabled (cannot interact) from aria-readonly
+      (can focus, cannot change, submits value). This is the same extension
+      applied in the React Aria Checkbox implementation. The canonical collapses
+      these into disabled only, following HTML's checkbox model where readonly
+      is not applicable to <input type="checkbox">. React Aria adopts the broader
+      ARIA model consistently across all toggle components.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      isInvalid (boolean on SwitchField) — marks the switch as in an invalid
+      validation state. Sets data-invalid on both SwitchField and SwitchButton,
+      and aria-invalid on the hidden input. Can be set manually or derived
+      automatically from the validate function when validationBehavior="aria".
+    rationale: >-
+      The canonical Switch does not document an invalid state — switches are
+      immediate-effect controls and form validation on them is unusual (the
+      canonical notes this in formIntegration). React Aria exposes isInvalid
+      for completeness across its form-field pattern, enabling design systems
+      that use switches in form contexts (e.g. a required terms-acceptance
+      switch) to surface validation errors via FieldError without hacking the
+      API. Paired with FieldError as a sibling inside SwitchField.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: axes.properties
+    type: extended
+    addition: >-
+      validationBehavior: "native" | "aria" (on SwitchField, default "native")
+      — controls whether validation uses the browser native Constraint Validation
+      API (popover bubble, :invalid pseudo-class) or an ARIA-only approach
+      (aria-invalid plus a live-region error message, no browser popover).
+    rationale: >-
+      The canonical's formIntegration.validation prose describes the Constraint
+      Validation API but does not expose it as a selectable mode. React Aria
+      makes the trade-off explicit because native validation popover UX is
+      often undesirable in component-library contexts where custom FieldError
+      rendering is preferred. The "aria" mode suppresses the browser popover
+      and relies on the FieldError slot for error presentation.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: axes.states.interactive
+    type: extended
+    addition: >-
+      React Aria exposes data-hovered on SwitchButton via useHover internally,
+      enabling pointer-device hover styling without relying on CSS :hover, which
+      has known false-positive behaviour on touch devices. Also exposes
+      data-focused (any focus) and data-focus-visible (keyboard focus only,
+      via the FocusRing concept) as distinct attributes on SwitchButton.
+    rationale: >-
+      React Aria normalises hover and focus across pointer types and input
+      modalities. data-hovered reflects true hover (pointer device only, not
+      touch emulation). data-focused vs data-focus-visible lets consumers style
+      focus rings only for keyboard users without JS-level logic. The canonical
+      documents hover and focus-visible as interactive states but does not
+      specify the data attribute surface — React Aria's data-* attributes are
+      the CSS contract for consumer styling.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  # ── Events ───────────────────────────────────────────────────────────────
+
+  - from: events[checkedChange]
+    type: reshaped
+    to: "onChange(isSelected: boolean) on SwitchField"
+    rationale: >-
+      The canonical checkedChange event carries
+      { checked: boolean, previousChecked: boolean }. React Aria's onChange
+      fires with a single boolean (the new isSelected value) — no previousChecked
+      in the payload. React Aria follows the on* callback convention and applies
+      the is* naming for the boolean value consistently (isSelected rather than
+      checked), matching its Checkbox and RadioGroup patterns. The event is
+      placed on SwitchField rather than SwitchButton; SwitchButton does not
+      accept an onChange prop directly.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: >-
+      [data-selected] CSS attribute selectors on the consumer's stylesheet
+      applied to the consumer's track/thumb elements inside SwitchButton.
+    rationale: >-
+      React Aria ships no motion duration tokens. Thumb translation animation
+      and track colour transitions are driven entirely by consumer CSS keyed
+      off [data-selected], [data-disabled], [data-pressed] on the SwitchButton
+      root. The canonical thumbSlide and trackColorShift duration tokens are
+      achievable but are entirely consumer-side. This is the same pattern as the
+      React Aria Checkbox implementation where indicator-draw animation is
+      consumer CSS responsibility.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      React Aria does not implement reduced-motion suppression in JS. Consumers
+      apply @media (prefers-reduced-motion: reduce) in their CSS to suppress
+      transitions on the track and thumb elements. The library's data-attribute
+      state machine still updates synchronously; motion suppression is entirely
+      consumer CSS responsibility.
+      Source: https://react-aria.adobe.com/Switch (fetched 2026-06-05)
+
+rationale: |
+  React Aria Switch is a behaviour-only primitive that owns the accessibility
+  contract (role="switch", aria-checked, form participation via hidden input,
+  press/hover/focus normalisation) while leaving visual slot anatomy, size
+  variants, and motion timing entirely to the consumer.
+
+  The three deepest structural divergences from the canon are:
+
+  1. Root split into SwitchField + SwitchButton — the canonical envisions a
+     single root element (label or div+label-for). React Aria splits this into
+     SwitchField (div, form-validation context provider) and SwitchButton
+     (label, interactive surface). The split aligns Switch with the broader
+     React Aria field-component pattern (TextField, NumberField) but means
+     consumers compose two co-required components rather than one.
+
+  2. No named track, thumb, or label slots — all visual sub-structure is
+     consumer-composed children rendered inside SwitchButton's children render
+     function. The library's styling contract is the data-selected,
+     data-disabled, data-pressed, data-hovered, data-focus-visible,
+     data-readonly, data-invalid, data-required attribute set on SwitchButton.
+     Consumers key all CSS off these attributes.
+
+  3. Description and FieldError live outside SwitchButton — the description
+     slot (Text slot="description") and validation error slot (FieldError) are
+     siblings of SwitchButton inside SwitchField, not nested inside the
+     clickable label region. This keeps the description and error DOM outside
+     the hit-target, matching the React Aria field-component structural pattern.
+
+  The rename surface (isSelected for "checked" state, isDisabled, isRequired,
+  onChange with single boolean payload) follows React Aria's consistent is*/on*
+  naming scheme applied uniformly across all toggle components. The underlying
+  AT-visible ARIA state (role="switch", aria-checked, aria-required,
+  aria-disabled) is canonical-compliant and produced correctly by the hidden
+  input that SwitchButton renders via VisuallyHidden.
+
+lastReviewed: '2026-06-05'

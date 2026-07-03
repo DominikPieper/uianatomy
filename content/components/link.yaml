@@ -555,6 +555,29 @@ contracts:
         is unidentifiable as a navigation target. The same list
         is the canonical SR navigation surface for sighted-link
         scanning.
+  vocabularyDrift:
+    - system: Material Design 3
+      theirTerm: 'Links (typography role)'
+      note: >-
+        M3 treats links as a text style rather than a discrete component;
+        there is no Link component API, so canon's link anatomy (icon-leading,
+        external-indicator) has no M3 component pendant.
+    - system: GOV.UK
+      theirTerm: 'Link + Back link + Skip link'
+      note: >-
+        GOV.UK splits canon's link variants into named components; "Skip link"
+        is canon's skip-navigation use, "Back link" a directional variant.
+    - system: Polaris
+      theirTerm: 'Link (removeUnderline, monochrome)'
+      note: >-
+        Polaris exposes styling flags (`monochrome`, `removeUnderline`) that
+        canon treats as theming, not anatomy; underline-removal collides with
+        canon's contract that links be distinguishable by more than color.
+    - system: Atlassian
+      theirTerm: 'Link + Button appearance="link"'
+      note: >-
+        ADS offers both a real Link and a Button styled as a link; the latter
+        is canon's "link-as-button" anti-pattern boundary (action vs navigation).
 
 notes: >-
   Link is one of the few canonical components whose anatomy is

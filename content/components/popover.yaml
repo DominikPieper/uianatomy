@@ -813,6 +813,22 @@ contracts:
         (`onPointerDownOutside`, `onEscapeKeyDown`,
         `onFocusOutside`) rather than a unified `dismiss` event;
         consumers wrap to recover the canonical contract.
+    - system: Radix
+      theirTerm: Popover.Anchor
+      note: >-
+        Radix adds an optional `Popover.Anchor` so the floating
+        surface can be positioned against an element other than
+        the trigger. Canon anchors to the trigger and treats a
+        separate positioning reference as a layout concern, not a
+        distinct anatomy slot — documented here rather than added.
+    - system: React Aria
+      theirTerm: 'placement (12+ compound side+align values)'
+      note: >-
+        React Aria collapses positioning into one `placement` prop
+        (`bottom start`, `top end`, …); canon keeps the two
+        orthogonal axes `side` (block/inline start/end) and `align`
+        (start/center/end) separate so each is independently
+        addressable. The value sets are equivalent, the shape differs.
 
 notes: >-
   Popover sits between Modal (always modal) and Tooltip (never

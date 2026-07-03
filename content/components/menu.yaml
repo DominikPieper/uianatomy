@@ -241,6 +241,44 @@ anatomy:
         meaning, omit `role="group"` and use a separator
         slot instead.
 
+  - id: group-label
+    required: false
+    purpose: >-
+      Visible (or sr-only) heading that names a group —
+      "Recent files", "Sort by". Carries the `id` that the
+      group's `aria-labelledby` points at, so SR users hear
+      the group name as context when entering its items.
+      Not a menuitem and never focusable; it sits inside the
+      group as a static heading. Radix `DropdownMenu.Label`
+      and Headless UI section headings render this slot.
+    slotKind: structural
+    layout:
+      parent: group
+      row: 1
+      col: 1
+      span: full
+    figma:
+      type: text
+      hint: Small uppercase or muted section heading above the group's items
+    code:
+      slot: group-label
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        A `<span>`/`<div>` (NOT `role="menuitem"`) carrying the
+        `id` referenced by the parent group's
+        `aria-labelledby`. Visible or `sr-only` text is both
+        valid. Must not be focusable and must not appear in
+        the roving-tabindex sequence — it is a label, not an
+        item. When the group needs no visible heading, drop
+        this slot and give the group an `aria-label` instead.
+    tokens:
+      typography:
+        size: text.xs
+        weight: weight.semibold
+      color:
+        foreground: color.text.muted
+
   - id: separator
     required: false
     purpose: >-

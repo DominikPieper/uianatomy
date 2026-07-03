@@ -1,0 +1,396 @@
+componentId: radio-group
+libraryId: headlessui
+componentName: "RadioGroup / Radio / Label / Description / Fieldset / Legend"
+
+exampleCode: |
+  import {
+    Field, Fieldset, Label, Description,
+    Legend, Radio, RadioGroup,
+  } from '@headlessui/react';
+
+  const plans = [
+    { id: 'startup', name: 'Startup', price: '$29/mo' },
+    { id: 'business', name: 'Business', price: '$99/mo' },
+    { id: 'enterprise', name: 'Enterprise', price: '$249/mo' },
+  ];
+
+  export function PlanPicker({ value, onChange }) {
+    return (
+      <Fieldset>
+        <Legend className="text-base font-semibold text-gray-900">
+          Select a plan
+        </Legend>
+        <Description className="mt-1 text-sm text-gray-500">
+          Choose the plan that best fits your team.
+        </Description>
+
+        <RadioGroup
+          value={value}
+          onChange={onChange}
+          name="plan"
+          className="mt-4 space-y-2"
+        >
+          {plans.map((plan) => (
+            <Radio
+              key={plan.id}
+              value={plan}
+              className="group flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3
+                         data-checked:border-blue-500 data-checked:bg-blue-50
+                         data-focus:ring-2 data-focus:ring-blue-500"
+            >
+              {/* visual indicator — consumer-authored */}
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-gray-400
+                               group-data-checked:border-blue-500">
+                <span className="hidden h-2 w-2 rounded-full bg-blue-500 group-data-checked:block" />
+              </span>
+              <span className="text-sm font-medium text-gray-900">{plan.name}</span>
+              <span className="ml-auto text-sm text-gray-500">{plan.price}</span>
+            </Radio>
+          ))}
+        </RadioGroup>
+      </Fieldset>
+    );
+  }
+
+divergence:
+  # ── Anatomy: root renders div, not fieldset ────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      RadioGroup renders a plain div (default `as="div"`) with role="radiogroup"
+      applied automatically. The canonical fieldset-based grouping is handled by
+      a separate Fieldset component (also exported from @headlessui/react) which
+      renders a native <fieldset> with aria-labelledby pointing to a Legend div.
+      The two components are composable but independent — RadioGroup does not
+      automatically compose with Fieldset; consumers must nest them manually.
+    rationale: >-
+      Headless UI separates group-container semantics (Fieldset) from selection
+      state management (RadioGroup) into two distinct components. This allows
+      RadioGroup to be used without fieldset markup when role="radiogroup" + a
+      generic Label is sufficient, and allows Fieldset to wrap other form
+      controls beyond radios. The canonical anatomy treats fieldset + radiogroup
+      as a single co-located root; Headless UI makes the structural and semantic
+      grouping independently composable. Source:
+      https://headlessui.com/react/radio-group (RadioGroup props, as="div",
+      2026-06-05); https://headlessui.com/react/fieldset (Fieldset component,
+      2026-06-05).
+
+  # ── Anatomy: legend is a separate Fieldset-scoped component ───────────────────
+
+  - from: anatomy[legend]
+    type: reshaped
+    to: >-
+      Headless UI exports a Legend component (renders div by default, not the
+      native <legend> element) that is scoped to the Fieldset component via
+      context. A generic Label component can also label a RadioGroup directly
+      via aria-labelledby. The two paths are distinct: Fieldset+Legend for
+      fieldset-semantic grouping; RadioGroup+Label for div-based radiogroup
+      with accessible name. There is no single canonical equivalent of the
+      HTML <legend> as a first child of <fieldset>.
+    rationale: >-
+      The Headless UI Legend deliberately renders as a div (not the native
+      <legend>) because the native element is difficult to style — it has
+      browser-specific positioning constraints inside a fieldset that break
+      common layout patterns. The accessible name link is achieved via
+      aria-labelledby from Fieldset to Legend rather than the native
+      fieldset/legend implicit association. This is a styling-driven trade-off:
+      consumers get full control over layout at the cost of the native element
+      semantic. Source: https://headlessui.com/react/fieldset (Legend renders
+      as div; fieldset uses aria-labelledby, 2026-06-05).
+
+  # ── Anatomy: no indicator slot — consumer-authored via data-checked ───────────
+
+  - from: anatomy[indicator]
+    type: omitted
+    rationale: >-
+      Headless UI Radio ships no Indicator sub-component. The visual filled-dot
+      indicator inside a selected radio is entirely consumer-authored: consumers
+      write CSS (or Tailwind utilities) targeting the data-checked attribute on
+      Radio (or a child element that reads group-data-checked). The library
+      applies aria-checked="true" on the Radio element for AT but provides no
+      rendered visual element for the selection indicator. This is consistent
+      with the library's intentionally-unstyled philosophy — all visual
+      treatment is the consumer's responsibility. Source:
+      https://headlessui.com/react/radio-group (Radio data attributes:
+      data-checked, 2026-06-05).
+
+  # ── Anatomy: description is the generic Description component ─────────────────
+
+  - from: anatomy[description]
+    type: reshaped
+    to: >-
+      The generic Description component (imported from @headlessui/react)
+      associates itself via aria-describedby on the nearest Field, Fieldset, or
+      RadioGroup in context. When used inside a Field wrapping a single Radio,
+      it describes that Radio. When used as a sibling to RadioGroup inside a
+      Fieldset, it describes the group. There is no RadioGroupDescription
+      dedicated component (that was the v1 API, now deprecated).
+    rationale: >-
+      Headless UI v2 consolidates per-component label/description into a shared
+      Label and Description component driven by context. The aria-describedby
+      wiring target is resolved by context (whichever Field, Fieldset, or
+      RadioGroup the Description is a descendant of). Consumers composing
+      group-level descriptions must place Description outside Field but inside
+      Fieldset or adjacent to RadioGroup to get the group-level aria-describedby
+      association. This is a composability improvement over dedicated
+      RadioGroupDescription but requires the consumer to understand context
+      scoping. Source: https://headlessui.com/react/radio-group (Description
+      import, 2026-06-05); https://headlessui.com/react/fieldset (Description
+      scoped via context, 2026-06-05).
+
+  # ── Anatomy: no error-message slot ────────────────────────────────────────────
+
+  - from: anatomy[error-message]
+    type: omitted
+    rationale: >-
+      Headless UI RadioGroup ships no error-message component and no aria-live
+      error region. There is no `invalid` prop on RadioGroup (unlike Headless
+      UI Combobox which carries an `invalid` prop that propagates data-invalid
+      through the tree). Consumers must author validation message rendering,
+      aria-live="polite" on the container, and manual aria-describedby wiring
+      on RadioGroup themselves. Headless UI's Fieldset utilities do not include
+      a structured error-message primitive. Source:
+      https://headlessui.com/react/radio-group (RadioGroup props — no invalid
+      prop listed, 2026-06-05); GitHub source confirms no invalid prop:
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/radio-group/radio-group.tsx
+      (2026-06-05).
+
+  # ── Anatomy: radio slot splits to Radio + optional Field wrapper ───────────────
+
+  - from: anatomy[radio]
+    type: reshaped
+    to: >-
+      Each radio option is the Radio component. It renders as a span by default
+      (not a label or div). Consumers use a Field + Label + Radio composition to
+      get the label association: Field provides context, Label renders the
+      visible text, and Radio contains the visual indicator (author-supplied).
+      Unlike the canonical label-wrapping-input slot, Radio does not wrap a
+      native <input type="radio">; it is a custom element with role="radio"
+      and aria-checked managed by the library.
+    rationale: >-
+      Headless UI Radio is a fully custom element that replaces the native radio
+      input pattern. This allows full visual control (card-style radios, rich
+      content inside the option) at the cost of the native input semantic.
+      Hidden native inputs for form submission are provided via the RadioGroup
+      `name` prop rather than per-Radio native inputs. The label association is
+      mediated via context (Field+Label) rather than by wrapping the input in a
+      label element. Source: https://headlessui.com/react/radio-group
+      (Radio as="span" default, Field+Label composition pattern, 2026-06-05).
+
+  # ── Anatomy: input slot — no native input element per radio ───────────────────
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      No per-Radio native <input type="radio"> is rendered. Role="radio" and
+      aria-checked are applied directly to the Radio span element. When the
+      RadioGroup `name` prop is provided, a single hidden <input type="hidden">
+      is injected at the RadioGroup level carrying the selected value for form
+      submission — not a per-radio input. The native roving-tabindex and
+      browser mutex (shared name attribute) are not used; Headless UI manages
+      both via JavaScript.
+    rationale: >-
+      Replacing the native input with a custom element gives consumers full
+      styling freedom over the radio affordance — no browser-native radio circle
+      to reset, no clip-path gymnastics. The trade-off is that keyboard mutex
+      and roving-tabindex must be re-implemented in JavaScript, and form
+      submission requires the hidden-input mechanism rather than the native
+      radio name-grouping. Headless UI implements roving-tabindex correctly
+      (arrow keys select and move focus; tab exits the group). Source:
+      https://headlessui.com/react/radio-group (Radio component, keyboard
+      interactions, name prop on RadioGroup, 2026-06-05); GitHub source:
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/radio-group/radio-group.tsx
+      (2026-06-05).
+
+  # ── Axes: no size property ────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Headless UI is intentionally unstyled and ships no size prop. All sizing
+      (sm/md/lg) is the consumer's responsibility via className or CSS custom
+      properties. Source: https://headlessui.com/react/radio-group (RadioGroup
+      props — no size listed, 2026-06-05).
+
+  # ── Axes: no orientation property ────────────────────────────────────────────
+
+  - from: axes.properties[orientation]
+    type: omitted
+    rationale: >-
+      RadioGroup ships no orientation prop and does not set aria-orientation on
+      the radiogroup element. Vertical vs horizontal layout is entirely the
+      consumer's CSS responsibility. Arrow-key navigation (Up/Down/Left/Right)
+      cycles through all options regardless of visual orientation — Headless UI
+      does not restrict which arrow keys work based on an orientation setting.
+      Source: https://headlessui.com/react/radio-group (keyboard interactions:
+      all four arrow keys cycle options, no orientation param, 2026-06-05).
+
+  # ── Axes: no invalid property ────────────────────────────────────────────────
+
+  - from: axes.properties[invalid]
+    type: omitted
+    rationale: >-
+      RadioGroup has no `invalid` prop (unlike Headless UI Combobox which has
+      one). Consumers must manually set aria-invalid on the RadioGroup element
+      via the `as` prop or by passing aria-invalid directly (Headless UI
+      forwards unknown props to the underlying element). There is no data-invalid
+      propagation through the tree for RadioGroup. Source:
+      https://headlessui.com/react/radio-group (RadioGroup props, 2026-06-05).
+
+  # ── Axes: no required property ───────────────────────────────────────────────
+
+  - from: axes.properties[required]
+    type: omitted
+    rationale: >-
+      RadioGroup has no `required` prop. Setting aria-required on the group
+      requires consumers to pass the attribute directly: `<RadioGroup
+      aria-required="true">`. There is no automatic wiring of Constraint
+      Validation API or aria-required through the library. Source:
+      https://headlessui.com/react/radio-group (RadioGroup props, 2026-06-05).
+
+  # ── Axes: no card variant ─────────────────────────────────────────────────────
+
+  - from: axes.variants[card]
+    type: omitted
+    rationale: >-
+      Headless UI ships no card variant. The library is unstyled; the card
+      visual treatment (selectable card border + background) is a pure
+      consumer-styling concern applied via data-checked on Radio. Consumers
+      can author the card variant by styling Radio with rounded borders and
+      background changes on data-checked without any library variant prop.
+      Source: https://headlessui.com/react/radio-group (Radio data-checked
+      styling example shows card-like treatment, 2026-06-05).
+
+  # ── Extended: by prop for object comparison ────────────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `by` prop on RadioGroup accepts a key of T or a custom comparator function
+      `(a: T, b: T) => boolean`. When `value` is an object rather than a
+      primitive string, `by` defines equality for matching the selected Radio.
+      The canonical anatomy assumes string values; the `by` prop extends the
+      API to support structured object values where identity equality would fail.
+    rationale: >-
+      The canonical radio-group assumes primitive string values for the selected
+      radio (matching the native HTML `value` attribute model). Headless UI's
+      generic type parameter T allows any object as the selected value, which
+      requires an equality comparator when the selected object instance changes
+      between renders (e.g. value comes from an API response). This is a
+      practical extension for React consumers working with server-fetched data.
+      Source: https://headlessui.com/react/radio-group (RadioGroup props — by,
+      2026-06-05).
+
+  # ── Extended: name + form props for form integration ─────────────────────────
+
+  - from: formIntegration.nativeElement
+    type: extended
+    addition: >-
+      `name: string` and `form: string` props on RadioGroup. When `name` is
+      provided, a hidden <input> element is injected at the RadioGroup level
+      carrying the serialised selected value for native form submission. The
+      `form` prop associates the hidden input with a specific form element by
+      id. This replaces the canonical per-radio native input + shared name-
+      attribute mechanism.
+    rationale: >-
+      The canonical form integration pattern relies on per-radio native
+      <input type="radio" name="…"> elements — the browser enforces mutex via
+      shared name and submits the checked radio's value. Headless UI uses a
+      single hidden input at the group level because Radio renders no native
+      input per option. This achieves the same form-submission result but
+      departs from the browser-native model: the hidden input always submits,
+      even when no radio is checked (it would submit an empty string), whereas
+      native radios omit the field entirely when none is checked. Source:
+      https://headlessui.com/react/radio-group (RadioGroup props — name, form,
+      2026-06-05).
+
+  # ── Extended: defaultValue for uncontrolled usage ────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `defaultValue` prop on RadioGroup enables uncontrolled mode: the initial
+      selected value is set once on mount and the library manages selection
+      state internally without a consumer-supplied onChange + value pair. The
+      canonical anatomy documents only the controlled pattern (value +
+      onValueChange).
+    rationale: >-
+      Providing both controlled (value + onChange) and uncontrolled
+      (defaultValue) modes is idiomatic React. The canonical anatomy documents
+      controlled state as the primary model because it is the form-library-
+      compatible path; uncontrolled mode is a Headless UI ergonomic addition
+      for simple cases where the consumer does not need to read or own the
+      selection state. Source: https://headlessui.com/react/radio-group
+      (RadioGroup props — defaultValue, 2026-06-05).
+
+  # ── Events: onChange naming diverges from canonical valueChange ───────────────
+
+  - from: events[valueChange]
+    type: renamed
+    to: onChange on RadioGroup root
+    rationale: >-
+      The canonical event is `valueChange` with payload
+      `{ value: string, previousValue: string | null }`. Headless UI fires
+      `onChange(value: T)` on the RadioGroup root, delivering only the new
+      value without the previous value. Consumers who need previousValue must
+      capture it from their own state before the onChange fires. The naming
+      follows React convention (onChange) rather than the canonical camelCase
+      event-name pattern (valueChange). Source:
+      https://headlessui.com/react/radio-group (RadioGroup props — onChange,
+      2026-06-05).
+
+  # ── Events: no validityChange event ─────────────────────────────────────────
+
+  - from: events[validityChange]
+    type: omitted
+    rationale: >-
+      Headless UI RadioGroup emits no validityChange or onValidationChange
+      event. Because there is no invalid/required prop on RadioGroup, there is
+      no library-managed validity state to observe. Consumers must derive
+      validity from their own form state and wire aria-invalid manually.
+      Source: https://headlessui.com/react/radio-group (RadioGroup props,
+      2026-06-05).
+
+rationale: |
+  Headless UI React v2.x RadioGroup (@headlessui/react) is an intentionally
+  unstyled, custom-element radio implementation that replaces native
+  <input type="radio"> elements with ARIA-attributed span elements. This
+  structural choice is the root cause of most divergences.
+
+  The divergences cluster into four groups:
+
+  1. Native-input replacement — Radio renders as a span with role="radio"
+     and aria-checked; no per-radio native input is rendered. The browser's
+     native mutex enforcement (shared name attribute), native label association,
+     and native roving-tabindex are all replaced by JavaScript implementations.
+     Form submission is handled via a single hidden input at the RadioGroup
+     level (when the name prop is used) rather than per-radio native inputs.
+     The ARIA contract (role="radio", aria-checked, role="radiogroup") is
+     correctly implemented.
+
+  2. Structural decomposition — The canonical fieldset+legend+radiogroup root
+     is split across two independent components: Fieldset (renders fieldset,
+     but with Legend as a div + aria-labelledby rather than a native legend)
+     and RadioGroup (renders div with role="radiogroup"). Consumers must compose
+     them manually. The generic Label and Description components from
+     @headlessui/react handle accessible name and description association via
+     context-driven aria-labelledby / aria-describedby.
+
+  3. Missing validation surface — No invalid prop, no required prop, no
+     error-message primitive, no validityChange event. Headless UI RadioGroup
+     has no opinion on form validation state; consumers own the entire
+     validation pipeline including aria-invalid, aria-required, error-message
+     rendering, and aria-live announcements.
+
+  4. Intentionally-unstyled axis gaps — No size prop, no orientation prop
+     (though all four arrow keys work regardless of layout), no card variant.
+     The indicator visual is entirely consumer-authored via data-checked styling.
+     The only extended props are ergonomic: by for object comparison,
+     defaultValue for uncontrolled mode, and name/form for form integration.
+
+  The v1 API (RadioGroupOption, RadioGroupLabel, RadioGroupDescription as
+  dedicated named exports) is deprecated in v2 in favour of Radio, Label,
+  and Description with context-driven association.
+
+lastReviewed: '2026-06-05'

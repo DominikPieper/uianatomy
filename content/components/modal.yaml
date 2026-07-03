@@ -813,6 +813,34 @@ contracts:
         practice. Keyboard users perceive the modal as
         non-dismissible and reach for the close button by mouse,
         breaking the keyboard-equivalence contract.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: 'Dialog (Modal)'
+      note: >-
+        APG matches the canonical pattern; its "Alert Dialog" is canon's
+        `variant="alertdialog"`.
+    - system: Material Design 3
+      theirTerm: 'Dialog (basic / full-screen)'
+      note: >-
+        M3 splits by size — "Basic dialog" and "Full-screen dialog" — where
+        canon carries size as a property on one Modal; a full-screen dialog
+        on small viewports is canon's responsive behavior, not a new component.
+    - system: Polaris
+      theirTerm: Modal
+      note: >-
+        Polaris matches the name but folds edge-anchored panels into the same
+        component; canon separates those out as Drawer.
+    - system: Atlassian
+      theirTerm: 'Modal dialog'
+      note: >-
+        ADS uses "Modal dialog" and exposes width as a token scale
+        (small/medium/large/x-large) that maps to canon's size property.
+    - system: Carbon
+      theirTerm: 'Modal / Danger modal'
+      note: >-
+        Carbon's `danger` modal is canon's `variant="alertdialog"`
+        destructive case; `passiveModal` (no footer actions) is a
+        configuration of the same component, not a separate pattern.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/

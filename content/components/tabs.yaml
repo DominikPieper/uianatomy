@@ -774,6 +774,27 @@ contracts:
         arrow-key navigation jumps over it without warning,
         leaving keyboard users stranded mid-traversal and
         SR users with no announcement that the tab exists.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Tabs
+      note: >-
+        APG matches the canonical name and the tablist/tab/tabpanel anatomy
+        and roving-tabindex pattern exactly.
+    - system: Material Design 3
+      theirTerm: 'Tabs (primary / secondary)'
+      note: >-
+        M3 distinguishes "Primary" and "Secondary" tabs by hierarchy/placement;
+        canon treats emphasis as styling, not an anatomy or activation axis.
+    - system: Carbon
+      theirTerm: 'Tabs (line / contained)'
+      note: >-
+        Carbon's `line` vs `contained` is visual treatment of the tab list;
+        it maps to canon theming, not the manual/automatic activation axis.
+    - system: Atlassian
+      theirTerm: Tabs
+      note: >-
+        ADS matches the name; its tabs are always automatic-activation, where
+        canon documents both manual and automatic as an explicit axis.
 
 sources:
   - https://www.w3.org/WAI/ARIA/apg/patterns/tabs/

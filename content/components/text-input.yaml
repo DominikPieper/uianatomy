@@ -746,13 +746,10 @@ formIntegration:
     current value submits as a string entry under the configured
     name when the parent `<form>` submits.
   submittedValue: >-
-    Single FormData entry per TextInput — the input's current
-    `.value` (string). `type="number"` / `type="email"` /
-    `type="url"` all submit as strings; consumers must coerce.
-    `disabled` excludes the field from FormData entirely;
-    `readonly` includes it. `type="password"` submits in
-    cleartext — HTTPS at the transport layer is the canonical
-    secrecy boundary, not the input type.
+    The input's current `.value` as a single string entry — see
+    `formData` below for the full mechanics (one entry per field,
+    string-typed regardless of `type`, `disabled` excluded /
+    `readonly` included, password in cleartext).
   requiredAttr: true
   formData: >-
     Single FormData entry per TextInput — `formData.get('email')`

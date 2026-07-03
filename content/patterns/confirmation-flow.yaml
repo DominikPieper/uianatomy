@@ -251,10 +251,24 @@ contracts:
         dialog's "demand a decision" semantic into "trick the
         user into committing".
 
+sources:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/
+  - https://www.w3.org/WAI/WCAG21/Understanding/error-prevention-legal-financial-data.html
+  - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
+  - url: https://www.radix-ui.com/primitives/docs/components/alert-dialog
+    library: radix
+    verifiedAt: '2026-06-05'
+  - url: https://headlessui.com/react/dialog
+    library: headlessUi
+    verifiedAt: '2026-06-05'
+  - url: https://m3.material.io/components/dialogs/overview
+    library: material3
+    verifiedAt: '2026-06-05'
 notes: >-
   This is the first canonical pattern entry. Prose was triangulated
   against APG (alertdialog role), Radix, Headless UI, CDK, Polaris,
-  and Material 3 documentation as of 2026-04. Library APIs change;
-  re-validate the framework skeletons against current docs before
-  citing them in production reviews.
-lastReviewed: "2026-05-01"
+  and Material 3 documentation. The decision and mistake claims trace
+  to the APG alertdialog pattern and WCAG 3.3.4 (Error Prevention).
+  Library APIs change; re-validate the framework skeletons against
+  current docs before citing them in production reviews.
+lastReviewed: "2026-06-05"

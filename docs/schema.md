@@ -739,7 +739,7 @@ This is descriptive, not prescriptive. We document what's idiomatic, not what's 
 - `alternateNames` — array of industry synonyms or library-specific names users might search by. Modal: `[Dialog, Alert dialog]`; Toast: `[Snackbar, Flag]`; Combobox: `[Autocomplete, Typeahead]`. Schema requires `min(1)` when present. Surfaced in the component hero as "Also called …", in JSON-LD `mainEntity.DefinedTerm.alternateName`, and indexed by Pagefind.
 - `notes` — author's editorial notes that don't fit elsewhere
 - `lastReviewed` — ISO date of last full review
-- `sources` — list of URLs consulted during research (not displayed to users; useful for re-review)
+- `sources` — list of URLs consulted during research (not displayed to users; useful for re-review). Entries are either a bare URL string or `{ url, library, verifiedAt }` (the latter two are paired — declare both or neither). Patterns (`content/patterns/*.yaml`) may also carry `sources` with the same shape, but unlike components they are **not** subject to the ≥3-source depth guard — patterns synthesize spec flows (APG, WCAG 3.3.x) rather than mirror a single library (P6-172).
 
 ## What's deliberately not in the schema
 

@@ -1,0 +1,286 @@
+componentId: switch
+libraryId: headlessui
+componentName: Switch / Field / Label / Description
+
+exampleCode: |
+  import {
+    Field, Label, Description, Switch,
+  } from '@headlessui/react';
+  import { useState } from 'react';
+
+  export function NotificationsSwitch() {
+    const [enabled, setEnabled] = useState(false);
+
+    return (
+      <Field className="flex items-center gap-3">
+        <Switch
+          checked={enabled}
+          onChange={setEnabled}
+          name="notifications"
+          className="relative inline-flex h-6 w-11 items-center rounded-full
+                     bg-gray-200 data-checked:bg-blue-600 data-focus:ring-2
+                     transition-colors"
+        >
+          <span
+            aria-hidden="true"
+            className="inline-block h-4 w-4 translate-x-1 rounded-full bg-white
+                       transition-transform data-checked:translate-x-6"
+          />
+        </Switch>
+        <div>
+          <Label className="text-sm font-medium text-gray-900">
+            Notifications
+          </Label>
+          <Description className="text-xs text-gray-500">
+            Email and push for new messages
+          </Description>
+        </div>
+      </Field>
+    );
+  }
+
+divergence:
+  # ── Anatomy: no dedicated Track slot ─────────────────────────────────────────
+
+  - from: anatomy[track]
+    type: reshaped
+    to: >-
+      The Switch root element itself serves as the track. There is no separate
+      exported Track sub-component. The pill-shaped rail is authored as the
+      Switch button's own styled container via className; data-checked on the
+      Switch root is used to shift background colour.
+    rationale: >-
+      The canonical anatomy separates track (decorative rail) from root
+      (structural wrapper) to allow independent slot-level styling. Headless UI
+      collapses both into a single `Switch` element that renders as a `<button
+      role="switch">`. This simplifies the component tree at the cost of
+      losing a dedicated slot for track-specific tokens (border-radius, off/on
+      background). Consumers style track-state via data-checked on the root
+      itself. Source: https://headlessui.com/react/switch (Switch props and
+      usage examples, 2026-06-05).
+
+  # ── Anatomy: no dedicated Thumb slot ─────────────────────────────────────────
+
+  - from: anatomy[thumb]
+    type: reshaped
+    to: >-
+      No exported Thumb sub-component. The sliding indicator is a plain `<span
+      aria-hidden="true">` authored inside Switch as consumer-owned children.
+      Translation animation (translate-x-1 / translate-x-6) is written by
+      the consumer using Tailwind utilities or custom CSS on data-checked.
+    rationale: >-
+      The canonical thumb slot is a distinct part of the component anatomy with
+      its own token bindings (radius.full, color.surface.bg) and accessibility
+      contract (aria-hidden). Headless UI deliberately omits this slot — the
+      library is unstyled and provides no thumb element. The consumer must
+      render their own indicator element, apply aria-hidden, and manage the
+      translation transition. This reduces the API surface at the cost of
+      requiring consumers to re-implement thumb accessibility and motion
+      semantics from scratch on every usage. Source:
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/switch/switch.tsx
+      (no Thumb export confirmed, 2026-06-05);
+      https://headlessui.com/react/switch (2026-06-05).
+
+  # ── Anatomy: no dedicated Input slot ─────────────────────────────────────────
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      The Switch root element renders as `<button role="switch"
+      aria-checked="true|false">` (or a custom element via the `as` prop).
+      A hidden `<input type="checkbox">` is automatically injected by the
+      library when the `name` prop is provided — this hidden input is not an
+      exported consumer-facing slot.
+    rationale: >-
+      The canonical input slot is a distinct interactive element carrying
+      role="switch" and aria-checked. Headless UI merges root and input into
+      a single `<button>` element — the button itself carries role="switch",
+      aria-checked, aria-labelledby, and aria-describedby. This is valid per
+      APG (button is an acceptable host for role="switch"); it simplifies the
+      DOM hierarchy while preserving the ARIA contract. The hidden form-bridge
+      input is managed internally, not surfaced as a slot. Source:
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/switch/switch.tsx
+      (ourProps includes role: 'switch', aria-checked; FormFields injection
+      confirmed, 2026-06-05).
+
+  # ── Anatomy: Label and Description via shared Field components ───────────────
+
+  - from: anatomy[label]
+    type: reshaped
+    to: >-
+      Exported as a standalone `Label` component (shared across Switch,
+      Combobox, Listbox, etc.) rather than a Switch-specific sub-component.
+      When wrapped in `Field`, Label auto-associates with Switch via a
+      generated ID. `Label` renders as `<label>` by default; `passive` prop
+      (default false) prevents the label click from toggling the switch.
+    rationale: >-
+      The canonical label slot is a switch-specific anatomy part. Headless UI
+      shares the Label and Description components across all form-control
+      primitives, using Field as the context provider for auto-ID wiring. The
+      `passive` prop adds control over click propagation that the canonical
+      anatomy does not model — useful when the label contains interactive
+      children that should not trigger the switch. Source:
+      https://headlessui.com/react/switch (Field, Label, Description usage,
+      2026-06-05).
+
+  - from: anatomy[description]
+    type: reshaped
+    to: >-
+      Exported as a standalone `Description` component (shared across all
+      Headless UI form primitives) that renders as `<p>` by default. When
+      wrapped in `Field`, it is auto-associated with the Switch via
+      aria-describedby on a generated ID — consumers do not manually set
+      aria-describedby.
+    rationale: >-
+      The canonical description slot is a switch-specific optional anatomy part.
+      Headless UI's shared Description component is wired through the Field
+      context, removing the need for manual aria-describedby. This is a
+      composition-over-specialisation trade-off: the API is more flexible
+      across component types but hides the wiring mechanism inside Field
+      context. Consumers who use Description outside a Field must set
+      aria-describedby manually. Source: https://headlessui.com/react/switch
+      (Field + Description, 2026-06-05).
+
+  # ── Axes: no size property ───────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Headless UI is intentionally unstyled; it ships no size prop (sm/md).
+      All sizing is the consumer's responsibility via className, CSS custom
+      properties, or design tokens. Source: https://headlessui.com/react/switch
+      (Switch props table — no size entry, 2026-06-05).
+
+  # ── Axes: no required property ───────────────────────────────────────────────
+
+  - from: axes.properties[required]
+    type: omitted
+    rationale: >-
+      Headless UI Switch does not expose a `required` prop. The canonical switch
+      anatomy documents `required` as a property that sets aria-required="true"
+      on the input and enables native Constraint Validation (valueMissing). No
+      such prop exists on the Headless UI Switch; consumers must set required
+      manually on the hidden input (accessible only via DOM inspection) or
+      author their own validation logic. Source:
+      https://headlessui.com/react/switch (Switch props table — no required
+      entry, 2026-06-05);
+      https://github.com/tailwindlabs/headlessui/blob/main/packages/%40headlessui-react/src/components/switch/switch.tsx
+      (no required prop in component signature, 2026-06-05).
+
+  # ── Axes: no with-icons variant ──────────────────────────────────────────────
+
+  - from: axes.variants[with-icons]
+    type: omitted
+    rationale: >-
+      The canonical with-icons variant adds a check/dash glyph to the thumb for
+      redundant state reinforcement (Material 3 precedent). Headless UI ships
+      no variant system and no Thumb sub-component, so there is no slot to
+      place icons into. Consumers who want the with-icons pattern must author
+      icon elements inside their consumer-owned thumb span and manage
+      aria-hidden themselves. Source: https://headlessui.com/react/switch
+      (2026-06-05).
+
+  # ── Extended: data-changing for transition tuning ────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `data-changing` attribute on the Switch root. Set to true for two
+      animation frames when the checked state changes, allowing consumers to
+      apply fine-grained CSS transitions (e.g. different easing on enter vs
+      exit). Exposed in the render prop as `changing: boolean`. No canonical
+      equivalent — the canonical motion spec documents a single
+      motion.duration.fast token for thumb slide.
+    rationale: >-
+      The two-frame `data-changing` window lets consumers apply spring-style
+      or overshooting transitions specifically on the state-change frames,
+      then settle into the resting state without keeping an active transition
+      class. This addresses the limitation of CSS transition-only animations
+      (no spring) without requiring a JS animation library. Source:
+      https://headlessui.com/react/switch (data-changing, 2026-06-05).
+
+  # ── Extended: defaultChecked for uncontrolled usage ─────────────────────────
+
+  - from: axes.properties[disabled]
+    type: extended
+    addition: >-
+      `defaultChecked: boolean` prop enables uncontrolled usage — the Switch
+      manages its own checked state internally. The canonical property map
+      models only controlled `checked` with `onCheckedChange`; the canonical
+      event section documents only the controlled API. Headless UI's
+      defaultChecked matches React's uncontrolled-input pattern. Source:
+      https://headlessui.com/react/switch (Switch props — defaultChecked,
+      2026-06-05).
+    rationale: >-
+      Uncontrolled usage avoids the controlled-state boilerplate for simple
+      settings panes where the consumer does not need to observe the checked
+      state in React — e.g. a form submitted via native action where only the
+      hidden input's value matters. The canonical anatomy only documents
+      controlled switches; this is an additive pattern aligned with standard
+      HTML form semantics.
+
+  # ── Extended: Field container with auto-ID wiring ────────────────────────────
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      `Field` component (exported from @headlessui/react) acts as a context
+      provider that auto-generates and injects IDs linking Label and Description
+      to the Switch via aria-labelledby and aria-describedby respectively.
+      Field also propagates `disabled` to all child form controls — setting
+      `disabled` on Field disables the Switch, Label, and Description with
+      data-disabled without requiring each child to receive the prop
+      individually. The canonical root slot does not model a context-providing
+      wrapper.
+    rationale: >-
+      Auto-ID wiring removes a class of consumer errors (mismatched for/id
+      pairs, forgotten aria-describedby) at the cost of coupling Label and
+      Description to Field context. Consumers who use Switch without Field
+      must manually associate labels and descriptions. Source:
+      https://headlessui.com/react/switch (Field section, 2026-06-05).
+
+  # ── Reshaped: onChange event payload ─────────────────────────────────────────
+
+  - from: events[checkedChange]
+    type: renamed
+    to: onChange
+    rationale: >-
+      The canonical event is `checkedChange` with payload `{ checked: boolean,
+      previousChecked: boolean }`. Headless UI names it `onChange` (consistent
+      with React input convention) and delivers only the new boolean value
+      directly — `onChange={(checked) => ...}` — without the previousChecked
+      context. Consumers who need previousChecked must track it in their own
+      state. Source: https://headlessui.com/react/switch (Switch props —
+      onChange, 2026-06-05).
+
+rationale: |
+  Headless UI React Switch (@headlessui/react, v2.x) is a minimal unstyled
+  switch primitive that honours the APG role="switch" contract but diverges
+  from the canonical anatomy in two structural areas and several axis gaps.
+
+  The divergences cluster into three groups:
+
+  1. Collapsed anatomy — The canonical four-slot anatomy (root, track, thumb,
+     input) collapses to a single Switch element. Track and input are merged
+     into the root `<button role="switch">`; thumb is entirely consumer-owned
+     with no exported component. This eliminates per-slot token bindings and
+     forces consumers to re-implement the thumb's aria-hidden, translation
+     animation, and icon-variant patterns on every usage site.
+
+  2. Shared Field system — Label and Description are shared components wired
+     through a Field context provider rather than Switch-specific sub-components.
+     The auto-ID mechanism is ergonomic but requires Field for correct
+     aria-labelledby / aria-describedby wiring; consumers who skip Field must
+     manage association IDs manually.
+
+  3. Missing axes — No `size` prop (library is intentionally unstyled), no
+     `required` prop (no Constraint Validation API integration), and no
+     `with-icons` variant (no Thumb slot to place icons into).
+
+  The ARIA contract is correctly implemented: Switch renders role="switch" on
+  the button, aria-checked reflects the boolean state, and a hidden
+  `<input type="checkbox">` is injected when `name` is provided for native
+  form submission. The `data-changing` extension enables fine-grained CSS
+  transition control beyond the canonical motion spec.
+
+lastReviewed: '2026-06-05'

@@ -1,0 +1,318 @@
+componentId: radio-group
+libraryId: radix
+componentName: RadioGroup
+
+exampleCode: |
+  import * as RadioGroup from '@radix-ui/react-radio-group';
+
+  <form>
+    <fieldset>
+      <legend>Preferred contact method</legend>
+      <RadioGroup.Root
+        name="contact"
+        defaultValue="email"
+        aria-labelledby="contact-legend"
+        onValueChange={(value) => console.log(value)}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <RadioGroup.Item value="email">
+              <RadioGroup.Indicator />
+            </RadioGroup.Item>
+            Email
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <RadioGroup.Item value="phone">
+              <RadioGroup.Indicator />
+            </RadioGroup.Item>
+            Phone
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <RadioGroup.Item value="sms">
+              <RadioGroup.Indicator />
+            </RadioGroup.Item>
+            SMS
+          </label>
+        </div>
+      </RadioGroup.Root>
+    </fieldset>
+  </form>
+
+divergence:
+  # ── Anatomy: root ──────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: RadioGroup.Root renders as <div role="radiogroup"> (not <fieldset>)
+    rationale: >-
+      The canonical root is a `<fieldset>` (which provides the radiogroup
+      semantic implicitly and pairs with `<legend>` for the accessible name
+      without ARIA). Radix renders a `Primitive.div` with an explicit
+      `role="radiogroup"` attribute instead. This means the label association
+      is never implicit — consumers must wire `aria-labelledby` on Root
+      pointing to a separate heading or label element to satisfy the canonical
+      accessible-name contract. Radix does not ship a `<fieldset>` wrapper
+      because it opts for the custom-element path throughout its primitives,
+      leaving semantic HTML element choices to the consumer layer.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/radio-group/src/radio-group.tsx
+
+  - from: anatomy[root]
+    type: extended
+    addition: >-
+      RadioGroup.Root exposes a `loop` prop (boolean, default true) — when
+      true, keyboard arrow-key navigation wraps from the last radio back to
+      the first and vice versa. Also exposes a `dir` prop ("ltr" | "rtl")
+      for explicit text-direction control, which governs whether ArrowRight
+      moves forward or backward through the group. Neither is modelled in
+      the canonical axes.
+    rationale: >-
+      The canonical anatomy documents the wrap-around behaviour as the
+      canonical APG contract (always wrap) but does not expose it as a
+      consumer-togglable boolean. Radix makes wrap opt-out via `loop`
+      (defaulting to the APG-canonical on). `dir` is a Radix-wide convention
+      for RTL support that the canonical anatomy handles via CSS logical
+      properties rather than a prop.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Anatomy: legend ───────────────────────────────────────────────────────
+
+  - from: anatomy[legend]
+    type: omitted
+    rationale: >-
+      Radix ships no Label or Legend sub-component for the group. The
+      canonical `legend` slot — a `<legend>` inside `<fieldset>` providing
+      the group's accessible name — is entirely the consumer's responsibility.
+      Because Root renders as `<div role="radiogroup">` (not `<fieldset>`),
+      a `<legend>` cannot be used at all; consumers must author a separate
+      heading or `<span id>` element and pass its id via `aria-labelledby` on
+      Root. Without this wiring SR users hear individual radio labels without
+      the group context. Radix's docs show the consumer-composed pattern but
+      do not package it.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group
+
+  # ── Anatomy: radio ────────────────────────────────────────────────────────
+
+  - from: anatomy[radio]
+    type: renamed
+    to: RadioGroup.Item
+    rationale: >-
+      One-to-one conceptual match. Radix uses "Item" as its compound-component
+      term across all collection primitives (Select, Tabs, DropdownMenu).
+      RadioGroup.Item is the repeating slot per option; it internally composes
+      a visible `<button role="radio">` (RadioGroupItemTrigger) plus a hidden
+      `<input type="radio">` for form participation. The wrapping label is the
+      consumer's responsibility (see `radio-label` omission below).
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#item
+
+  # ── Anatomy: input ────────────────────────────────────────────────────────
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      RadioGroupItemTrigger (<button role="radio" aria-checked> with
+      data-state / data-disabled) + RadioGroupItemBubbleInput (hidden
+      <input type="radio"> at opacity:0 / translateX(-100%) / aria-hidden /
+      tabIndex=-1) rendered only when isFormControl is true
+    rationale: >-
+      The canonical `input` slot is a visible native `<input type="radio">`
+      that carries the interactive, form-participation, and aria-checked roles
+      in a single element. Radix splits these concerns across two internal
+      nodes — the same architectural decision as in Radix Checkbox. The
+      visible interactive element is a `<button role="radio">` that holds
+      `aria-checked` and handles arrow-key / Space activation. A separate
+      hidden `RadioGroupItemBubbleInput` (`<input type="radio">`, absolutely
+      positioned off-screen via `translateX(-100%)`, `opacity: 0`,
+      `pointerEvents: none`, `tabIndex={-1}`, `aria-hidden`) exists solely for
+      native form participation and constraint-validation bubbling. The hidden
+      input is rendered only when `isFormControl` is true (Root is inside a
+      `<form>`). Consumers cannot target the hidden input directly — it is
+      fully internal.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/radio-group/src/radio.tsx
+
+  # ── Anatomy: indicator ────────────────────────────────────────────────────
+
+  - from: anatomy[indicator]
+    type: renamed
+    to: RadioGroup.Indicator
+    rationale: >-
+      Same concept and decorative role. Radix uses "Indicator" as the term
+      across Checkbox and RadioGroup. RadioGroup.Indicator renders only when
+      its parent Item is checked; it also exposes a `forceMount` prop
+      (boolean) that keeps the Indicator node in the DOM when unchecked,
+      enabling CSS exit animations. The forceMount extension is identical in
+      motive to Radix Checkbox.Indicator's forceMount. Data attributes
+      `[data-state]` ("checked" | "unchecked") and `[data-disabled]` are
+      emitted on the Indicator element.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#indicator
+
+  # ── Anatomy: radio-label ──────────────────────────────────────────────────
+
+  - from: anatomy[radio-label]
+    type: omitted
+    rationale: >-
+      Radix ships no per-radio label sub-component. The canonical `radio-label`
+      slot — the text label identifying each option, associated with its input
+      either by wrapping or by `for` — is the consumer's responsibility.
+      Consumers must author a `<label>` that wraps RadioGroup.Item (label
+      click activates the button) or pair a `<label htmlFor={id}>` with an
+      `id` on Item. Without this, the button's accessible name is empty and
+      SR users hear "radio button" with no option identity. Radix's docs show
+      the consumer-composed label pattern but do not package it.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#item
+
+  # ── Anatomy: description ──────────────────────────────────────────────────
+
+  - from: anatomy[description]
+    type: omitted
+    rationale: >-
+      Radix has no description sub-component. Consumers who need group-level
+      helper text programmatically associated with the group must author a
+      `<span id="desc">` element and pass `aria-describedby` to
+      RadioGroup.Root themselves. Root accepts arbitrary HTML attributes
+      (passthrough to the `<div>`), so the wiring is possible but not first-
+      class. No data attribute or slot API surfaces description state.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Anatomy: error-message ────────────────────────────────────────────────
+
+  - from: anatomy[error-message]
+    type: omitted
+    rationale: >-
+      Radix has no error-message sub-component and exposes no `invalid` prop
+      or `[data-invalid]` attribute. Validation error presentation is entirely
+      consumer-composed: pass `aria-invalid="true"` and `aria-describedby`
+      directly to RadioGroup.Root, render an error `<span>` with
+      `aria-live="polite"` as a sibling. Native constraint-validation
+      propagation via the hidden bubble input handles the browser's internal
+      validity state; visual error messaging is out of scope for the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Axes: variants ────────────────────────────────────────────────────────
+
+  - from: axes.variants[card]
+    type: omitted
+    rationale: >-
+      Radix is an unstyled primitive and ships no visual variants. The
+      canonical `card` variant (selectable card with visually-hidden input
+      retained for AT) requires consumer-authored CSS and layout; Radix
+      provides no data attributes, slot structure, or variant prop for it.
+      The `[data-state]` attribute on Item ("checked" | "unchecked") is
+      sufficient to drive card-style selection styling, but the variant
+      pattern itself is the consumer's design-system concern.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group
+
+  # ── Axes: properties ──────────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix RadioGroup ships no `size` prop. Visual size of the button trigger
+      and indicator are controlled entirely via consumer CSS on RadioGroup.Item
+      and RadioGroup.Indicator. The canonical `sm | md | lg` scale is a
+      design-system convention layered above the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group
+
+  - from: axes.properties[invalid]
+    type: omitted
+    rationale: >-
+      Radix ships no `invalid` prop and exposes no `[data-invalid]` attribute
+      on Root or Item. Consumers signal invalidity by passing `aria-invalid`
+      directly to RadioGroup.Root as a passthrough HTML attribute. The hidden
+      bubble input handles native constraint-validation internally; no
+      first-class invalid state is surfaced at the component API layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Axes: states ──────────────────────────────────────────────────────────
+
+  - from: axes.states.data[invalid]
+    type: omitted
+    rationale: >-
+      No `[data-invalid]` or equivalent data attribute is emitted by Radix.
+      Root emits only `[data-disabled]`. Item and Indicator emit
+      `[data-state]` ("checked" | "unchecked") and `[data-disabled]`.
+      Styling the invalid state requires consumer selectors on
+      `[aria-invalid="true"]` on Root rather than a `[data-invalid]` data
+      attribute. This mirrors the same omission in Radix Checkbox.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/radio-group/src/radio.tsx
+
+  # ── Events: valueChange ───────────────────────────────────────────────────
+
+  - from: events[valueChange]
+    type: renamed
+    to: "onValueChange prop on RadioGroup.Root (signature: (value: string) => void)"
+    rationale: >-
+      One-to-one conceptual match. Radix uses the React convention of
+      `on`-prefixed callback props rather than the canonical camelCase event
+      name. The payload is the new selected value string directly, not the
+      canonical `{ value, previousValue }` object — consumers needing
+      `previousValue` must track it in local state. The event fires on user
+      interaction (arrow-key selection and click/Space activation of an item).
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Events: validityChange ────────────────────────────────────────────────
+
+  - from: events[validityChange]
+    type: omitted
+    rationale: >-
+      Radix exposes no `validityChange` event or equivalent. Native
+      constraint-validation fires through the hidden bubble input's own
+      browser events, but these are internal and not re-emitted on the Root.
+      Consumers who need validation-change notifications must subscribe to the
+      form's native `invalid` event or manage validity in their own state layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
+
+  # ── Motion ────────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: >-
+      [data-state]="checked" | "unchecked" CSS attribute selectors on
+      RadioGroup.Item and RadioGroup.Indicator; Indicator forceMount enables
+      exit animation. No duration tokens are shipped.
+    rationale: >-
+      Radix ships no motion duration tokens. State changes are communicated
+      via the `[data-state]` attribute on Item and Indicator; consumers write
+      CSS transitions or animations keyed to these selectors using their own
+      duration values. Exit animations on the Indicator require `forceMount`
+      so the node persists in the DOM during the closing phase. The canonical
+      `indicatorScale` and `selectionShift` durations are achievable but their
+      values are fully consumer-side.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#indicator
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix implements no reduced-motion behaviour. The `[data-state]`
+      attribute still flips immediately on selection; suppressing animation
+      under `prefers-reduced-motion` is entirely the consumer's CSS
+      responsibility via `@media (prefers-reduced-motion: reduce)`. The
+      canonical "instant" fallback is achievable but is not bundled.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group
+
+rationale: |
+  Radix RadioGroup is a minimal, unstyled primitive that covers the
+  accessibility contract (div role="radiogroup", aria-required,
+  aria-orientation, button role="radio" with aria-checked, roving-tabindex
+  via RovingFocusGroup, hidden bubble input for form participation) but
+  deliberately omits every design-system slot above the interactive core:
+  no legend, no per-radio label, no description, no error-message, no size
+  prop, no invalid prop.
+
+  The most architecturally significant divergence mirrors Radix Checkbox:
+  the visible interactive element is a <button role="radio"> rather than a
+  native <input type="radio">, and form participation is handled by a
+  separate hidden bubble input (aria-hidden, opacity 0, translateX(-100%)).
+  This means the Root renders as <div role="radiogroup"> rather than
+  <fieldset> — consumers cannot use <legend> and must wire aria-labelledby
+  manually. Without that wiring, SR users hear individual radio labels
+  without the "Preferred contact method" group context frame.
+
+  All remaining divergences follow the Radix philosophy: expose the ARIA
+  state machine and form integration at the lowest layer; leave every
+  design-system concern (sizing, validation UI, description, label slots,
+  motion timing) to the consumer layer above the primitive. The loop prop
+  (default true) is a useful extension over the canonical anatomy — it
+  exposes the APG wrap-around behaviour as an explicit opt-out, defaulting
+  correctly to the APG-canonical on.
+
+lastReviewed: '2026-06-05'

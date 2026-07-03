@@ -1,0 +1,220 @@
+componentId: switch
+libraryId: radix
+componentName: Switch
+
+exampleCode: |
+  import * as Switch from '@radix-ui/react-switch';
+
+  <label htmlFor="notifications" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    Notifications
+    <Switch.Root
+      id="notifications"
+      name="notifications"
+      defaultChecked={false}
+      onCheckedChange={(checked) => console.log(checked)}
+    >
+      <Switch.Thumb />
+    </Switch.Root>
+  </label>
+
+  {/* Controlled, disabled, form-bound */}
+  <Switch.Root
+    checked={enabled}
+    onCheckedChange={setEnabled}
+    disabled={isPending}
+    name="dark-mode"
+    value="enabled"
+    required
+  >
+    <Switch.Thumb />
+  </Switch.Root>
+
+divergence:
+  # ── Anatomy: root ────────────────────────────────────────────────────────
+
+  - from: anatomy[root]
+    type: reshaped
+    to: >-
+      Switch.Root renders as <button type="button" role="switch"
+      aria-checked={checked}> — the interactive element is the root itself,
+      not a wrapping <label> or <div>
+    rationale: >-
+      The canonical root is a structural wrapper (<label> or <div>) that
+      associates the switch visual with its label and carries focus-state
+      data-attributes, delegating interactivity to the inner input slot.
+      Radix collapses the structural wrapper and the interactive element into
+      a single <button role="switch"> (SwitchTrigger). This means the Root
+      is simultaneously the hit-target, the ARIA role host, and the
+      aria-checked carrier. Label association is the consumer's
+      responsibility: wrap Root in a <label> or pair it with a <label
+      htmlFor={id}> targeting Root's id prop. Without this, the button has
+      no accessible name.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/switch/src/switch.tsx
+
+  # ── Anatomy: track ───────────────────────────────────────────────────────
+
+  - from: anatomy[track]
+    type: omitted
+    rationale: >-
+      Radix ships no Track sub-component. The canonical track slot is the
+      pill-shaped rail that communicates the two switch positions visually
+      (background shifts between off-colour and on-colour). In Radix the
+      track is a consumer-authored concern: consumers render a styled child
+      <span> or rely entirely on CSS applied to Switch.Root to produce the
+      track shape and colour. There is no Radix-managed element that carries
+      the track role or data-state for the track surface specifically — Root's
+      own [data-state] attribute ("checked" | "unchecked") is the hook for
+      styling both the track-like visual and the container.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  # ── Anatomy: input ───────────────────────────────────────────────────────
+
+  - from: anatomy[input]
+    type: reshaped
+    to: >-
+      <button role="switch" aria-checked> (SwitchTrigger via Root) for
+      interaction + hidden SwitchBubbleInput (<input type="checkbox"
+      aria-hidden="true">) for form participation, rendered only when
+      isFormControl is true (Root is inside a <form>)
+    rationale: >-
+      The canonical input slot is a single element — either <input
+      type="checkbox" role="switch"> (combining form participation and the
+      switch role) or <button role="switch"> — doing both jobs. Radix splits
+      these concerns identically to how it handles Checkbox: the visible
+      interactive element is the <button role="switch"> (Root / SwitchTrigger)
+      holding aria-checked and handling keyboard events; a separate hidden
+      <input type="checkbox"> (SwitchBubbleInput), positioned absolutely with
+      opacity: 0, handles native form submission and Constraint Validation API
+      bubbling. The hidden input is rendered only when the Root is a
+      descendant of a <form> (isFormControl detection). Consumers cannot
+      target or customise the hidden input — it is internal to the primitive.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/switch/src/switch.tsx
+
+  # ── Anatomy: label ───────────────────────────────────────────────────────
+
+  - from: anatomy[label]
+    type: omitted
+    rationale: >-
+      Radix ships no Label sub-component for Switch. The canonical label slot
+      — a <label> or <label for> that provides the accessible name and
+      extends the click-target — is entirely the consumer's responsibility.
+      Consumers must either wrap Switch.Root in a native <label> element (so
+      clicking the label text activates the button) or render a separate
+      <label htmlFor={id}> paired with an id on Root. Without this consumer-
+      authored label, the button's accessible name is empty and SR users hear
+      only "switch" with no indication of what is controlled. Radix docs show
+      the pattern but do not package it.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  # ── Anatomy: description ─────────────────────────────────────────────────
+
+  - from: anatomy[description]
+    type: omitted
+    rationale: >-
+      Radix has no description sub-component. Consumers who need helper text
+      programmatically associated with the switch must author a <span
+      id="desc"> and pass aria-describedby={id} to Switch.Root as an
+      arbitrary HTML attribute (Root accepts all passthrough attributes).
+      The slot is not first-class at the Radix layer.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  # ── Axes: with-icons variant ─────────────────────────────────────────────
+
+  - from: axes.variants[with-icons]
+    type: omitted
+    rationale: >-
+      Radix Switch is an unstyled primitive and ships no with-icons variant.
+      The canonical with-icons variant adds a check glyph (on) and dash glyph
+      (off) inside Switch.Thumb for redundant non-colour state signalling
+      (Material 3 precedent). In Radix, Switch.Thumb accepts arbitrary
+      children via the asChild pattern or consumer-rendered children are not
+      a first-class API — Thumb's public interface is SwitchThumbProps
+      extending PrimitiveSpanProps with no children-specific slot. Consumers
+      must compose icon children themselves inside Thumb using Radix's asChild
+      or by simply placing icon elements as Thumb's children.
+      Source: https://github.com/radix-ui/primitives/blob/main/packages/react/switch/src/switch.tsx
+
+  # ── Axes: size property ──────────────────────────────────────────────────
+
+  - from: axes.properties[size]
+    type: omitted
+    rationale: >-
+      Radix Switch has no size prop. The visual size of the track-like Root
+      and of Thumb is controlled entirely via consumer CSS. The canonical sm |
+      md scale is a design-system convention layered above the primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  # ── Events: checkedChange ────────────────────────────────────────────────
+
+  - from: events[checkedChange]
+    type: renamed
+    to: "onCheckedChange (Switch.Root prop, signature: (checked: boolean) => void)"
+    rationale: >-
+      One-to-one conceptual match. Radix uses the React on-prefixed callback
+      convention rather than the canonical camelCase event name. The payload
+      is the new checked value directly (boolean), not the canonical object
+      shape { checked: boolean, previousChecked: boolean }. The previous value
+      is absent — consumers needing previousChecked must track it in local
+      state. Unlike Checkbox's onCheckedChange, the Switch variant never
+      receives 'indeterminate' because the switch role is strictly binary.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  # ── Motion ───────────────────────────────────────────────────────────────
+
+  - from: motion.durations
+    type: reshaped
+    to: >-
+      [data-state]="checked" | "unchecked" CSS attribute selectors on
+      Switch.Root and Switch.Thumb; no duration tokens shipped
+    rationale: >-
+      Radix ships no motion duration tokens. State changes are communicated
+      via [data-state] on both Root and Thumb; consumers author CSS
+      transitions (e.g. transform: translateX(...)) keyed to these selectors
+      using their own timing values. The canonical thumbSlide /
+      trackColorShift duration tokens are achievable but their values are
+      entirely consumer-side. Thumb has no forceMount prop (unlike
+      Checkbox.Indicator), so exit animations are simpler — the Thumb node
+      stays mounted in all states.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+  - from: motion.reducedMotionFallback
+    type: omitted
+    rationale: >-
+      Radix implements no prefers-reduced-motion behaviour. The [data-state]
+      attribute still flips immediately on toggle; suppressing the thumb-slide
+      transition under prefers-reduced-motion is entirely the consumer's CSS
+      responsibility. The canonical "instant" fallback is achievable via
+      @media (prefers-reduced-motion: reduce) but is not bundled in the
+      primitive.
+      Source: https://www.radix-ui.com/primitives/docs/components/switch
+
+rationale: |
+  Radix Switch is a minimal unstyled primitive that correctly implements the
+  WAI-ARIA switch role contract: <button role="switch"> with aria-checked
+  (boolean only — no "mixed"), Space and Enter toggle, hidden checkbox input
+  for form participation, and [data-state] / [data-disabled] for CSS styling
+  hooks. It diverges from the canonical anatomy in three structural areas.
+
+  First, the root element choice: Radix Root is a <button role="switch">
+  rather than a structural <label> or <div> wrapper. This collapses the
+  canonical root slot and input slot into one, which means label-association
+  and description-wiring are the consumer's responsibility. The canonical
+  "click anywhere on the label toggles the switch" pattern requires the
+  consumer to wrap Root in a native <label>.
+
+  Second, the track slot is entirely absent. Radix delegates the visual track
+  rail to consumer CSS — [data-state] on Root is the only provided hook.
+  Consumers who need a separate track element for independent styling must
+  author it themselves as a child of Root.
+
+  Third, the label and description slots are omitted — consistent with the
+  Radix philosophy of shipping only the ARIA state machine and form
+  integration, leaving every design-system slot (label, description, size,
+  icon variant, motion timing) to the consumer layer.
+
+  The with-icons variant and size property from the canonical axes are both
+  absent for the same reason: Radix is an unstyled primitive that establishes
+  no visual conventions. The overall APG compliance is complete; the
+  design-system conventions above the interactive core are not.
+
+lastReviewed: '2026-06-05'

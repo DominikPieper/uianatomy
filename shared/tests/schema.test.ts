@@ -1479,20 +1479,24 @@ describe('mistake severity', () => {
 });
 
 describe('contracts field (P6-73)', () => {
-  it('parses accordion contracts (nonNegotiable, no vocabularyDrift)', async () => {
+  it('parses accordion contracts (nonNegotiable + vocabularyDrift)', async () => {
     const accordion = await loadComponent(join(contentDir, 'accordion.yaml'));
     expect(accordion.contracts?.nonNegotiable?.length).toBeGreaterThanOrEqual(2);
-    expect(accordion.contracts?.vocabularyDrift).toBeUndefined();
     const rules = accordion.contracts?.nonNegotiable?.map((c) => c.source) ?? [];
     for (const s of rules) expect(s).toBe('apg');
+    // P6-171 — vocabularyDrift backfilled
+    expect(accordion.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(3);
+    const accSystems = accordion.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
+    expect(accSystems).toEqual(expect.arrayContaining(['APG', 'Polaris', 'Material 3']));
   });
 
-  it('parses drawer contracts (vocabularyDrift only)', async () => {
+  it('parses drawer contracts (nonNegotiable + vocabularyDrift)', async () => {
     const drawer = await loadComponent(join(contentDir, 'drawer.yaml'));
     expect(drawer.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(4);
-    expect(drawer.contracts?.nonNegotiable).toBeUndefined();
     const systems = drawer.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
     expect(systems).toEqual(expect.arrayContaining(['Polaris', 'Carbon', 'Material 3', 'vaul']));
+    // P6-170 — nonNegotiable backfilled (focus management / inert-when-modal)
+    expect(drawer.contracts?.nonNegotiable?.length).toBeGreaterThanOrEqual(4);
   });
 
   it('parses toast contracts (vocabularyDrift only)', async () => {

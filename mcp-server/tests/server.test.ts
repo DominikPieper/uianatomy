@@ -656,7 +656,7 @@ describe('mcp server', () => {
       arguments: { libraryId: 'radix' },
     });
     const radixRows = parseJson(radixRes as any);
-    expect(radixRows.length).toBe(15);
+    expect(radixRows.length).toBe(17);
     expect(radixRows.every((r: any) => r.libraryId === 'radix')).toBe(true);
     const componentIds = radixRows.map((r: any) => r.componentId).sort();
     expect(componentIds).toEqual([
@@ -672,7 +672,9 @@ describe('mcp server', () => {
       'menu',
       'modal',
       'popover',
+      'radio-group',
       'select',
+      'switch',
       'tabs',
       'tooltip',
     ]);
@@ -748,7 +750,7 @@ describe('mcp server', () => {
     expect(rules.some((r: string) => r.includes('alertdialog'))).toBe(true);
   });
 
-  it('get_contracts returns null contracts for components without a block', async () => {
+  it('get_contracts returns the populated contracts block for a component (P6-169)', async () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_contracts',
@@ -757,7 +759,9 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.id).toBe('button');
     expect(parsed.kind).toBe('component');
-    expect(parsed.contracts).toBeNull();
+    // P6-169 backfilled button's contracts (hard non-negotiables + vocabularyDrift).
+    expect(parsed.contracts.nonNegotiable.length).toBeGreaterThanOrEqual(1);
+    expect(parsed.contracts.vocabularyDrift.length).toBeGreaterThanOrEqual(1);
   });
 
   it('get_contracts errors on unknown id (neither component nor pattern)', async () => {

@@ -590,6 +590,53 @@ contracts:
         Hover-only triggers exclude keyboard users from the
         description entirely (WCAG 2.1.1 violation). Most-often
         broken contract in real-world implementations.
+    - rule: >-
+        Content-on-hover obeys WCAG 1.4.13: dismissible via Escape
+        without moving the pointer; hoverable (the pointer can
+        travel from trigger onto the tooltip without it vanishing);
+        and persistent until the user dismisses it, moves hover and
+        focus away, or the information becomes invalid. A short
+        dismiss-grace (~100ms) bridges the trigger-to-tooltip gap.
+      source: wcag
+      sourceRef: 'WCAG 1.4.13 (Content on Hover or Focus)'
+      consequence: >-
+        A tooltip that closes the instant the pointer leaves the
+        trigger flickers shut as the user moves toward it; one with
+        no Escape dismissal cannot be cleared when it obscures
+        content the user still needs to read underneath.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Tooltip
+      note: >-
+        APG matches the canonical name and the `role="tooltip"` +
+        hover/focus-triggered, non-interactive pattern.
+    - system: Carbon
+      theirTerm: 'Tooltip / Toggletip / Definition tooltip'
+      note: >-
+        Carbon splits by trigger and content: "Tooltip" (hover/focus, passive)
+        is canon Tooltip; "Toggletip" (click-triggered, may hold interactive
+        content) is canon Popover territory; "Definition tooltip" is the
+        inline-glossary specialization.
+    - system: Material Design 3
+      theirTerm: 'Tooltip (plain / rich)'
+      note: >-
+        M3's "Plain tooltip" is canon Tooltip; the "Rich tooltip" carries a
+        title, body, and action buttons — interactive content that crosses
+        into canon Popover, not Tooltip.
+    - system: Atlassian
+      theirTerm: Tooltip
+      note: >-
+        ADS matches the name and enforces the passive, non-interactive
+        contract; interactive variants are routed to its Popup component.
+    - system: Radix
+      theirTerm: 'data-state="instant-open" vs "delayed-open"'
+      note: >-
+        Radix splits the canon `open` state into `delayed-open` (revealed
+        after the hover delay) and `instant-open` (revealed immediately
+        because another tooltip in the group was already open) so authors
+        can suppress the enter-animation on instant reveals. Canon models
+        a single `open` data-state and treats this as a motion concern, not
+        a distinct state — documented here rather than added to axes.states.
 
 notes: >-
   Tooltip is the canonical reference's most contract-rigid

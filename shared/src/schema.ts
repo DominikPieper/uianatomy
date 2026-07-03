@@ -811,6 +811,11 @@ export const patternSchema = z
     mistakes: z.array(mistakeSchema).min(3),
     frameworkSkeletons: frameworkSkeletonsSchema,
     contracts: contractsSchema.optional(),
+    // P6-172 — patterns may cite sources like components (same shape).
+    // Optional and un-counted: patterns synthesize spec flows (APG, WCAG
+    // 3.3.x) rather than mirror a single library, so the component
+    // ≥3-source depth guard does not apply.
+    sources: z.array(sourceEntrySchema).optional(),
     notes: z.string().min(1).optional(),
     lastReviewed: z
       .string()

@@ -728,6 +728,28 @@ contracts:
         mirror rather than the authoritative state, AT
         announcements drift from the visible state and keyboard-
         only flows lose orientation between expansions.
+  vocabularyDrift:
+    - system: APG
+      theirTerm: Accordion
+      note: >-
+        APG matches the canonical name and the header-button + region
+        pattern exactly.
+    - system: Polaris
+      theirTerm: Collapsible
+      note: >-
+        Polaris ships only the single expand/collapse primitive (canon
+        Disclosure); a multi-section accordion is composed from several
+        Collapsibles, so there is no `single`/`multiple` expansion axis.
+    - system: Material 3
+      theirTerm: 'Lists (expandable) / no standalone accordion'
+      note: >-
+        M3 has no first-class Accordion; the equivalent is an expandable
+        list item, which folds the header/panel structure into list anatomy.
+    - system: Carbon
+      theirTerm: Accordion
+      note: >-
+        Carbon matches the canonical name; its `align` (start/end chevron)
+        and `size` props are styling, not canon expansion-mode axes.
 
 notes: >-
   Accordion is one of the most-implemented patterns and one of
