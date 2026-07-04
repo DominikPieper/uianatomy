@@ -7,13 +7,19 @@ import type { Component } from '../src/schema.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
 
+// mistakes/mismatches are a smoke floor, not a volume target (ADR-035):
+// counts measure that the section was populated at all, not how much a
+// component "should" have. The old MIN=4 induced padding (P6-186 had to
+// hand-fix 11 components carrying a synthesized 4th mismatch); real depth
+// judgment belongs to semantic review (canon-auditor / component-review),
+// not this count.
 const MIN = {
   anatomySlots: 3,
   variants: 2,
   properties: 2,
   statesCombined: 4,
-  mistakes: 4,
-  mismatches: 4,
+  mistakes: 2,
+  mismatches: 2,
   sources: 3,
 } as const;
 

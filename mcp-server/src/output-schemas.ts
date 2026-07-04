@@ -15,7 +15,6 @@
 // derived/aggregate envelopes the canon schema doesn't cover.
 import { z } from 'zod';
 import {
-  componentSchema,
   patternSchema,
   subAnatomySchema,
   axesSchema,
@@ -35,18 +34,17 @@ export const aboutOutput = z.object({
   summary: z.string(),
 });
 
-// get_component augments the canonical record with two derived fields.
-// componentSchema is non-strict, so extra keys are tolerated; we extend so
-// the derived fields are advertised rather than silently stripped.
-export const componentOutput = componentSchema.extend({
-  stalenessDays: z.number().nullable(),
-  staleAfter: z.number(),
-});
+// get_component / get_components: the full componentSchema serialized as JSON
+// Schema is ~18-19 KB *each* (P6-194 — together over half of tools/list's
+// ~65 KB). Advertising it twice buys agents nothing: structuredContent is
+// still the real, fully-typed record (validated at load time by the same
+// componentSchema — see the reuse-over-redefinition note above), so a client
+// that wants the shape can read it off any actual response. The outputSchema
+// slot only needs to satisfy the MCP requirement that structuredContent is a
+// JSON object; looseObject does that in a few bytes instead of ~19 KB.
+export const componentOutput = looseObject;
 
-export const componentsBulkOutput = z.object({
-  components: z.array(componentSchema),
-  missing: z.array(z.string()),
-});
+export const componentsBulkOutput = looseObject;
 
 export const componentViewOutput = looseObject;
 

@@ -11,6 +11,25 @@ const { variant = 'desktop' } = Astro.props;
 const components = await getCollection('components');
 const byId = new Map(components.map((c) => [c.data.id, c.data]));
 
+// P6-190 — build-time guard: every canonical component must appear in exactly
+// one category, and every categorized id must exist. Silently dropping unknown
+// ids left 7 components unreachable from the sidebar.
+const categorized = CATEGORIES.flatMap((cat) => cat.components);
+const categorizedSet = new Set(categorized);
+if (categorized.length !== categorizedSet.size) {
+  const dupes = [...new Set(categorized.filter((id, i) => categorized.indexOf(id) !== i))];
+  throw new Error(`categories.ts lists duplicate component ids: ${dupes.join(', ')}`);
+}
+const missing = [...byId.keys()].filter((id) => !categorizedSet.has(id)).sort();
+const unknown = categorized.filter((id) => !byId.has(id)).sort();
+if (missing.length > 0 || unknown.length > 0) {
+  throw new Error(
+    'categories.ts is out of sync with content/components:' +
+      (missing.length > 0 ? ` missing from categories: ${missing.join(', ')}.` : '') +
+      (unknown.length > 0 ? ` unknown ids in categories: ${unknown.join(', ')}.` : ''),
+  );
+}
+
 const pathname = Astro.url.pathname.replace(/\/$/, '');
 const isCurrent = (id: string): boolean => {
   const base = `/components/${id}`;

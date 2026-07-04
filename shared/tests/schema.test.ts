@@ -50,6 +50,101 @@ describe('component schema', () => {
   });
 });
 
+// ADR-036 — react required, webComponents/angularSignals/vue optional
+// across frameworkMap, event.frameworkNotes, formIntegration.bridges, and
+// pattern.frameworkSkeletons.
+describe('optional non-react framework fields (ADR-036)', () => {
+  it('accepts a frameworkMap with only react', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const reactOnly = {
+      ...card,
+      frameworkMap: { react: card.frameworkMap.react },
+    };
+    const result = componentSchema.safeParse(reactOnly);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a frameworkMap missing react', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const noReact = {
+      ...card,
+      frameworkMap: { webComponents: card.frameworkMap.webComponents },
+    };
+    const result = componentSchema.safeParse(noReact);
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts an event with only a react frameworkNote', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const firstEvent = modal.events?.[0];
+    expect(firstEvent).toBeDefined();
+    const reactOnlyEvent = {
+      ...modal,
+      events: [{ ...firstEvent, frameworkNotes: { react: firstEvent!.frameworkNotes.react } }],
+    };
+    const result = componentSchema.safeParse(reactOnlyEvent);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an event frameworkNotes missing react', async () => {
+    const modal = await loadComponent(join(contentDir, 'modal.yaml'));
+    const firstEvent = modal.events?.[0];
+    expect(firstEvent).toBeDefined();
+    const noReactEvent = {
+      ...modal,
+      events: [{ ...firstEvent, frameworkNotes: { vue: firstEvent!.frameworkNotes.vue } }],
+    };
+    const result = componentSchema.safeParse(noReactEvent);
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts formIntegration.bridges with only react', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bridges = button.formIntegration?.bridges;
+    expect(bridges).toBeDefined();
+    const reactOnly = {
+      ...button,
+      formIntegration: { ...button.formIntegration, bridges: { react: bridges!.react } },
+    };
+    const result = componentSchema.safeParse(reactOnly);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects formIntegration.bridges missing react', async () => {
+    const button = await loadComponent(join(contentDir, 'button.yaml'));
+    const bridges = button.formIntegration?.bridges;
+    expect(bridges).toBeDefined();
+    const noReact = {
+      ...button,
+      formIntegration: { ...button.formIntegration, bridges: { vue: bridges!.vue } },
+    };
+    const result = componentSchema.safeParse(noReact);
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts pattern.frameworkSkeletons with only react', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = [...patterns.values()][0];
+    const reactOnly = {
+      ...pattern,
+      frameworkSkeletons: { react: pattern.frameworkSkeletons.react },
+    };
+    const result = patternSchema.safeParse(reactOnly);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects pattern.frameworkSkeletons missing react', async () => {
+    const patterns = await loadPatterns({ patternsDir });
+    const pattern = [...patterns.values()][0];
+    const noReact = {
+      ...pattern,
+      frameworkSkeletons: { vue: pattern.frameworkSkeletons.vue },
+    };
+    const result = patternSchema.safeParse(noReact);
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('property type discriminated union', () => {
   it('parses primitive arm', () => {
     const result = propertySchema.safeParse({
@@ -871,9 +966,12 @@ describe('events field', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects event missing a frameworkNotes key', async () => {
+  // ADR-036 — only react is required on frameworkNotes; a missing
+  // non-react key (vue, here) is now valid, superseding the pre-ADR-036
+  // "any missing key is rejected" behaviour this test used to assert.
+  it('accepts event frameworkNotes missing a non-react key (vue)', async () => {
     const modal = await loadComponent(join(contentDir, 'modal.yaml'));
-    const bad = {
+    const ok = {
       ...modal,
       events: [
         {
@@ -887,8 +985,8 @@ describe('events field', () => {
         },
       ],
     };
-    const result = componentSchema.safeParse(bad);
-    expect(result.success).toBe(false);
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
   });
 });
 
@@ -1597,6 +1695,78 @@ describe('contracts field (P6-73)', () => {
       expect(result.success, `source=${c.source} sourceRef=${c.sourceRef}`).toBe(false);
     }
   });
+
+  // P6-201 (Schritt 1) — structural link from a contract rule to the
+  // mistake(s) it guards against, replacing prose-restatement.
+  it('accepts nonNegotiable.relatedMistakes referencing an existing mistake id', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const existingMistakeId = card.mistakes[0].id;
+    const ok = {
+      ...card,
+      contracts: {
+        nonNegotiable: [
+          { rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: [existingMistakeId] },
+        ],
+      },
+    };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an empty relatedMistakes array', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      contracts: {
+        nonNegotiable: [{ rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: [] }],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a relatedMistakes entry that is not a valid slug', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      contracts: {
+        nonNegotiable: [
+          { rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: ['Not A Slug!'] },
+        ],
+      },
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
+// P6-201 (Schritt 1) — optional id on mismatchSchema, symmetric with
+// mistakeSchema.id.
+describe('mismatch id field (P6-201)', () => {
+  it('parses a mismatch with an id', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const withId = {
+      ...card,
+      mismatches: [{ ...card.mismatches[0], id: 'card-elevation-mismatch' }, ...card.mismatches.slice(1)],
+    };
+    const result = componentSchema.safeParse(withId);
+    expect(result.success).toBe(true);
+  });
+
+  it('parses every existing canonical component without requiring mismatch ids (still optional)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    for (const m of card.mismatches) expect(m.id).toBeUndefined();
+  });
+
+  it('rejects a mismatch id that is not a valid slug', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      mismatches: [{ ...card.mismatches[0], id: 'Not A Slug!' }, ...card.mismatches.slice(1)],
+    };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('sources[] entry shape (P5-34 / ADR-028 phase-2)', () => {
@@ -1752,7 +1922,11 @@ describe('pattern schema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects pattern missing one framework skeleton', () => {
+  // ADR-036 — only react is required on frameworkSkeletons; a missing
+  // non-react key (angularSignals, here) is now valid, superseding the
+  // pre-ADR-036 "any missing key is rejected" behaviour this test used to
+  // assert.
+  it('accepts pattern frameworkSkeletons missing a non-react key (angularSignals)', () => {
     const result = patternSchema.safeParse({
       id: 'tiny',
       name: 'Tiny',
@@ -1771,7 +1945,7 @@ describe('pattern schema', () => {
       frameworkSkeletons: { webComponents: 'x', react: 'x', vue: 'x' },
       lastReviewed: '2026-05-01',
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it('rejects pattern with non-slug componentId in composition', () => {
@@ -1838,9 +2012,12 @@ describe('formIntegration structured fields (P6-121)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects bridges entry missing one framework', async () => {
+  // ADR-036 — only react is required on bridges; a missing non-react key
+  // (webComponents, here) is now valid, superseding the pre-ADR-036 "any
+  // missing key is rejected" behaviour this test used to assert.
+  it('accepts bridges entry missing a non-react framework (webComponents)', async () => {
     const button = await loadComponent(join(contentDir, 'button.yaml'));
-    const bad = {
+    const ok = {
       ...button,
       formIntegration: {
         ...button.formIntegration,
@@ -1848,12 +2025,12 @@ describe('formIntegration structured fields (P6-121)', () => {
           react: 'controlled',
           vue: 'v-model',
           angularSignals: 'CVA',
-          // webComponents missing
+          // webComponents omitted
         },
       },
     };
-    const result = componentSchema.safeParse(bad);
-    expect(result.success).toBe(false);
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
   });
 });
 

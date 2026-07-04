@@ -121,6 +121,23 @@ describe('mcp server', () => {
     expect(parsed.codeSlots).toBeUndefined();
   });
 
+  it('get_component_view designer matches SKILL.md\'s advertised projection (P6-196)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_view',
+      arguments: { id: 'card', view: 'designer' },
+    });
+    const parsed = parseJson(result as any);
+    // SKILL.md promises tokens + motion + responsive + propertyMap + i18n on
+    // the designer view — previously these keys did not exist on the
+    // projection at all.
+    expect(parsed.tokens).toBeDefined();
+    expect(parsed.propertyMap).not.toBeUndefined();
+    expect(parsed.i18n).not.toBeUndefined();
+    expect('motion' in parsed).toBe(true);
+    expect('responsive' in parsed).toBe(true);
+  });
+
   it('get_component_view dev returns codeSlots and frameworkMap', async () => {
     const { client } = await connect();
     const result = await client.callTool({
@@ -130,6 +147,25 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.codeSlots).toBeDefined();
     expect(parsed.frameworkMap).toBeDefined();
+  });
+
+  it('get_component_view dev matches SKILL.md\'s advertised projection (P6-196)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_view',
+      arguments: { id: 'combobox', view: 'dev' },
+    });
+    const parsed = parseJson(result as any);
+    // SKILL.md promises events + formIntegration + a11yAcceptance +
+    // performance on the dev view — this was the exact gap the review
+    // flagged: the documented a11y-acceptance-via-dev-view recipe returned
+    // slot hints instead, since a11yAcceptance did not exist on this
+    // projection at all.
+    expect(parsed.events).toBeDefined();
+    expect(parsed.a11yAcceptance).not.toBeNull();
+    expect(parsed.a11yAcceptance.axeRules.length).toBeGreaterThan(0);
+    expect('formIntegration' in parsed).toBe(true);
+    expect('performance' in parsed).toBe(true);
   });
 
   it('search_components finds Card by variant token', async () => {
@@ -169,6 +205,17 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     const ids = parsed.map((c: any) => c.id);
     expect(ids).toContain('modal');
+  });
+
+  it('search_components matches component-level alternateNames (P6-192)', async () => {
+    const { client } = await connect();
+    // `snackbar` lives only in toast.alternateNames — exercises the component-level
+    // alias haystack path (distinct from per-variant alternativeNames), which SKILL.md
+    // advertises as the Snackbar → Toast recipe.
+    const result = await client.callTool({ name: 'search_components', arguments: { query: 'snackbar' } });
+    const parsed = parseJson(result as any);
+    const ids = parsed.map((c: any) => c.id);
+    expect(ids).toContain('toast');
   });
 
   it('list_components surfaces lastReviewed and stalenessDays (P6-125)', async () => {
@@ -300,6 +347,74 @@ describe('mcp server', () => {
     expect(parsed.whenToUse.use.length).toBeGreaterThan(0);
     expect(parsed.whenToUse.avoid.length).toBeGreaterThan(0);
     expect(parsed.whenToUse.vsRelated.map((v: any) => v.id)).toEqual(['tile', 'list-item', 'table']);
+  });
+
+  it('get_component_section returns a11yAcceptance (P6-195 — was only reachable via the full record)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'combobox', sections: ['a11yAcceptance'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.a11yAcceptance.axeRules.length).toBeGreaterThan(0);
+  });
+
+  it('get_component_section returns propertyMap (P6-195)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'alert', sections: ['propertyMap'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.propertyMap.length).toBeGreaterThan(0);
+  });
+
+  it('get_component_section returns formIntegration when present and null when absent (P6-195)', async () => {
+    const { client } = await connect();
+    const present = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'button', sections: ['formIntegration'] },
+    });
+    expect(parseJson(present as any).formIntegration).not.toBeNull();
+    const absent = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'accordion', sections: ['formIntegration'] },
+    });
+    expect(parseJson(absent as any).formIntegration).toBeNull();
+  });
+
+  it('get_component_section returns i18n (P6-195)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'alert', sections: ['i18n'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.i18n).not.toBeNull();
+  });
+
+  it('get_component_section returns performance when present and null when absent (P6-195)', async () => {
+    const { client } = await connect();
+    const present = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'accordion', sections: ['performance'] },
+    });
+    expect(parseJson(present as any).performance).not.toBeNull();
+    const absent = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'avatar', sections: ['performance'] },
+    });
+    expect(parseJson(absent as any).performance).toBeNull();
+  });
+
+  it('get_component_section returns sources (P6-195)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'alert', sections: ['sources'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.sources.length).toBeGreaterThan(0);
   });
 
   it('get_component_section returns multiple sections in one call', async () => {
@@ -1074,5 +1189,35 @@ describe('mcp best-practices', () => {
     );
     expect(limited.length).toBe(2);
     expect(limited).toEqual(all.slice(0, 2));
+  });
+});
+
+describe('mcp character limit (P6-194)', () => {
+  it('get_component stays under the soft limit for every canonical component (no warning noise)', async () => {
+    const { client } = await connect();
+    const list = parseJson((await client.callTool({ name: 'list_components', arguments: {} })) as any);
+    for (const c of list) {
+      const r = (await client.callTool({ name: 'get_component', arguments: { id: c.id } })) as any;
+      expect(r.content.length, `${c.id} should not carry a soft-limit warning block`).toBe(1);
+    }
+  });
+
+  it('appends a soft-limit warning (without dropping data) when a response exceeds CHARACTER_LIMIT', async () => {
+    const { client } = await connect();
+    const list = parseJson((await client.callTool({ name: 'list_components', arguments: {} })) as any);
+    const allIds = list.map((c: any) => c.id);
+    const result = (await client.callTool({
+      name: 'get_components',
+      arguments: { ids: allIds },
+    })) as any;
+    expect(result.content.length).toBe(2);
+    const [dataBlock, warningBlock] = result.content;
+    expect(dataBlock.type).toBe('text');
+    expect(warningBlock.type).toBe('text');
+    expect(warningBlock.text).toContain('soft limit');
+    // Data must be intact — never silently truncated.
+    const parsed = JSON.parse(dataBlock.text);
+    expect(parsed.components.length).toBe(allIds.length);
+    expect(parsed.missing.length).toBe(0);
   });
 });

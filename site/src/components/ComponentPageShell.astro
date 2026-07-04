@@ -61,10 +61,15 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
   <div class="component-shell">
     <SiteSidebar />
     <SiteSidebar variant="mobile" />
+    {/* P6-191 — the designer page is indexed whole; the dev page contributes
+        only its dev-exclusive sections via data-pagefind-body fragments inside
+        DevView (so the article must NOT carry data-pagefind-ignore there).
+        Bridge stays ignored: it re-renders shared content and would only
+        produce duplicate results. */}
     <article
       class="component-shell__content"
       data-pagefind-body={view === 'designer' ? '' : undefined}
-      data-pagefind-ignore={view === 'designer' ? undefined : ''}
+      data-pagefind-ignore={view === 'bridge' ? '' : undefined}
       data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
     >
       <section class="component-hero">

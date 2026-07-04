@@ -17,6 +17,8 @@ const FRAMEWORK_ORDER: Array<'webComponents' | 'react' | 'angularSignals' | 'vue
   'angularSignals',
   'vue',
 ];
+// ADR-036 — only react is guaranteed on frameworkNotes; the filter below
+// skips frameworks the event didn't declare instead of rendering blank.
 ---
 {!events || events.length === 0 ? null : (
   <ol class="events-list">
@@ -31,7 +33,7 @@ const FRAMEWORK_ORDER: Array<'webComponents' | 'react' | 'angularSignals' | 'vue
             <dt>Payload</dt>
             <dd class="events-payload">{e.payload}</dd>
           </div>
-          {FRAMEWORK_ORDER.map((fw) => (
+          {FRAMEWORK_ORDER.filter((fw) => e.frameworkNotes[fw] !== undefined).map((fw) => (
             <div>
               <dt>{FRAMEWORK_LABEL[fw]}</dt>
               <dd>{e.frameworkNotes[fw]}</dd>

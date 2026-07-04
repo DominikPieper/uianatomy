@@ -48,8 +48,11 @@ type View = (typeof VIEW_VALUES)[number];
 // use the explicit `limit` parameter / filters that the list-style tools
 // expose, keeping truncation opt-in and lossless.
 // ---------------------------------------------------------------------------
+// P6-194 — compact, not pretty-printed: indentation buys nothing for a
+// machine consumer and costs ~16% more chars (measured on get_component
+// payloads), which is pure token waste at scale across every response.
 function serialize(value: unknown): string {
-  return JSON.stringify(value, null, 2);
+  return JSON.stringify(value);
 }
 
 function contentFor(value: unknown): Array<{ type: 'text'; text: string }> {
@@ -57,8 +60,11 @@ function contentFor(value: unknown): Array<{ type: 'text'; text: string }> {
   if (text.length <= CHARACTER_LIMIT) {
     return [{ type: 'text', text }];
   }
+  // P6-194 — not every array-returning tool has a `limit` parameter
+  // (get_implementations doesn't), so the hint hedges instead of asserting
+  // one exists.
   const hint = Array.isArray(value)
-    ? `Pass a 'limit' (where supported), add a filter, or fetch specific ids to shrink it.`
+    ? `Add a filter, fetch specific ids, or (where the tool accepts one) pass a smaller 'limit' to shrink it.`
     : `Request fewer ids or use a narrower slice tool to shrink it.`;
   return [
     { type: 'text', text },
@@ -100,6 +106,14 @@ function computeStalenessDays(lastReviewed: string | undefined): number | null {
   return Math.max(0, days);
 }
 
+// P6-196 — the designer/dev projections previously carried only slots +
+// axes + mismatches/mistakes + (dev) frameworkMap, but SKILL.md advertised a
+// richer split (designer: + tokens/motion/responsive/propertyMap/i18n; dev: +
+// events/formIntegration/a11yAcceptance/performance) that the code never
+// delivered — an agent following the documented dev-view a11y-acceptance
+// recipe got slot hints instead. The projections below now match what
+// SKILL.md promises rather than the other way around, since a11yAcceptance
+// et al. are flagship sections worth surfacing through the role-scoped view.
 function viewProjection(component: Component, view: View) {
   const base = {
     id: component.id,
@@ -114,6 +128,13 @@ function viewProjection(component: Component, view: View) {
       axes: component.axes,
       mismatches: component.mismatches,
       mistakes: component.mistakes,
+      tokens: component.anatomy
+        .filter((slot) => slot.tokens !== undefined)
+        .map((slot) => ({ slotId: slot.id, tokens: slot.tokens })),
+      motion: component.motion ?? null,
+      responsive: component.responsive ?? null,
+      propertyMap: component.propertyMap ?? null,
+      i18n: component.i18n ?? null,
     };
   }
   if (view === 'dev') {
@@ -124,6 +145,10 @@ function viewProjection(component: Component, view: View) {
       axes: component.axes,
       frameworkMap: component.frameworkMap,
       mistakes: component.mistakes,
+      events: component.events ?? null,
+      formIntegration: component.formIntegration ?? null,
+      a11yAcceptance: component.a11yAcceptance ?? null,
+      performance: component.performance ?? null,
     };
   }
   return component;
@@ -240,7 +265,7 @@ export function createServer(): McpServer {
         view: z
           .enum(VIEW_VALUES)
           .describe(
-            "Projection: 'designer' (figma slots + axes + mismatches + mistakes), 'dev' (code slots + a11y hints + frameworkMap + mistakes), 'bridge' (the full record).",
+            "Projection: 'designer' (figma slots + axes + mismatches + mistakes + tokens + motion + responsive + propertyMap + i18n), 'dev' (code slots + a11y hints + axes + frameworkMap + mistakes + events + formIntegration + a11yAcceptance + performance), 'bridge' (the full record).",
           ),
       }),
       outputSchema: componentViewOutput,
@@ -304,7 +329,7 @@ export function createServer(): McpServer {
     {
       title: 'Get Component Section(s)',
       description:
-        'Return one or more named sections of a component in a single round-trip — the bandwidth-friendly alternative to fetching the full record via `get_component`. Pass `sections` as a list; the result is an object keyed by the requested section names. `motion`/`responsive`/`transitions`/`events`/`whenToUse` are null when the component declares none. `tokens` returns only slots that bind tokens (`[{ slotId, tokens }]`). For anatomy-only or mismatch-only needs prefer the `get_anatomy` / `get_mismatches` shortcuts; for contracts use `get_contracts` (it also covers patterns).',
+        'Return one or more named sections of a component in a single round-trip — the bandwidth-friendly alternative to fetching the full record via `get_component`. Pass `sections` as a list; the result is an object keyed by the requested section names. `motion`/`responsive`/`transitions`/`events`/`whenToUse`/`a11yAcceptance`/`propertyMap`/`formIntegration`/`i18n`/`performance`/`sources` are null when the component declares none. `tokens` returns only slots that bind tokens (`[{ slotId, tokens }]`). For anatomy-only or mismatch-only needs prefer the `get_anatomy` / `get_mismatches` shortcuts; for contracts use `get_contracts` (it also covers patterns).',
       inputSchema: z.strictObject({
         id: componentIdField,
         sections: z
@@ -321,6 +346,12 @@ export function createServer(): McpServer {
               'transitions',
               'events',
               'whenToUse',
+              'a11yAcceptance',
+              'propertyMap',
+              'formIntegration',
+              'i18n',
+              'performance',
+              'sources',
             ]),
           )
           .min(1)
@@ -370,6 +401,27 @@ export function createServer(): McpServer {
           case 'whenToUse':
             pick.whenToUse = c.whenToUse ?? null;
             break;
+          // P6-195 — six sections had no slice access at all, including
+          // a11yAcceptance (a flagship feature reachable only via the full
+          // ~30-50 KB record before this).
+          case 'a11yAcceptance':
+            pick.a11yAcceptance = c.a11yAcceptance ?? null;
+            break;
+          case 'propertyMap':
+            pick.propertyMap = c.propertyMap ?? null;
+            break;
+          case 'formIntegration':
+            pick.formIntegration = c.formIntegration ?? null;
+            break;
+          case 'i18n':
+            pick.i18n = c.i18n ?? null;
+            break;
+          case 'performance':
+            pick.performance = c.performance ?? null;
+            break;
+          case 'sources':
+            pick.sources = c.sources ?? null;
+            break;
         }
       }
       return jsonResult(pick);
@@ -381,7 +433,7 @@ export function createServer(): McpServer {
     {
       title: 'Search Components',
       description:
-        'Case-insensitive substring search across component id, name, description, anatomy slot ids, variant names + per-variant `alternativeNames` (ADR-031, P6-127), and referenced sub-anatomy ids (P6-126). Per-variant `alternativeNames` are the canonical surface for cross-system synonyms — e.g. Toast/Alert/Banner/Badge `error` carries `[danger, destructive, critical]` and `warning` carries `[caution, attention]`, so `search_components({ query: "danger" })` resolves via the haystack rather than via a query-side synonym map. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer.',
+        'Case-insensitive substring search across component id, name, description, component-level `alternateNames` (P6-192 — e.g. `search_components({ query: "snackbar" })` resolves to Toast), anatomy slot ids, variant names + per-variant `alternativeNames` (ADR-031, P6-127), and referenced sub-anatomy ids (P6-126). Per-variant `alternativeNames` are the canonical surface for cross-system synonyms — e.g. Toast/Alert/Banner/Badge `error` carries `[danger, destructive, critical]` and `warning` carries `[caution, attention]`, so `search_components({ query: "danger" })` resolves via the haystack rather than via a query-side synonym map. Sub-anatomy ids are matched too — `search_components({ query: "action-group" })` returns Card / Alert / Modal / Drawer.',
       inputSchema: z.strictObject({
         query: z
           .string()
@@ -416,6 +468,10 @@ export function createServer(): McpServer {
             ' ' +
             c.description +
             ' ' +
+            // P6-192 — component-level aliases (Snackbar → toast, Loader →
+            // progress, …); distinct from per-variant alternativeNames below.
+            (c.alternateNames ?? []).join(' ') +
+            ' ' +
             c.anatomy.map((s) => s.id).join(' ') +
             ' ' +
             c.axes.variants
@@ -437,7 +493,7 @@ export function createServer(): McpServer {
     {
       title: 'List Implementations',
       description:
-        'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId. Optional `componentId` filter narrows the roster to a single canonical component (returns an empty array when no audits exist for that component); optional `libraryId` filter narrows to a single library. Use this tool for the lightweight summary-row shape; use `get_implementations({ componentId })` to get full Implementation records (exampleCode + divergence list + rationale). Today the roster covers Modal × {radix, headlessui, cdk}; other components have no audits yet.',
+        'List every Phase-2 library audit (one entry per library/component pair) with library id, component id, library-specific component name, divergence count, and last-reviewed date. Sorted by libraryId then componentId. Optional `componentId` filter narrows the roster to a single canonical component (returns an empty array when no audits exist for that component); optional `libraryId` filter narrows to a single library. Use this tool for the lightweight summary-row shape; use `get_implementations({ componentId })` to get full Implementation records (exampleCode + divergence list + rationale). Call it without filters to see the current roster — coverage grows over time, so this description deliberately states no counts (P6-193).',
       inputSchema: z.strictObject({
         componentId: z
           .string()

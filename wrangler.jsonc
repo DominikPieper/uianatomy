@@ -26,5 +26,12 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  // P6-206 / ADR-037 — counts-only telemetry on the /mcp route: tool name +
+  // best-effort subject id per call, no arguments/bodies/client identifiers.
+  // Scoped to the MCP endpoint only; the human-facing site stays untouched
+  // (docs/CLAUDE.md's no-analytics rule is unaffected).
+  "analytics_engine_datasets": [
+    { "binding": "MCP_ANALYTICS", "dataset": "uianatomy_mcp_calls" }
+  ]
 }

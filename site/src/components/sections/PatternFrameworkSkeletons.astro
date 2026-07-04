@@ -27,12 +27,17 @@ const SKELETON_LABEL: Record<keyof typeof pattern.frameworkSkeletons, string> = 
     Composition shape only. Each library will diverge in API surface
     (see the linked component pages for divergence audits).
   </p>
-  {(['webComponents', 'react', 'vue', 'angularSignals'] as const).map((key) => (
-    <div class="pattern__skeleton">
-      <h3 class="pattern__skeleton-label">{SKELETON_LABEL[key]}</h3>
-      <Code code={pattern.frameworkSkeletons[key]} lang={SKELETON_LANG[key]} wrap={true} />
-    </div>
-  ))}
+  {(['webComponents', 'react', 'vue', 'angularSignals'] as const)
+    // ADR-036 — only react is guaranteed; skip frameworks the pattern
+    // didn't declare instead of passing undefined to the code block.
+    .map((key) => [key, pattern.frameworkSkeletons[key]] as const)
+    .filter((entry): entry is [typeof entry[0], string] => entry[1] !== undefined)
+    .map(([key, code]) => (
+      <div class="pattern__skeleton">
+        <h3 class="pattern__skeleton-label">{SKELETON_LABEL[key]}</h3>
+        <Code code={code} lang={SKELETON_LANG[key]} wrap={true} />
+      </div>
+    ))}
 </section>
 
 <style>

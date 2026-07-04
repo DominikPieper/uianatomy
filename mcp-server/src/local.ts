@@ -3,10 +3,9 @@
 //
 // The production transport is Streamable HTTP via the Cloudflare Worker
 // (worker/index.ts), which loads the canon from pre-built JSON bundles. This
-// entry is for LOCAL use: `pnpm dev` (tsx watch) and the eval harness
-// (mcp-server/eval), which launch the server over stdio and drive it with a
-// real MCP client. It loads canon straight from the YAML on disk via the FS
-// loaders (dir resolution lives in data.ts).
+// entry is for LOCAL use: `pnpm dev` (tsx watch) or any stdio MCP client
+// pointed at this file. It loads canon straight from the YAML on disk via
+// the FS loaders (dir resolution lives in data.ts).
 //
 // stdio rule: NEVER write to stdout — that channel is the MCP wire. All
 // diagnostics go to stderr.

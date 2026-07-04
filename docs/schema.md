@@ -19,6 +19,7 @@ mistakes: [...]             # Common implementation errors
 frameworkMap: {...}         # Cross-framework expression
 motion: {...}               # Optional. Durations, easing, reduced-motion fallback
 responsive: {...}           # Optional. Behaviour changes at viewport breakpoints
+contracts: {...}            # Optional. Hard-binding rules + per-system vocabulary drift
 ```
 
 ## `anatomy`
@@ -273,12 +274,12 @@ events:                                            # optional
     payload: >-                                    # free-text prose
       The id of the newly selected tab — always a string matching one of
       the rendered tab ids; never empty.
-    frameworkNotes:                                # all four required
-      webComponents: >-
-        `change` CustomEvent on the host with `event.detail = { selectedId }`.
+    frameworkNotes:                                # react required, rest optional (ADR-036)
       react: >-
         `onValueChange(value: string)` (Radix) or `onSelectionChange(key)`
         (React Aria).
+      webComponents: >-
+        `change` CustomEvent on the host with `event.detail = { selectedId }`.
       angularSignals: >-
         `output<string>('selectedChange')`; pair with `[(selected)]`.
       vue: >-
@@ -305,7 +306,7 @@ The field is optional on every component; required-by-discipline (not by Zod) on
 - When present, `events` is a non-empty array. Each entry has exactly three required fields: `name`, `payload`, `frameworkNotes`.
 - `name` is a camelCase identifier (`/^[a-z][a-zA-Z0-9]*$/`). Mirrors the conventional event-name shape across frameworks (`onChange`, `update:modelValue` strip both reduce to the same canonical name).
 - `payload` is free-text prose describing what the consumer receives — the value, the shape of a structured payload, or "No payload" for void events. Carries the meaning callers need to wire correctly.
-- `frameworkNotes` mirrors the `frameworkMap` shape: all four framework keys (`webComponents`, `react`, `angularSignals`, `vue`) are required, each free-text. Captures the per-framework idiom for the same canonical event.
+- `frameworkNotes` mirrors the `frameworkMap` shape: `react` is required, `webComponents`/`angularSignals`/`vue` are optional (ADR-036), each free-text. Captures the per-framework idiom for the same canonical event — omit a framework rather than fill it with a mechanical, unresearched note.
 
 **Conventional event names** (open-ended; pick the form that names the change unambiguously):
 
@@ -404,7 +405,7 @@ formIntegration:
   nativeElement: input                # input | button | select | textarea | none
   submittedValue: 'string (value attribute when checked)'
   requiredAttr: true                  # boolean — does the HTML required attribute apply
-  bridges:                            # all four frameworks required when bridges is declared
+  bridges:                            # react required, rest optional when bridges is declared (ADR-036)
     react: 'controlled (value, onChange) | uncontrolled (defaultValue, onChange)'
     vue: 'v-model:modelValue / update:modelValue'
     angularSignals: 'ControlValueAccessor'
@@ -414,7 +415,7 @@ formIntegration:
 - **`nativeElement`** — closed enum naming the underlying HTML form element. `none` for components that compose without delegating to a single HTML form-control (e.g. Combobox, Tag Input).
 - **`submittedValue`** — free prose describing what the form submission carries (`'string'`, `'string[]'`, `'boolean'`, `'FormData multipart'`, etc.). Captures the wire-shape consumers need to validate downstream.
 - **`requiredAttr`** — does the HTML `required` attribute apply to the canonical native element? `true` for inputs / textareas / selects with required-validation; `false` for buttons (no required-attribute semantics) and for composite components that map required-validation to a non-native attribute.
-- **`bridges`** — strict object keyed by framework, each value free-prose naming the canonical binding pattern (React controlled/uncontrolled, Vue v-model, Angular ControlValueAccessor, Web Components form-associated custom elements). All four framework keys required when `bridges` is declared.
+- **`bridges`** — strict object keyed by framework, each value free-prose naming the canonical binding pattern (React controlled/uncontrolled, Vue v-model, Angular ControlValueAccessor, Web Components form-associated custom elements). `react` is required when `bridges` is declared; `vue`/`angularSignals`/`webComponents` are optional (ADR-036) — omit a framework rather than fill it with an unresearched note.
 
 The structured fields complement the prose fields rather than replacing them: prose explains the contract narratively; structured fields make the same contract queryable. P6-121 backlog item tracks the migration of existing components to add structured-field coverage.
 
@@ -676,13 +677,16 @@ The bridge between figma and code worlds. Documents typical translation problems
 
 ```yaml
 mismatches:
-  - figma: Variants for hover/focus
+  - id: card-hover-focus-variant-explosion  # optional (P6-201)
+    figma: Variants for hover/focus
     code: CSS pseudo-classes
     consequence: Figma variant explosion (24 variants instead of 3)
     correct: Treat hover/focus as state spec, not as component variant
 ```
 
 This is the highest-value section for designer-developer collaboration. Most other reference sites document one side or the other; the mismatches are where teams actually struggle.
+
+**`id` (optional, P6-201):** symmetric with `mistakes[].id`. Lets a `contracts.nonNegotiable[].relatedMistakes`-style structural reference (or a future mismatch-to-mismatch cross-ref) point at a specific mismatch instead of restating its prose inline. Not backfilled across the existing corpus — new mismatches that a contract rule needs to reference should carry one; components with no such reference can leave it out.
 
 ## `mistakes`
 
@@ -707,6 +711,32 @@ Each mistake has a stable `id` so it can be referenced from other components or 
 
 Renderers sort by severity descending (blockers first); within a tier, declaration order is preserved. The `MistakesList` component shows the severity tag inline next to the mistake id.
 
+## `contracts` (optional, top-level, P6-73)
+
+Hard-binding rules and per-system naming drift — the parts of a component's contract that are not negotiable design taste, distinct from `mistakes` (implementation errors) and `mismatches` (Figma↔code translation friction).
+
+```yaml
+contracts:
+  nonNegotiable:
+    - rule: Trigger carries role="combobox", aria-expanded, and aria-controls
+      source: apg                      # apg | wcag | html-spec | platform | canon
+      sourceRef: 'APG: Combobox Pattern' # optional, shape-checked against `source`
+      consequence: Screen readers cannot announce the popup relationship or its open state
+      relatedMistakes: [combobox-missing-aria-expanded]  # optional (P6-201)
+  vocabularyDrift:
+    - system: Material 3
+      theirTerm: Exposed Dropdown Menu
+      notes: Ships as a text field + menu composite, not a dedicated combobox primitive
+```
+
+At least one of `nonNegotiable` / `vocabularyDrift` must be present.
+
+**`nonNegotiable[]`** — rules with `source` (which authority backs the rule), an optional `sourceRef` (shape-validated per source: `apg` needs an `APG:`/`WAI-ARIA` prefix, `wcag` needs a numbered criterion, `html-spec` needs to name HTML/WHATWG/DOM; `platform`/`canon` are free-form), and a `consequence` describing what breaks on violation.
+
+- **`relatedMistakes` (optional, P6-201):** array of `mistakes[].id` on the *same* component. Points a rule at the mistake(s) that document its violation instead of restating the mistake's prose inline — the ADR-027 antipattern (`contracts.nonNegotiable` echoing `mistakes`/`mismatches` almost verbatim) that P6-185 partially fixed via prose dedup on 15 components. A consistency test (`shared/tests/consistency.test.ts`) enforces that every id resolves. Not backfilled across the corpus — add it when authoring or editing a rule that has a documented mistake behind it.
+
+**`vocabularyDrift[]`** — per-design-system naming attributed to a `system`, with `theirTerm` and optional `notes`. Distinct from `frameworkMap` (cross-*framework* expression mechanism) — this is cross-*design-system* naming.
+
 ## `frameworkMap`
 
 How canonical concepts express in major frameworks.
@@ -728,6 +758,8 @@ frameworkMap:
 ```
 
 This is descriptive, not prescriptive. We document what's idiomatic, not what's "best."
+
+**`react` is required; `webComponents`/`angularSignals`/`vue` are optional (ADR-036).** React is the canon's best-researched framework — Radix, React Aria, and most Phase-2 implementation audits are React-ecosystem libraries — so it's the one guaranteed entry. The other three may be omitted rather than filled with a mechanical, often-interpolated note (Vue `v-model`, Angular `output()`) that restates a framework idiom instead of a fact specific to the component. The same react-required/rest-optional shape applies to `events[].frameworkNotes`, `formIntegration.bridges`, and `pattern.frameworkSkeletons` — all four multi-framework surfaces followed the same over-fan-out finding in the 2026-07-03 design review.
 
 **Selector-prefix convention.** Web-component examples in `frameworkMap.webComponents` and elsewhere in the canon use the `ui-` prefix (`<ui-button>`, `<ui-modal>`, `<ui-text-input>`). This is a placeholder convention — the canon does not mandate any particular library's prefix; consumers are expected to substitute their own (`md-`, `pf-`, `sl-`, `mat-`, `nz-`, etc.). The prefix is included only because custom-element names require a hyphen per the HTML spec, and `ui-` is the most-neutral filler.
 

@@ -41,9 +41,23 @@ plus 4 echte Widersprüche beim Duplikat-Digging gefunden. Batch **P6-176…187*
 (12 Items) komplett abgearbeitet via 30 parallele Agenten (ein Agent pro File,
 Konflikt-frei da File-Grenzen). 225/225 Tests grün. **Neu offen:** P6-175
 (switch/radio-group Canon-Gaps, unverändert), P6-188 (Slider/DatePicker/Tree
-authoren), P6-189 (combobox-vs-select Crossover-Schwelle uneins). Danach nur
-noch das alte P4/P5/P6-Defer-Backlog (meist build-ahead-of-demand, owner-driven
-oder bewusst geparkt).
+authoren), P6-189 (combobox-vs-select Crossover-Schwelle uneins).
+
+**Design-Review 2026-07-03 (4 Reviewer: Data / UX / MCP / Strategie):** Verdikt —
+Architektur (YAML+Zod, 1 Corpus → Site+MCP) fundamental richtig, **kein** Neubau.
+Hauptbefunde: (1) Demand-Seite fehlt komplett — Distribution P6-44 nie exekutiert,
+0 Consumption-Telemetrie, `LIBRARY_VERSIONS` 0/20 gefüllt; (2) 3-View-Konzept
+liefert ~70% identische Seiten 3× — auf 1 Seite + Rollen-Lens konsolidieren
+(P6-197, ADR); (3) harte Bugs: Sidebar verliert 7 Komponenten (P6-190), Suche
+indexiert Dev-Content nicht (P6-191), MCP-Alias-Suche broken (P6-192), stale
+MCP-Roster-Claims (P6-193). **Bug-Batch P6-190…193 erledigt 2026-07-03, MCP-
+Token-Diät P6-194…196 + die 4 „kleinen" ADR-Items P6-201(Schritt 1)/204/205/206
+erledigt 2026-07-04** (ADR-035 Depth-Smoke-Floor, ADR-036 react-required/Rest-
+optional, ADR-037 MCP-Telemetrie; tools/list 64.7KB→29.6KB; 240 shared + 86 mcp
+Tests grün, Site-Build + `wrangler deploy --dry-run` verifiziert). **Offen:
+P6-197** (3 View-URLs → 1 Seite + Rollen-Lens — größter verbleibender Umbau,
+bewusst zuletzt) **+ P6-201 Schritt 2** (volles `rules[]`, L). Danach P6-44
+Distribution **vor** neuer Breite (P6-188 defer).
 
 ---
 
@@ -97,6 +111,48 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 
 ---
 
+## Design-Review 2026-07-03 — Befunde (Data / UX / MCP / Strategie)
+
+### Bugs (sofort, alle S)
+
+- [x] **P6-190 Sidebar verliert 7 Komponenten** — alle 41 ids kategorisiert (neue Kategorie „Data" für table/tree-grid; menu→Overlay, pagination→Disclosure, progress→Feedback, code-block→Display, grid-pattern→Containers) + Build-Time-Guard in SiteSidebar wirft bei missing/unknown/duplicate ids statt stumm zu droppen. Erledigt 2026-07-03. Dateien: `site/src/data/categories.ts`, `site/src/components/SiteSidebar.astro`.
+- [x] **P6-191 Pagefind indexiert nur Designer-View** — Bridge war doch **kein** Superset (Tokens/Motion/Responsive fehlen dort), daher statt View-Swap: Designer-Page bleibt voll indexiert + Dev-Page trägt die 6 dev-exklusiven Sektionen (codeAnatomy/frameworkMap/events/formIntegration/performance/a11yAcceptance) als `data-pagefind-body`-Fragmente mit eigenem Titel „<Name> · Dev view" bei — volle Abdeckung ohne Duplikate, im gebauten Index verifiziert. Erledigt 2026-07-03. Dateien: `site/src/components/ComponentPageShell.astro`, `site/src/components/views/DevView.astro`.
+- [x] **P6-192 MCP `search_components` findet `alternateNames` nicht** — component-level Aliase in Haystack + Tool-Description, Regression-Test „snackbar"→toast. Erledigt 2026-07-03. Dateien: `mcp-server/src/server.ts`, `mcp-server/tests/server.test.ts`.
+- [x] **P6-193 Stale Roster-Claims in MCP-Metadaten** — Roster-/Count-Facts aus `list_implementations`-Description + SKILL.md (2 Stellen, inkl. falscher „takes no arguments"-Claim) entfernt bzw. count-frei formuliert, `annotations.ts` „29 tools" + `local.ts` toter eval-Verweis bereinigt. Erledigt 2026-07-03. Dateien: `mcp-server/src/{server,annotations,local}.ts`, `site/public/.well-known/agent-skills/uianatomy-mcp/SKILL.md`.
+
+### MCP — Effizienz & Surface
+
+- [x] **P6-194 MCP-Token-Diät** — `componentOutput`/`componentsBulkOutput` von voll-serialisiertem componentSchema (2× ~19KB) auf looseObject demoted (`structuredContent` bleibt vollständig, nur die outputSchema-Advertisement schrumpft); `serialize()` compact statt pretty-printed; CHARACTER_LIMIT 25k→60k (max. Einzelkomponente compact = 54.9KB, Alarm damit für echte Bulk-Pathologien statt 33/41 Komponenten reserviert); Array-Hint korrigiert (behauptete `limit`-Param für Tools ohne einen, z.B. `get_implementations`). `tools/list` 64.7KB→29.6KB (**−54%**, gemessen). 2 neue Tests (Non-Warning-Fall + echter Warning-Pfad ohne Datenverlust). Erledigt 2026-07-04. Dateien: `mcp-server/src/{server,output-schemas,constants}.ts`, `mcp-server/tests/server.test.ts`.
+- [x] **P6-195 `get_component_section`-Enum um 6 Sektionen erweitert** — `a11yAcceptance`/`propertyMap`/`formIntegration`/`i18n`/`performance`/`sources` ergänzt (a11yAcceptance war vorher nur via Fullrecord erreichbar); `get_anatomy`/`get_mismatches` bleiben als benannte Shortcuts (kein Einfalten — eigener Value als schnellster Pfad). 6 neue Tests (je Present-Fall, formIntegration+performance zusätzlich Null-Fall). SKILL.md (2 Stellen) nachgezogen. Erledigt 2026-07-04. Dateien: `mcp-server/src/server.ts`, `mcp-server/tests/server.test.ts`, `site/public/.well-known/agent-skills/uianatomy-mcp/SKILL.md`.
+- [x] **P6-196 `get_component_view`-Projektionen an SKILL.md angeglichen** — Code an Doku angepasst (nicht umgekehrt): designer-View bekommt tokens/motion/responsive/propertyMap/i18n, dev-View bekommt events/formIntegration/a11yAcceptance/performance — vorher lieferte dev weder a11yAcceptance noch events trotz SKILL.md-Versprechen (der Recipe „a11y acceptance via dev view" lieferte de facto nur Slot-Hints). bridge bleibt Fullrecord-Alias (kein Streichen — eigenständiger Projektions-Name für Downstream-Klarheit). 2 neue Regressions-Tests. Erledigt 2026-07-04. Dateien: `mcp-server/src/server.ts`, `mcp-server/tests/server.test.ts`.
+- [ ] **P6-207 MCP-Tool-Batch: review-checklist + compare + unified search** — `get_review_checklist(id)` (contracts + severity-sortierte mistakes + mismatches + required slots + a11yAcceptance + Divergenz-Highlights = PR-Review-Intent in 1 Call), `compare_components(a,b)` via existierendem `computeCompareDiff`, `search` über patterns/implementations/sub-anatomies mit matchedField+snippet. Dateien: `mcp-server/src/server.ts`, `shared/src/compare.ts`.
+- [ ] **P6-208 MCP `initialize.instructions` + Resources/Prompts evaluieren** — get_about-Framing in die initialize-Response; Corpus als Resource-Templates (`uianatomy://component/{id}` + completions) für resource-aware Clients; 1-2 Prompts („audit against canon"). Additiv, Tools bleiben primär. Datei: `mcp-server/src/server.ts`.
+- [ ] **P6-209 Worker-Cold-Start: Zod-Revalidierung der Bundles skippen** — `safeParse` über ~1.8MB bereits-validierte Bundles bei Module-Init dominiert Cold-Start; trusted fast path (validate at bundle-write, cast at read) + CI-Test behält Sicherheit. Dateien: `worker/index.ts`, `shared/src/bundle.ts`.
+
+### UX — Quick Wins (unabhängig von IA-Entscheidung)
+
+- [ ] **P6-198 „On this page"-TOC auf Komponenten-Seiten** — ~10k-Wort-Seiten mit 13-17 h2 ohne Orientierung; sticky Anchor-Liste mit Rollen-Badges, Section-ids existieren schon. Datei: `site/src/components/ComponentPageShell.astro`.
+- [ ] **P6-199 vsRelated-Rows verlinken `/compare`** — Compare ist am Moment des Intents (vsRelated-Block) unauffindbar; pro Row Link auf `/compare?a=X&b=Y`. Datei: `site/src/components/sections/WhenToUseSection.astro`.
+- [ ] **P6-200 Homepage: Kategorie-Gruppierung + Inline-Suche** — flacher A-Z-Wall aus 41 Cards mit je vollem Anatomy-SVG (552KB HTML); `categories.ts`-Gruppierung wiederverwenden, Suchfeld inline statt nur Header-Icon, Card-Thumbs vereinfachen/lazy-loaden. Dateien: `site/src/pages/index.astro`, `site/src/components/ComponentCard.astro`.
+
+### Entscheidungen (ADR nötig)
+
+- [ ] **P6-197 IA-Konsolidierung: 3 View-URLs → 1 Seite + Rollen-Lens** — Views sind gemessen ~70% identisch (combobox: 3×~10k Wörter), views.md beschreibt unshipped Produkt (Switcher-Persistenz/Prompt/Mistake-Filtering existieren nicht), Search+MD-Exports 3× dupliziert; Ziel: `/components/<id>` einzige Seite, Rolle = `data-view`-Lens via localStorage (CSS-Infra existiert), `/components/<id>/a11y` als einzige echte Sub-Page, 301s für /dev+/bridge, 138→~60 Pages; views.md-Rewrite gehört dazu. ADR via `adr-author`. Dateien: `site/src/**`, `docs/views.md`, `docs/adr/`.
+- [~] **P6-201 `rules[]` als First-Class-Records (Triple-Encoding auflösen)** — **Schritt 1 erledigt 2026-07-04** (additiv, kein ADR nötig): `mismatchSchema.id` optional (Symmetrie zu `mistakeSchema.id`), `nonNegotiableContractSchema.relatedMistakes: [slug]` optional, Resolution-Lint in `consistency.test.ts` (relatedMistakes muss auf `mistakes[].id` derselben Komponente auflösen — Sibling-Check zum vsRelated-Lint). Kein YAML-Backfill (0/41 Adoption bewusst — Felder sind jetzt legal+guarded, Migration folgt bei Bedarf). `contracts` bekam dabei erstmals eine eigene schema.md-Sektion (fehlte komplett trotz P6-73). 232 shared Tests grün (+7), Site-Build clean. **Offen: Schritt 2** (L, ADR nötig) — volles `rules[]` mit id/statement/source, mistakes/mismatches referenzieren statt restaten. Dateien: `shared/src/schema.ts`, `shared/tests/{schema,consistency}.test.ts`, `docs/schema.md`.
+- [x] **P6-204 Depth-Contract: MIN=4 → Smoke-Floor=2 (ADR-035)** — `mistakes`/`mismatches` 4→2 (die zwei Prosa-Listen-Sektionen, auf denen P6-186 Padding fand); `anatomySlots`/`variants`/`properties`/`statesCombined`/`sources` unverändert. Citation-/ruleId-Lint bewusst **nicht** umgesetzt — bräuchte neues per-Entry-Schema-Feld (eigener schema-field-add-Zyklus), als Alternative in der ADR dokumentiert statt gebündelt. Kein Migrationsbedarf (alle 41 Komponenten hatten bereits ≥4). 232 Tests grün. Erledigt 2026-07-04. Dateien: `docs/adr/035-depth-contract-smoke-floor.md`, `shared/tests/depth.test.ts`.
+- [x] **P6-205 4-Framework-Prosa-Pflicht gelockert (ADR-036)** — `frameworkMapSchema`/`eventFrameworkNotesSchema`/`formIntegrationBridgesSchema`/`frameworkSkeletonsSchema`: `react` required, `webComponents`/`angularSignals`/`vue` optional (React = best-researched Framework im Corpus). Konventions-Tabelle in `vocabulary.ts` bewusst **nicht** umgesetzt — eigener größerer Schema-Zyklus (discriminated union nötig), als Alternative in ADR dokumentiert statt gebündelt. Kein YAML-Backfill (reine Lockerung, alle 41+2 Records erfüllen die neue Schwelle bereits). 3 Render-Components (`FrameworkMapTable`/`EventsTable`/`PatternFrameworkSkeletons`) filtern jetzt fehlende Frameworks statt leere Zellen zu rendern. 3 alte „any-missing-key-rejected"-Tests auf neues Verhalten geflippt + 8 neue ADR-036-Tests. 240 shared Tests grün, Typecheck clean, Site-Build 138 Pages clean. Erledigt 2026-07-04. Dateien: `docs/adr/036-optional-non-react-framework-notes.md`, `shared/src/schema.ts`, `shared/tests/schema.test.ts`, `docs/schema.md`, `site/src/components/sections/{FrameworkMapTable,EventsTable,PatternFrameworkSkeletons}.astro`.
+- [x] **P6-206 MCP-Consumption-Telemetrie (counts-only, ADR-037)** — `MCP_ANALYTICS`-Analytics-Engine-Binding (`wrangler.jsonc`) + 1 Write pro `tools/call` (Tool-Name + best-effort subject-id aus `id`/`componentId`/`ids[0]`, kein Body/keine Client-IDs, Timestamp automatisch via AE); Body wird per `.clone()` gepeekt, Original-Request bleibt für den Transport unberührt; fire-and-forget try/catch (Telemetrie darf Response nie brechen). ADR-037 scoped die CLAUDE.md-no-analytics-Regel explizit auf die Human-Site — MCP-Endpoint ist unberührt von dieser Regel, keine Aufweichung. `wrangler deploy --dry-run` bestätigt Binding + clean Bundle. Erledigt 2026-07-04. Dateien: `docs/adr/037-mcp-consumption-telemetry.md`, `worker/index.ts`, `wrangler.jsonc`.
+
+### Schema/Daten — Cleanup
+
+- [ ] **P6-202 Consistency-Test: divergence-`from`-Pfade gegen Canon resolven** — 715 Pfade in 47 Impl-Files sind nur shape-validiert (`canonicalRefPath`), Canon-Renames stranden Refs stumm; ein Test der jeden `from` auflöst (Asymmetrie: `vsRelated[].id` wird bereits resolved). Höchster Value-per-Effort im Review. Datei: `shared/tests/consistency.test.ts`.
+- [ ] **P6-203 Dormante Versioning-Schema-Felder löschen** — `since`/`changelog`/`staleAfter`/`deprecated`/`variantDeprecations` 0/41 Adoption, Render+MCP seit P6-163 weg; ~100 LOC Schema + ~120 Zeilen schema.md raus (git preserved, Re-Add wäre additiv), `lastReviewed` bleibt. Dateien: `shared/src/schema.ts`, `docs/schema.md`.
+- [ ] **P6-210 Repo-Hygiene** — `files.zip` (April-Seed, ignored) löschen; `UIAnatomy Design System/` (23 git-tracked Brand-Files im Root) nach `docs/brand/` oder raus; `scripts/migrate-variants-shape.py` (One-Shot, done) löschen; stale `mcp-server/dist/` (28-Tool-Build + netlify-Remnant) klären. Dateien: Repo-Root, `scripts/`, `mcp-server/dist/`.
+- [ ] **P6-211 Build-Hygiene-Gotcha in Tooling gießen** — `pnpm -F @uianatomy/shared build && rm -rf site/.astro` lebt als Tribal Knowledge in 2 SKILL.md; root `predev`/`prebuild` bzw. `clean:astro` verdrahten. Dateien: `package.json`, `site/package.json`.
+- [ ] **P6-212 Corpus-Version als Content-Hash** — alles ist `0.0.0`, Bundles tragen keine Version; build-time Hash+Datum in `content-bundle.json` + MCP-Server-Version = minimum viable Versioning (volle Changelog-Maschinerie bleibt geparkt, ADR-023). Dateien: `shared/scripts/bundle-*.mjs`, `mcp-server/src/server.ts`.
+
+---
+
 ## Offen — übernommen aus altem Backlog (Stand 2026-05-31)
 
 ### P4 — Skalierung & Tooling
@@ -105,6 +161,7 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 ### P5 — Implementations / Sources
 - [~] **P5-34c sources[] verified-Migration: 28 Komponenten verbleiben** — 13/41 migriert (button + accordion/alert/avatar/badge + banner/breadcrumbs/card/checkbox + avatar-group/code-block/combobox/disclosure), 61 lib-URLs verifiziert+drift-korrigiert. Rest resumable in 4er-Gruppen (Start: drawer/modal/table/tabs); ~50% URL-Drift-Rate erwartet. Improve-#8. Datei: `content/components/*.yaml`.
 - [ ] **P5-36 Library-Versionen Phase-4: auto-version-bump CI** — Script fetcht LIBRARY_VERSIONS-keys via npm-registry/docs-sniff, öffnet PR wenn pin > N Monate lagged. Defer bis baseline-versions gefüllt. Datei: `scripts/check-library-versions.mjs` + `.github/workflows/`.
+- [ ] **P5-38 `LIBRARY_VERSIONS`-Baseline füllen (ADR-028 exekutieren)** — 0/20 Einträge haben `version`/`verifiedAt` trotz Freshness-Anspruch; alle 47 Impl-Audits zitieren ungepinnte Versionen; Baseline einmal füllen = Voraussetzung für P5-36 (auto-bump CI) und Glaubwürdigkeit des Audit-Produkts. Datei: `shared/src/vocabulary.ts`.
 - [ ] **P5-37 sources[] bare-URL Restcleanup (3 Komponenten)** — bare-URLs ohne `library`/`verifiedAt` in avatar-group (5), avatar (2), checkbox (1) — Libraries nicht in `LIBRARY_KEYS`. Abhängig von P6-152: bei Aufnahme auf `{url,library,verifiedAt}` heben, sonst bewusst bare lassen. Datei: `content/components/{avatar-group,avatar,checkbox}.yaml`.
 
 ### P6 — Reichweite & Schema-Followups

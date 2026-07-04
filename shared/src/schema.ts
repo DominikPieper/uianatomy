@@ -338,6 +338,10 @@ export const axesSchema = z
   });
 
 export const mismatchSchema = z.object({
+  // P6-201 — optional, symmetric with mistakeSchema.id. Lets a contract's
+  // nonNegotiable rule (or a future mismatch-to-mismatch cross-ref) point at
+  // a specific mismatch instead of restating its prose inline.
+  id: slug.optional(),
   figma: z.string().min(1),
   code: z.string().min(1),
   consequence: z.string().min(1),
@@ -359,11 +363,16 @@ const frameworkEntrySchema = z.object({
   variantMechanism: z.string().min(1),
 });
 
+// ADR-036 — react is the canon's best-researched framework (Radix, React
+// Aria, most Phase-2 audits are React-ecosystem); the other three are
+// optional so a component isn't forced to author a mechanical, often
+// interpolated note (Vue v-model, Angular output()) with nothing genuine
+// behind it.
 export const frameworkMapSchema = z.object({
-  webComponents: frameworkEntrySchema,
   react: frameworkEntrySchema,
-  angularSignals: frameworkEntrySchema,
-  vue: frameworkEntrySchema,
+  webComponents: frameworkEntrySchema.optional(),
+  angularSignals: frameworkEntrySchema.optional(),
+  vue: frameworkEntrySchema.optional(),
 });
 
 const motionDurationKey = z
@@ -413,12 +422,14 @@ const eventName = z
     'event name must be camelCase, e.g. select, openChange',
   );
 
+// ADR-036 — react required, other three optional (same rationale as
+// frameworkMapSchema above).
 export const eventFrameworkNotesSchema = z
   .object({
-    webComponents: z.string().min(1),
     react: z.string().min(1),
-    angularSignals: z.string().min(1),
-    vue: z.string().min(1),
+    webComponents: z.string().min(1).optional(),
+    angularSignals: z.string().min(1).optional(),
+    vue: z.string().min(1).optional(),
   })
   .strict();
 
@@ -516,12 +527,14 @@ export const formIntegrationNativeElementSchema = z.enum([
   'none',
 ]);
 
+// ADR-036 — react required, other three optional (same rationale as
+// frameworkMapSchema above).
 export const formIntegrationBridgesSchema = z
   .object({
     react: z.string().min(1),
-    vue: z.string().min(1),
-    angularSignals: z.string().min(1),
-    webComponents: z.string().min(1),
+    vue: z.string().min(1).optional(),
+    angularSignals: z.string().min(1).optional(),
+    webComponents: z.string().min(1).optional(),
   })
   .strict();
 
@@ -702,12 +715,14 @@ export const patternDecisionSchema = z
   })
   .strict();
 
+// ADR-036 — react required, other three optional (same rationale as
+// frameworkMapSchema above).
 export const frameworkSkeletonsSchema = z
   .object({
-    webComponents: z.string().min(1),
     react: z.string().min(1),
-    vue: z.string().min(1),
-    angularSignals: z.string().min(1),
+    webComponents: z.string().min(1).optional(),
+    vue: z.string().min(1).optional(),
+    angularSignals: z.string().min(1).optional(),
   })
   .strict();
 
@@ -757,6 +772,12 @@ export const nonNegotiableContractSchema = z
     source: contractSourceSchema,
     sourceRef: z.string().min(1).optional(),
     consequence: z.string().min(1),
+    // P6-201 — structural link to the mistake(s) this rule guards against,
+    // in place of restating the mistake's prose inline (the ADR-027
+    // antipattern P6-185 partially fixed). Ids must resolve to
+    // mistakes[].id on the same component — enforced by a consistency test,
+    // not here, since that check needs the full component record.
+    relatedMistakes: z.array(slug).min(1).optional(),
   })
   .strict()
   .refine(

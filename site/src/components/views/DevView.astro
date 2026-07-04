@@ -17,9 +17,16 @@ import A11yTable from '../sections/A11yTable.astro';
 interface Props { component: Component }
 const { component } = Astro.props;
 ---
+{/* P6-191 — the designer page is indexed whole; this view contributes only
+    its dev-exclusive sections (code anatomy, framework map, events, form
+    integration, performance, a11y acceptance) as data-pagefind-body
+    fragments, so dev-only content is searchable without duplicating the
+    shared sections the designer page already indexes. */}
 <section data-view-section="dev">
-  <SectionHeader role="dev" title="Code anatomy" id="code-anatomy" />
-  <CodeSlotTable component={component} />
+  <div data-pagefind-body data-pagefind-meta={`title:${component.name} · Dev view`}>
+    <SectionHeader role="dev" title="Code anatomy" id="code-anatomy" />
+    <CodeSlotTable component={component} />
+  </div>
 
   <SectionHeader role="both" title="Variants, properties, states" id="axes" />
   <AxesTable component={component} />
@@ -31,38 +38,40 @@ const { component } = Astro.props;
     </>
   )}
 
-  <SectionHeader role="dev" title="Cross-framework expression" id="framework-map" />
-  <FrameworkMapTable component={component} />
+  <div data-pagefind-body>
+    <SectionHeader role="dev" title="Cross-framework expression" id="framework-map" />
+    <FrameworkMapTable component={component} />
+  </div>
 
   {component.events && component.events.length > 0 && (
-    <>
+    <div data-pagefind-body>
       <SectionHeader role="both" title="Events" id="events" />
       <EventsTable component={component} />
-    </>
+    </div>
   )}
 
   {component.formIntegration && (
-    <>
+    <div data-pagefind-body>
       <SectionHeader role="dev" title="Form integration" id="form-integration" />
       <FormIntegrationSection component={component} />
-    </>
+    </div>
   )}
 
   {component.performance && component.performance.length > 0 && (
-    <>
+    <div data-pagefind-body>
       <SectionHeader role="dev" title="Performance thresholds" id="performance" />
       <PerformanceSection component={component} />
-    </>
+    </div>
   )}
 
   <SectionHeader role="both" title="Accessibility" id="a11y" />
   <A11yTable component={component} />
 
   {component.a11yAcceptance && (
-    <>
+    <div data-pagefind-body>
       <SectionHeader role="both" title="Accessibility acceptance" id="a11y-acceptance" />
       <A11yAcceptanceTable component={component} />
-    </>
+    </div>
   )}
 
   {component.contracts && (

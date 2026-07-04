@@ -48,6 +48,40 @@ setAbout(loadAboutFromBundle(aboutBundleJson as { markdown: unknown; summary: un
 
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
+  // P6-206 / ADR-037 — counts-only MCP telemetry. Optional: absent in
+  // environments where the binding isn't provisioned (e.g. a preview
+  // deploy before the dataset exists); recordToolCall() no-ops in that case.
+  MCP_ANALYTICS?: AnalyticsEngineDataset;
+}
+
+// P6-206 / ADR-037 — one data point per tools/call request: tool name +
+// best-effort subject id, nothing else (no arguments, no client identifiers).
+// Analytics Engine timestamps every write automatically. Fire-and-forget: a
+// telemetry failure must never affect the actual MCP response.
+function extractToolCall(body: unknown): { toolName: string; subjectId: string | undefined } | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const rpc = body as { method?: unknown; params?: unknown };
+  if (rpc.method !== 'tools/call') return null;
+  const params = rpc.params as { name?: unknown; arguments?: unknown } | undefined;
+  if (typeof params?.name !== 'string') return null;
+  const args = params.arguments as Record<string, unknown> | undefined;
+  const subjectId =
+    (typeof args?.id === 'string' && args.id) ||
+    (typeof args?.componentId === 'string' && args.componentId) ||
+    (Array.isArray(args?.ids) && typeof args.ids[0] === 'string' && args.ids[0]) ||
+    undefined;
+  return { toolName: params.name, subjectId };
+}
+
+function recordToolCall(env: Env, toolName: string, subjectId: string | undefined): void {
+  try {
+    env.MCP_ANALYTICS?.writeDataPoint({
+      blobs: [toolName, subjectId ?? ''],
+      indexes: [toolName],
+    });
+  } catch {
+    // Never let telemetry break the MCP response.
+  }
 }
 
 const SKIP_PREFIXES = ['/api/', '/.well-known/', '/pagefind/', '/_astro/', '/brand/'];
@@ -82,12 +116,23 @@ function estimateTokens(body: string): number {
   return Math.ceil(body.length / 4);
 }
 
-async function handleMcp(request: Request): Promise<Response> {
+async function handleMcp(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST' && request.method !== 'GET') {
     return new Response('Method Not Allowed', {
       status: 405,
       headers: { Allow: 'POST, GET' },
     });
+  }
+  // P6-206 / ADR-037 — peek the body for tools/call telemetry via a clone,
+  // so the original request stream is untouched for the transport below.
+  if (request.method === 'POST') {
+    try {
+      const parsed: unknown = await request.clone().json();
+      const call = extractToolCall(parsed);
+      if (call) recordToolCall(env, call.toolName, call.subjectId);
+    } catch {
+      // Not JSON, or not a tools/call shape — nothing to record.
+    }
   }
   const transport = new WebStandardStreamableHTTPServerTransport();
   const server = createServer();
@@ -136,7 +181,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/mcp') {
-      return handleMcp(request);
+      return handleMcp(request, env);
     }
 
     const md = await maybeMarkdown(request, env);

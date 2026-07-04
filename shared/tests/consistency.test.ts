@@ -280,6 +280,29 @@ describe('cross-component consistency', () => {
     expect(failures, failures.join('\n')).toEqual([]);
   });
 
+  // P6-201 (Schritt 1) — contracts.nonNegotiable[].relatedMistakes is the
+  // structural link replacing prose-restatement of a mistake inside a
+  // contract's rule/consequence text (the ADR-027 antipattern). Sibling
+  // check to the vsRelated resolution lint above: same shape, different
+  // reference field.
+  it('contracts.nonNegotiable[].relatedMistakes resolves to an existing mistake on the same component', async () => {
+    const map = await loadComponents({ contentDir });
+    const failures: string[] = [];
+    for (const c of map.values()) {
+      const mistakeIds = new Set(c.mistakes.map((m) => m.id));
+      for (const rule of c.contracts?.nonNegotiable ?? []) {
+        for (const ref of rule.relatedMistakes ?? []) {
+          if (!mistakeIds.has(ref)) {
+            failures.push(
+              `${c.id}: contracts.nonNegotiable relatedMistakes "${ref}" does not resolve to a mistakes[].id on ${c.id}`,
+            );
+          }
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
   it('pattern.composition[].componentId resolves to an existing canonical component', async () => {
     const components = await loadComponents({ contentDir });
     const patterns = await loadPatterns({ patternsDir });

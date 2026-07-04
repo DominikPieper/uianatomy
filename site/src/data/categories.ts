@@ -6,11 +6,11 @@ export interface Category {
 export const CATEGORIES: Category[] = [
   {
     name: 'Containers',
-    components: ['card', 'tile', 'list-item', 'accordion'],
+    components: ['card', 'tile', 'list-item', 'accordion', 'grid-pattern'],
   },
   {
     name: 'Disclosure',
-    components: ['tabs', 'disclosure', 'segmented-control', 'stepper', 'sidebar-nav', 'breadcrumbs'],
+    components: ['tabs', 'disclosure', 'segmented-control', 'stepper', 'sidebar-nav', 'breadcrumbs', 'pagination'],
   },
   {
     name: 'Inputs',
@@ -18,11 +18,15 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Overlay',
-    components: ['modal', 'drawer', 'popover', 'tooltip'],
+    components: ['modal', 'drawer', 'popover', 'tooltip', 'menu'],
   },
   {
     name: 'Feedback',
-    components: ['alert', 'toast', 'banner', 'link', 'skeleton'],
+    components: ['alert', 'toast', 'banner', 'link', 'skeleton', 'progress'],
+  },
+  {
+    name: 'Data',
+    components: ['table', 'tree-grid'],
   },
   {
     name: 'Identity',
@@ -30,6 +34,6 @@ export const CATEGORIES: Category[] = [
   },
   {
     name: 'Display',
-    components: ['badge', 'icon'],
+    components: ['badge', 'icon', 'code-block'],
   },
 ];

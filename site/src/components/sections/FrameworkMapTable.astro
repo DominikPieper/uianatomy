@@ -2,7 +2,11 @@
 import type { Component } from '@uianatomy/shared/schema';
 interface Props { component: Component }
 const { component } = Astro.props;
-const entries = Object.entries(component.frameworkMap) as [string, { structureMechanism: string; variantMechanism: string }][];
+// ADR-036 — only react is guaranteed; filter out frameworks the component
+// didn't declare instead of rendering an empty row.
+const entries = Object.entries(component.frameworkMap).filter(
+  ([, val]) => val !== undefined,
+) as [string, { structureMechanism: string; variantMechanism: string }][];
 const labels: Record<string, string> = {
   webComponents: 'Web Components',
   react: 'React',
