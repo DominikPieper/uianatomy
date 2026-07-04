@@ -924,6 +924,12 @@ th {
   justify-content: center;
   overflow: hidden;
   color: var(--fg-faint);
+  /* P6-200 — the homepage renders a full anatomy SVG per card (41 of them);
+     content-visibility skips layout/paint for off-screen cards without
+     needing JS or a native lazy-load attribute (inline SVG has none). The
+     fixed height above makes contain-intrinsic-size exact, not a guess. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 140px;
 }
 .component-card:hover .component-card__thumb {
   color: var(--accent-active);

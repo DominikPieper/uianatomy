@@ -3,9 +3,22 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ComponentCard from '../components/ComponentCard.astro';
 import { siteJsonLd } from '../lib/jsonLd';
+import { CATEGORIES } from '../data/categories';
 
 const components = await getCollection('components');
-components.sort((a, b) => a.data.name.localeCompare(b.data.name));
+const byId = new Map(components.map((e) => [e.data.id, e]));
+
+// P6-200 — group by the same categories the sidebar uses instead of one
+// flat 41-card A-Z wall. SiteSidebar.astro's build-time guard already
+// enforces every component id has exactly one category, so this can assume
+// the roster is complete.
+const groups = CATEGORIES.map((cat) => ({
+  name: cat.name,
+  entries: cat.components
+    .map((id) => byId.get(id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
+    .sort((a, b) => a.data.name.localeCompare(b.data.name)),
+}));
 ---
 <Base
   title="Components"
@@ -31,19 +44,107 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
       </p>
     </section>
 
-    <nav aria-labelledby="components-heading">
-      <h2 id="components-heading" class="section-rule">Components</h2>
+    <div class="components-filter">
+      <label class="components-filter__label" for="components-filter-input">
+        Filter components
+      </label>
+      <input
+        type="search"
+        id="components-filter-input"
+        class="components-filter__input"
+        placeholder="Filter by name or description…"
+        autocomplete="off"
+        data-components-filter
+      />
+      <p class="components-filter__empty" data-components-filter-empty hidden>
+        No components match "<span data-components-filter-query></span>".
+      </p>
+    </div>
 
-      <ul class="component-grid" role="list">
-        {components.map((entry) => (
-          <li><ComponentCard component={entry.data} /></li>
-        ))}
-      </ul>
-    </nav>
+    <div data-components-groups>
+      {groups.map((group) => (
+        <nav aria-labelledby={`group-${group.name}`} data-component-group data-group-name={group.name}>
+          <h2 id={`group-${group.name}`} class="section-rule">{group.name}</h2>
+          <ul class="component-grid" role="list">
+            {group.entries.map((entry) => (
+              <li
+                data-component-item
+                data-search-text={`${entry.data.name} ${entry.data.description}`.toLowerCase()}
+              ><ComponentCard component={entry.data} /></li>
+            ))}
+          </ul>
+        </nav>
+      ))}
+    </div>
   </article>
 </Base>
 
+<script>
+  function setupComponentsFilter(): void {
+    const input = document.querySelector<HTMLInputElement>('[data-components-filter]');
+    const groupsRoot = document.querySelector<HTMLElement>('[data-components-groups]');
+    const emptyMsg = document.querySelector<HTMLElement>('[data-components-filter-empty]');
+    const queryLabel = document.querySelector<HTMLElement>('[data-components-filter-query]');
+    if (!input || !groupsRoot || !emptyMsg) return;
+
+    const groups = Array.from(groupsRoot.querySelectorAll<HTMLElement>('[data-component-group]'));
+
+    input.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+      let anyVisible = false;
+      for (const group of groups) {
+        let groupHasMatch = false;
+        const items = group.querySelectorAll<HTMLElement>('[data-component-item]');
+        items.forEach((item) => {
+          const matches = query === '' || (item.dataset.searchText ?? '').includes(query);
+          item.hidden = !matches;
+          if (matches) groupHasMatch = true;
+        });
+        group.hidden = !groupHasMatch;
+        if (groupHasMatch) anyVisible = true;
+      }
+      emptyMsg.hidden = anyVisible || query === '';
+      if (queryLabel) queryLabel.textContent = input.value.trim();
+    });
+  }
+  setupComponentsFilter();
+</script>
+
 <style>
+  .components-filter {
+    margin: 0 0 32px;
+  }
+  .components-filter__label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-12, 12px);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin: 0 0 8px;
+  }
+  .components-filter__input {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--surface-bg);
+    color: inherit;
+    font-size: 15px;
+  }
+  .components-filter__input:focus-visible {
+    outline: 2px solid var(--accent-active);
+    outline-offset: 2px;
+  }
+  .components-filter__empty {
+    margin: 16px 0 0;
+    color: var(--fg-muted);
+  }
+  [data-component-group] {
+    margin: 0 0 40px;
+  }
   .component-grid {
     list-style: none;
     padding: 0;
@@ -51,6 +152,13 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
   }
   .component-grid > li {
     display: contents;
+  }
+  /* [hidden] loses to the author `display: contents` rule above by cascade
+     order (both are author-origin, comparable specificity) unless restated
+     here — without this, JS-set .hidden on a filtered-out card would be a
+     no-op and the card would stay visible. */
+  .component-grid > li[hidden] {
+    display: none;
   }
   .hero-meta {
     margin: 16px 0 0;

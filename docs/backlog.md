@@ -138,8 +138,8 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 ### UX — Quick Wins (unabhängig von IA-Entscheidung)
 
 - [x] **P6-198 „On this page"-TOC auf Komponenten-Seiten** — im Zuge von P6-197 mitgelöst: `ComponentTOC.astro`, client-seitig aus gerenderten `.section-header`-Elementen generiert (kein hardcodeter Section-Katalog → kann nicht von der tatsächlichen Seite abdriften), Rollen-Dimming auf TOC-Einträgen gespiegelt. Erledigt 2026-07-04. Datei: `site/src/components/ComponentTOC.astro`.
-- [ ] **P6-199 vsRelated-Rows verlinken `/compare`** — Compare ist am Moment des Intents (vsRelated-Block) unauffindbar; pro Row Link auf `/compare?a=X&b=Y`. Datei: `site/src/components/sections/WhenToUseSection.astro`.
-- [ ] **P6-200 Homepage: Kategorie-Gruppierung + Inline-Suche** — flacher A-Z-Wall aus 41 Cards mit je vollem Anatomy-SVG (552KB HTML); `categories.ts`-Gruppierung wiederverwenden, Suchfeld inline statt nur Header-Icon, Card-Thumbs vereinfachen/lazy-loaden. Dateien: `site/src/pages/index.astro`, `site/src/components/ComponentCard.astro`.
+- [x] **P6-199 vsRelated-Rows verlinken `/compare`** — jede vsRelated-Row bekommt zusätzlich zum Component-Chip einen „Compare →"-Link auf `/compare?a=<current>&b=<related>`. Erledigt 2026-07-04. Datei: `site/src/components/sections/WhenToUseSection.astro`.
+- [x] **P6-200 Homepage: Kategorie-Gruppierung + Inline-Suche** — 8 Kategorien aus `categories.ts` statt flacher A-Z-Wall (jede eigene `<nav>`-Section); Inline-Suchfeld filtert client-seitig über Name+Description, versteckt leere Gruppen, zeigt Empty-State. Card-Thumbs: `content-visibility: auto` + `contain-intrinsic-size` (kein natives Lazy-Load für inline-SVG möglich, das ist das Äquivalent). CSS-Cascade-Fix nötig (`display: contents` auf `.component-grid > li` überschreibt sonst `[hidden]`, gleiche Origin/Spezifität → explizite Override-Regel ergänzt). Build+Preview-Smoke-Test verifiziert (HTTP 200, alle 8 Gruppen im DOM). Erledigt 2026-07-04. Dateien: `site/src/pages/index.astro`, `site/src/styles/global.css`.
 
 ### Entscheidungen (ADR nötig)
 

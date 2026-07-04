@@ -24,7 +24,10 @@ const wtu = component.whenToUse;
         <ul class="when-to-use__vs-list">
           {wtu.vsRelated.map((v) => (
             <li class="when-to-use__vs-item">
-              <a class="related-chip" href={`/components/${v.id}`}>{v.id}</a>
+              <div class="when-to-use__vs-links">
+                <a class="related-chip" href={`/components/${v.id}`}>{v.id}</a>
+                <a class="when-to-use__vs-compare" href={`/compare?a=${component.id}&b=${v.id}`}>Compare →</a>
+              </div>
               <p class="when-to-use__vs-prose">{v.difference}</p>
             </li>
           ))}
@@ -100,6 +103,19 @@ const wtu = component.whenToUse;
     .when-to-use__vs-item {
       grid-template-columns: 1fr;
     }
+  }
+  .when-to-use__vs-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .when-to-use__vs-compare {
+    font-size: var(--fs-12, 12px);
+    color: var(--fg-muted);
+  }
+  .when-to-use__vs-compare:hover {
+    color: var(--accent-active, var(--text-primary));
   }
   .when-to-use__vs-prose {
     margin: 0;
