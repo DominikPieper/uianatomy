@@ -253,6 +253,27 @@ divergence:
       state. Source: https://headlessui.com/react/switch (Switch props —
       onChange, 2026-06-05).
 
+  # ── Reshaped: Enter key submits the form instead of toggling ────────────────
+
+  - from: a11yAcceptance.keyboardWalk[enter]
+    type: reshaped
+    to: >-
+      Enter does not toggle the Switch. Per the library's own documented
+      keyboard interaction table: "Space when a Switch is focused: Toggles
+      the Switch" and "Enter when in a form: Submits the form" — Enter is
+      reserved for form submission, not switch activation.
+    rationale: >-
+      The canonical a11yAcceptance.keyboardWalk documents Enter as an
+      "optional toggle per APG" that "most implementations bind... to toggle
+      for symmetry; some restrict to Space only." Headless UI is a concrete,
+      verified instance of the restrict-to-Space branch, and goes further by
+      giving Enter an active, different meaning (form submit) rather than
+      simply ignoring it — a consumer who assumes Enter-toggles-everywhere
+      (common React/Radix convention) will find Enter silently submits an
+      enclosing form instead of flipping the switch. Source:
+      https://headlessui.com/react/switch (Switch keyboard interaction
+      table, 2026-07-04).
+
 rationale: |
   Headless UI React Switch (@headlessui/react, v2.x) is a minimal unstyled
   switch primitive that honours the APG role="switch" contract but diverges
@@ -283,4 +304,11 @@ rationale: |
   form submission. The `data-changing` extension enables fine-grained CSS
   transition control beyond the canonical motion spec.
 
-lastReviewed: '2026-06-05'
+  4. Enter-key divergence (P6-175) — Enter does not toggle the Switch here;
+     per the library's own keyboard-interaction table, Enter is reserved for
+     form submission and only Space toggles. This is a real instance of the
+     ambiguity the canonical a11yAcceptance.keyboardWalk already flags
+     generically ("some restrict to Space only") — Headless UI restricts,
+     and additionally repurposes Enter rather than leaving it inert.
+
+lastReviewed: '2026-07-04'

@@ -139,6 +139,27 @@ divergence:
       import, 2026-06-05); https://headlessui.com/react/fieldset (Description
       scoped via context, 2026-06-05).
 
+  # ── Anatomy: radio-description (P6-175) — same generic component, wrap-per-radio ──
+
+  - from: anatomy[radio-description]
+    type: reshaped
+    to: >-
+      The same generic Description component as the group-level slot above,
+      resolved to a single Radio when the consumer wraps that Radio (and only
+      that Radio) in its own Field. No per-radio-specific prop or component
+      exists — it's the identical mechanism reused at a narrower scope.
+    rationale: >-
+      P6-175 (2026-07-04) — the canonical `radio-description` slot (added
+      this pass) has no dedicated Headless UI counterpart, but the library's
+      context-scoped Description component already covers the use case: a
+      consumer who wraps one Radio in a Field and places Description inside
+      that Field gets a correctly-wired per-item aria-describedby, using
+      exactly the same import and component as the group-level case. The
+      "reshape" is scope, not API — no new component to learn, just a
+      narrower wrapping.
+      Source: https://headlessui.com/react/fieldset (Description scoped via
+      context, 2026-07-04).
+
   # ── Anatomy: no error-message slot ────────────────────────────────────────────
 
   - from: anatomy[error-message]
@@ -393,4 +414,4 @@ rationale: |
   dedicated named exports) is deprecated in v2 in favour of Radio, Label,
   and Description with context-driven association.
 
-lastReviewed: '2026-06-05'
+lastReviewed: '2026-07-04'

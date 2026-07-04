@@ -122,7 +122,13 @@ anatomy:
       colour (typically muted) and on-state colour (typically
       accent). The track is decorative; the semantic state is
       carried by the input plus `aria-checked`. Width is
-      typically 1.7-2× the thumb diameter.
+      typically 1.7-2× the thumb diameter. Required because the
+      visual rail always exists at runtime — but mature
+      libraries (Radix, React Aria, Headless UI, per the
+      implementation audits) rarely expose it as a separately
+      managed element; the Root itself commonly renders as the
+      track surface, with track-specific styling applied to
+      Root directly rather than to a distinct child.
     slotKind: decorative
     layout:
       row: 1
@@ -493,7 +499,12 @@ frameworkMap:
       Aria Switch, Material UI Switch, Mantine Switch);
       compound or prop-driven; controlled via `checked` (or
       `isSelected`) and `onCheckedChange`; hidden native
-      input rendered when `name` is passed
+      input rendered when `name` is passed. No library in the
+      audited set (Radix, React Aria, Headless UI) exposes a
+      distinct Track sub-component — the canonical track slot
+      collapses into Root, which carries the pill-shaped
+      styling directly (see the anatomy `track` slot and the
+      per-library `implementations/` audits).
     variantMechanism: >-
       props with class-variance-authority; `size` / `disabled`
       / `required` props; `checked` is strictly boolean (no

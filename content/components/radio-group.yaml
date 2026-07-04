@@ -170,7 +170,7 @@ anatomy:
       when no radio is checked; once any radio is checked, that
       radio becomes the tab-stop and siblings drop out of the
       tab order. Repeats per option; typical count is 2-7.
-    slotKind: content
+    slotKind: structural
     layout:
       row: 3
       col: 1
@@ -290,13 +290,52 @@ anatomy:
         not selected". The label is per-radio; never collapse
         multiple options into a single label. For options with
         descriptions ("Email — Best for non-urgent updates"),
-        compose the description as a separate per-radio
-        description slot bound via `aria-describedby`.
+        use the sibling `radio-description` slot bound via
+        `aria-describedby`, not a compound label string.
     tokens:
       typography:
         size: text.sm
       color:
         foreground: color.text.primary
+
+  - id: radio-description
+    required: false
+    purpose: >-
+      Optional per-radio helper text distinguishing options
+      whose difference isn't obvious from the label alone
+      ("Email — Best for non-urgent updates", "SMS — Charges
+      may apply"). Distinct from the group-level `description`
+      slot (which contextualises the whole choice, e.g. "Choose
+      how we should contact you") — this is per-option nuance.
+      Optional because most radio sets have self-explanatory
+      labels; add it only when an option's consequence or
+      scope needs a sentence the label can't carry.
+    slotKind: content
+    layout:
+      row: 2
+      col: 2
+      span: 5
+      parent: radio
+    figma:
+      type: text
+      hint: Smaller text below the radio-label; muted color; visibility per "has description" property on the option
+    code:
+      slot: radio-description
+      semantic: span-or-div
+    a11y:
+      hint: >-
+        Associate via `aria-describedby` on the radio's input,
+        referencing this element's id. SR announces it after
+        the radio-label and state — "radio button, 1 of 3,
+        Email, Best for non-urgent updates, not selected".
+        Never fold this text into the radio-label itself; a
+        compound label loses the label/description distinction
+        AT relies on to skip descriptions when scanning quickly.
+    tokens:
+      typography:
+        size: text.xs
+      color:
+        foreground: color.text.muted
 
   - id: description
     required: false

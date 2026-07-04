@@ -148,19 +148,28 @@ divergence:
   - from: anatomy[description]
     type: reshaped
     to: >-
-      Two separate description surfaces: (1) group-level <Text slot="description">
-      (or description prop on RadioGroup) wired via aria-describedby on the group
-      root; (2) per-Radio description prop (string) which maps to a per-item
-      aria-describedby. Both are available without manual wiring.
+      <Text slot="description"> child (or description prop on RadioGroup),
+      wired via aria-describedby on the group root.
     rationale: >-
-      The canonical defines a single group-level `description` slot. React Aria
-      extends this with two distinct description surfaces: the group `<Text slot="description">`
-      (mirrors CheckboxGroup's pattern; aria-describedby on the radiogroup root)
-      and a per-Radio `description` prop for individual-option helper text. The
-      group-level surface matches the canonical; the per-radio surface is an
-      extension. Both are wired automatically without consumer aria-describedby
-      management.
+      The canonical group-level `description` slot maps to React Aria's
+      `<Text slot="description">` (mirrors CheckboxGroup's pattern;
+      aria-describedby on the radiogroup root automatically). One-to-one
+      match; only the markup shape differs.
       Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-06-05)
+
+  - from: anatomy[radio-description]
+    type: reshaped
+    to: >-
+      description prop (string) on individual <Radio>, wired to a per-item
+      aria-describedby automatically.
+    rationale: >-
+      P6-175 (2026-07-04) — the canonical `radio-description` slot (added
+      this pass to formalise what the radio-label a11y hint already
+      anticipated) maps one-to-one to React Aria's per-Radio `description`
+      prop. No manual aria-describedby management needed; the library wires
+      it. This is the library-level confirmation that motivated adding the
+      canonical slot rather than leaving it as unstructured prose.
+      Source: https://react-aria.adobe.com/RadioGroup (fetched 2026-07-04)
 
   - from: anatomy[error-message]
     type: reshaped
@@ -442,4 +451,4 @@ rationale: |
   addition to the group-level Text slot) is an extension over the canonical's
   group-only description.
 
-lastReviewed: '2026-06-05'
+lastReviewed: '2026-07-04'

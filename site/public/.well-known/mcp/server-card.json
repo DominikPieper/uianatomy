@@ -1,7 +1,7 @@
 {
   "serverInfo": {
     "name": "uianatomy",
-    "version": "ee4aea95509f"
+    "version": "3bdd8b6b9bd5"
   },
   "endpoint": "https://uianatomy.dev/mcp",
   "transport": "streamable-http",

@@ -173,6 +173,18 @@ divergence:
       class. No data attribute or slot API surfaces description state.
       Source: https://www.radix-ui.com/primitives/docs/components/radio-group#root
 
+  # ── Anatomy: radio-description (P6-175) ──────────────────────────────────
+
+  - from: anatomy[radio-description]
+    type: omitted
+    rationale: >-
+      No per-item description mechanism on RadioGroup.Item — same gap as the
+      group-level description above, one level deeper. Consumers who need
+      per-option helper text ("Email — Best for non-urgent updates") must
+      author their own element and wire aria-describedby to the Item's
+      underlying input themselves; Radix surfaces no prop or slot for it.
+      Source: https://www.radix-ui.com/primitives/docs/components/radio-group#item
+
   # ── Anatomy: error-message ────────────────────────────────────────────────
 
   - from: anatomy[error-message]
@@ -315,4 +327,4 @@ rationale: |
   exposes the APG wrap-around behaviour as an explicit opt-out, defaulting
   correctly to the APG-canonical on.
 
-lastReviewed: '2026-06-05'
+lastReviewed: '2026-07-04'
