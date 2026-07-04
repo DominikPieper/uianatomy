@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import axe from 'axe-core';
-import { loadComponents, loadPatterns } from '../src/loader.js';
+import { loadComponents, loadPatterns, loadImplementations } from '../src/loader.js';
 import type { Component } from '../src/schema.js';
 import {
   LIBRARY_VERSIONS,
@@ -27,6 +27,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, '..', '..', 'content', 'components');
 const patternsDir = join(here, '..', '..', 'content', 'patterns');
+const implementationsDir = join(here, '..', '..', 'implementations');
 
 const SPACING = new Set(CANON_SPACING);
 const RADIUS = new Set(CANON_RADIUS);
@@ -658,5 +659,117 @@ describe('cross-component consistency', () => {
       );
     }
     expect(candidates).toEqual([]);
+  });
+});
+
+// P6-202 — the divergence `from` path on every implementation audit
+// (`implementations/<lib>/<id>.yaml`) is shape-validated by `canonicalRefPath`
+// (schema.ts) but never resolved against the canonical component it claims
+// to reference. A canonical rename (slot/property/variant/event/state) then
+// silently strands the reference — the implementation audit still validates,
+// it just quietly stops meaning what it says. 715 `from` paths exist across
+// 47 implementation files at the time this test was added.
+//
+// Not every bracketed path segment is a stored id: `contracts.nonNegotiable[X]`
+// and `a11yAcceptance.keyboardWalk[X]` use human-authored descriptive slugs
+// (e.g. `disabled-tabs-use-aria-disabled`, `arrowUpDown`) because those
+// schemas carry no per-entry id to reference structurally. For those two
+// categories this resolver checks that the referenced collection exists and
+// is non-empty, without asserting the bracket text matches a real key —
+// asserting more would mean guessing a slugification convention no schema
+// enforces, and would produce false failures on legitimate references.
+function resolveCanonicalRefPath(component: Component, path: string): boolean {
+  const bareMatch = path.match(/^([a-zA-Z0-9.]+)$/);
+  const bracketMatch = path.match(/^([a-zA-Z0-9.]+)\[([^\]]+)\]$/);
+  if (!bareMatch && !bracketMatch) return false;
+  const base = (bareMatch ?? bracketMatch)![1];
+  const key = bracketMatch?.[2];
+
+  switch (base) {
+    case 'anatomy':
+      if (key === undefined) return false;
+      // P6-126 / ADR-030 — a $ref slot resolves into the sub-anatomy's own
+      // child slots, so a divergence describing the *whole region* (e.g.
+      // "action-group") won't match any literal slot id. Also accept a
+      // match against the resolved slot's __subAnatomy.id provenance.
+      return component.anatomy.some((s) => {
+        if (s.id === key) return true;
+        const provenance = (s as { __subAnatomy?: { id: string } }).__subAnatomy;
+        return provenance?.id === key;
+      });
+    case 'axes.properties':
+      return key === undefined
+        ? component.axes.properties.length > 0
+        : component.axes.properties.some((p) => p.name === key);
+    case 'axes.variants':
+      return key === undefined
+        ? component.axes.variants.length > 0
+        : component.axes.variants.some((v) => v.name === key);
+    case 'axes.states':
+      return key === undefined
+        ? true
+        : [...component.axes.states.interactive, ...component.axes.states.data].includes(key);
+    case 'axes.states.interactive':
+      return key === undefined
+        ? component.axes.states.interactive.length > 0
+        : component.axes.states.interactive.includes(key);
+    case 'axes.states.data':
+      return key !== undefined && component.axes.states.data.includes(key);
+    case 'axes.states.transitions':
+      return key === undefined
+        ? (component.axes.states.transitions?.length ?? 0) > 0
+        : (component.axes.states.transitions ?? []).some((t) => `${t.from}-to-${t.to}` === key);
+    case 'events':
+      return key !== undefined && (component.events ?? []).some((e) => e.name === key);
+    case 'formIntegration.name':
+      return component.formIntegration?.name !== undefined;
+    case 'formIntegration.nativeElement':
+      return component.formIntegration?.nativeElement !== undefined;
+    case 'motion.durations':
+      return component.motion?.durations !== undefined;
+    case 'motion.easing':
+      return component.motion?.easing !== undefined;
+    case 'motion.reducedMotionFallback':
+      return component.motion?.reducedMotionFallback !== undefined;
+    case 'a11yAcceptance.keyboardWalk':
+      // Descriptive bracket label, not a stored id — see file header.
+      return (component.a11yAcceptance?.keyboardWalk?.length ?? 0) > 0;
+    case 'contracts.nonNegotiable':
+      // Descriptive bracket label, not a stored id — see file header.
+      return (component.contracts?.nonNegotiable?.length ?? 0) > 0;
+    default:
+      return false;
+  }
+}
+
+describe('implementation divergence from-path resolution (P6-202)', () => {
+  it('every divergence[].from resolves against its canonical component', async () => {
+    const components = await loadComponents({ contentDir });
+    const byLibrary = await loadImplementations({ implementationsDir });
+    const failures: string[] = [];
+    for (const [libraryId, byComponent] of byLibrary) {
+      for (const [componentId, impl] of byComponent) {
+        const component = components.get(componentId);
+        if (!component) {
+          failures.push(`${libraryId}/${componentId}: implementation has no matching canonical component`);
+          continue;
+        }
+        for (const d of impl.divergence ?? []) {
+          if (!resolveCanonicalRefPath(component, d.from)) {
+            failures.push(
+              `${libraryId}/${componentId}: divergence.from "${d.from}" does not resolve against canonical ${componentId}`,
+            );
+          }
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('resolveCanonicalRefPath rejects an unrecognised base path (sanity check on the resolver itself)', async () => {
+    const components = await loadComponents({ contentDir });
+    const card = components.get('card')!;
+    expect(resolveCanonicalRefPath(card, 'notARealField[x]')).toBe(false);
+    expect(resolveCanonicalRefPath(card, 'anatomy[not-a-real-slot]')).toBe(false);
   });
 });

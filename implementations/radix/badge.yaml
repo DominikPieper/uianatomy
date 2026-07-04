@@ -35,12 +35,12 @@ divergence:
       pattern as Radix Themes Button.
       (https://www.radix-ui.com/themes/docs/components/badge)
 
-  - from: anatomy[content]
+  - from: anatomy[label]
     type: omitted
     rationale: >-
-      Radix Themes Badge has no named content slot. All badge text is a
+      Radix Themes Badge has no named label slot. All badge text is a
       free React child rendered inside the `<span>` root. The canonical
-      content slot exists to pin the live-region contract (aria-live on
+      label slot exists to pin the live-region contract (aria-live on
       that slot for count updates); Radix has no equivalent structural
       anchor — the entire badge `<span>` is the only element and no
       aria-live wiring is applied by the library.
