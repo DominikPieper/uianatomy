@@ -1,6 +1,6 @@
 # ADR 023: Optional Versioning Metadata for Canonical Components
 
-**Status:** Accepted (dormant — live surface parked 2026-05-31, backlog P6-163)
+**Status:** Accepted (schema removed 2026-07-04, backlog P6-203 — see second amendment)
 **Date:** 2026-05
 
 > **2026-05-31 amendment (P6-163).** After 0/41 components populated `since` /
@@ -12,6 +12,26 @@
 > dormant) and this ADR + the `docs/schema.md` Versioning section remain the
 > design record. Re-add the tool + render when the first component lands a
 > real published change. The decision below is preserved as authored.
+
+> **2026-07-04 amendment (P6-203, 2026-07-03 design review).** Dormancy was
+> not neutral — the review found an unexercised optional schema surface still
+> costs every subsequent schema edit and review pass that has to reason about
+> it (Zod refines, cross-field validation, `docs/schema.md` upkeep). With the
+> live surface already gone since May and still zero adoption two months
+> later, the fields themselves (`since`, `changelog`/`changelogSchema`,
+> per-slot/per-property `deprecated`/`deprecationSchema`,
+> `axes.variantDeprecations`/`variantDeprecationSchema`, and the `semver`
+> helper they alone used) were deleted from `shared/src/schema.ts`.
+> `staleAfter` (P6-125) is a distinct field with a real MCP consumer
+> (`get_component`/`list_components` staleness signal) and was **not**
+> touched — the review's dormant-field finding lumped it in by "0/41
+> adoption" alone, but 0/41 explicit declarations is expected for an optional
+> field with a sensible default, not evidence of deadness. This ADR and the
+> Context/Decision/Rationale below remain the historical record of the
+> original design; `docs/schema.md`'s Versioning section now points here
+> instead of re-documenting removed fields. Re-adding any of this is a fresh,
+> purely additive schema-field-add cycle if a real deprecation need
+> materializes — nothing about this removal forecloses that.
 
 ## Context
 

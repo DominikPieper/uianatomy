@@ -1,6 +1,6 @@
 ---
 name: schema-field-add
-description: Drive the full lifecycle of adding or renaming a field on the canonical Zod schema in shared/src/schema.ts — ADR check, schema edit, schema.md doc, YAML migration across content/components/*.yaml + implementations/*/*.yaml, render-side update in site/, test guard, and build-hygiene cleanup. Use whenever the user asks to add a new field to the canon, rename one, change a vocabulary, or make a non-additive schema change. Triggers on phrases like "add field X", "neues feld auf schemaX", "rename type to kind", "migrate vocabulary", "schema change for X", "extend componentSchema", "extend patternSchema", "extend a11yAcceptanceSchema". Prefer this over ad-hoc edits because forgetting any of the seven steps leaves the repo half-migrated; the build-hygiene gotcha (`pnpm -F @uianatomy/shared build && rm -rf site/.astro`) and the YAML-migration step are the two most commonly forgotten parts.
+description: Drive the full lifecycle of adding or renaming a field on the canonical Zod schema in shared/src/schema.ts — ADR check, schema edit, schema.md doc, YAML migration across content/components/*.yaml + implementations/*/*.yaml, render-side update in site/, test guard, and build-hygiene cleanup. Use whenever the user asks to add a new field to the canon, rename one, change a vocabulary, or make a non-additive schema change. Triggers on phrases like "add field X", "neues feld auf schemaX", "rename type to kind", "migrate vocabulary", "schema change for X", "extend componentSchema", "extend patternSchema", "extend a11yAcceptanceSchema". Prefer this over ad-hoc edits because forgetting any of the seven steps leaves the repo half-migrated; rebuilding `shared` (`pnpm -F @uianatomy/shared build`) and the YAML-migration step are the two most commonly forgotten parts (P6-211 — `rm -rf site/.astro` is now automatic via predev/prebuild, no longer a manual step).
 ---
 
 # schema-field-add
@@ -150,13 +150,13 @@ Both must pass before declaring the migration complete.
 
 ### Step 7: Build-hygiene cleanup
 
-After **every** `shared/src/schema.ts` change, run before site rebuild:
+After **every** `shared/src/schema.ts` change, rebuild shared before site rebuild:
 
 ```bash
-pnpm -F @uianatomy/shared build && rm -rf site/.astro
+pnpm -F @uianatomy/shared build
 ```
 
-This is the single most-forgotten step in the project. Symptoms when missed: site build appears to succeed but renders the *previous* schema's data; new MCP-tool subpath imports (e.g. `@uianatomy/shared/vocabulary` from P6-66) resolve to stale dist content.
+(P6-211 — `site/package.json`'s `predev`/`prebuild` now auto-clear `.astro` on every `pnpm dev`/`pnpm build`, so the `rm -rf site/.astro` half of this step no longer needs to be typed by hand. Rebuilding `shared` itself still does, since site's scripts don't know shared's source changed.) Symptoms when the shared rebuild is skipped: site build appears to succeed but renders the *previous* schema's data; new MCP-tool subpath imports (e.g. `@uianatomy/shared/vocabulary` from P6-66) resolve to stale dist content.
 
 Then verify the site:
 

@@ -210,7 +210,7 @@ Ask: "Append these N items to docs/backlog.md?" If yes, hand control to the `bac
 - Do not flag the same finding under both Critical and Major — pick the highest applicable severity.
 - Do not bundle a 10-component sweep into one summary. Per-component reports are the contract.
 - Do not invent gaps. If the schema doesn't require it and the depth contract doesn't require it and the recent-additions list doesn't require it, the component is fine.
-- Do not rerun the audit on a component the user just finished editing without first running `pnpm -F @uianatomy/shared build && rm -rf site/.astro` per the build-hygiene gotcha — stale dist makes the audit lie.
+- Do not rerun the audit on a component the user just finished editing without first running `pnpm -F @uianatomy/shared build` per the build-hygiene gotcha — stale dist makes the audit lie. (P6-211 — `rm -rf site/.astro` is now automatic via site's predev/prebuild, no longer a manual step.)
 
 ## Final summary template
 

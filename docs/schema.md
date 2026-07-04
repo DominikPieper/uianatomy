@@ -526,7 +526,6 @@ variants:
 - `name` is the canonical variant id used by anatomy props, code, and design-system docs. Variant names within a component must be unique.
 - `alternativeNames` are colloquial or cross-system synonyms agents/searchers may type. The values feed `search_components`'s haystack alongside the canonical `name`. Use sparingly: the entry is canon, not aspirational. Each alias must not collide with another variant's `name` in the same component, must not duplicate the variant's own `name`, and must not repeat within the array.
 - Render: `AxesTable.astro` shows the canonical `name` as the variant chip and renders an italic muted "aka …" line beneath when `alternativeNames` is non-empty.
-- The parallel `axes.variantDeprecations` array (per [ADR-023](./adr/023-versioning.md)) continues to reference variant names — its cross-refine reads from `axes.variants.map((v) => v.name)`.
 
 ### `properties[].type`
 
@@ -829,116 +828,9 @@ The checks cover:
 
 The canonical vocabularies are mirrored into the test file as constants. Extending a vocabulary (a new token name lands in an ADR) is a same-PR update of both `docs/schema.md` and `shared/tests/consistency.test.ts`. Drift between the two is itself a review signal.
 
-## Versioning (optional)
+## Versioning — removed (P6-203)
 
-Components may declare lightweight versioning metadata to record when slots / variants / properties entered the canon and when they were retired. Full rationale in [ADR-023](./adr/023-versioning.md).
-
-**Component-level:**
-
-```yaml
-since: 1.0.0                       # SemVer MAJOR.MINOR.PATCH
-changelog:                         # optional, non-empty when present
-  - version: 2.0.0
-    date: 2026-05-01
-    summary: Drop `tertiary` variant; standardise on `primary` / `secondary`.
-  - version: 1.0.0
-    date: 2026-01-01
-    summary: Initial canonical entry.
-```
-
-**Per-slot (`anatomy[].since` / `anatomy[].deprecated`):**
-
-```yaml
-- id: legacy-header
-  required: false
-  purpose: ...
-  since: 1.0.0
-  deprecated:
-    since: 2.0.0
-    reason: Folded into `header` slot.
-    replacement: header
-```
-
-**Per-property:**
-
-```yaml
-- name: variant
-  kind: enum
-  values: [primary, secondary]
-  deprecated:
-    since: 2.0.0
-    reason: Replaced by `tone`.
-    replacement: tone
-```
-
-**Per-variant** (sparse list — only deprecated entries are recorded):
-
-```yaml
-axes:
-  variants:
-    - name: primary
-    - name: secondary
-    - name: tertiary
-  variantDeprecations:
-    - name: tertiary
-      since: 2.0.0
-      reason: Folded into `secondary`.
-      replacement: secondary
-```
-
-**Shape rules:**
-
-- `since` and `deprecated.since` use `MAJOR.MINOR.PATCH` (regex `^\d+\.\d+\.\d+$`). No `v` prefix, no pre-release tags.
-- `deprecated` is `{ since, reason, replacement? }`, all `.strict()`. Reason is required prose.
-- `variantDeprecations[].name` is cross-validated against `axes.variants` — unknown names raise a Zod issue with path `axes.variantDeprecations[i].name`.
-- `changelog[]` versions must be unique (refine).
-- All versioning fields are optional. Components without an active deprecation history can omit the lot.
-- **Convention (not enforced):** `since` values on slots/properties/variantDeprecations should appear in `changelog[].version` for the same component. Drift is reviewer-caught, not Zod-caught — keeping it loose lets components add deprecation metadata before a full changelog exists.
-
-### When to populate (editorial-trigger contract)
-
-The `since` + `changelog` surface is **dormant by editorial design** until a component has a published change worth versioning. As of 2026-05-05 no canonical component declares either field, and `get_changelog` returns `null` for all 41 components — that is the correct state until the first qualifying edit lands.
-
-A change qualifies for a changelog entry when at least one of these is true:
-
-1. **Schema rename of a published field** — a slot, axis, variant, property, or event renames to a new canonical name. `since` records the version of the new name; the previous name is added to `variantDeprecations` / per-property `deprecated` / per-slot `deprecated` with `replacement` pointing at the new name. Example trigger: P6-119's `nonLinear → linear` polarity rename — once the canon ships its first official version, this rename becomes the first changelog entry on Stepper.
-2. **Mistake correction after publish** — a `mistakes[].id` is removed (no longer a real failure mode) or its `severity` is changed in a way that invalidates prior reader assumptions. Bumps `MINOR` (additive) or `MAJOR` (semantic shift).
-3. **Canonical-name change of the component itself** — the `name` field changes (e.g. "Notification" → "Toast") and downstream consumers need to know to migrate references. Bumps `MAJOR`.
-4. **Variant / property / event removed** — anything that was in the canon and is now not. Bumps `MAJOR`.
-
-A change does **not** qualify when:
-
-- A new component is added to the canon (no per-component changelog event; project-level changelog handles roster expansion).
-- Prose is rewritten without changing the meaning (descriptions, intro, mistake fix-text).
-- A new mistake / mismatch / contracts entry is added (additive prose; not a versionable canonical change).
-- A `lastReviewed` date changes (use `lastReviewed`, not `changelog`).
-
-### How to populate
-
-When a qualifying change lands:
-
-1. Add `since: 1.0.0` to the component if not already present (initial canonical baseline). All currently-shipping components share the same baseline version when their first changelog event lands.
-2. Add the new entry at the **top** of `changelog[]` (newest first):
-   ```yaml
-   changelog:
-     - version: 2.0.0
-       date: 2026-MM-DD
-       summary: One-line description of what changed and why.
-   ```
-3. Bump the new top-line `since` to match the new version (component-level) or the rename target's `since` (slot / property / variant level).
-4. Wire `deprecated.replacement` on the renamed-from element pointing to the renamed-to id / name.
-5. Update component `lastReviewed`.
-
-### Downstream consumer pattern
-
-Consumers that depend on canonical naming (implementation audits, design-system bridges, MCP-integrated agents) should subscribe to changelog updates as a re-audit trigger:
-
-1. Cache `(componentId, lastSeenVersion)` per component the consumer audits against.
-2. Periodically poll `get_changelog({ id })` (or fetch the bundle and read `since`).
-3. When the returned `since` exceeds the cached `lastSeenVersion`, re-run the audit against that component — a canonical change has shipped.
-4. The `summary` text on each changelog entry tells the consumer whether the change is breaking (rename / removal / canonical-name change) or additive (mistake-correction). Consumers can prioritise re-audits accordingly.
-
-The `get_changelog` MCP tool surfaces this contract per-component; future tooling could expose a project-level changelog feed (RSS or aggregate JSON) when the volume warrants it.
+The schema briefly carried lightweight versioning metadata (`since`, `changelog`, per-slot/per-property/per-variant `deprecated`/`variantDeprecations`) per [ADR-023](./adr/023-versioning.md). The live surface (render + the `get_changelog` MCP tool) was parked 2026-05-31 after a month with zero adoption (no canonical component ever populated any of these fields) — see `site/src/content/changelog/2026-05-31-park-versioning.md`. The schema fields themselves were removed entirely 2026-07-04 (P6-203, part of the 2026-07-03 design review) rather than left dormant: an unexercised lifecycle costs every schema and review pass it touches, and re-adding an optional field later is a cheap, purely additive change if a real versioning need ever materializes. `lastReviewed` — which has full adoption and real MCP/render consumers — is unaffected and remains the component's freshness signal.
 
 ## Schema evolution
 

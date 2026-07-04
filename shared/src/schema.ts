@@ -81,18 +81,6 @@ export const slotKindSchema = z.enum([
   'decorative',
 ]);
 
-const semver = z
-  .string()
-  .regex(/^\d+\.\d+\.\d+$/, 'must be SemVer MAJOR.MINOR.PATCH (e.g. 1.2.0)');
-
-export const deprecationSchema = z
-  .object({
-    since: semver,
-    reason: z.string().min(1),
-    replacement: z.string().min(1).optional(),
-  })
-  .strict();
-
 export const anatomySlotSchema = z.object({
   id: slug,
   required: z.boolean(),
@@ -103,8 +91,6 @@ export const anatomySlotSchema = z.object({
   code: codeHintSchema,
   a11y: a11yHintSchema,
   tokens: slotTokensSchema.optional(),
-  since: semver.optional(),
-  deprecated: deprecationSchema.optional(),
 });
 
 // P6-126 / ADR-030 — sub-anatomy: a slot pattern that recurs across
@@ -193,8 +179,6 @@ const propertyPrimitiveSchema = z
     name: z.string().min(1),
     kind: z.literal('primitive'),
     of: z.enum(['boolean']),
-    since: semver.optional(),
-    deprecated: deprecationSchema.optional(),
   })
   .strict();
 
@@ -206,8 +190,6 @@ const propertyEnumSchema = z
       .array(z.string().min(1))
       .min(2, 'enum must declare at least two values')
       .refine((v) => new Set(v).size === v.length, 'enum values must be unique'),
-    since: semver.optional(),
-    deprecated: deprecationSchema.optional(),
   })
   .strict();
 
@@ -251,15 +233,6 @@ export const statesSchema = z
     });
   });
 
-export const variantDeprecationSchema = z
-  .object({
-    name: z.string().min(1),
-    since: semver,
-    reason: z.string().min(1),
-    replacement: z.string().min(1).optional(),
-  })
-  .strict();
-
 export const variantEntrySchema = z
   .object({
     name: z.string().min(1),
@@ -274,7 +247,6 @@ export const axesSchema = z
     variants: z.array(variantEntrySchema).min(1),
     properties: z.array(propertySchema),
     states: statesSchema,
-    variantDeprecations: z.array(variantDeprecationSchema).min(1).optional(),
   })
   .superRefine((axes, ctx) => {
     const variantNames = new Set<string>();
@@ -315,25 +287,6 @@ export const axesSchema = z
         }
         seenAliases.add(alias);
       });
-    });
-    if (!axes.variantDeprecations) return;
-    const seen = new Set<string>();
-    axes.variantDeprecations.forEach((d, i) => {
-      if (!variantNames.has(d.name)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['variantDeprecations', i, 'name'],
-          message: `variantDeprecations[${i}].name "${d.name}" must reference a declared variant`,
-        });
-      }
-      if (seen.has(d.name)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['variantDeprecations', i, 'name'],
-          message: `variantDeprecations[${i}].name "${d.name}" is declared twice`,
-        });
-      }
-      seen.add(d.name);
     });
   });
 
@@ -681,24 +634,6 @@ export const implementationSchema = z
   })
   .strict();
 
-export const changelogEntrySchema = z
-  .object({
-    version: semver,
-    date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'changelog date must be ISO YYYY-MM-DD'),
-    summary: z.string().min(1),
-  })
-  .strict();
-
-export const changelogSchema = z
-  .array(changelogEntrySchema)
-  .min(1)
-  .refine(
-    (entries) => new Set(entries.map((e) => e.version)).size === entries.length,
-    { message: 'changelog versions must be unique' },
-  );
-
 export const compositionEntrySchema = z
   .object({
     componentId: slug,
@@ -868,8 +803,6 @@ export const componentSchema = z.object({
   // re-fetching the date themselves.
   staleAfter: z.number().int().positive().max(3650).optional(),
   sources: z.array(sourceEntrySchema).optional(),
-  since: semver.optional(),
-  changelog: changelogSchema.optional(),
   // P6-126 / ADR-030 — anatomy entries can be either inline slot objects
   // or `{ $ref }` references to a canonical sub-anatomy. The loader resolves
   // refs eagerly so post-load Component.anatomy is a flat AnatomySlot[].
@@ -941,10 +874,6 @@ export type PerformanceThreshold = z.infer<typeof performanceThresholdSchema>;
 export type Performance = z.infer<typeof performanceSchema>;
 export type Divergence = z.infer<typeof divergenceSchema>;
 export type Implementation = z.infer<typeof implementationSchema>;
-export type Deprecation = z.infer<typeof deprecationSchema>;
-export type VariantDeprecation = z.infer<typeof variantDeprecationSchema>;
-export type ChangelogEntry = z.infer<typeof changelogEntrySchema>;
-export type Changelog = z.infer<typeof changelogSchema>;
 // P6-126 / ADR-030 — schema permits anatomy entries to be either inline
 // AnatomySlot or AnatomySlotRef (`$ref` to a sub-anatomy). The loader
 // resolves refs eagerly before returning, so consumers see the resolved

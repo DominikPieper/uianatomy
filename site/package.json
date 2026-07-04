@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "rm -rf .astro",
     "dev": "astro dev --open",
-    "prebuild": "node scripts/build-mcp-card.mjs && node scripts/build-agent-skills-index.mjs",
+    "prebuild": "rm -rf .astro && node scripts/build-mcp-card.mjs && node scripts/build-agent-skills-index.mjs",
     "build": "astro build",
     "postbuild": "node scripts/fix-llms-md.mjs",
     "preview": "astro preview",
