@@ -57,8 +57,10 @@ optional Frameworks), ADR-037 (MCP-Telemetrie), ADR-038 (IA-Konsolidierung
 P6-197+P6-198 — 3 View-URLs → 1 Seite + Rollen-Lens, 138→52 Pages), plus
 komplette Cleanup-Bucket P6-202/203/210/211/212 (Divergence-Path-Resolver +
 1 echter Bug gefunden, dormante Versioning-Felder raus, Repo-Hygiene,
-Build-Hygiene automatisiert, Content-Hash-Versioning). **Review-Backlog
-2026-07-03 komplett abgearbeitet.** 224 shared + 88 mcp Tests grün, Site-
+Build-Hygiene automatisiert, Content-Hash-Versioning), UX-Quickwins P6-199+
+P6-200 (Compare-Links auf vsRelated, Homepage-Kategorien + Inline-Suche).
+**Review-Backlog 2026-07-03 komplett abgearbeitet — 7 Commits, main 7 ahead
+of origin, noch nicht gepusht.** 224 shared + 88 mcp Tests grün, Site-
 Build + Preview-Smoke-Test + `wrangler deploy --dry-run` durchgängig
 verifiziert. **Bewusst zurückgestellt:** P6-201 Schritt 2 (volles `rules[]`,
 L), P6-213 (a11y-Subpage, aus P6-197). **Nächster Schritt laut Strategie-
