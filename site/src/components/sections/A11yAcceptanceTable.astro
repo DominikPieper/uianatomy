@@ -71,6 +71,13 @@ const a = component.a11yAcceptance;
     gap: 22px;
     margin: 0 0 24px;
   }
+  .a11y-acceptance__block {
+    /* grid items default to min-width: auto, which sizes the track to the
+       nowrap keys/trigger badges' full content width and blows the whole
+       block past the viewport on mobile; min-width: 0 lets .table-scroll's
+       own overflow-x handle it instead. */
+    min-width: 0;
+  }
   .a11y-acceptance__block h4 {
     font-size: var(--text-step--1);
     font-weight: 600;

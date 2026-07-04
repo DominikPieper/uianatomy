@@ -802,6 +802,14 @@ th {
   td {
     padding: 10px 12px;
   }
+  /* auto-layout tables with nowrap badge/code cells otherwise get shrink-forced
+     to the wrapper's width, starving prose columns; let the table size to its
+     natural content width so genuine overflow hands off to .table-scroll's
+     scroll+fade affordance instead of squeezing columns unreadably thin. */
+  table {
+    width: auto;
+    min-width: 100%;
+  }
 }
 
 /* Index page */

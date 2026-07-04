@@ -74,6 +74,12 @@ const { axes } = component;
     display: grid;
     gap: 24px;
   }
+  .axes__group {
+    /* same grid-blowout guard as A11yAcceptanceTable: without this, a
+       wide table-scroll descendant can force the grid track past the
+       viewport instead of scrolling internally. */
+    min-width: 0;
+  }
   .axes__group h3 {
     margin: 0 0 4px;
   }
