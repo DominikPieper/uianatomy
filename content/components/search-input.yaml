@@ -232,9 +232,9 @@ axes:
     - name: compact
     - name: with-suggestions
   properties:
-    - { name: hasIcon, kind: primitive, of: boolean }
-    - { name: hasClear, kind: primitive, of: boolean }
-    - { name: hasSubmit, kind: primitive, of: boolean }
+    - {name: hasIcon, kind: primitive, of: boolean}
+    - {name: hasClear, kind: primitive, of: boolean}
+    - {name: hasSubmit, kind: primitive, of: boolean}
     - name: size
       kind: enum
       values: [sm, md, lg]
@@ -778,57 +778,6 @@ whenToUse:
         when the input drives a search results region.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The input element is `<input type="search">` (or
-        `role="searchbox"` on a non-input host). SearchInput
-        emits free-text queries; the with-suggestions popup
-        previews, it does not commit as the input value.
-      source: html-spec
-      sourceRef: 'HTML input type="search" + ARIA searchbox role'
-      consequence: >-
-        Implementing as a constrained Combobox (commit-from-
-        listbox sets value) silently rejects free-text queries
-        that do not match an option. Users type, press Enter,
-        and the search never fires. The contract — "free-text in,
-        free-text out" — is the whole point of the pattern.
-    - rule: >-
-        Enter on the input always submits the query. For
-        with-suggestions variant, Enter-with-highlight selects-
-        and-submits; Enter-without-highlight submits the typed
-        value verbatim. The submit-button click is equivalent.
-      source: canon
-      consequence: >-
-        Implementations that capture Enter for popup-close or
-        blur leave users without a keyboard submit path —
-        sighted users tab to the submit button, SR users have
-        no canonical action key. Breaks the form-control
-        keyboard contract that SearchInput inherits from
-        `<input>`.
-    - rule: >-
-        Clear-button activation resets the associated results
-        region back to its empty / default state. Query state
-        and results state are coupled; clearing one clears the
-        other.
-      source: canon
-      consequence: >-
-        Without coupled clear, the input shows empty but the
-        results page or panel still shows old hits. State
-        diverges silently — users see stale data and cannot
-        trust the surface to reflect their current intent.
-    - rule: >-
-        With-suggestions popup carries explicit AT structure:
-        `role="listbox"` with `aria-activedescendant` for
-        typeahead-style suggestions, or `role="region"` with a
-        polite live region announcing result counts for
-        result-preview style.
-      source: apg
-      sourceRef: 'APG: Combobox + Live Region patterns'
-      consequence: >-
-        Without listbox structure or live region, SR users hear
-        nothing as they type — no feedback that suggestions
-        exist, no count announcement, no path to navigate. The
-        suggestions become a sighted-pointer-only feature.
   vocabularyDrift:
     - system: HTML
       theirTerm: 'input type="search"'
@@ -868,3 +817,58 @@ sources:
   - https://www.gov.uk/service-manual/design/search
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: input-element-input-type-search-role
+    statement: >-
+      The input element is `<input type="search">` (or
+      `role="searchbox"` on a non-input host). SearchInput
+      emits free-text queries; the with-suggestions popup
+      previews, it does not commit as the input value.
+    source: html-spec
+    sourceRef: 'HTML input type="search" + ARIA searchbox role'
+    consequence: >-
+      Implementing as a constrained Combobox (commit-from-
+      listbox sets value) silently rejects free-text queries
+      that do not match an option. Users type, press Enter,
+      and the search never fires. The contract — "free-text in,
+      free-text out" — is the whole point of the pattern.
+  - id: enter-input-submits-query
+    statement: >-
+      Enter on the input always submits the query. For
+      with-suggestions variant, Enter-with-highlight selects-
+      and-submits; Enter-without-highlight submits the typed
+      value verbatim. The submit-button click is equivalent.
+    source: canon
+    consequence: >-
+      Implementations that capture Enter for popup-close or
+      blur leave users without a keyboard submit path —
+      sighted users tab to the submit button, SR users have
+      no canonical action key. Breaks the form-control
+      keyboard contract that SearchInput inherits from
+      `<input>`.
+  - id: clear-button-activation-resets-associated
+    statement: >-
+      Clear-button activation resets the associated results
+      region back to its empty / default state. Query state
+      and results state are coupled; clearing one clears the
+      other.
+    source: canon
+    consequence: >-
+      Without coupled clear, the input shows empty but the
+      results page or panel still shows old hits. State
+      diverges silently — users see stale data and cannot
+      trust the surface to reflect their current intent.
+  - id: suggestions-popup-carries-explicit-structure
+    statement: >-
+      With-suggestions popup carries explicit AT structure:
+      `role="listbox"` with `aria-activedescendant` for
+      typeahead-style suggestions, or `role="region"` with a
+      polite live region announcing result counts for
+      result-preview style.
+    source: apg
+    sourceRef: 'APG: Combobox + Live Region patterns'
+    consequence: >-
+      Without listbox structure or live region, SR users hear
+      nothing as they type — no feedback that suggestions
+      exist, no count announcement, no path to navigate. The
+      suggestions become a sighted-pointer-only feature.

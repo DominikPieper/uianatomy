@@ -168,8 +168,8 @@ axes:
     - name: standalone
     - name: button-styled
   properties:
-    - { name: external, kind: primitive, of: boolean }
-    - { name: download, kind: primitive, of: boolean }
+    - {name: external, kind: primitive, of: boolean}
+    - {name: download, kind: primitive, of: boolean}
     - name: size
       kind: enum
       values: [sm, md, lg]
@@ -520,46 +520,6 @@ whenToUse:
         text; the Icon stays decorative with `aria-hidden="true"`.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Any control with link semantics renders as a real
-        `<a href="…">`. Substituting `role="link"` on a `<div>` or
-        `<span>` is never the default path — it is a last-resort
-        fallback, and only ever a fallback.
-      source: html-spec
-      sourceRef: 'HTML anchor element semantics'
-      consequence: >-
-        The `link-clickable-div` mistake catalogues the concrete
-        breakage this rule forecloses: no native focus, no
-        middle-click/copy-link, no keyboard activation without
-        bespoke handlers, and invisibility to AT link-list
-        navigation.
-    - rule: >-
-        `target="_blank"` never ships alone: `rel="noopener
-        noreferrer"`, a visible external-link indicator, and an
-        accessible-name suffix disclosing the new-tab behaviour are
-        a single atomic unit — present together or the exemption
-        does not apply.
-      source: html-spec
-      sourceRef: 'HTML rel attribute + WCAG 3.2.5 (Change on Request)'
-      consequence: >-
-        The `link-external-no-rel-or-indication` mistake documents
-        the two independent failure modes this rule closes:
-        `window.opener` tabnabbing when `rel` is missing, and an
-        unpredictable context change when the indicator and
-        announcement are missing.
-    - rule: >-
-        A link's accessible name is self-descriptive out of
-        context. Generic boilerplate ("click here", "read more",
-        "here") never stands as the entire accessible name.
-      source: wcag
-      sourceRef: 'WCAG 2.4.4 — Link Purpose (In Context) / G91'
-      consequence: >-
-        The `link-uninformative-text` mistake documents the
-        concrete SR link-list failure this rule prevents;
-        `aria-labelledby` is the sanctioned escape hatch when
-        visual design constrains the visible text to something
-        shorter than a self-descriptive name.
   vocabularyDrift:
     - system: Material Design 3
       theirTerm: 'Links (typography role)'
@@ -604,3 +564,46 @@ sources:
   - https://inclusive-components.design/links-vs-buttons/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: any-control-link-semantics-renders-real
+    statement: >-
+      Any control with link semantics renders as a real
+      `<a href="…">`. Substituting `role="link"` on a `<div>` or
+      `<span>` is never the default path — it is a last-resort
+      fallback, and only ever a fallback.
+    source: html-spec
+    sourceRef: 'HTML anchor element semantics'
+    consequence: >-
+      The `link-clickable-div` mistake catalogues the concrete
+      breakage this rule forecloses: no native focus, no
+      middle-click/copy-link, no keyboard activation without
+      bespoke handlers, and invisibility to AT link-list
+      navigation.
+  - id: target-blank-ships-alone-rel-noopener
+    statement: >-
+      `target="_blank"` never ships alone: `rel="noopener
+      noreferrer"`, a visible external-link indicator, and an
+      accessible-name suffix disclosing the new-tab behaviour are
+      a single atomic unit — present together or the exemption
+      does not apply.
+    source: html-spec
+    sourceRef: 'HTML rel attribute + WCAG 3.2.5 (Change on Request)'
+    consequence: >-
+      The `link-external-no-rel-or-indication` mistake documents
+      the two independent failure modes this rule closes:
+      `window.opener` tabnabbing when `rel` is missing, and an
+      unpredictable context change when the indicator and
+      announcement are missing.
+  - id: links-accessible-name-self-descriptive-out
+    statement: >-
+      A link's accessible name is self-descriptive out of
+      context. Generic boilerplate ("click here", "read more",
+      "here") never stands as the entire accessible name.
+    source: wcag
+    sourceRef: 'WCAG 2.4.4 — Link Purpose (In Context) / G91'
+    consequence: >-
+      The `link-uninformative-text` mistake documents the
+      concrete SR link-list failure this rule prevents;
+      `aria-labelledby` is the sanctioned escape hatch when
+      visual design constrains the visible text to something
+      shorter than a self-descriptive name.

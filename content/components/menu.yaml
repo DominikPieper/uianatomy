@@ -456,9 +456,9 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: typeahead, kind: primitive, of: boolean }
-    - { name: wrapNavigation, kind: primitive, of: boolean }
-    - { name: closeOnSelect, kind: primitive, of: boolean }
+    - {name: typeahead, kind: primitive, of: boolean}
+    - {name: wrapNavigation, kind: primitive, of: boolean}
+    - {name: closeOnSelect, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -1186,95 +1186,6 @@ performance:
       due to the cumulative DOM-render cost.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Every interactive descendant of the `root`
-        menu carries `role="menuitem"`,
-        `role="menuitemcheckbox"`, or
-        `role="menuitemradio"`; no interactive
-        descendant may render with an unset or
-        generic role. Non-interactive descendants
-        (`separator`, `group-label`) carry no
-        interactive role.
-      source: apg
-      sourceRef: 'WAI-ARIA menu role and required children'
-      consequence: >-
-        AT collapses the menu/menuitem role
-        hierarchy to generic list semantics — see
-        mistake `menuitem-no-role`.
-
-    - rule: >-
-        Arrow-key navigation moves focus between
-        menuitems — ArrowDown / ArrowUp for
-        vertical menus, ArrowLeft / ArrowRight for
-        horizontal. Home / End jump to first / last.
-        Tab does NOT navigate between items — Tab
-        closes the menu (or moves focus out). The
-        roving-tabindex maintains a single tab-stop.
-      source: apg
-      sourceRef: 'APG: Menu and menubar pattern keyboard interaction'
-      consequence: >-
-        Without the canonical keyboard model,
-        keyboard users cannot navigate the menu
-        efficiently — they must mouse-click each
-        item. The arrow-key pattern is the
-        defining keyboard affordance of menus;
-        without it, the menu is a list-of-buttons
-        with misleading `role="menu"`.
-
-    - rule: >-
-        Every `submenu-trigger` carries
-        `aria-haspopup="menu"` and a live
-        `aria-expanded` value. ArrowRight (or
-        Enter / Space) on a focused
-        submenu-trigger opens its paired
-        `submenu` and moves focus to that
-        submenu's first item; ArrowLeft or Escape
-        on a focused submenu item closes that
-        submenu and returns focus to its trigger.
-      source: apg
-      sourceRef: 'APG: Menu pattern submenu interaction'
-      consequence: >-
-        Keyboard and AT users cannot discover or
-        traverse nested menu hierarchies — the
-        submenu becomes reachable by mouse only.
-        See mistake `menu-submenu-no-aria-haspopup`.
-
-    - rule: >-
-        When the `typeahead` property is true (the
-        canonical default), every printable
-        keystroke extends a buffer that resets
-        after ~500ms of inactivity, and focus
-        moves to the next `menuitem`,
-        `menuitemcheckbox`, or `menuitemradio`
-        whose accessible name starts with the
-        buffered string (case-insensitive).
-      source: apg
-      sourceRef: 'APG: Menu pattern keyboard support — first-character search'
-      consequence: >-
-        A menu that declares `typeahead: true` but
-        does not implement the buffer/match/reset
-        behavior silently fails keyboard users
-        typing to search. (The ~7-item threshold
-        for defaulting typeahead on is a design
-        heuristic, not this rule's concern — see
-        mistake `menu-no-typeahead`.)
-
-    - rule: >-
-        A disabled menuitem stays mounted in the
-        DOM and in the roving-tabindex sequence
-        with `aria-disabled="true"`; it is never
-        removed or hidden, arrow-key navigation
-        may still land on it, and its activation
-        handler is suppressed via
-        `event.preventDefault`.
-      source: canon
-      consequence: >-
-        Menu item count and position shift across
-        renders, breaking the stable-structure
-        expectation users build. See mistake
-        `menu-disabled-not-aria-disabled`.
-
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: 'role=menu + role=menuitem + role=menuitemcheckbox + role=menuitemradio'
@@ -1396,3 +1307,92 @@ notes: >-
   highest-risk authoring path in the canon.
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: every-interactive-descendant-root-menu-carries
+    statement: >-
+      Every interactive descendant of the `root`
+      menu carries `role="menuitem"`,
+      `role="menuitemcheckbox"`, or
+      `role="menuitemradio"`; no interactive
+      descendant may render with an unset or
+      generic role. Non-interactive descendants
+      (`separator`, `group-label`) carry no
+      interactive role.
+    source: apg
+    sourceRef: 'WAI-ARIA menu role and required children'
+    consequence: >-
+      AT collapses the menu/menuitem role
+      hierarchy to generic list semantics — see
+      mistake `menuitem-no-role`.
+  - id: arrow-key-navigation-moves-focus-between
+    statement: >-
+      Arrow-key navigation moves focus between
+      menuitems — ArrowDown / ArrowUp for
+      vertical menus, ArrowLeft / ArrowRight for
+      horizontal. Home / End jump to first / last.
+      Tab does NOT navigate between items — Tab
+      closes the menu (or moves focus out). The
+      roving-tabindex maintains a single tab-stop.
+    source: apg
+    sourceRef: 'APG: Menu and menubar pattern keyboard interaction'
+    consequence: >-
+      Without the canonical keyboard model,
+      keyboard users cannot navigate the menu
+      efficiently — they must mouse-click each
+      item. The arrow-key pattern is the
+      defining keyboard affordance of menus;
+      without it, the menu is a list-of-buttons
+      with misleading `role="menu"`.
+  - id: every-submenu-trigger-carries-aria-haspopup
+    statement: >-
+      Every `submenu-trigger` carries
+      `aria-haspopup="menu"` and a live
+      `aria-expanded` value. ArrowRight (or
+      Enter / Space) on a focused
+      submenu-trigger opens its paired
+      `submenu` and moves focus to that
+      submenu's first item; ArrowLeft or Escape
+      on a focused submenu item closes that
+      submenu and returns focus to its trigger.
+    source: apg
+    sourceRef: 'APG: Menu pattern submenu interaction'
+    consequence: >-
+      Keyboard and AT users cannot discover or
+      traverse nested menu hierarchies — the
+      submenu becomes reachable by mouse only.
+      See mistake `menu-submenu-no-aria-haspopup`.
+  - id: typeahead-property-true-canonical-default-every
+    statement: >-
+      When the `typeahead` property is true (the
+      canonical default), every printable
+      keystroke extends a buffer that resets
+      after ~500ms of inactivity, and focus
+      moves to the next `menuitem`,
+      `menuitemcheckbox`, or `menuitemradio`
+      whose accessible name starts with the
+      buffered string (case-insensitive).
+    source: apg
+    sourceRef: 'APG: Menu pattern keyboard support — first-character search'
+    consequence: >-
+      A menu that declares `typeahead: true` but
+      does not implement the buffer/match/reset
+      behavior silently fails keyboard users
+      typing to search. (The ~7-item threshold
+      for defaulting typeahead on is a design
+      heuristic, not this rule's concern — see
+      mistake `menu-no-typeahead`.)
+  - id: disabled-menuitem-stays-mounted-dom-roving
+    statement: >-
+      A disabled menuitem stays mounted in the
+      DOM and in the roving-tabindex sequence
+      with `aria-disabled="true"`; it is never
+      removed or hidden, arrow-key navigation
+      may still land on it, and its activation
+      handler is suppressed via
+      `event.preventDefault`.
+    source: canon
+    consequence: >-
+      Menu item count and position shift across
+      renders, breaking the stable-structure
+      expectation users build. See mistake
+      `menu-disabled-not-aria-disabled`.

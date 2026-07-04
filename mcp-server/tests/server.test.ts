@@ -431,6 +431,18 @@ describe('mcp server', () => {
     expect(parsed.sources.length).toBeGreaterThan(0);
   });
 
+  it('get_component_section returns rules (P6-201 Step 2 / ADR-039)', async () => {
+    const { client } = await connect();
+    const result = await client.callTool({
+      name: 'get_component_section',
+      arguments: { id: 'alert', sections: ['rules'] },
+    });
+    const parsed = parseJson(result as any);
+    expect(parsed.rules.length).toBeGreaterThan(0);
+    expect(parsed.rules[0]).toHaveProperty('id');
+    expect(parsed.rules[0]).toHaveProperty('statement');
+  });
+
   it('get_component_section returns multiple sections in one call', async () => {
     const { client } = await connect();
     const result = await client.callTool({
@@ -853,7 +865,7 @@ describe('mcp server', () => {
     expect(parsed).toEqual([]);
   });
 
-  it('get_contracts returns accordion nonNegotiable entries (component path)', async () => {
+  it('get_contracts returns accordion rules (component path) (ADR-039)', async () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_contracts',
@@ -862,11 +874,11 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.id).toBe('accordion');
     expect(parsed.kind).toBe('component');
-    expect(parsed.contracts.nonNegotiable.length).toBeGreaterThanOrEqual(2);
-    for (const c of parsed.contracts.nonNegotiable) expect(c.source).toBe('apg');
+    expect(parsed.rules.length).toBeGreaterThanOrEqual(2);
+    for (const r of parsed.rules) expect(r.source).toBe('apg');
   });
 
-  it('get_contracts returns confirmation-flow contracts (pattern path)', async () => {
+  it('get_contracts returns confirmation-flow rules (pattern path) (ADR-039)', async () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_contracts',
@@ -875,11 +887,11 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.id).toBe('confirmation-flow');
     expect(parsed.kind).toBe('pattern');
-    const rules = parsed.contracts.nonNegotiable.map((c: any) => c.rule);
-    expect(rules.some((r: string) => r.includes('alertdialog'))).toBe(true);
+    const statements = parsed.rules.map((r: any) => r.statement);
+    expect(statements.some((s: string) => s.includes('alertdialog'))).toBe(true);
   });
 
-  it('get_contracts returns the populated contracts block for a component (P6-169)', async () => {
+  it('get_contracts returns rules + vocabularyDrift for a component (P6-169, ADR-039)', async () => {
     const { client } = await connect();
     const result = await client.callTool({
       name: 'get_contracts',
@@ -888,8 +900,8 @@ describe('mcp server', () => {
     const parsed = parseJson(result as any);
     expect(parsed.id).toBe('button');
     expect(parsed.kind).toBe('component');
-    // P6-169 backfilled button's contracts (hard non-negotiables + vocabularyDrift).
-    expect(parsed.contracts.nonNegotiable.length).toBeGreaterThanOrEqual(1);
+    // P6-169 backfilled button's contracts (hard rules + vocabularyDrift).
+    expect(parsed.rules.length).toBeGreaterThanOrEqual(1);
     expect(parsed.contracts.vocabularyDrift.length).toBeGreaterThanOrEqual(1);
   });
 

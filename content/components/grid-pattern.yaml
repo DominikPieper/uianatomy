@@ -438,10 +438,10 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: multiSelect, kind: primitive, of: boolean }
-    - { name: virtualized, kind: primitive, of: boolean }
-    - { name: stickyHeader, kind: primitive, of: boolean }
-    - { name: sortable, kind: primitive, of: boolean }
+    - {name: multiSelect, kind: primitive, of: boolean}
+    - {name: virtualized, kind: primitive, of: boolean}
+    - {name: stickyHeader, kind: primitive, of: boolean}
+    - {name: sortable, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -1295,100 +1295,6 @@ performance:
       mount.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The grid implements roving-tabindex —
-        only one cell carries `tabindex="0"` at a
-        time; all other cells carry
-        `tabindex="-1"`. Tab from outside enters
-        the grid at the active cell; Tab inside
-        the grid exits to the next document
-        focusable. Implementations that ship
-        every cell as `tabindex="0"` or no cells
-        as `tabindex="0"` violate the APG grid
-        keyboard model.
-      source: apg
-      sourceRef: 'APG: Grid pattern keyboard interaction'
-      consequence: >-
-        Without roving-tabindex, the grid is
-        either a Table-with-broken-tab-model
-        (every cell a tab stop, breaking the
-        single-tab-into-grid contract) or a
-        keyboard-trap (no cells reachable). The
-        APG grid pattern's whole point is the
-        roving-tabindex keyboard model; without
-        it, `role="grid"` is misleading.
-    - rule: >-
-        Arrow keys move focus between cells —
-        ArrowUp / ArrowDown navigate rows,
-        ArrowLeft / ArrowRight navigate columns.
-        Home / End jump within row;
-        Ctrl+Home / Ctrl+End jump to grid
-        boundaries; Page Up / Page Down move
-        by viewport-row-count.
-      source: apg
-      sourceRef: 'APG: Grid pattern keyboard interaction'
-      consequence: >-
-        Without 2D arrow-key navigation, the
-        grid pattern degrades to a Table with
-        misleading role. Keyboard users cannot
-        navigate cell-by-cell; the canonical
-        affordance disappears.
-    - rule: >-
-        Editable variant supports F2 / Enter to
-        enter edit-mode, Escape to cancel
-        (revert + exit), Enter to commit
-        (commit + exit), Tab to commit-and-
-        advance. The three exits are the
-        canonical edit-mode contract.
-      source: apg
-      sourceRef: 'APG: Grid pattern editable cells interaction'
-      consequence: >-
-        Without the three-exit contract, users
-        get trapped in the cell-editor (no
-        Escape) or commit changes accidentally
-        (no Tab-to-commit-and-advance) or
-        cannot enter edit-mode at all (no F2 /
-        Enter handler). The canonical edit-
-        lifecycle is the difference between
-        usable and unusable editable grids.
-    - rule: >-
-        Cells inside `role="grid"` carry
-        `role="gridcell"` (data cells),
-        `role="columnheader"` (column headers),
-        or `role="rowheader"` (row headers). The
-        role hierarchy is consistent — grid
-        contains rows, rows contain cells with
-        the canonical cell roles.
-      source: apg
-      sourceRef: 'WAI-ARIA grid role and required children'
-      consequence: >-
-        Without the role hierarchy, AT
-        announces inconsistent semantics — root
-        as grid but cells as plain table cells.
-        SR users hear "grid, 5 rows, 7 columns"
-        on entry but "cell, 12" without the
-        gridcell role on navigation. The role
-        mismatch breaks programmatic
-        relationships AT relies on.
-    - rule: >-
-        Virtualized grids declare `aria-rowcount`
-        and `aria-colcount` on the root and
-        `aria-rowindex` / `aria-colindex` per
-        rendered cell. The virtualizer keeps
-        these in sync as it recycles DOM nodes.
-      source: apg
-      sourceRef: 'APG: Grid pattern virtualization guidance'
-      consequence: >-
-        Without the explicit indices, AT users
-        perceive the dataset as the rendered
-        count (50 of 10,000); Page-Down
-        navigation becomes unreliable as the
-        virtualizer recycles nodes. The
-        virtualization-aware ARIA attributes are
-        the canonical bridge between the
-        rendered subset and the logical
-        structure.
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: 'role=grid + role=gridcell + role=row'
@@ -1479,3 +1385,102 @@ sources:
   - https://tanstack.com/table/latest
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: grid-implements-roving-tabindex
+    statement: >-
+      The grid implements roving-tabindex —
+      only one cell carries `tabindex="0"` at a
+      time; all other cells carry
+      `tabindex="-1"`. Tab from outside enters
+      the grid at the active cell; Tab inside
+      the grid exits to the next document
+      focusable. Implementations that ship
+      every cell as `tabindex="0"` or no cells
+      as `tabindex="0"` violate the APG grid
+      keyboard model.
+    source: apg
+    sourceRef: 'APG: Grid pattern keyboard interaction'
+    consequence: >-
+      Without roving-tabindex, the grid is
+      either a Table-with-broken-tab-model
+      (every cell a tab stop, breaking the
+      single-tab-into-grid contract) or a
+      keyboard-trap (no cells reachable). The
+      APG grid pattern's whole point is the
+      roving-tabindex keyboard model; without
+      it, `role="grid"` is misleading.
+  - id: arrow-keys-move-focus-between-cells
+    statement: >-
+      Arrow keys move focus between cells —
+      ArrowUp / ArrowDown navigate rows,
+      ArrowLeft / ArrowRight navigate columns.
+      Home / End jump within row;
+      Ctrl+Home / Ctrl+End jump to grid
+      boundaries; Page Up / Page Down move
+      by viewport-row-count.
+    source: apg
+    sourceRef: 'APG: Grid pattern keyboard interaction'
+    consequence: >-
+      Without 2D arrow-key navigation, the
+      grid pattern degrades to a Table with
+      misleading role. Keyboard users cannot
+      navigate cell-by-cell; the canonical
+      affordance disappears.
+  - id: editable-variant-supports-f2-enter-enter
+    statement: >-
+      Editable variant supports F2 / Enter to
+      enter edit-mode, Escape to cancel
+      (revert + exit), Enter to commit
+      (commit + exit), Tab to commit-and-
+      advance. The three exits are the
+      canonical edit-mode contract.
+    source: apg
+    sourceRef: 'APG: Grid pattern editable cells interaction'
+    consequence: >-
+      Without the three-exit contract, users
+      get trapped in the cell-editor (no
+      Escape) or commit changes accidentally
+      (no Tab-to-commit-and-advance) or
+      cannot enter edit-mode at all (no F2 /
+      Enter handler). The canonical edit-
+      lifecycle is the difference between
+      usable and unusable editable grids.
+  - id: cells-inside-role-grid-carry-role
+    statement: >-
+      Cells inside `role="grid"` carry
+      `role="gridcell"` (data cells),
+      `role="columnheader"` (column headers),
+      or `role="rowheader"` (row headers). The
+      role hierarchy is consistent — grid
+      contains rows, rows contain cells with
+      the canonical cell roles.
+    source: apg
+    sourceRef: 'WAI-ARIA grid role and required children'
+    consequence: >-
+      Without the role hierarchy, AT
+      announces inconsistent semantics — root
+      as grid but cells as plain table cells.
+      SR users hear "grid, 5 rows, 7 columns"
+      on entry but "cell, 12" without the
+      gridcell role on navigation. The role
+      mismatch breaks programmatic
+      relationships AT relies on.
+  - id: virtualized-grids-declare-aria-rowcount-aria
+    statement: >-
+      Virtualized grids declare `aria-rowcount`
+      and `aria-colcount` on the root and
+      `aria-rowindex` / `aria-colindex` per
+      rendered cell. The virtualizer keeps
+      these in sync as it recycles DOM nodes.
+    source: apg
+    sourceRef: 'APG: Grid pattern virtualization guidance'
+    consequence: >-
+      Without the explicit indices, AT users
+      perceive the dataset as the rendered
+      count (50 of 10,000); Page-Down
+      navigation becomes unreliable as the
+      virtualizer recycles nodes. The
+      virtualization-aware ARIA attributes are
+      the canonical bridge between the
+      rendered subset and the logical
+      structure.

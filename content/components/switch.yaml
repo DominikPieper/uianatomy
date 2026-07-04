@@ -296,8 +296,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: disabled, kind: primitive, of: boolean }
-    - { name: required, kind: primitive, of: boolean }
+    - {name: disabled, kind: primitive, of: boolean}
+    - {name: required, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -704,49 +704,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The label's accessible-name string is byte-identical in
-        the `off` and `on` states — test: diff the label text
-        across a toggle; any difference is a violation,
-        regardless of which state words were used.
-      source: apg
-      sourceRef: 'APG: Switch pattern'
-      consequence: >-
-        A per-state label collapses the identification string
-        and the state signal into one announcement (mistake
-        `switch-label-is-state`); the design-time root cause is
-        Figma variants named after the state instead of the
-        controlled noun (see mismatches).
-    - rule: >-
-        `aria-checked` on `role="switch"` is a two-value
-        enumeration — `"true"` or `"false"` only. `"mixed"` is
-        not a member of the set, unlike `role="checkbox"` where
-        it is valid. Test: assert the attribute is one of the
-        two literals at every transition.
-      source: apg
-      sourceRef: 'APG: Switch role binary states'
-      consequence: >-
-        A third value is an ARIA spec violation with undefined
-        AT behaviour, not a supported tri-state (mistake
-        `switch-aria-checked-mixed`); the design-time root cause
-        is modelling Switch variants after Checkbox's tri-state
-        set (see mismatches).
-    - rule: >-
-        A form-bound switch's value is readable from `FormData`
-        on submit — satisfied by a form-associated element (a
-        hidden `<input type="checkbox" role="switch">` or the
-        ElementInternals API; see anatomy: input) and violated
-        by a bare `<button role="switch">` with no such
-        association.
-      source: html-spec
-      sourceRef: 'HTML form-submission via input checkbox'
-      consequence: >-
-        Without the association, the switch's on/off state is
-        silently absent from the submitted form data (mistake
-        `switch-no-form-bridge`); the design-time root cause is
-        a Figma spec that omits the hidden-bridge annotation
-        (see mismatches).
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: '`role="switch"` (with `aria-checked` true | false)'
@@ -808,3 +765,49 @@ sources:
   - https://developer.apple.com/design/human-interface-guidelines/toggles
 
 lastReviewed: '2026-05-03'
+rules:
+  - id: labels-accessible-name-string-byte-identical
+    statement: >-
+      The label's accessible-name string is byte-identical in
+      the `off` and `on` states — test: diff the label text
+      across a toggle; any difference is a violation,
+      regardless of which state words were used.
+    source: apg
+    sourceRef: 'APG: Switch pattern'
+    consequence: >-
+      A per-state label collapses the identification string
+      and the state signal into one announcement (mistake
+      `switch-label-is-state`); the design-time root cause is
+      Figma variants named after the state instead of the
+      controlled noun (see mismatches).
+  - id: aria-checked-role-switch-two-value
+    statement: >-
+      `aria-checked` on `role="switch"` is a two-value
+      enumeration — `"true"` or `"false"` only. `"mixed"` is
+      not a member of the set, unlike `role="checkbox"` where
+      it is valid. Test: assert the attribute is one of the
+      two literals at every transition.
+    source: apg
+    sourceRef: 'APG: Switch role binary states'
+    consequence: >-
+      A third value is an ARIA spec violation with undefined
+      AT behaviour, not a supported tri-state (mistake
+      `switch-aria-checked-mixed`); the design-time root cause
+      is modelling Switch variants after Checkbox's tri-state
+      set (see mismatches).
+  - id: form-bound-switchs-value-readable-from
+    statement: >-
+      A form-bound switch's value is readable from `FormData`
+      on submit — satisfied by a form-associated element (a
+      hidden `<input type="checkbox" role="switch">` or the
+      ElementInternals API; see anatomy: input) and violated
+      by a bare `<button role="switch">` with no such
+      association.
+    source: html-spec
+    sourceRef: 'HTML form-submission via input checkbox'
+    consequence: >-
+      Without the association, the switch's on/off state is
+      silently absent from the submitted form data (mistake
+      `switch-no-form-bridge`); the design-time root cause is
+      a Figma spec that omits the hidden-bridge annotation
+      (see mismatches).

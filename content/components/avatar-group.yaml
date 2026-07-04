@@ -141,7 +141,7 @@ anatomy:
       with the literal "+N" text or "+N more" label. Activates when
       total count > `max`; the rendered element (button or span) is
       a function of the `interactive` property — see the a11y hint
-      below and `contracts.nonNegotiable`.
+      below and `rules`.
     slotKind: interactive
     layout:
       row: 2
@@ -223,7 +223,7 @@ axes:
     - name: overflowDirection
       kind: enum
       values: [end, start]
-    - { name: interactive, kind: primitive, of: boolean }
+    - {name: interactive, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -580,49 +580,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The container element carries both `role="group"` and a
-        non-empty `aria-label` naming the group. Neither attribute
-        alone satisfies the contract — `aria-label` on a role-less
-        element is inert, and an unlabelled `role="group"` is an
-        anonymous region. Testable as a single query:
-        `[role="group"][aria-label]:not([aria-label=""])` on the
-        container.
-      source: apg
-      sourceRef: 'WAI-ARIA role=group plus accessible-name pattern'
-      consequence: >-
-        A container missing either half cannot be told apart from
-        an unordered run of unrelated images by assistive
-        technology — see mistake `avatar-group-no-group-role` for
-        the concrete failure mode and fix.
-    - rule: >-
-        The overflow indicator's presence is a pure function of
-        `total` and `max`: rendered whenever `total > max`, absent
-        whenever `total <= max`. There is no third, independently-
-        authored state — an implementation cannot hide surplus
-        avatars while also omitting the indicator.
-      source: canon
-      consequence: >-
-        Violating this makes the group under-report its own
-        membership — see mistake
-        `avatar-group-counts-beyond-max-silent-collapse` for the
-        concrete failure mode and fix.
-    - rule: >-
-        The overflow indicator's element type is a pure function of
-        the `interactive` property: `<button>` carrying
-        `aria-expanded` and `aria-controls` when `interactive` is
-        true, a labelled `<span>` when `interactive` is false. A
-        `<div>` (with or without a click handler) is not a valid
-        rendering for either state.
-      source: apg
-      sourceRef: 'APG: Disclosure pattern'
-      consequence: >-
-        A `<div>`-based indicator is unreachable by keyboard and
-        exposes no disclosure semantics to assistive technology —
-        see mistake
-        `avatar-group-overflow-not-button-when-interactive` for the
-        concrete failure mode and fix.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Avatar
@@ -675,3 +632,49 @@ sources:
   - https://heroui.com/docs/components/avatar
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: container-element-carries-both-role-group
+    statement: >-
+      The container element carries both `role="group"` and a
+      non-empty `aria-label` naming the group. Neither attribute
+      alone satisfies the contract — `aria-label` on a role-less
+      element is inert, and an unlabelled `role="group"` is an
+      anonymous region. Testable as a single query:
+      `[role="group"][aria-label]:not([aria-label=""])` on the
+      container.
+    source: apg
+    sourceRef: 'WAI-ARIA role=group plus accessible-name pattern'
+    consequence: >-
+      A container missing either half cannot be told apart from
+      an unordered run of unrelated images by assistive
+      technology — see mistake `avatar-group-no-group-role` for
+      the concrete failure mode and fix.
+  - id: overflow-indicators-presence-pure-function-total
+    statement: >-
+      The overflow indicator's presence is a pure function of
+      `total` and `max`: rendered whenever `total > max`, absent
+      whenever `total <= max`. There is no third, independently-
+      authored state — an implementation cannot hide surplus
+      avatars while also omitting the indicator.
+    source: canon
+    consequence: >-
+      Violating this makes the group under-report its own
+      membership — see mistake
+      `avatar-group-counts-beyond-max-silent-collapse` for the
+      concrete failure mode and fix.
+  - id: overflow-indicators-element-type-pure-function
+    statement: >-
+      The overflow indicator's element type is a pure function of
+      the `interactive` property: `<button>` carrying
+      `aria-expanded` and `aria-controls` when `interactive` is
+      true, a labelled `<span>` when `interactive` is false. A
+      `<div>` (with or without a click handler) is not a valid
+      rendering for either state.
+    source: apg
+    sourceRef: 'APG: Disclosure pattern'
+    consequence: >-
+      A `<div>`-based indicator is unreachable by keyboard and
+      exposes no disclosure semantics to assistive technology —
+      see mistake
+      `avatar-group-overflow-not-button-when-interactive` for the
+      concrete failure mode and fix.

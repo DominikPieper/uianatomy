@@ -271,8 +271,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg, full]
-    - { name: dismissible, kind: primitive, of: boolean }
-    - { name: swipeable, kind: primitive, of: boolean }
+    - {name: dismissible, kind: primitive, of: boolean}
+    - {name: swipeable, kind: primitive, of: boolean}
   states:
     interactive:
       - focus-visible
@@ -825,51 +825,6 @@ whenToUse:
         rendering converges on small viewports.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        A modal drawer has `role="dialog"` + `aria-modal="true"` and an
-        accessible name (`aria-labelledby` pointing at its heading, or
-        `aria-label`). A non-modal drawer drops `aria-modal` and may use
-        `role="complementary"`/`region` instead — the role reflects whether
-        it blocks the rest of the page.
-      source: apg
-      sourceRef: 'APG: Dialog (Modal) pattern'
-      consequence: >-
-        Without `role=dialog`+name, SR users entering the panel get no
-        boundary and no title; without `aria-modal` semantics they are not
-        told the rest of the page is unavailable.
-    - rule: >-
-        On open, a modal drawer moves focus into the panel (first focusable
-        or the panel container), traps Tab/Shift+Tab within it, and on close
-        restores focus to the element that opened it.
-      source: apg
-      sourceRef: 'APG: Dialog — focus placement and return'
-      consequence: >-
-        Focus left behind the scrim lets keyboard users tab into hidden
-        page content they cannot see; no focus return strands them at the
-        top of the document after closing, destroying their place.
-    - rule: >-
-        While a modal drawer is open, background content is made
-        non-interactive and hidden from AT — `inert` on the page root
-        (or `aria-hidden="true"` + pointer/tab blocking on older targets).
-        A non-modal drawer must NOT inert the background; that is the
-        defining difference between the two modes.
-      source: apg
-      sourceRef: 'WAI-ARIA modal semantics + HTML inert attribute'
-      consequence: >-
-        Skipping inert lets SR virtual-cursor and Tab reach the obscured
-        page, breaking the modal illusion; conversely inerting a non-modal
-        drawer freezes the very content the side panel is meant to annotate.
-    - rule: >-
-        Escape closes a modal drawer, and the dismiss affordance is a real
-        focusable control (close button and/or scrim) — not a click-only
-        overlay. Escape-to-close is suppressed only when closing would lose
-        unsaved work, and then a confirmation intercepts.
-      source: apg
-      sourceRef: 'APG: Dialog — Escape dismissal'
-      consequence: >-
-        A modal with no Escape and a click-only scrim traps keyboard users
-        with no way out; a silent Escape mid-edit discards their input.
   vocabularyDrift:
     - system: Polaris
       theirTerm: Modal
@@ -913,3 +868,52 @@ sources:
   - https://inclusive-components.design/a-todo-list/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: modal-drawer-role-dialog-aria-modal
+    statement: >-
+      A modal drawer has `role="dialog"` + `aria-modal="true"` and an
+      accessible name (`aria-labelledby` pointing at its heading, or
+      `aria-label`). A non-modal drawer drops `aria-modal` and may use
+      `role="complementary"`/`region` instead — the role reflects whether
+      it blocks the rest of the page.
+    source: apg
+    sourceRef: 'APG: Dialog (Modal) pattern'
+    consequence: >-
+      Without `role=dialog`+name, SR users entering the panel get no
+      boundary and no title; without `aria-modal` semantics they are not
+      told the rest of the page is unavailable.
+  - id: open-modal-drawer-moves-focus-into
+    statement: >-
+      On open, a modal drawer moves focus into the panel (first focusable
+      or the panel container), traps Tab/Shift+Tab within it, and on close
+      restores focus to the element that opened it.
+    source: apg
+    sourceRef: 'APG: Dialog — focus placement and return'
+    consequence: >-
+      Focus left behind the scrim lets keyboard users tab into hidden
+      page content they cannot see; no focus return strands them at the
+      top of the document after closing, destroying their place.
+  - id: while-modal-drawer-open-background-content
+    statement: >-
+      While a modal drawer is open, background content is made
+      non-interactive and hidden from AT — `inert` on the page root
+      (or `aria-hidden="true"` + pointer/tab blocking on older targets).
+      A non-modal drawer must NOT inert the background; that is the
+      defining difference between the two modes.
+    source: apg
+    sourceRef: 'WAI-ARIA modal semantics + HTML inert attribute'
+    consequence: >-
+      Skipping inert lets SR virtual-cursor and Tab reach the obscured
+      page, breaking the modal illusion; conversely inerting a non-modal
+      drawer freezes the very content the side panel is meant to annotate.
+  - id: escape-closes-modal-drawer-dismiss-affordance
+    statement: >-
+      Escape closes a modal drawer, and the dismiss affordance is a real
+      focusable control (close button and/or scrim) — not a click-only
+      overlay. Escape-to-close is suppressed only when closing would lose
+      unsaved work, and then a confirmation intercepts.
+    source: apg
+    sourceRef: 'APG: Dialog — Escape dismissal'
+    consequence: >-
+      A modal with no Escape and a click-only scrim traps keyboard users
+      with no way out; a silent Escape mid-edit discards their input.

@@ -47,7 +47,8 @@ Top-level fields from `shared/src/schema.ts` — every component should have:
 - `events` — declare for any component with interactive states.
 - `formIntegration` — declare for form controls and form containers.
 - `performance` — declare only when there is a real numeric capacity threshold (single-entry numeric warnings belong in `whenToUse.avoid` per P6-75).
-- `contracts: { nonNegotiable?, vocabularyDrift? }` — extract structurable content from `notes` per ADR-027. Components with long `notes` blocks (> 400 chars) are candidates.
+- `rules: [{ id, statement, source, sourceRef?, consequence }]` — hard-binding rules extracted from `notes` per ADR-027; top-level array, not nested under `contracts` (ADR-039, P6-201 Step 2). Components with long `notes` blocks (> 400 chars) are candidates. Check `mistakes[].ruleId` / `mismatches[].ruleId` resolve to a real `rules[].id` when present.
+- `contracts: { vocabularyDrift? }` — per-system naming drift only (ADR-039 narrowed this from its original ADR-027 shape).
 
 ### B. Depth contract
 

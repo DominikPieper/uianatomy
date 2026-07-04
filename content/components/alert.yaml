@@ -227,9 +227,9 @@ axes:
     - name: error
       alternativeNames: [danger, destructive, critical]
   properties:
-    - { name: dismissible, kind: primitive, of: boolean }
-    - { name: hasIcon, kind: primitive, of: boolean }
-    - { name: hasTitle, kind: primitive, of: boolean }
+    - {name: dismissible, kind: primitive, of: boolean}
+    - {name: hasIcon, kind: primitive, of: boolean}
+    - {name: hasTitle, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
@@ -680,51 +680,6 @@ whenToUse:
         thing they describe; alerts own their row.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        An urgent, time-sensitive message uses `role="alert"` (implicit
-        `aria-live="assertive"` + `aria-atomic="true"`); a non-urgent
-        status message uses `role="status"` (implicit `aria-live="polite"`).
-        Pick by interruption cost, not by visual prominence.
-      source: apg
-      sourceRef: 'APG: Alert pattern + WAI-ARIA alert/status roles'
-      consequence: >-
-        `role="alert"` interrupts whatever the SR is currently saying.
-        Using it for non-urgent confirmations ("Saved") talks over the
-        user; using `status` for a genuine error (payment failed) means
-        the warning waits behind everything queued and may never be heard.
-    - rule: >-
-        The live-region element exists in the DOM (empty) before its text is
-        injected. Content is inserted into the standing region; the region is
-        not created already-populated, and the visible alert maps to a single
-        live region (not a fresh node per message).
-      source: apg
-      sourceRef: 'APG: Alert — live region must be present before content changes'
-      consequence: >-
-        Most screen readers only announce mutations to a live region that
-        was already in the accessibility tree. Mounting `<div role=alert>Error</div>`
-        in one step frequently announces nothing — the region and its content
-        arrive together, so there is no "change" to detect.
-    - rule: >-
-        An alert does not steal focus and is not a focus trap. If the message
-        requires acknowledgement or blocks the task, it is no longer an alert —
-        it is `Modal[variant=alertdialog]`, with the focus management that implies.
-      source: apg
-      sourceRef: 'APG: Alert vs Alert Dialog'
-      consequence: >-
-        Moving focus to a passive alert yanks the user out of their current
-        field mid-task; conversely, a blocking decision rendered as a passive
-        alert can be missed entirely because nothing forces interaction.
-    - rule: >-
-        Severity is conveyed by icon + text, never by color alone. The icon
-        carries an accessible label or the meaning is in the message text
-        (e.g. "Error: …"), so color-blind and SR users get the severity.
-      source: wcag
-      sourceRef: 'WCAG 1.4.1 (Use of Color)'
-      consequence: >-
-        A red-bordered alert with no icon and no "error" in the copy is
-        indistinguishable from an info alert for ~8% of users and for every
-        SR user — the single most-cited color-only failure in status UI.
   vocabularyDrift:
     - system: APG
       theirTerm: Alert
@@ -771,3 +726,52 @@ sources:
   - https://inclusive-components.design/notifications/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: urgent-time-sensitive-message-uses-role
+    statement: >-
+      An urgent, time-sensitive message uses `role="alert"` (implicit
+      `aria-live="assertive"` + `aria-atomic="true"`); a non-urgent
+      status message uses `role="status"` (implicit `aria-live="polite"`).
+      Pick by interruption cost, not by visual prominence.
+    source: apg
+    sourceRef: 'APG: Alert pattern + WAI-ARIA alert/status roles'
+    consequence: >-
+      `role="alert"` interrupts whatever the SR is currently saying.
+      Using it for non-urgent confirmations ("Saved") talks over the
+      user; using `status` for a genuine error (payment failed) means
+      the warning waits behind everything queued and may never be heard.
+  - id: live-region-element-exists-dom-empty
+    statement: >-
+      The live-region element exists in the DOM (empty) before its text is
+      injected. Content is inserted into the standing region; the region is
+      not created already-populated, and the visible alert maps to a single
+      live region (not a fresh node per message).
+    source: apg
+    sourceRef: 'APG: Alert — live region must be present before content changes'
+    consequence: >-
+      Most screen readers only announce mutations to a live region that
+      was already in the accessibility tree. Mounting `<div role=alert>Error</div>`
+      in one step frequently announces nothing — the region and its content
+      arrive together, so there is no "change" to detect.
+  - id: alert-steal-focus-focus-trap
+    statement: >-
+      An alert does not steal focus and is not a focus trap. If the message
+      requires acknowledgement or blocks the task, it is no longer an alert —
+      it is `Modal[variant=alertdialog]`, with the focus management that implies.
+    source: apg
+    sourceRef: 'APG: Alert vs Alert Dialog'
+    consequence: >-
+      Moving focus to a passive alert yanks the user out of their current
+      field mid-task; conversely, a blocking decision rendered as a passive
+      alert can be missed entirely because nothing forces interaction.
+  - id: severity-conveyed-icon-text-color-alone
+    statement: >-
+      Severity is conveyed by icon + text, never by color alone. The icon
+      carries an accessible label or the meaning is in the message text
+      (e.g. "Error: …"), so color-blind and SR users get the severity.
+    source: wcag
+    sourceRef: 'WCAG 1.4.1 (Use of Color)'
+    consequence: >-
+      A red-bordered alert with no icon and no "error" in the copy is
+      indistinguishable from an info alert for ~8% of users and for every
+      SR user — the single most-cited color-only failure in status UI.

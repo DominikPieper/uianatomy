@@ -166,8 +166,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: dot, kind: primitive, of: boolean }
-    - { name: hasIcon, kind: primitive, of: boolean }
+    - {name: dot, kind: primitive, of: boolean}
+    - {name: hasIcon, kind: primitive, of: boolean}
   states:
     interactive: []
     data:
@@ -205,8 +205,7 @@ mismatches:
       from content to an `aria-label` on root.
 
   - figma: Count baked as a static text in the Figma component
-    code: A controlled prop receives the count and renders it inside
-      the content slot
+    code: A controlled prop receives the count and renders it inside the content slot
     consequence: >-
       Designers update the Figma badge with one fixed number ("3"
       or "12"). Developers shipping the live count have no design
@@ -421,47 +420,6 @@ a11yAcceptance:
     - role-img-alt
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Severity is paired with a non-colour cue — an icon, a
-        textual prefix in the content, or a visually-hidden
-        severity word in the accessible name. Colour alone is
-        reinforcement, not the contract.
-      source: wcag
-      sourceRef: 'WCAG 1.4.1 — Use of Color'
-      consequence: >-
-        Colour-only severity excludes users with colour-vision
-        deficiencies and SR users entirely. The variant axis is a
-        structural commitment; the visual treatment must mirror it
-        in at least two channels.
-    - rule: >-
-        Live counts wrap in `aria-live="polite"` on the root or
-        content slot, with `aria-atomic="true"` so the full new
-        value reads. Throttle SR-announcements at the
-        implementation layer to avoid flooding under rapid
-        increments.
-      source: apg
-      sourceRef: 'APG: Live Region patterns — polite vs assertive'
-      consequence: >-
-        Without the live region, count updates are sighted-only —
-        SR users hear the new value only on re-navigation to the
-        badge, after the underlying state-change has lost
-        relevance. Counts that change without announcement
-        misrepresent the surface to SR users.
-    - rule: >-
-        Decorative-only badges (dot variant or icon-only without
-        meaningful content) carry the accessible name on the badge
-        root via `aria-label` (e.g. `aria-label="Unread"`,
-        `aria-label="Verified"`). Any icon-leading glyph stays
-        `aria-hidden="true"` — the badge's meaning lives in the
-        root's accessible name, not in the visual.
-      source: apg
-      sourceRef: 'WAI-ARIA aria-label on non-text (dot / icon-only) content patterns'
-      consequence: >-
-        Without the root-level label, SR users encounter an
-        unannotated dot or icon and lose the metadata the badge
-        was supposed to carry. The decoration is sighted-only
-        and the dot becomes invisible to AT.
   vocabularyDrift:
     - system: Polaris
       theirTerm: Badge
@@ -506,3 +464,47 @@ sources:
     verifiedAt: '2026-05-05'
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: severity-paired-non-colour-cue
+    statement: >-
+      Severity is paired with a non-colour cue — an icon, a
+      textual prefix in the content, or a visually-hidden
+      severity word in the accessible name. Colour alone is
+      reinforcement, not the contract.
+    source: wcag
+    sourceRef: 'WCAG 1.4.1 — Use of Color'
+    consequence: >-
+      Colour-only severity excludes users with colour-vision
+      deficiencies and SR users entirely. The variant axis is a
+      structural commitment; the visual treatment must mirror it
+      in at least two channels.
+  - id: live-counts-wrap-aria-live-polite
+    statement: >-
+      Live counts wrap in `aria-live="polite"` on the root or
+      content slot, with `aria-atomic="true"` so the full new
+      value reads. Throttle SR-announcements at the
+      implementation layer to avoid flooding under rapid
+      increments.
+    source: apg
+    sourceRef: 'APG: Live Region patterns — polite vs assertive'
+    consequence: >-
+      Without the live region, count updates are sighted-only —
+      SR users hear the new value only on re-navigation to the
+      badge, after the underlying state-change has lost
+      relevance. Counts that change without announcement
+      misrepresent the surface to SR users.
+  - id: decorative-badges-dot-variant-icon-without
+    statement: >-
+      Decorative-only badges (dot variant or icon-only without
+      meaningful content) carry the accessible name on the badge
+      root via `aria-label` (e.g. `aria-label="Unread"`,
+      `aria-label="Verified"`). Any icon-leading glyph stays
+      `aria-hidden="true"` — the badge's meaning lives in the
+      root's accessible name, not in the visual.
+    source: apg
+    sourceRef: 'WAI-ARIA aria-label on non-text (dot / icon-only) content patterns'
+    consequence: >-
+      Without the root-level label, SR users encounter an
+      unannotated dot or icon and lose the metadata the badge
+      was supposed to carry. The decoration is sighted-only
+      and the dot becomes invisible to AT.

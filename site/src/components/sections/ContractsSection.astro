@@ -3,6 +3,9 @@ import type { Component, Pattern, ContractSource } from '@uianatomy/shared/schem
 interface Props { entry: Component | Pattern }
 const { entry } = Astro.props;
 
+// P6-201 Step 2 (ADR-039) — rules[] lives at the top level now, promoted
+// out of contracts.nonNegotiable; contracts carries only vocabularyDrift.
+const rules = entry.rules;
 const contracts = entry.contracts;
 
 const SOURCE_LABEL: Record<ContractSource, string> = {
@@ -13,26 +16,26 @@ const SOURCE_LABEL: Record<ContractSource, string> = {
   canon: 'Canon',
 };
 ---
-{contracts && (
+{((rules && rules.length > 0) || (contracts?.vocabularyDrift && contracts.vocabularyDrift.length > 0)) && (
   <div class="contracts">
-    {contracts.nonNegotiable && contracts.nonNegotiable.length > 0 && (
+    {rules && rules.length > 0 && (
       <section class="contracts-block">
-        <h3 class="contracts-heading">Non-negotiable contracts</h3>
+        <h3 class="contracts-heading">Non-negotiable rules</h3>
         <ol class="contracts-list">
-          {contracts.nonNegotiable.map((c) => (
-            <li class={`contract contract--${c.source}`}>
+          {rules.map((r) => (
+            <li class={`contract contract--${r.source}`} id={r.id}>
               <header class="contract-header">
-                <span class={`contract-source contract-source--${c.source}`}>{SOURCE_LABEL[c.source]}</span>
-                {c.sourceRef && <span class="contract-ref">{c.sourceRef}</span>}
+                <span class={`contract-source contract-source--${r.source}`}>{SOURCE_LABEL[r.source]}</span>
+                {r.sourceRef && <span class="contract-ref">{r.sourceRef}</span>}
               </header>
-              <p class="contract-rule">{c.rule}</p>
-              <p class="contract-consequence">{c.consequence}</p>
+              <p class="contract-rule">{r.statement}</p>
+              <p class="contract-consequence">{r.consequence}</p>
             </li>
           ))}
         </ol>
       </section>
     )}
-    {contracts.vocabularyDrift && contracts.vocabularyDrift.length > 0 && (
+    {contracts?.vocabularyDrift && contracts.vocabularyDrift.length > 0 && (
       <section class="contracts-block">
         <h3 class="contracts-heading">Vocabulary drift</h3>
         <dl class="vocab-drift">

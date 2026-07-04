@@ -273,12 +273,12 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg]
-    - { name: invalid, kind: primitive, of: boolean }
-    - { name: disabled, kind: primitive, of: boolean }
-    - { name: readonly, kind: primitive, of: boolean }
-    - { name: required, kind: primitive, of: boolean }
-    - { name: hasLeadingIcon, kind: primitive, of: boolean }
-    - { name: hasTrailingIcon, kind: primitive, of: boolean }
+    - {name: invalid, kind: primitive, of: boolean}
+    - {name: disabled, kind: primitive, of: boolean}
+    - {name: readonly, kind: primitive, of: boolean}
+    - {name: required, kind: primitive, of: boolean}
+    - {name: hasLeadingIcon, kind: primitive, of: boolean}
+    - {name: hasTrailingIcon, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -925,63 +925,6 @@ whenToUse:
         it a single-line value (TextInput)?
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Every field's accessible name (per the browser accname
-        computation) resolves from a real `<label for="<input-id>">`
-        or `aria-labelledby` — never from `placeholder` alone.
-        Independently testable: query the input's computed
-        accessible name; it must be non-empty and must not be
-        sourced from the `placeholder` attribute when no
-        `<label>` / `aria-labelledby` is present.
-      source: html-spec
-      sourceRef: 'HTML label element + WCAG 1.3.1 / 3.3.2'
-      consequence: >-
-        See mistakes[placeholder-as-label] for the failure mode
-        and fix; this contract is the independently-checkable
-        invariant behind that mistake.
-    - rule: >-
-        `input.getAttribute('aria-invalid') === 'true'` holds if
-        and only if the field currently fails validation, and
-        whenever true, `aria-describedby` includes the `id` of a
-        node carrying `role="alert"` or `aria-live="polite"`.
-        Independently testable: assert the boolean equivalence
-        between visual invalid-state and the `aria-invalid` value.
-      source: apg
-      sourceRef: 'APG: Form patterns + WCAG 3.3.1 (Error Identification)'
-      consequence: >-
-        See mistakes[missing-aria-invalid] for the failure mode
-        and fix; this contract is the invariant that failure mode
-        violates.
-    - rule: >-
-        A visible required indicator (asterisk, "(required)"
-        suffix) is present in the label if and only if the input
-        carries the `required` attribute — a bidirectional 1:1
-        mapping, independently checkable per field without
-        reference to any other contract.
-      source: html-spec
-      sourceRef: 'HTML required attribute + WCAG 3.3.2 (Labels or Instructions)'
-      consequence: >-
-        See mistakes[required-without-attribute] for the failure
-        mode and fix; this contract is the bidirectional invariant
-        it violates (indicator implies attribute, and vice versa).
-    - rule: >-
-        Every field mapped to a WHATWG Autofill field category
-        (name, email, address, tel, cc-*, current-password,
-        new-password, etc.) carries a matching, spec-valid
-        `autocomplete` token; `autocomplete="off"` is reserved for
-        fields with no matching category. Partially independently
-        testable: axe-core's `autocomplete-valid` flags malformed
-        tokens, but a syntactically-valid `off` on a field that
-        should carry a real category is not axe-detectable and
-        needs manual/semantic review.
-      source: html-spec
-      sourceRef: 'HTML autocomplete attribute (WHATWG) + WCAG 1.3.5 (Identify Input Purpose)'
-      consequence: >-
-        See mistakes[wrong-autocomplete] for the failure mode and
-        fix; this contract is the invariant it violates. WCAG
-        1.3.5 requires `autocomplete` for canonical personal-data
-        fields at AA conformance.
   vocabularyDrift:
     - system: Material 3
       theirTerm: 'Text fields (filled / outlined)'
@@ -1030,3 +973,64 @@ sources:
   - https://www.gov.uk/service-manual/design/text-input
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: every-fields-accessible-name-per-browser
+    statement: >-
+      Every field's accessible name (per the browser accname
+      computation) resolves from a real `<label for="<input-id>">`
+      or `aria-labelledby` — never from `placeholder` alone.
+      Independently testable: query the input's computed
+      accessible name; it must be non-empty and must not be
+      sourced from the `placeholder` attribute when no
+      `<label>` / `aria-labelledby` is present.
+    source: html-spec
+    sourceRef: 'HTML label element + WCAG 1.3.1 / 3.3.2'
+    consequence: >-
+      See mistakes[placeholder-as-label] for the failure mode
+      and fix; this contract is the independently-checkable
+      invariant behind that mistake.
+  - id: input-getattribute-aria-invalid-true-holds
+    statement: >-
+      `input.getAttribute('aria-invalid') === 'true'` holds if
+      and only if the field currently fails validation, and
+      whenever true, `aria-describedby` includes the `id` of a
+      node carrying `role="alert"` or `aria-live="polite"`.
+      Independently testable: assert the boolean equivalence
+      between visual invalid-state and the `aria-invalid` value.
+    source: apg
+    sourceRef: 'APG: Form patterns + WCAG 3.3.1 (Error Identification)'
+    consequence: >-
+      See mistakes[missing-aria-invalid] for the failure mode
+      and fix; this contract is the invariant that failure mode
+      violates.
+  - id: visible-required-indicator-asterisk-required
+    statement: >-
+      A visible required indicator (asterisk, "(required)"
+      suffix) is present in the label if and only if the input
+      carries the `required` attribute — a bidirectional 1:1
+      mapping, independently checkable per field without
+      reference to any other contract.
+    source: html-spec
+    sourceRef: 'HTML required attribute + WCAG 3.3.2 (Labels or Instructions)'
+    consequence: >-
+      See mistakes[required-without-attribute] for the failure
+      mode and fix; this contract is the bidirectional invariant
+      it violates (indicator implies attribute, and vice versa).
+  - id: every-field-mapped-whatwg-autofill-field
+    statement: >-
+      Every field mapped to a WHATWG Autofill field category
+      (name, email, address, tel, cc-*, current-password,
+      new-password, etc.) carries a matching, spec-valid
+      `autocomplete` token; `autocomplete="off"` is reserved for
+      fields with no matching category. Partially independently
+      testable: axe-core's `autocomplete-valid` flags malformed
+      tokens, but a syntactically-valid `off` on a field that
+      should carry a real category is not axe-detectable and
+      needs manual/semantic review.
+    source: html-spec
+    sourceRef: 'HTML autocomplete attribute (WHATWG) + WCAG 1.3.5 (Identify Input Purpose)'
+    consequence: >-
+      See mistakes[wrong-autocomplete] for the failure mode and
+      fix; this contract is the invariant it violates. WCAG
+      1.3.5 requires `autocomplete` for canonical personal-data
+      fields at AA conformance.

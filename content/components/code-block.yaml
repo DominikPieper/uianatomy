@@ -346,10 +346,10 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: showLineNumbers, kind: primitive, of: boolean }
-    - { name: showCopyButton, kind: primitive, of: boolean }
-    - { name: showLanguageLabel, kind: primitive, of: boolean }
-    - { name: wrap, kind: primitive, of: boolean }
+    - {name: showLineNumbers, kind: primitive, of: boolean}
+    - {name: showCopyButton, kind: primitive, of: boolean}
+    - {name: showLanguageLabel, kind: primitive, of: boolean}
+    - {name: wrap, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -936,95 +936,6 @@ i18n:
     language.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The code's `textContent` matches the verbatim
-        code that should be copyable. Syntax-highlight
-        wrappers are decorative — `aria-hidden="true"`
-        — so SR users hear the raw code, not the
-        token roles. Implementations that ship without
-        aria-hidden on syntax spans pollute the AT
-        announcement.
-      source: wcag
-      sourceRef: 'WCAG 1.3.1 Info and Relationships'
-      consequence: >-
-        Without the rule, SR users hear "keyword
-        function, identifier myFunc, punctuation open
-        paren, parameter x, ..." instead of "function
-        myFunc(x)" and cannot follow the code. The
-        token-as-decoration semantic is the canonical
-        assistive-tech contract for syntax-
-        highlighted code.
-
-    - rule: >-
-        The copy-button has an explicit accessible
-        name (`aria-label="Copy code"` or visible
-        text label) AND surfaces success / failure
-        feedback via both visible icon transition
-        and an `aria-live="polite"` region.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
-      consequence: >-
-        Without the rule, icon-only copy-buttons
-        announce as "button" with no semantic;
-        clipboard writes occur silently and users
-        cannot tell whether the copy succeeded. AT
-        users + first-time users both lose trust in
-        the affordance.
-
-    - rule: >-
-        Line numbers render via CSS
-        `counter-increment` (or as an
-        `aria-hidden` sibling gutter) so they do
-        NOT enter the clipboard when users
-        copy the code. Implementations that ship
-        line numbers as text-children pollute
-        every paste.
-      source: canon
-      consequence: >-
-        Without the rule, users copy "1\\nconst x =
-        1;\\n2\\nconst y = 2;" instead of "const x = 1;\\nconst y = 2;"
-        and have to manually strip line numbers in
-        their editor. Functional regression that
-        erodes trust in the documentation surface.
-        The CSS-counter pattern is the canonical
-        clean-clipboard discipline.
-
-    - rule: >-
-        Block variant with horizontal overflow wraps
-        the code in a focusable scrollable region —
-        `tabindex="0"` plus `role="region"` plus
-        accessible name. Keyboard users discover
-        and scroll the area via arrow keys.
-      source: wcag
-      sourceRef: 'WCAG 2.1.1 Keyboard'
-      consequence: >-
-        Without the rule, long code lines (function
-        signatures, URL strings) become invisible to
-        keyboard users — Tab skips past, arrow keys
-        do nothing. Sighted-mouse users scroll fine;
-        the affordance is invisible to keyboard and
-        AT. WCAG 2.1.1 violation.
-
-    - rule: >-
-        Block variant uses `<pre>` and inline variant
-        uses `<code>` — the canonical HTML semantics
-        for preformatted-text and inline-code.
-        Implementations that ship `<div>` with
-        monospace styling lose the AT-announced
-        boundary between code and prose.
-      source: html-spec
-      sourceRef: 'HTML standard — pre and code element semantics'
-      consequence: >-
-        Without the rule, SR users navigating prose
-        do not hear the code-vs-prose boundary —
-        inline code references blend into surrounding
-        text with no semantic signal. Block code
-        ships without the preformatted-text
-        announcement. The HTML semantics are
-        canonical and free; substituting them for
-        styled `<div>`s is regression.
-
   vocabularyDrift:
     - system: HTML
       theirTerm: '<pre> + <code>'
@@ -1134,3 +1045,92 @@ sources:
     verifiedAt: '2026-05-05'
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: codes-textcontent-matches-verbatim-code-should
+    statement: >-
+      The code's `textContent` matches the verbatim
+      code that should be copyable. Syntax-highlight
+      wrappers are decorative — `aria-hidden="true"`
+      — so SR users hear the raw code, not the
+      token roles. Implementations that ship without
+      aria-hidden on syntax spans pollute the AT
+      announcement.
+    source: wcag
+    sourceRef: 'WCAG 1.3.1 Info and Relationships'
+    consequence: >-
+      Without the rule, SR users hear "keyword
+      function, identifier myFunc, punctuation open
+      paren, parameter x, ..." instead of "function
+      myFunc(x)" and cannot follow the code. The
+      token-as-decoration semantic is the canonical
+      assistive-tech contract for syntax-
+      highlighted code.
+  - id: copy-button-explicit-accessible-name-aria
+    statement: >-
+      The copy-button has an explicit accessible
+      name (`aria-label="Copy code"` or visible
+      text label) AND surfaces success / failure
+      feedback via both visible icon transition
+      and an `aria-live="polite"` region.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+    consequence: >-
+      Without the rule, icon-only copy-buttons
+      announce as "button" with no semantic;
+      clipboard writes occur silently and users
+      cannot tell whether the copy succeeded. AT
+      users + first-time users both lose trust in
+      the affordance.
+  - id: line-numbers-render-via-css-counter
+    statement: >-
+      Line numbers render via CSS
+      `counter-increment` (or as an
+      `aria-hidden` sibling gutter) so they do
+      NOT enter the clipboard when users
+      copy the code. Implementations that ship
+      line numbers as text-children pollute
+      every paste.
+    source: canon
+    consequence: >-
+      Without the rule, users copy "1\\nconst x =
+      1;\\n2\\nconst y = 2;" instead of "const x = 1;\\nconst y = 2;"
+      and have to manually strip line numbers in
+      their editor. Functional regression that
+      erodes trust in the documentation surface.
+      The CSS-counter pattern is the canonical
+      clean-clipboard discipline.
+  - id: block-variant-horizontal-overflow-wraps-code
+    statement: >-
+      Block variant with horizontal overflow wraps
+      the code in a focusable scrollable region —
+      `tabindex="0"` plus `role="region"` plus
+      accessible name. Keyboard users discover
+      and scroll the area via arrow keys.
+    source: wcag
+    sourceRef: 'WCAG 2.1.1 Keyboard'
+    consequence: >-
+      Without the rule, long code lines (function
+      signatures, URL strings) become invisible to
+      keyboard users — Tab skips past, arrow keys
+      do nothing. Sighted-mouse users scroll fine;
+      the affordance is invisible to keyboard and
+      AT. WCAG 2.1.1 violation.
+  - id: block-variant-uses-pre-inline-variant
+    statement: >-
+      Block variant uses `<pre>` and inline variant
+      uses `<code>` — the canonical HTML semantics
+      for preformatted-text and inline-code.
+      Implementations that ship `<div>` with
+      monospace styling lose the AT-announced
+      boundary between code and prose.
+    source: html-spec
+    sourceRef: 'HTML standard — pre and code element semantics'
+    consequence: >-
+      Without the rule, SR users navigating prose
+      do not hear the code-vs-prose boundary —
+      inline code references blend into surrounding
+      text with no semantic signal. Block code
+      ships without the preformatted-text
+      announcement. The HTML semantics are
+      canonical and free; substituting them for
+      styled `<div>`s is regression.

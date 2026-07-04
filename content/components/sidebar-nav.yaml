@@ -299,8 +299,8 @@ axes:
     - name: expanded
     - name: collapsed
   properties:
-    - { name: collapsible, kind: primitive, of: boolean }
-    - { name: hasFooter, kind: primitive, of: boolean }
+    - {name: collapsible, kind: primitive, of: boolean}
+    - {name: hasFooter, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
@@ -778,18 +778,6 @@ whenToUse:
         current page within the chosen destination.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Active item carries `aria-current="page"` (or
-        `aria-current="location"` for sub-page targets) on the
-        anchor element.
-      source: apg
-      sourceRef: 'WAI-ARIA aria-current property'
-      consequence: >-
-        Visual current-state is routinely shown without the
-        accessible counterpart; assistive tech then has no way to
-        announce the user's location in the navigation tree, and
-        SR-driven orientation breaks.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Navigation drawer
@@ -819,3 +807,16 @@ sources:
   - https://inclusive-components.design/menus-menu-buttons/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: active-item-carries-aria-current-page
+    statement: >-
+      Active item carries `aria-current="page"` (or
+      `aria-current="location"` for sub-page targets) on the
+      anchor element.
+    source: apg
+    sourceRef: 'WAI-ARIA aria-current property'
+    consequence: >-
+      Visual current-state is routinely shown without the
+      accessible counterpart; assistive tech then has no way to
+      announce the user's location in the navigation tree, and
+      SR-driven orientation breaks.

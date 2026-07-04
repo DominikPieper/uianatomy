@@ -278,7 +278,7 @@ divergence:
       where a translucent overlay dims the page while the popover is open —
       a pattern the canonical anatomy does not cover. Using a full backdrop on
       a non-modal popover can blur the line between Popover and Dialog; the
-      canonical's `contracts.nonNegotiable` notes that installing modal
+      canonical's `rules[]` notes that installing modal
       behaviour on a Popover is an anti-pattern. Source:
       https://headlessui.com/react/popover (PopoverBackdrop, 2026-05-31).
 
@@ -354,7 +354,7 @@ divergence:
       only locks scroll, not focus — so it does not violate the canonical
       non-modal contract. However, naming a prop `modal` on a canonically
       non-modal component risks confusion; consumers may expect full modality
-      semantics. The canonical's `contracts.nonNegotiable` warns against
+      semantics. The canonical's `rules[]` warns against
       focus-trapping; scroll-locking alone is an acceptable trade-off for
       bottom-sheet-style popovers on mobile. Source:
       https://headlessui.com/react/popover (PopoverPanel modal prop, 2026-05-31).

@@ -212,8 +212,8 @@ axes:
     - name: constrained
     - name: creatable
   properties:
-    - { name: removable, kind: primitive, of: boolean }
-    - { name: duplicates, kind: primitive, of: boolean }
+    - {name: removable, kind: primitive, of: boolean}
+    - {name: duplicates, kind: primitive, of: boolean}
     - name: size
       kind: enum
       values: [sm, md, lg]
@@ -791,22 +791,6 @@ whenToUse:
         bound (the user drives the values). Visual treatment may
         converge; the activator semantics never do.
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Backspace pressed in an empty input is a two-step
-        removal: the first press selects (highlights) the last
-        committed tag without removing it; the second press
-        removes the selected tag and returns focus to the input.
-        Removing on the first press is non-canonical.
-      source: apg
-      sourceRef: 'APG: Combobox keyboard interaction (carry-over to chip-input)'
-      consequence: >-
-        The most-overlooked APG-aligned behaviour for this
-        component and the most-frequently broken. Without the
-        select-then-remove step, keyboard-only users either have
-        no way to remove tags after they commit (mouse-only
-        remove button) or risk accidental deletion from a single
-        stray Backspace with no confirmation step.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Chip input
@@ -841,3 +825,20 @@ sources:
   - https://polaris.shopify.com/components/selection-and-input/tag
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: backspace-pressed-empty-input-two-step
+    statement: >-
+      Backspace pressed in an empty input is a two-step
+      removal: the first press selects (highlights) the last
+      committed tag without removing it; the second press
+      removes the selected tag and returns focus to the input.
+      Removing on the first press is non-canonical.
+    source: apg
+    sourceRef: 'APG: Combobox keyboard interaction (carry-over to chip-input)'
+    consequence: >-
+      The most-overlooked APG-aligned behaviour for this
+      component and the most-frequently broken. Without the
+      select-then-remove step, keyboard-only users either have
+      no way to remove tags after they commit (mouse-only
+      remove button) or risk accidental deletion from a single
+      stray Backspace with no confirmation step.

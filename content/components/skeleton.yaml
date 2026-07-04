@@ -164,8 +164,8 @@ axes:
     - name: size
       kind: enum
       values: [xs, sm, md, lg, xl]
-    - { name: animated, kind: primitive, of: boolean }
-    - { name: multiple, kind: primitive, of: boolean }
+    - {name: animated, kind: primitive, of: boolean}
+    - {name: multiple, kind: primitive, of: boolean}
   states:
     interactive: []
     data:
@@ -428,49 +428,6 @@ a11yAcceptance:
     - landmark-unique
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The skeleton container carries `aria-busy="true"` while
-        loading is in-flight; individual skeleton shapes carry
-        `aria-hidden="true"`. A sibling `role="status"` region
-        announces the loading start textually.
-      source: apg
-      sourceRef: 'WAI-ARIA aria-busy + status role patterns'
-      consequence: >-
-        Without `aria-busy`, SR users navigating into the region
-        encounter placeholders read as graphics with no signal
-        that content is loading. Without `aria-hidden` on shapes,
-        each placeholder reads separately and floods the
-        announcement queue. Without the status region, the
-        textual announcement of what loads is missing entirely.
-    - rule: >-
-        Shimmer / wave / pulse animation respects
-        `prefers-reduced-motion: reduce` and falls back to a
-        static placeholder. The motion is reinforcement, not the
-        contract; users with motion sensitivity must be able to
-        suppress it.
-      source: wcag
-      sourceRef: 'WCAG 2.3.3 — Animation from Interactions (AAA) + 2.2 user-controllable timing'
-      consequence: >-
-        Continuous shimmer animation across multiple skeletons
-        triggers vestibular discomfort and cognitive load for
-        affected users; the layout-preserving promise of
-        Skeleton becomes hostile when motion cannot be turned
-        off. The reduced-motion fallback is a non-negotiable
-        accessibility floor.
-    - rule: >-
-        The textual loading announcement names what loads,
-        scoped to the region. "Loading messages", not "Loading…"
-        or "Please wait". One announcement per loading region;
-        page-level loaders handle page-level status separately.
-      source: canon
-      consequence: >-
-        Generic "Loading…" announcements give SR users no
-        prediction of what arrives; multiple competing
-        announcements ("Loading… Loading messages… Loading
-        product list") confuse the user about which region
-        actually completed. Region-scoped, content-named
-        announcements give the user a model of the page.
   vocabularyDrift:
     - system: Material 3
       theirTerm: 'Loading indicator (Skeleton variant)'
@@ -508,3 +465,49 @@ sources:
   - https://chakra-ui.com/docs/components/skeleton
 
 lastReviewed: '2026-05-03'
+rules:
+  - id: skeleton-container-carries-aria-busy-true
+    statement: >-
+      The skeleton container carries `aria-busy="true"` while
+      loading is in-flight; individual skeleton shapes carry
+      `aria-hidden="true"`. A sibling `role="status"` region
+      announces the loading start textually.
+    source: apg
+    sourceRef: 'WAI-ARIA aria-busy + status role patterns'
+    consequence: >-
+      Without `aria-busy`, SR users navigating into the region
+      encounter placeholders read as graphics with no signal
+      that content is loading. Without `aria-hidden` on shapes,
+      each placeholder reads separately and floods the
+      announcement queue. Without the status region, the
+      textual announcement of what loads is missing entirely.
+  - id: shimmer-wave-pulse-animation-respects-prefers
+    statement: >-
+      Shimmer / wave / pulse animation respects
+      `prefers-reduced-motion: reduce` and falls back to a
+      static placeholder. The motion is reinforcement, not the
+      contract; users with motion sensitivity must be able to
+      suppress it.
+    source: wcag
+    sourceRef: 'WCAG 2.3.3 — Animation from Interactions (AAA) + 2.2 user-controllable timing'
+    consequence: >-
+      Continuous shimmer animation across multiple skeletons
+      triggers vestibular discomfort and cognitive load for
+      affected users; the layout-preserving promise of
+      Skeleton becomes hostile when motion cannot be turned
+      off. The reduced-motion fallback is a non-negotiable
+      accessibility floor.
+  - id: textual-loading-announcement-names-what-loads
+    statement: >-
+      The textual loading announcement names what loads,
+      scoped to the region. "Loading messages", not "Loading…"
+      or "Please wait". One announcement per loading region;
+      page-level loaders handle page-level status separately.
+    source: canon
+    consequence: >-
+      Generic "Loading…" announcements give SR users no
+      prediction of what arrives; multiple competing
+      announcements ("Loading… Loading messages… Loading
+      product list") confuse the user about which region
+      actually completed. Region-scoped, content-named
+      announcements give the user a model of the page.

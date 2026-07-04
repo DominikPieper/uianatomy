@@ -204,7 +204,7 @@ axes:
     - name: standard
     - name: icon-only
   properties:
-    - { name: hasCaret, kind: primitive, of: boolean }
+    - {name: hasCaret, kind: primitive, of: boolean}
     - name: side
       kind: enum
       values: [top, right, bottom, left]
@@ -718,21 +718,6 @@ whenToUse:
         opening from a non-button trigger).
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        `role="menu"` hosts a list of commands invoked on
-        activation and uses the APG menu-keyboard contract
-        (ArrowKeys for item navigation, Enter / Space to invoke,
-        Escape / Tab to close). Form controls and arbitrary
-        interactive content do not belong inside `role="menu"`.
-      source: apg
-      sourceRef: 'APG: Menu Button pattern'
-      consequence: >-
-        Menus containing inputs or arbitrary interactive content
-        violate the role contract — SR users cannot Tab into the
-        items, and keyboard navigation breaks on both sides. Reach
-        for Popover (`role="dialog"`) when the surface needs to
-        host arbitrary content.
   vocabularyDrift:
     - system: APG
       theirTerm: Menu Button
@@ -781,3 +766,19 @@ sources:
   - https://m3.material.io/components/menus/overview
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: role-menu-hosts-list-commands-invoked
+    statement: >-
+      `role="menu"` hosts a list of commands invoked on
+      activation and uses the APG menu-keyboard contract
+      (ArrowKeys for item navigation, Enter / Space to invoke,
+      Escape / Tab to close). Form controls and arbitrary
+      interactive content do not belong inside `role="menu"`.
+    source: apg
+    sourceRef: 'APG: Menu Button pattern'
+    consequence: >-
+      Menus containing inputs or arbitrary interactive content
+      violate the role contract — SR users cannot Tab into the
+      items, and keyboard navigation breaks on both sides. Reach
+      for Popover (`role="dialog"`) when the surface needs to
+      host arbitrary content.

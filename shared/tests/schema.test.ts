@@ -1381,25 +1381,20 @@ describe('mistake severity', () => {
   });
 });
 
-describe('contracts field (P6-73)', () => {
-  it('parses accordion contracts (nonNegotiable + vocabularyDrift)', async () => {
+describe('contracts field (P6-73, narrowed to vocabularyDrift by ADR-039)', () => {
+  it('parses accordion contracts (vocabularyDrift)', async () => {
     const accordion = await loadComponent(join(contentDir, 'accordion.yaml'));
-    expect(accordion.contracts?.nonNegotiable?.length).toBeGreaterThanOrEqual(2);
-    const rules = accordion.contracts?.nonNegotiable?.map((c) => c.source) ?? [];
-    for (const s of rules) expect(s).toBe('apg');
     // P6-171 — vocabularyDrift backfilled
     expect(accordion.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(3);
     const accSystems = accordion.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
     expect(accSystems).toEqual(expect.arrayContaining(['APG', 'Polaris', 'Material 3']));
   });
 
-  it('parses drawer contracts (nonNegotiable + vocabularyDrift)', async () => {
+  it('parses drawer contracts (vocabularyDrift)', async () => {
     const drawer = await loadComponent(join(contentDir, 'drawer.yaml'));
     expect(drawer.contracts?.vocabularyDrift?.length).toBeGreaterThanOrEqual(4);
     const systems = drawer.contracts?.vocabularyDrift?.map((v) => v.system) ?? [];
     expect(systems).toEqual(expect.arrayContaining(['Polaris', 'Carbon', 'Material 3', 'vaul']));
-    // P6-170 — nonNegotiable backfilled (focus management / inert-when-modal)
-    expect(drawer.contracts?.nonNegotiable?.length).toBeGreaterThanOrEqual(4);
   });
 
   it('parses toast contracts (vocabularyDrift only)', async () => {
@@ -1409,22 +1404,58 @@ describe('contracts field (P6-73)', () => {
     expect(systems).toEqual(expect.arrayContaining(['Material 3', 'Atlassian', 'Polaris', 'Sonner']));
   });
 
-  it('rejects empty contracts (refine: at least one of nonNegotiable / vocabularyDrift)', async () => {
+  it('accepts an empty contracts object (nonNegotiable retired by ADR-039 — vocabularyDrift is the only field left, and it stays optional)', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
-    const bad = { ...card, contracts: {} };
+    const ok = { ...card, contracts: {} };
+    const result = componentSchema.safeParse(ok);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects empty system / theirTerm', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const cases = [
+      { contracts: { vocabularyDrift: [{ system: '', theirTerm: 't' }] } },
+      { contracts: { vocabularyDrift: [{ system: 's', theirTerm: '' }] } },
+    ];
+    for (const c of cases) {
+      const result = componentSchema.safeParse({ ...card, ...c });
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it('rejects an unrecognised key on contracts (nonNegotiable no longer lives here)', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = {
+      ...card,
+      contracts: { nonNegotiable: [{ rule: 'r', source: 'apg', consequence: 'c' }] },
+    };
     const result = componentSchema.safeParse(bad);
     expect(result.success).toBe(false);
+  });
+});
+
+// P6-201 Step 2 (ADR-039) — rules[] promoted out of contracts.nonNegotiable
+// to a first-class top-level record. rule -> statement rename; id required.
+describe('rules field (P6-201 Step 2 / ADR-039)', () => {
+  it('parses accordion rules', async () => {
+    const accordion = await loadComponent(join(contentDir, 'accordion.yaml'));
+    expect(accordion.rules?.length).toBeGreaterThanOrEqual(2);
+    const sources = accordion.rules?.map((r) => r.source) ?? [];
+    for (const s of sources) expect(s).toBe('apg');
+    const ids = accordion.rules?.map((r) => r.id) ?? [];
+    expect(new Set(ids).size).toBe(ids.length); // unique within the component
+  });
+
+  it('parses drawer rules (P6-170 backfilled — focus management / inert-when-modal)', async () => {
+    const drawer = await loadComponent(join(contentDir, 'drawer.yaml'));
+    expect(drawer.rules?.length).toBeGreaterThanOrEqual(4);
   });
 
   it('rejects unknown source enum', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const bad = {
       ...card,
-      contracts: {
-        nonNegotiable: [
-          { rule: 'r', source: 'best-practice', consequence: 'c' },
-        ],
-      },
+      rules: [{ id: 'r', statement: 'r', source: 'best-practice', consequence: 'c' }],
     };
     const result = componentSchema.safeParse(bad);
     expect(result.success).toBe(false);
@@ -1435,27 +1466,32 @@ describe('contracts field (P6-73)', () => {
     for (const source of ['apg', 'wcag', 'html-spec', 'platform', 'canon']) {
       const ok = {
         ...card,
-        contracts: {
-          nonNegotiable: [{ rule: 'r', source, consequence: 'c' }],
-        },
+        rules: [{ id: 'r', statement: 'r', source, consequence: 'c' }],
       };
       const result = componentSchema.safeParse(ok);
       expect(result.success, `source=${source}`).toBe(true);
     }
   });
 
-  it('rejects empty rule / consequence / system / theirTerm', async () => {
+  it('rejects empty id / statement / consequence, or a missing id', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const cases = [
-      { contracts: { nonNegotiable: [{ rule: '', source: 'apg', consequence: 'c' }] } },
-      { contracts: { nonNegotiable: [{ rule: 'r', source: 'apg', consequence: '' }] } },
-      { contracts: { vocabularyDrift: [{ system: '', theirTerm: 't' }] } },
-      { contracts: { vocabularyDrift: [{ system: 's', theirTerm: '' }] } },
+      { rules: [{ id: '', statement: 'r', source: 'apg', consequence: 'c' }] },
+      { rules: [{ id: 'r', statement: '', source: 'apg', consequence: 'c' }] },
+      { rules: [{ id: 'r', statement: 'r', source: 'apg', consequence: '' }] },
+      { rules: [{ statement: 'r', source: 'apg', consequence: 'c' }] },
     ];
     for (const c of cases) {
       const result = componentSchema.safeParse({ ...card, ...c });
       expect(result.success).toBe(false);
     }
+  });
+
+  it('rejects an id that is not a valid slug', async () => {
+    const card = await loadComponent(join(contentDir, 'card.yaml'));
+    const bad = { ...card, rules: [{ id: 'Not A Slug!', statement: 'r', source: 'apg', consequence: 'c' }] };
+    const result = componentSchema.safeParse(bad);
+    expect(result.success).toBe(false);
   });
 
   it('accepts canonical sourceRef shapes per source enum', async () => {
@@ -1470,12 +1506,7 @@ describe('contracts field (P6-73)', () => {
       { source: 'canon', sourceRef: 'GDPR Art. 7 / EDPB Guidelines 05/2020' },
     ];
     for (const c of cases) {
-      const ok = {
-        ...card,
-        contracts: {
-          nonNegotiable: [{ rule: 'r', consequence: 'c', ...c }],
-        },
-      };
+      const ok = { ...card, rules: [{ id: 'r', statement: 'r', consequence: 'c', ...c }] };
       const result = componentSchema.safeParse(ok);
       expect(result.success, `source=${c.source} sourceRef=${c.sourceRef}`).toBe(true);
     }
@@ -1490,55 +1521,32 @@ describe('contracts field (P6-73)', () => {
       { source: 'html-spec', sourceRef: 'Some prose with no spec word' }, // missing HTML/WHATWG/DOM
     ];
     for (const c of cases) {
-      const bad = {
-        ...card,
-        contracts: {
-          nonNegotiable: [{ rule: 'r', consequence: 'c', ...c }],
-        },
-      };
+      const bad = { ...card, rules: [{ id: 'r', statement: 'r', consequence: 'c', ...c }] };
       const result = componentSchema.safeParse(bad);
       expect(result.success, `source=${c.source} sourceRef=${c.sourceRef}`).toBe(false);
     }
   });
 
-  // P6-201 (Schritt 1) — structural link from a contract rule to the
-  // mistake(s) it guards against, replacing prose-restatement.
-  it('accepts nonNegotiable.relatedMistakes referencing an existing mistake id', async () => {
+  // P6-201 Step 2 (ADR-039) — structural forward-reference from a mistake or
+  // mismatch to the rule it's about, replacing the retired
+  // nonNegotiable.relatedMistakes (which pointed the other way).
+  it('accepts mistakes[].ruleId and mismatches[].ruleId referencing an existing rule id', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
-    const existingMistakeId = card.mistakes[0].id;
+    const existingRuleId = card.rules![0].id;
     const ok = {
       ...card,
-      contracts: {
-        nonNegotiable: [
-          { rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: [existingMistakeId] },
-        ],
-      },
+      mistakes: [{ ...card.mistakes[0], ruleId: existingRuleId }, ...card.mistakes.slice(1)],
+      mismatches: [{ ...card.mismatches[0], ruleId: existingRuleId }, ...card.mismatches.slice(1)],
     };
     const result = componentSchema.safeParse(ok);
     expect(result.success).toBe(true);
   });
 
-  it('rejects an empty relatedMistakes array', async () => {
+  it('rejects a ruleId that is not a valid slug', async () => {
     const card = await loadComponent(join(contentDir, 'card.yaml'));
     const bad = {
       ...card,
-      contracts: {
-        nonNegotiable: [{ rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: [] }],
-      },
-    };
-    const result = componentSchema.safeParse(bad);
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects a relatedMistakes entry that is not a valid slug', async () => {
-    const card = await loadComponent(join(contentDir, 'card.yaml'));
-    const bad = {
-      ...card,
-      contracts: {
-        nonNegotiable: [
-          { rule: 'r', source: 'apg', consequence: 'c', relatedMistakes: ['Not A Slug!'] },
-        ],
-      },
+      mistakes: [{ ...card.mistakes[0], ruleId: 'Not A Slug!' }, ...card.mistakes.slice(1)],
     };
     const result = componentSchema.safeParse(bad);
     expect(result.success).toBe(false);

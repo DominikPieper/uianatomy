@@ -512,14 +512,14 @@ axes:
     - name: density
       kind: enum
       values: [comfortable, compact]
-    - { name: stickyHeader, kind: primitive, of: boolean }
-    - { name: striped, kind: primitive, of: boolean }
-    - { name: bordered, kind: primitive, of: boolean }
-    - { name: hoverable, kind: primitive, of: boolean }
-    - { name: sortable, kind: primitive, of: boolean }
-    - { name: multiSort, kind: primitive, of: boolean }
-    - { name: resizable, kind: primitive, of: boolean }
-    - { name: virtualization, kind: primitive, of: boolean }
+    - {name: stickyHeader, kind: primitive, of: boolean}
+    - {name: striped, kind: primitive, of: boolean}
+    - {name: bordered, kind: primitive, of: boolean}
+    - {name: hoverable, kind: primitive, of: boolean}
+    - {name: sortable, kind: primitive, of: boolean}
+    - {name: multiSort, kind: primitive, of: boolean}
+    - {name: resizable, kind: primitive, of: boolean}
+    - {name: virtualization, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -1304,86 +1304,6 @@ performance:
       slow connections.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The table has an accessible name — `<caption>` as the
-        first child of `<table>` is canonical, with
-        `aria-labelledby` pointing to a sibling heading id as
-        an acceptable fallback. Implementations that ship a
-        bare `<table>` without either lose the table's
-        semantic identity entirely.
-      source: wcag
-      sourceRef: 'WCAG 1.3.1 Info and Relationships'
-      consequence: >-
-        Without an accessible name, SR users entering the
-        table region hear "table, N rows, M columns" with no
-        semantic label. Multi-table pages become
-        unnavigable; the user cannot tell which table they
-        have entered. WCAG 1.3.1 violation;
-        axe-core flags `empty-table-header` and related
-        rules.
-    - rule: >-
-        Column headers use `<th scope="col">` and (when
-        present) row headers use `<th scope="row">`.
-        Implementations that ship `<td>` styled as headers
-        or `<th>` without scope break the
-        programmatic header-to-cell association.
-      source: html-spec
-      sourceRef: 'HTML standard — table model and scope attribute'
-      consequence: >-
-        Without explicit scope, complex tables (multi-row
-        headers, spanning cells) lose the implicit
-        association algorithm — AT users hear cell values
-        without column context. WCAG 1.3.1 violation; axe-
-        core flags `td-headers-attr` and
-        `th-has-data-cells`.
-    - rule: >-
-        Sort affordances are `<button>` elements (inside
-        `<th>`), not click-handlers on `<span>` / `<svg>` /
-        `<div>`. Sort direction is announced via the parent
-        `<th>`'s `aria-sort` attribute, not via visible-text
-        only.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
-      consequence: >-
-        Click-handlers on non-button elements are invisible
-        to keyboard and AT users — Tab does not focus them,
-        Space and Enter do nothing, AT announces no role.
-        WCAG 4.1.2 violation. This specific failure mode is
-        not reliably axe-core-detectable: a `<span>` / `<div>`
-        with only a click handler carries no ARIA markup for
-        any rule to catch, so no `aria-*` rule fires. Catching
-        it requires manual keyboard-navigation testing or code
-        review, not automated scanning.
-    - rule: >-
-        Bulk-selection header checkbox uses
-        `aria-checked="mixed"` plus the native
-        `indeterminate` DOM property whenever the selection
-        state is partial.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
-      consequence: >-
-        Without `aria-checked="mixed"`, AT users hear
-        "checked" or "unchecked" when the truth is "some
-        selected" — the wrong state announcement leads to
-        accidental select-all or accidental deselect-all on
-        activation. WCAG 4.1.2 violation; axe-core flags
-        `aria-valid-attr-value` when the indeterminate state
-        is missing.
-    - rule: >-
-        Horizontally-scrollable tables wrap `<table>` in
-        `<div role="region" aria-labelledby="caption-id"
-        tabindex="0">`. The region role plus accessible
-        name plus `tabindex="0"` make the scrollable area
-        keyboard-discoverable and AT-discoverable.
-      source: apg
-      sourceRef: 'APG: Table pattern — scrollable region note'
-      consequence: >-
-        Without the wrapper, keyboard users cannot scroll
-        the table — Tab skips past it, arrow keys do
-        nothing. Sighted-mouse users scroll fine; the
-        affordance is invisible to keyboard and AT. WCAG
-        2.1.1 (Keyboard) violation.
   vocabularyDrift:
     - system: TanStack Table
       theirTerm: ColumnDef + SortingState + RowSelectionState
@@ -1485,3 +1405,88 @@ notes: >-
   bidirectionally documented in vsRelated.
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: table-accessible-name
+    statement: >-
+      The table has an accessible name — `<caption>` as the
+      first child of `<table>` is canonical, with
+      `aria-labelledby` pointing to a sibling heading id as
+      an acceptable fallback. Implementations that ship a
+      bare `<table>` without either lose the table's
+      semantic identity entirely.
+    source: wcag
+    sourceRef: 'WCAG 1.3.1 Info and Relationships'
+    consequence: >-
+      Without an accessible name, SR users entering the
+      table region hear "table, N rows, M columns" with no
+      semantic label. Multi-table pages become
+      unnavigable; the user cannot tell which table they
+      have entered. WCAG 1.3.1 violation;
+      axe-core flags `empty-table-header` and related
+      rules.
+  - id: column-headers-use-th-scope-col
+    statement: >-
+      Column headers use `<th scope="col">` and (when
+      present) row headers use `<th scope="row">`.
+      Implementations that ship `<td>` styled as headers
+      or `<th>` without scope break the
+      programmatic header-to-cell association.
+    source: html-spec
+    sourceRef: 'HTML standard — table model and scope attribute'
+    consequence: >-
+      Without explicit scope, complex tables (multi-row
+      headers, spanning cells) lose the implicit
+      association algorithm — AT users hear cell values
+      without column context. WCAG 1.3.1 violation; axe-
+      core flags `td-headers-attr` and
+      `th-has-data-cells`.
+  - id: sort-affordances-button-elements-inside-th
+    statement: >-
+      Sort affordances are `<button>` elements (inside
+      `<th>`), not click-handlers on `<span>` / `<svg>` /
+      `<div>`. Sort direction is announced via the parent
+      `<th>`'s `aria-sort` attribute, not via visible-text
+      only.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+    consequence: >-
+      Click-handlers on non-button elements are invisible
+      to keyboard and AT users — Tab does not focus them,
+      Space and Enter do nothing, AT announces no role.
+      WCAG 4.1.2 violation. This specific failure mode is
+      not reliably axe-core-detectable: a `<span>` / `<div>`
+      with only a click handler carries no ARIA markup for
+      any rule to catch, so no `aria-*` rule fires. Catching
+      it requires manual keyboard-navigation testing or code
+      review, not automated scanning.
+  - id: bulk-selection-header-checkbox-uses-aria
+    statement: >-
+      Bulk-selection header checkbox uses
+      `aria-checked="mixed"` plus the native
+      `indeterminate` DOM property whenever the selection
+      state is partial.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+    consequence: >-
+      Without `aria-checked="mixed"`, AT users hear
+      "checked" or "unchecked" when the truth is "some
+      selected" — the wrong state announcement leads to
+      accidental select-all or accidental deselect-all on
+      activation. WCAG 4.1.2 violation; axe-core flags
+      `aria-valid-attr-value` when the indeterminate state
+      is missing.
+  - id: horizontally-scrollable-tables-wrap-table-div
+    statement: >-
+      Horizontally-scrollable tables wrap `<table>` in
+      `<div role="region" aria-labelledby="caption-id"
+      tabindex="0">`. The region role plus accessible
+      name plus `tabindex="0"` make the scrollable area
+      keyboard-discoverable and AT-discoverable.
+    source: apg
+    sourceRef: 'APG: Table pattern — scrollable region note'
+    consequence: >-
+      Without the wrapper, keyboard users cannot scroll
+      the table — Tab skips past it, arrow keys do
+      nothing. Sighted-mouse users scroll fine; the
+      affordance is invisible to keyboard and AT. WCAG
+      2.1.1 (Keyboard) violation.

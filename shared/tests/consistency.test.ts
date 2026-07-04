@@ -281,23 +281,26 @@ describe('cross-component consistency', () => {
     expect(failures, failures.join('\n')).toEqual([]);
   });
 
-  // P6-201 (Schritt 1) — contracts.nonNegotiable[].relatedMistakes is the
-  // structural link replacing prose-restatement of a mistake inside a
-  // contract's rule/consequence text (the ADR-027 antipattern). Sibling
+  // P6-201 Step 2 (ADR-039) — mistakes[].ruleId / mismatches[].ruleId are
+  // the structural link replacing prose-restatement of a rule inside a
+  // mistake's description/fix or a mismatch's consequence/correct text (the
+  // ADR-027 antipattern). Supersedes Step 1's contracts.nonNegotiable[].
+  // relatedMistakes, which pointed the reference the other way. Sibling
   // check to the vsRelated resolution lint above: same shape, different
   // reference field.
-  it('contracts.nonNegotiable[].relatedMistakes resolves to an existing mistake on the same component', async () => {
+  it('mistakes[].ruleId and mismatches[].ruleId resolve to an existing rule on the same component', async () => {
     const map = await loadComponents({ contentDir });
     const failures: string[] = [];
     for (const c of map.values()) {
-      const mistakeIds = new Set(c.mistakes.map((m) => m.id));
-      for (const rule of c.contracts?.nonNegotiable ?? []) {
-        for (const ref of rule.relatedMistakes ?? []) {
-          if (!mistakeIds.has(ref)) {
-            failures.push(
-              `${c.id}: contracts.nonNegotiable relatedMistakes "${ref}" does not resolve to a mistakes[].id on ${c.id}`,
-            );
-          }
+      const ruleIds = new Set((c.rules ?? []).map((r) => r.id));
+      for (const m of c.mistakes) {
+        if (m.ruleId !== undefined && !ruleIds.has(m.ruleId)) {
+          failures.push(`${c.id}: mistakes[${m.id}].ruleId "${m.ruleId}" does not resolve to a rules[].id on ${c.id}`);
+        }
+      }
+      for (const mm of c.mismatches) {
+        if (mm.ruleId !== undefined && !ruleIds.has(mm.ruleId)) {
+          failures.push(`${c.id}: mismatches[${mm.id ?? '?'}].ruleId "${mm.ruleId}" does not resolve to a rules[].id on ${c.id}`);
         }
       }
     }
@@ -670,14 +673,16 @@ describe('cross-component consistency', () => {
 // it just quietly stops meaning what it says. 715 `from` paths exist across
 // 47 implementation files at the time this test was added.
 //
-// Not every bracketed path segment is a stored id: `contracts.nonNegotiable[X]`
-// and `a11yAcceptance.keyboardWalk[X]` use human-authored descriptive slugs
-// (e.g. `disabled-tabs-use-aria-disabled`, `arrowUpDown`) because those
-// schemas carry no per-entry id to reference structurally. For those two
-// categories this resolver checks that the referenced collection exists and
-// is non-empty, without asserting the bracket text matches a real key —
-// asserting more would mean guessing a slugification convention no schema
-// enforces, and would produce false failures on legitimate references.
+// Not every bracketed path segment is a stored id: `a11yAcceptance.
+// keyboardWalk[X]` uses human-authored descriptive slugs (e.g. `arrowUpDown`)
+// because keyboardWalkEntrySchema carries no per-entry id to reference
+// structurally. For that category this resolver checks that the referenced
+// collection exists and is non-empty, without asserting the bracket text
+// matches a real key — asserting more would mean guessing a slugification
+// convention no schema enforces, and would produce false failures on
+// legitimate references. `rules[X]` (P6-201 Step 2, ADR-039) DOES have a
+// real stored id now — promoted out of contracts.nonNegotiable specifically
+// so this kind of reference could resolve strictly instead of existence-only.
 function resolveCanonicalRefPath(component: Component, path: string): boolean {
   const bareMatch = path.match(/^([a-zA-Z0-9.]+)$/);
   const bracketMatch = path.match(/^([a-zA-Z0-9.]+)\[([^\]]+)\]$/);
@@ -734,9 +739,9 @@ function resolveCanonicalRefPath(component: Component, path: string): boolean {
     case 'a11yAcceptance.keyboardWalk':
       // Descriptive bracket label, not a stored id — see file header.
       return (component.a11yAcceptance?.keyboardWalk?.length ?? 0) > 0;
-    case 'contracts.nonNegotiable':
-      // Descriptive bracket label, not a stored id — see file header.
-      return (component.contracts?.nonNegotiable?.length ?? 0) > 0;
+    case 'rules':
+      // P6-201 Step 2 (ADR-039) — real stored id, strict match.
+      return key !== undefined && (component.rules ?? []).some((r) => r.id === key);
     default:
       return false;
   }

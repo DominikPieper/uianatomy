@@ -169,8 +169,8 @@ axes:
     - name: size
       kind: enum
       values: [xs, sm, md, lg, xl]
-    - { name: meaningful, kind: primitive, of: boolean }
-    - { name: hasStroke, kind: primitive, of: boolean }
+    - {name: meaningful, kind: primitive, of: boolean}
+    - {name: hasStroke, kind: primitive, of: boolean}
   states:
     interactive: []
     data:
@@ -424,41 +424,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The icon root carries exactly one of two aria states:
-        `aria-hidden="true"` with no role, or `role="img"` plus
-        `aria-label`. The two are mutually exclusive and jointly
-        exhaustive — no third state, no simultaneous combination.
-      source: apg
-      sourceRef: 'WAI-ARIA aria-hidden + role=img patterns'
-      consequence: >-
-        This is the invariant that mistakes `icon-meaningful-no-label`,
-        `icon-decorative-not-hidden`, and `icon-conflicting-aria-roles`
-        each check a different way of violating; see those entries
-        for the specific failure mode and fix.
-    - rule: >-
-        `fill` and `stroke` on the icon's vector paths resolve to
-        `currentColor`. A literal hex or named colour value is
-        permitted only as a documented brand-glyph exception
-        declared at the host component — never as the default.
-      source: html-spec
-      sourceRef: 'HTML inline SVG with currentColor keyword (W3C SVG + CSS Color)'
-      consequence: >-
-        See mistake `icon-color-not-currentcolor` for the
-        theming-breakage this prevents.
-    - rule: >-
-        An icon that is the sole content of an interactive host
-        (icon-only button, link, or dot-only badge) never carries
-        its own `aria-label`; the host owns the accessible name and
-        the icon stays `aria-hidden="true"` regardless of the
-        icon's semantic meaningfulness elsewhere.
-      source: canon
-      consequence: >-
-        Enforces the composition boundary in `whenToUse.vsRelated`
-        (id: button) — labelling both the icon and the host produces
-        a name-from-content collision that SR vendors resolve
-        inconsistently.
   vocabularyDrift:
     - system: HTML
       theirTerm: 'svg / img'
@@ -492,3 +457,41 @@ sources:
   - https://lucide.dev/
 
 lastReviewed: '2026-07-03'
+rules:
+  - id: icon-root-carries-exactly-one-two
+    statement: >-
+      The icon root carries exactly one of two aria states:
+      `aria-hidden="true"` with no role, or `role="img"` plus
+      `aria-label`. The two are mutually exclusive and jointly
+      exhaustive — no third state, no simultaneous combination.
+    source: apg
+    sourceRef: 'WAI-ARIA aria-hidden + role=img patterns'
+    consequence: >-
+      This is the invariant that mistakes `icon-meaningful-no-label`,
+      `icon-decorative-not-hidden`, and `icon-conflicting-aria-roles`
+      each check a different way of violating; see those entries
+      for the specific failure mode and fix.
+  - id: fill-stroke-icons-vector-paths-resolve
+    statement: >-
+      `fill` and `stroke` on the icon's vector paths resolve to
+      `currentColor`. A literal hex or named colour value is
+      permitted only as a documented brand-glyph exception
+      declared at the host component — never as the default.
+    source: html-spec
+    sourceRef: 'HTML inline SVG with currentColor keyword (W3C SVG + CSS Color)'
+    consequence: >-
+      See mistake `icon-color-not-currentcolor` for the
+      theming-breakage this prevents.
+  - id: icon-sole-content-interactive-host-icon
+    statement: >-
+      An icon that is the sole content of an interactive host
+      (icon-only button, link, or dot-only badge) never carries
+      its own `aria-label`; the host owns the accessible name and
+      the icon stays `aria-hidden="true"` regardless of the
+      icon's semantic meaningfulness elsewhere.
+    source: canon
+    consequence: >-
+      Enforces the composition boundary in `whenToUse.vsRelated`
+      (id: button) — labelling both the icon and the host produces
+      a name-from-content collision that SR vendors resolve
+      inconsistently.

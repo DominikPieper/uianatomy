@@ -285,7 +285,7 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg, xl]
-    - { name: dismissible, kind: primitive, of: boolean }
+    - {name: dismissible, kind: primitive, of: boolean}
     - name: scrollBehavior
       kind: enum
       values: [inside, outside]
@@ -757,58 +757,6 @@ a11yAcceptance:
     - duplicate-id-active
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        At most one modal is open at any moment. Stacking modals
-        is non-canonical; patterns that feel like they require
-        modal-on-modal redesign as a step flow within a single
-        modal, or as a sequence of modal → dismiss → modal.
-      source: canon
-      consequence: >-
-        Stacked modals fight for the focus trap, leak `inert`
-        handling between layers, and confuse assistive tech that
-        walks the modality tree. The "modality" contract becomes
-        ambiguous and SR users lose track of which surface owns
-        the next interaction.
-    - rule: >-
-        Focus is trapped inside the dialog while open, and
-        restored to the previously-focused trigger on close. If
-        the trigger no longer exists after the action, focus
-        moves to a stable landmark (page heading, confirmation
-        toast).
-      source: apg
-      sourceRef: 'APG: Dialog (Modal) pattern — Keyboard interaction'
-      consequence: >-
-        Without the trap, Tab leaks focus to controls hidden
-        beneath the backdrop; without restore, keyboard and SR
-        users land on `<body>` after dismissal and re-orient
-        from the top of the page. Both are routinely shipped
-        broken.
-    - rule: >-
-        The rest of the document is taken out of the AT and
-        interaction tree via `inert` on siblings of the dialog
-        portal — not via `aria-hidden="true"` on `<body>`.
-      source: html-spec
-      sourceRef: 'HTML inert attribute + ARIA dialog-modal pattern'
-      consequence: >-
-        Setting `aria-hidden` on `<body>` collapses the dialog
-        itself out of the AT tree because the dialog typically
-        descends from body. `inert` disables interaction without
-        collapsing AT semantics, which is what the modality
-        contract actually requires.
-    - rule: >-
-        Escape dismisses the dialog when `dismissible: true`,
-        bound at the dialog (or document) level so the handler
-        is identical across input modalities (Escape, close
-        button, backdrop click).
-      source: apg
-      sourceRef: 'APG: Dialog (Modal) pattern — Escape key'
-      consequence: >-
-        Escape attached to the backdrop only fires when the
-        backdrop receives the keystroke — almost never in
-        practice. Keyboard users perceive the modal as
-        non-dismissible and reach for the close button by mouse,
-        breaking the keyboard-equivalence contract.
   vocabularyDrift:
     - system: APG
       theirTerm: 'Dialog (Modal)'
@@ -851,3 +799,59 @@ sources:
   - https://inclusive-components.design/a-todo-list/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: most-one-modal-open-any-moment
+    statement: >-
+      At most one modal is open at any moment. Stacking modals
+      is non-canonical; patterns that feel like they require
+      modal-on-modal redesign as a step flow within a single
+      modal, or as a sequence of modal → dismiss → modal.
+    source: canon
+    consequence: >-
+      Stacked modals fight for the focus trap, leak `inert`
+      handling between layers, and confuse assistive tech that
+      walks the modality tree. The "modality" contract becomes
+      ambiguous and SR users lose track of which surface owns
+      the next interaction.
+  - id: focus-trapped-inside-dialog-while-open
+    statement: >-
+      Focus is trapped inside the dialog while open, and
+      restored to the previously-focused trigger on close. If
+      the trigger no longer exists after the action, focus
+      moves to a stable landmark (page heading, confirmation
+      toast).
+    source: apg
+    sourceRef: 'APG: Dialog (Modal) pattern — Keyboard interaction'
+    consequence: >-
+      Without the trap, Tab leaks focus to controls hidden
+      beneath the backdrop; without restore, keyboard and SR
+      users land on `<body>` after dismissal and re-orient
+      from the top of the page. Both are routinely shipped
+      broken.
+  - id: rest-document-taken-out-interaction-tree
+    statement: >-
+      The rest of the document is taken out of the AT and
+      interaction tree via `inert` on siblings of the dialog
+      portal — not via `aria-hidden="true"` on `<body>`.
+    source: html-spec
+    sourceRef: 'HTML inert attribute + ARIA dialog-modal pattern'
+    consequence: >-
+      Setting `aria-hidden` on `<body>` collapses the dialog
+      itself out of the AT tree because the dialog typically
+      descends from body. `inert` disables interaction without
+      collapsing AT semantics, which is what the modality
+      contract actually requires.
+  - id: escape-dismisses-dialog-dismissible-true-bound
+    statement: >-
+      Escape dismisses the dialog when `dismissible: true`,
+      bound at the dialog (or document) level so the handler
+      is identical across input modalities (Escape, close
+      button, backdrop click).
+    source: apg
+    sourceRef: 'APG: Dialog (Modal) pattern — Escape key'
+    consequence: >-
+      Escape attached to the backdrop only fires when the
+      backdrop receives the keystroke — almost never in
+      practice. Keyboard users perceive the modal as
+      non-dismissible and reach for the close button by mouse,
+      breaking the keyboard-equivalence contract.

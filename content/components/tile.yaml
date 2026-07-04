@@ -237,8 +237,8 @@ axes:
     - name: aspect
       kind: enum
       values: [square, portrait, landscape, free]
-    - { name: hasOverlay, kind: primitive, of: boolean }
-    - { name: hasLabel, kind: primitive, of: boolean }
+    - {name: hasOverlay, kind: primitive, of: boolean}
+    - {name: hasLabel, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
@@ -733,31 +733,6 @@ whenToUse:
         ratio. Avatars sit in lists, headers, attribution lines;
         tiles sit in 2D grids.
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Selected state on a `selectable` tile is never
-        colour-only: shipping code must combine a non-colour
-        visual change on the tile root, `aria-selected="true"`
-        on the root (or the `role="option"` / `role="gridcell"`
-        element), and a visible checkbox carrying its own
-        `aria-checked`. An implementation missing any one of the
-        three layers fails this contract regardless of colour
-        contrast ratios.
-      source: wcag
-      sourceRef: 'WCAG 1.4.1 Use of Color'
-      consequence: >-
-        A colour-only change is invisible to colour-vision-
-        deficient users and silent to screen readers even when
-        `aria-selected` is present, because sighted users have
-        no way to discover a tile grid is selectable without the
-        checkbox affordance. The three layers are independently
-        verifiable — a DOM query for the checkbox plus
-        `aria-selected`, and a check that the visual delta
-        survives a colour-desaturation filter — which makes this
-        contract auditable in code review or an automated a11y
-        test, unlike the purely categorical Tile-vs-Card
-        judgment call (see `mistakes[tile-as-card]` for that
-        distinction).
   vocabularyDrift:
     - system: Material 3
       theirTerm: Carousel / Cards / Image list
@@ -788,3 +763,29 @@ sources:
   - https://react-spectrum.adobe.com/react-aria/GridList.html
 
 lastReviewed: '2026-07-03'
+rules:
+  - id: selected-state-selectable-tile-colour-shipping
+    statement: >-
+      Selected state on a `selectable` tile is never
+      colour-only: shipping code must combine a non-colour
+      visual change on the tile root, `aria-selected="true"`
+      on the root (or the `role="option"` / `role="gridcell"`
+      element), and a visible checkbox carrying its own
+      `aria-checked`. An implementation missing any one of the
+      three layers fails this contract regardless of colour
+      contrast ratios.
+    source: wcag
+    sourceRef: 'WCAG 1.4.1 Use of Color'
+    consequence: >-
+      A colour-only change is invisible to colour-vision-
+      deficient users and silent to screen readers even when
+      `aria-selected` is present, because sighted users have
+      no way to discover a tile grid is selectable without the
+      checkbox affordance. The three layers are independently
+      verifiable — a DOM query for the checkbox plus
+      `aria-selected`, and a check that the visual delta
+      survives a colour-desaturation filter — which makes this
+      contract auditable in code review or an automated a11y
+      test, unlike the purely categorical Tile-vs-Card
+      judgment call (see `mistakes[tile-as-card]` for that
+      distinction).

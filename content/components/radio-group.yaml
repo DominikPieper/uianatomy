@@ -373,9 +373,9 @@ axes:
     - name: orientation
       kind: enum
       values: [vertical, horizontal]
-    - { name: required, kind: primitive, of: boolean }
-    - { name: disabled, kind: primitive, of: boolean }
-    - { name: invalid, kind: primitive, of: boolean }
+    - {name: required, kind: primitive, of: boolean}
+    - {name: disabled, kind: primitive, of: boolean}
+    - {name: invalid, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -834,55 +834,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The radio set is wrapped in `<fieldset>` with
-        `<legend>` (or `role="radiogroup"` with
-        `aria-labelledby`). The legend is the canonical
-        accessible name for the entire group. Implementations
-        that ship loose radios without group semantics lose
-        the "this is a single decision" frame for AT.
-      source: apg
-      sourceRef: 'APG: Radio Group pattern'
-      consequence: >-
-        Without group semantics, SR users hear individual
-        radio labels but not the group context. The
-        decision-frame ("Preferred contact method") is
-        invisible; users may navigate radios without
-        understanding what the choice is for. Group label is
-        the most-load-bearing accessibility contract.
-    - rule: >-
-        Roving-tabindex — only the checked radio (or first if
-        none checked) carries `tabindex="0"`; siblings carry
-        `tabindex="-1"`. Tab enters and exits the group as a
-        single stop; Arrow keys move focus and selection
-        within. Native HTML radio inputs provide this
-        automatically; custom-rendered radios must implement
-        explicitly.
-      source: apg
-      sourceRef: 'APG: Radio Group keyboard interaction'
-      consequence: >-
-        Without roving-tabindex, keyboard users tab through
-        every radio individually — a 7-option group requires
-        7 Tab presses to bypass. The group becomes a tab-stop
-        burden rather than a single decision. Arrow-key auto-
-        selection is the canonical interaction; users do not
-        need Space to commit.
-    - rule: >-
-        All radios in a single group share the same `name`
-        attribute (native HTML) or the same group `value`
-        binding (controlled). The mutex is enforced by the
-        group, not per-radio. Loose radios with distinct
-        names ship as independent toggles, not a group.
-      source: html-spec
-      sourceRef: 'HTML input radio name-grouping'
-      consequence: >-
-        Without shared `name` (or controlled `value`),
-        selecting a second radio does not deselect the
-        first. Multiple radios can be checked simultaneously
-        — the mutex is broken. Users see contradictory
-        state and form submission carries multiple values
-        for what should be a single field.
   vocabularyDrift:
     - system: HTML
       theirTerm: '`<input type="radio">`'
@@ -933,3 +884,55 @@ sources:
   - https://carbondesignsystem.com/components/radio-button/usage/
 
 lastReviewed: '2026-05-03'
+rules:
+  - id: radio-set-wrapped-fieldset-legend-role
+    statement: >-
+      The radio set is wrapped in `<fieldset>` with
+      `<legend>` (or `role="radiogroup"` with
+      `aria-labelledby`). The legend is the canonical
+      accessible name for the entire group. Implementations
+      that ship loose radios without group semantics lose
+      the "this is a single decision" frame for AT.
+    source: apg
+    sourceRef: 'APG: Radio Group pattern'
+    consequence: >-
+      Without group semantics, SR users hear individual
+      radio labels but not the group context. The
+      decision-frame ("Preferred contact method") is
+      invisible; users may navigate radios without
+      understanding what the choice is for. Group label is
+      the most-load-bearing accessibility contract.
+  - id: roving-tabindex
+    statement: >-
+      Roving-tabindex — only the checked radio (or first if
+      none checked) carries `tabindex="0"`; siblings carry
+      `tabindex="-1"`. Tab enters and exits the group as a
+      single stop; Arrow keys move focus and selection
+      within. Native HTML radio inputs provide this
+      automatically; custom-rendered radios must implement
+      explicitly.
+    source: apg
+    sourceRef: 'APG: Radio Group keyboard interaction'
+    consequence: >-
+      Without roving-tabindex, keyboard users tab through
+      every radio individually — a 7-option group requires
+      7 Tab presses to bypass. The group becomes a tab-stop
+      burden rather than a single decision. Arrow-key auto-
+      selection is the canonical interaction; users do not
+      need Space to commit.
+  - id: all-radios-single-group-share-same
+    statement: >-
+      All radios in a single group share the same `name`
+      attribute (native HTML) or the same group `value`
+      binding (controlled). The mutex is enforced by the
+      group, not per-radio. Loose radios with distinct
+      names ship as independent toggles, not a group.
+    source: html-spec
+    sourceRef: 'HTML input radio name-grouping'
+    consequence: >-
+      Without shared `name` (or controlled `value`),
+      selecting a second radio does not deselect the
+      first. Multiple radios can be checked simultaneously
+      — the mutex is broken. Users see contradictory
+      state and form submission carries multiple values
+      for what should be a single field.

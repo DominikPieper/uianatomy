@@ -371,8 +371,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg]
-    - { name: determinate, kind: primitive, of: boolean }
-    - { name: showValue, kind: primitive, of: boolean }
+    - {name: determinate, kind: primitive, of: boolean}
+    - {name: showValue, kind: primitive, of: boolean}
   states:
     interactive: []
     data:
@@ -927,86 +927,6 @@ i18n:
     announcements.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The progressbar element carries an accessible name
-        via `aria-label` or `aria-labelledby` — never
-        unlabeled.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
-      consequence: >-
-        An unlabeled progressbar fails Name-Role-Value: AT
-        users receive a role and a value with no way to
-        identify which operation it belongs to, and cannot
-        disambiguate multiple concurrent progressbars on
-        the same page. See mistake `progress-no-label`.
-    - rule: >-
-        Determinate progress reports `aria-valuemin`,
-        `aria-valuemax`, and `aria-valuenow`. Indeterminate
-        progress OMITS `aria-valuenow` entirely — never
-        sets it to `0` or a stale last-known value.
-      source: apg
-      sourceRef: 'WAI-ARIA progressbar role + aria-valuenow guidance'
-      consequence: >-
-        A present-but-stale `aria-valuenow` misrepresents
-        an unknown state as a measured one, so AT users
-        trust a number that does not correspond to
-        reality. Omission is the only signal APG defines
-        for "busy, fraction unknown." See mistake
-        `progress-indeterminate-with-valuenow`.
-    - rule: >-
-        Indeterminate animation respects
-        `prefers-reduced-motion: reduce` by falling back
-        to a static (non-continuously-animating) busy
-        indicator.
-      source: wcag
-      sourceRef: 'WCAG 2.3.3 Animation from Interactions'
-      consequence: >-
-        An indeterminate animation with no reduced-motion
-        fallback imposes unavoidable, indefinite motion on
-        users with vestibular or motion-triggered
-        conditions for the entire duration of the
-        underlying operation. See mistake
-        `progress-no-reduced-motion`.
-    - rule: >-
-        The progressbar element is non-interactive —
-        no `tabindex`, no role conflicts. The
-        component does not participate in tab-order
-        and does not respond to keyboard or pointer
-        activation.
-      source: html-spec
-      sourceRef: 'HTML standard — progress element semantics'
-      consequence: >-
-        Without the rule, implementations may add
-        `tabindex="0"` to draw focus on completion
-        or `onClick` to act as cancel-buttons.
-        Both patterns confuse keyboard users who
-        encounter unexpected tab stops on what
-        should be observation-only surfaces. Cancel
-        affordances live as sibling elements, not
-        on the progressbar itself.
-    - rule: >-
-        Native `<progress>` is an acceptable
-        alternative implementation when no styling
-        control is required. It carries the role +
-        value semantics natively and respects
-        `prefers-reduced-motion` automatically in
-        browsers that animate the indeterminate
-        state. Custom-styled `role="progressbar"`
-        is preferred when the design system needs
-        explicit control over the visual shape.
-      source: html-spec
-      sourceRef: 'HTML standard — progress element semantics'
-      consequence: >-
-        Without documenting the alternative,
-        implementations may unnecessarily reinvent
-        the role-driven pattern when native
-        `<progress>` would suffice. Native
-        `<progress>` styling is limited
-        (browser-specific pseudo-elements: `::-webkit-progress-bar`,
-        `::-moz-progress-bar`); design systems with
-        bespoke progress visuals choose
-        `role="progressbar"`.
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: 'role=progressbar + aria-valuemin/max/now'
@@ -1107,3 +1027,88 @@ notes: >-
   decision rule.
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: progressbar-element-carries-accessible-name-via
+    statement: >-
+      The progressbar element carries an accessible name
+      via `aria-label` or `aria-labelledby` — never
+      unlabeled.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+    consequence: >-
+      An unlabeled progressbar fails Name-Role-Value: AT
+      users receive a role and a value with no way to
+      identify which operation it belongs to, and cannot
+      disambiguate multiple concurrent progressbars on
+      the same page. See mistake `progress-no-label`.
+  - id: determinate-progress-reports-aria-valuemin-aria
+    statement: >-
+      Determinate progress reports `aria-valuemin`,
+      `aria-valuemax`, and `aria-valuenow`. Indeterminate
+      progress OMITS `aria-valuenow` entirely — never
+      sets it to `0` or a stale last-known value.
+    source: apg
+    sourceRef: 'WAI-ARIA progressbar role + aria-valuenow guidance'
+    consequence: >-
+      A present-but-stale `aria-valuenow` misrepresents
+      an unknown state as a measured one, so AT users
+      trust a number that does not correspond to
+      reality. Omission is the only signal APG defines
+      for "busy, fraction unknown." See mistake
+      `progress-indeterminate-with-valuenow`.
+  - id: indeterminate-animation-respects-prefers-reduced
+    statement: >-
+      Indeterminate animation respects
+      `prefers-reduced-motion: reduce` by falling back
+      to a static (non-continuously-animating) busy
+      indicator.
+    source: wcag
+    sourceRef: 'WCAG 2.3.3 Animation from Interactions'
+    consequence: >-
+      An indeterminate animation with no reduced-motion
+      fallback imposes unavoidable, indefinite motion on
+      users with vestibular or motion-triggered
+      conditions for the entire duration of the
+      underlying operation. See mistake
+      `progress-no-reduced-motion`.
+  - id: progressbar-element-non-interactive
+    statement: >-
+      The progressbar element is non-interactive —
+      no `tabindex`, no role conflicts. The
+      component does not participate in tab-order
+      and does not respond to keyboard or pointer
+      activation.
+    source: html-spec
+    sourceRef: 'HTML standard — progress element semantics'
+    consequence: >-
+      Without the rule, implementations may add
+      `tabindex="0"` to draw focus on completion
+      or `onClick` to act as cancel-buttons.
+      Both patterns confuse keyboard users who
+      encounter unexpected tab stops on what
+      should be observation-only surfaces. Cancel
+      affordances live as sibling elements, not
+      on the progressbar itself.
+  - id: native-progress-acceptable-alternative
+    statement: >-
+      Native `<progress>` is an acceptable
+      alternative implementation when no styling
+      control is required. It carries the role +
+      value semantics natively and respects
+      `prefers-reduced-motion` automatically in
+      browsers that animate the indeterminate
+      state. Custom-styled `role="progressbar"`
+      is preferred when the design system needs
+      explicit control over the visual shape.
+    source: html-spec
+    sourceRef: 'HTML standard — progress element semantics'
+    consequence: >-
+      Without documenting the alternative,
+      implementations may unnecessarily reinvent
+      the role-driven pattern when native
+      `<progress>` would suffice. Native
+      `<progress>` styling is limited
+      (browser-specific pseudo-elements: `::-webkit-progress-bar`,
+      `::-moz-progress-bar`); design systems with
+      bespoke progress visuals choose
+      `role="progressbar"`.

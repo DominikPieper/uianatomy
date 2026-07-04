@@ -131,7 +131,7 @@ divergence:
       Source: https://www.radix-ui.com/primitives/docs/components/tabs#content
 
   # ── Contracts ────────────────────────────────────────────────────────────
-  - from: contracts.nonNegotiable[disabled-tabs-use-aria-disabled]
+  - from: rules[disabled-tabs-use-aria-disabled]
     type: reshaped
     to: "Tabs.Trigger disabled prop sets native HTML disabled on the underlying button element, plus a data-disabled styling hook"
     rationale: >-

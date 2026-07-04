@@ -139,7 +139,7 @@ axes:
     - name: delay
       kind: enum
       values: [instant, short, base, long]
-    - { name: arrow, kind: primitive, of: boolean }
+    - {name: arrow, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -569,41 +569,6 @@ whenToUse:
         when authored.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Tooltip body contains only descriptive text — no
-        buttons, links, form controls, or other interactive
-        content. Focus never enters the tooltip.
-      source: apg
-      sourceRef: 'APG: Tooltip pattern'
-      consequence: >-
-        Tooltips with interactive content violate the canonical
-        contract and break keyboard / SR access — the user can
-        see the content but cannot reach it. Reach for Popover
-        when interaction is needed.
-    - rule: >-
-        Reveal on hover OR focus; dismiss on pointer-leave AND
-        focus-leave OR Escape.
-      source: apg
-      sourceRef: 'APG: Tooltip pattern'
-      consequence: >-
-        Hover-only triggers exclude keyboard users from the
-        description entirely (WCAG 2.1.1 violation). Most-often
-        broken contract in real-world implementations.
-    - rule: >-
-        Content-on-hover obeys WCAG 1.4.13: dismissible via Escape
-        without moving the pointer; hoverable (the pointer can
-        travel from trigger onto the tooltip without it vanishing);
-        and persistent until the user dismisses it, moves hover and
-        focus away, or the information becomes invalid. A short
-        dismiss-grace (~100ms) bridges the trigger-to-tooltip gap.
-      source: wcag
-      sourceRef: 'WCAG 1.4.13 (Content on Hover or Focus)'
-      consequence: >-
-        A tooltip that closes the instant the pointer leaves the
-        trigger flickers shut as the user moves toward it; one with
-        no Escape dismissal cannot be cleared when it obscures
-        content the user still needs to read underneath.
   vocabularyDrift:
     - system: APG
       theirTerm: Tooltip
@@ -659,3 +624,41 @@ sources:
   - https://inclusive-components.design/tooltips-toggletips/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: tooltip-body-contains-descriptive-text
+    statement: >-
+      Tooltip body contains only descriptive text — no
+      buttons, links, form controls, or other interactive
+      content. Focus never enters the tooltip.
+    source: apg
+    sourceRef: 'APG: Tooltip pattern'
+    consequence: >-
+      Tooltips with interactive content violate the canonical
+      contract and break keyboard / SR access — the user can
+      see the content but cannot reach it. Reach for Popover
+      when interaction is needed.
+  - id: reveal-hover-focus
+    statement: >-
+      Reveal on hover OR focus; dismiss on pointer-leave AND
+      focus-leave OR Escape.
+    source: apg
+    sourceRef: 'APG: Tooltip pattern'
+    consequence: >-
+      Hover-only triggers exclude keyboard users from the
+      description entirely (WCAG 2.1.1 violation). Most-often
+      broken contract in real-world implementations.
+  - id: content-hover-obeys-wcag-1-4
+    statement: >-
+      Content-on-hover obeys WCAG 1.4.13: dismissible via Escape
+      without moving the pointer; hoverable (the pointer can
+      travel from trigger onto the tooltip without it vanishing);
+      and persistent until the user dismisses it, moves hover and
+      focus away, or the information becomes invalid. A short
+      dismiss-grace (~100ms) bridges the trigger-to-tooltip gap.
+    source: wcag
+    sourceRef: 'WCAG 1.4.13 (Content on Hover or Focus)'
+    consequence: >-
+      A tooltip that closes the instant the pointer leaves the
+      trigger flickers shut as the user moves toward it; one with
+      no Escape dismissal cannot be cleared when it obscures
+      content the user still needs to read underneath.

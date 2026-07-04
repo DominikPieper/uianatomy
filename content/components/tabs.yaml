@@ -716,61 +716,6 @@ a11yAcceptance:
     - focus-order-semantics
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Exactly one tab carries `tabindex="0"` at any time — the
-        selected tab — and every other tab carries
-        `tabindex="-1"`. Left/Right (horizontal) or Up/Down
-        (vertical) arrow keys move focus among tabs and update
-        which tab holds `tabindex="0"`; Tab itself enters and
-        exits the tablist as a single stop.
-      source: apg
-      sourceRef: 'APG: Tabs pattern — Keyboard interaction'
-      consequence: >-
-        Verify by querying `tabindex` across all tabs after any
-        selection change — the count of `tabindex="0"` must be
-        exactly one. See mistake `tabs-no-arrow-keys` for what
-        breaks when this is skipped.
-    - rule: >-
-        `aria-selected` is the sole source of truth for tab
-        selection. No other attribute (e.g. a parallel
-        `data-selected`) may encode selection state; all
-        selection-dependent styling and the indicator position
-        derive from `[aria-selected="true"]`.
-      source: apg
-      sourceRef: 'APG: Tabs pattern — aria-selected'
-      consequence: >-
-        Verify that exactly one tab has `aria-selected="true"`
-        and that no CSS selector or JS branch reads a different
-        attribute for the same decision. See mistake
-        `tabs-state-as-data-attribute-only` for what breaks when
-        a parallel attribute is introduced.
-    - rule: >-
-        Every tab's `aria-controls` resolves to an existing
-        tabpanel id, and that tabpanel's `aria-labelledby`
-        resolves back to the same tab's id — the relationship
-        holds in both directions for every tab/panel pair,
-        regardless of visual adjacency.
-      source: apg
-      sourceRef: 'APG: Tabs pattern — aria-controls and aria-labelledby'
-      consequence: >-
-        Verify by resolving both id references for every
-        tab/panel pair; either direction missing fails the
-        contract. See mistake `tabs-panel-not-labelled` for what
-        breaks when the panel side is dropped.
-    - rule: >-
-        A disabled tab carries `aria-disabled="true"`, never the
-        HTML `disabled` attribute, and keeps its place in the
-        roving-tabindex sequence so arrow keys can still move
-        focus to it; only its activation (Enter / Space) is a
-        no-op.
-      source: apg
-      sourceRef: 'APG: Tabs pattern — Managing disabled tabs'
-      consequence: >-
-        Verify by arrow-keying through the tablist — a disabled
-        tab must still receive focus and never be silently
-        skipped. See mistake `tabs-disabled-but-not-skipped` for
-        what breaks when native `disabled` is used instead.
   vocabularyDrift:
     - system: APG
       theirTerm: Tabs
@@ -806,3 +751,62 @@ sources:
   - https://inclusive-components.design/tabbed-interfaces/
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: exactly-one-tab-carries-tabindex-0
+    statement: >-
+      Exactly one tab carries `tabindex="0"` at any time — the
+      selected tab — and every other tab carries
+      `tabindex="-1"`. Left/Right (horizontal) or Up/Down
+      (vertical) arrow keys move focus among tabs and update
+      which tab holds `tabindex="0"`; Tab itself enters and
+      exits the tablist as a single stop.
+    source: apg
+    sourceRef: 'APG: Tabs pattern — Keyboard interaction'
+    consequence: >-
+      Verify by querying `tabindex` across all tabs after any
+      selection change — the count of `tabindex="0"` must be
+      exactly one. See mistake `tabs-no-arrow-keys` for what
+      breaks when this is skipped.
+  - id: aria-selected-sole-source-truth-tab
+    statement: >-
+      `aria-selected` is the sole source of truth for tab
+      selection. No other attribute (e.g. a parallel
+      `data-selected`) may encode selection state; all
+      selection-dependent styling and the indicator position
+      derive from `[aria-selected="true"]`.
+    source: apg
+    sourceRef: 'APG: Tabs pattern — aria-selected'
+    consequence: >-
+      Verify that exactly one tab has `aria-selected="true"`
+      and that no CSS selector or JS branch reads a different
+      attribute for the same decision. See mistake
+      `tabs-state-as-data-attribute-only` for what breaks when
+      a parallel attribute is introduced.
+  - id: every-tabs-aria-controls-resolves-existing
+    statement: >-
+      Every tab's `aria-controls` resolves to an existing
+      tabpanel id, and that tabpanel's `aria-labelledby`
+      resolves back to the same tab's id — the relationship
+      holds in both directions for every tab/panel pair,
+      regardless of visual adjacency.
+    source: apg
+    sourceRef: 'APG: Tabs pattern — aria-controls and aria-labelledby'
+    consequence: >-
+      Verify by resolving both id references for every
+      tab/panel pair; either direction missing fails the
+      contract. See mistake `tabs-panel-not-labelled` for what
+      breaks when the panel side is dropped.
+  - id: disabled-tabs-use-aria-disabled
+    statement: >-
+      A disabled tab carries `aria-disabled="true"`, never the
+      HTML `disabled` attribute, and keeps its place in the
+      roving-tabindex sequence so arrow keys can still move
+      focus to it; only its activation (Enter / Space) is a
+      no-op.
+    source: apg
+    sourceRef: 'APG: Tabs pattern — Managing disabled tabs'
+    consequence: >-
+      Verify by arrow-keying through the tablist — a disabled
+      tab must still receive focus and never be silently
+      skipped. See mistake `tabs-disabled-but-not-skipped` for
+      what breaks when native `disabled` is used instead.

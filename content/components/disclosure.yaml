@@ -135,11 +135,11 @@ axes:
     - name: inline
     - name: standalone
   properties:
-    - { name: defaultExpanded, kind: primitive, of: boolean }
+    - {name: defaultExpanded, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
-    - { name: hasIcon, kind: primitive, of: boolean }
+    - {name: hasIcon, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -546,38 +546,6 @@ whenToUse:
         Disclosure preserves it.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Every CSS selector, JS conditional, and icon-rotation
-        binding for expanded/collapsed styling reads
-        `[aria-expanded="true"]` (or the equivalent DOM
-        property) as its sole state authority — no parallel
-        `data-expanded` attribute, no visual-only signal.
-      source: apg
-      sourceRef: 'APG: Disclosure pattern — aria-expanded'
-      consequence: >-
-        See mistakes `disclosure-no-aria-expanded` and
-        `disclosure-icon-only-state-cue` for the observed
-        failure modes when this is violated.
-    - rule: >-
-        The trigger's tag name is `button` with
-        `type="button"`; it is never an `<a>` element,
-        regardless of visual treatment.
-      source: html-spec
-      sourceRef: 'HTML button vs anchor semantics'
-      consequence: >-
-        See mistake `disclosure-as-link` for the observed
-        failure mode when this is violated.
-    - rule: >-
-        The trigger's `aria-controls` value equals the panel's
-        `id`, and the panel's `aria-labelledby` value equals the
-        trigger's `id` — both resolvable, never inferred from
-        DOM adjacency alone.
-      source: apg
-      sourceRef: 'APG: Disclosure pattern — aria-controls'
-      consequence: >-
-        See mistake `disclosure-no-aria-controls` for the
-        observed failure mode when this is violated.
   vocabularyDrift:
     - system: Radix
       theirTerm: Collapsible
@@ -628,3 +596,38 @@ sources:
   - https://inclusive-components.design/collapsible-sections/
 
 lastReviewed: '2026-07-03'
+rules:
+  - id: every-css-selector-js-conditional-icon
+    statement: >-
+      Every CSS selector, JS conditional, and icon-rotation
+      binding for expanded/collapsed styling reads
+      `[aria-expanded="true"]` (or the equivalent DOM
+      property) as its sole state authority — no parallel
+      `data-expanded` attribute, no visual-only signal.
+    source: apg
+    sourceRef: 'APG: Disclosure pattern — aria-expanded'
+    consequence: >-
+      See mistakes `disclosure-no-aria-expanded` and
+      `disclosure-icon-only-state-cue` for the observed
+      failure modes when this is violated.
+  - id: triggers-tag-name-button-type-button
+    statement: >-
+      The trigger's tag name is `button` with
+      `type="button"`; it is never an `<a>` element,
+      regardless of visual treatment.
+    source: html-spec
+    sourceRef: 'HTML button vs anchor semantics'
+    consequence: >-
+      See mistake `disclosure-as-link` for the observed
+      failure mode when this is violated.
+  - id: triggers-aria-controls-value-equals-panels
+    statement: >-
+      The trigger's `aria-controls` value equals the panel's
+      `id`, and the panel's `aria-labelledby` value equals the
+      trigger's `id` — both resolvable, never inferred from
+      DOM adjacency alone.
+    source: apg
+    sourceRef: 'APG: Disclosure pattern — aria-controls'
+    consequence: >-
+      See mistake `disclosure-no-aria-controls` for the
+      observed failure mode when this is violated.

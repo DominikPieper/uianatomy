@@ -119,7 +119,8 @@ Optional sections (declare only when meaningful):
 - `responsive: { breakpoints: [{ at, change }] }` — declare when cross-breakpoint behavior shifts.
 - `formIntegration: { name?, formData?, reset?, validation? }` — declare for form controls and form containers.
 - `performance: [...]` — declare only when there is a real numeric capacity threshold (Combobox virtualization, Tabs overflow). Single-entry omits like Modal `stackDepth` belong in `whenToUse.avoid` prose, not here (P6-75).
-- `contracts: { nonNegotiable?, vocabularyDrift? }` — extract structurable content from notes per ADR-027.
+- `rules: [{ id, statement, source, sourceRef?, consequence }]` — hard-binding rules extracted per ADR-027; promoted to a top-level array (not nested under `contracts`) by ADR-039 (P6-201 Step 2). `mistakes[].ruleId` / `mismatches[].ruleId` can forward-reference a rule's `id` instead of restating its prose.
+- `contracts: { vocabularyDrift? }` — per-system naming drift only (ADR-039 narrowed this from its original ADR-027 shape).
 - `notes` — freeform residue for prose that doesn't fit any structured field. Use sparingly.
 
 ### Step 5: Validate before render

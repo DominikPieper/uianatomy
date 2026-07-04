@@ -259,7 +259,7 @@ axes:
     - name: outlined
     - name: flat
   properties:
-    - { name: interactive, kind: primitive, of: boolean }
+    - {name: interactive, kind: primitive, of: boolean}
     - name: orientation
       kind: enum
       values: [vertical, horizontal]
@@ -602,59 +602,6 @@ performance:
       compose the elevated variant within this budget.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        When `interactive: true`, the card's activator is a single
-        real `<a href>` (navigation) or `<button>` (in-page action)
-        — never a `<div onclick>` and never `role="button"` on the
-        card root. See mistakes `card-as-link-nested-buttons` and
-        `clickable-card-no-keyboard` for the overlay-pattern
-        construction that keeps nested actions reachable.
-      source: html-spec
-      sourceRef: 'HTML interactive element semantics + WAI-ARIA Authoring Practices'
-      consequence: >-
-        Wrapping the entire card in `<a>` traps nested buttons —
-        keyboard users cannot activate inner controls, and SR
-        reads the nested buttons as part of the link's
-        accessible name. `<div onclick>` makes the card
-        unfocusable and unannounceable. The overlay pattern is
-        the only construction that keeps both the
-        whole-card-clickable affordance and the nested-actions
-        contract.
-    - rule: >-
-        `Card`, `Tile`, and `ListItem` are distinct canonical ids
-        with non-overlapping required anatomy — Card mandates
-        `title` and `body` as content slots. A composition that
-        drops both in favor of a single dominant image, or
-        reflows into a horizontal leading/primary/secondary/
-        trailing row, is not a Card variant — it is Tile's or
-        ListItem's contract. See `whenToUse.vsRelated` (`tile`,
-        `list-item`) for the full differentiation and decision
-        test.
-      source: canon
-      consequence: >-
-        Mixing the three contracts produces composite components
-        that read incoherently — text-heavy "tiles" lose the
-        gallery-scan affordance; image-led "cards" force
-        designers to invent media-dominant variants the canon
-        does not endorse; row-style cards collapse the
-        list/grid distinction that drives layout choice.
-    - rule: >-
-        Interactive states (hover / focus-visible / active /
-        disabled) are never modelled as Figma variants; variants
-        are reserved for structurally different versions
-        (`elevated` / `outlined` / `flat`). See mistake
-        `variant-explosion-from-states` for the variant-matrix
-        failure mode and the states-sheet fix.
-      source: canon
-      consequence: >-
-        Modelling states as variants explodes the matrix
-        (3 variants × 4 interactive states × 2 orientations × 2
-        densities = 48+ Figma variants) and forces designers
-        and developers to translate the variant matrix into
-        pseudo-classes by hand on every implementation. The
-        anatomy splits intentionally to keep both surfaces
-        small.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Card
@@ -704,3 +651,59 @@ sources:
   - https://inclusive-components.design/cards/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: interactive-true-cards-activator-single-real
+    statement: >-
+      When `interactive: true`, the card's activator is a single
+      real `<a href>` (navigation) or `<button>` (in-page action)
+      — never a `<div onclick>` and never `role="button"` on the
+      card root. See mistakes `card-as-link-nested-buttons` and
+      `clickable-card-no-keyboard` for the overlay-pattern
+      construction that keeps nested actions reachable.
+    source: html-spec
+    sourceRef: 'HTML interactive element semantics + WAI-ARIA Authoring Practices'
+    consequence: >-
+      Wrapping the entire card in `<a>` traps nested buttons —
+      keyboard users cannot activate inner controls, and SR
+      reads the nested buttons as part of the link's
+      accessible name. `<div onclick>` makes the card
+      unfocusable and unannounceable. The overlay pattern is
+      the only construction that keeps both the
+      whole-card-clickable affordance and the nested-actions
+      contract.
+  - id: card-tile-listitem-distinct-canonical-ids
+    statement: >-
+      `Card`, `Tile`, and `ListItem` are distinct canonical ids
+      with non-overlapping required anatomy — Card mandates
+      `title` and `body` as content slots. A composition that
+      drops both in favor of a single dominant image, or
+      reflows into a horizontal leading/primary/secondary/
+      trailing row, is not a Card variant — it is Tile's or
+      ListItem's contract. See `whenToUse.vsRelated` (`tile`,
+      `list-item`) for the full differentiation and decision
+      test.
+    source: canon
+    consequence: >-
+      Mixing the three contracts produces composite components
+      that read incoherently — text-heavy "tiles" lose the
+      gallery-scan affordance; image-led "cards" force
+      designers to invent media-dominant variants the canon
+      does not endorse; row-style cards collapse the
+      list/grid distinction that drives layout choice.
+  - id: interactive-states-hover-focus-visible-active
+    statement: >-
+      Interactive states (hover / focus-visible / active /
+      disabled) are never modelled as Figma variants; variants
+      are reserved for structurally different versions
+      (`elevated` / `outlined` / `flat`). See mistake
+      `variant-explosion-from-states` for the variant-matrix
+      failure mode and the states-sheet fix.
+    source: canon
+    consequence: >-
+      Modelling states as variants explodes the matrix
+      (3 variants × 4 interactive states × 2 orientations × 2
+      densities = 48+ Figma variants) and forces designers
+      and developers to translate the variant matrix into
+      pseudo-classes by hand on every implementation. The
+      anatomy splits intentionally to keep both surfaces
+      small.

@@ -282,9 +282,9 @@ axes:
     - name: two-line
     - name: three-line
   properties:
-    - { name: interactive, kind: primitive, of: boolean }
-    - { name: selectable, kind: primitive, of: boolean }
-    - { name: swipeable, kind: primitive, of: boolean }
+    - {name: interactive, kind: primitive, of: boolean}
+    - {name: selectable, kind: primitive, of: boolean}
+    - {name: swipeable, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
@@ -843,19 +843,6 @@ whenToUse:
         list-rhythm visual language; the second axis is the
         deciding factor.
 contracts:
-  nonNegotiable:
-    - rule: >-
-        ListItem renders within list semantics (`<ul>`/`<ol>` or
-        `role="list"`) and preserves list rhythm — consistent
-        inline density, vertical separators or none, never
-        card-shaped elevation.
-      source: canon
-      consequence: >-
-        ListItem styled as a card breaks the list rhythm and the
-        SR list-navigation contract; users navigating by list
-        lose item count and position. The list-vs-card
-        distinction is the highest-load-bearing canonical
-        decision for this component.
   vocabularyDrift:
     - system: Material 3
       theirTerm: List item
@@ -890,3 +877,17 @@ sources:
 
 lastReviewed: '2026-05-04'
 
+rules:
+  - id: listitem-renders-within-list-semantics-ul
+    statement: >-
+      ListItem renders within list semantics (`<ul>`/`<ol>` or
+      `role="list"`) and preserves list rhythm — consistent
+      inline density, vertical separators or none, never
+      card-shaped elevation.
+    source: canon
+    consequence: >-
+      ListItem styled as a card breaks the list rhythm and the
+      SR list-navigation contract; users navigating by list
+      lose item count and position. The list-vs-card
+      distinction is the highest-load-bearing canonical
+      decision for this component.

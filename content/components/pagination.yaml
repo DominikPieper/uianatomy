@@ -487,8 +487,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: showFirstLast, kind: primitive, of: boolean }
-    - { name: disabled, kind: primitive, of: boolean }
+    - {name: showFirstLast, kind: primitive, of: boolean}
+    - {name: disabled, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -1120,85 +1120,6 @@ i18n:
     avoids visual crowding regardless of language.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Pagination is wrapped in `<nav>` with a specific
-        `aria-label` ("Pagination" or the locale-
-        translated equivalent). The label distinguishes
-        the pagination from other navigation landmarks
-        on the page.
-      source: wcag
-      sourceRef: 'WCAG 1.3.1 Info and Relationships'
-      consequence: >-
-        Without the landmark, SR users cannot jump to
-        the pagination via landmark navigation — the
-        affordance becomes invisible to AT until users
-        encounter it by accident in linear reading
-        order. WCAG 1.3.1 violation.
-
-    - rule: >-
-        The current page carries `aria-current="page"`
-        and is rendered as static text or as a non-
-        navigating anchor — never as `<a href>` to the
-        current URL. Implementations that ship a self-
-        link create a useless tab stop and the
-        page-reload-on-click is hostile.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 Name, Role, Value'
-      consequence: >-
-        Without `aria-current="page"`, SR users hear
-        "Page 3, link" on every page-button without
-        any indication of which page they are
-        currently viewing. Self-link to current page
-        wastes user effort and breaks the navigation
-        model.
-
-    - rule: >-
-        Disabled previous / next / first / last buttons
-        retain DOM presence with `aria-disabled="true"`
-        — never removed via `display: none` or omitted
-        from rendering on boundary pages.
-      source: canon
-      consequence: >-
-        Without the rule, the pagination's tab-order
-        shifts between pages — users learn one keyboard
-        pattern then have it broken on transitions.
-        AT users hear different element-counts in the
-        landmark across page boundaries. The
-        disabled-not-removed contract is canonical.
-
-    - rule: >-
-        Ellipses are decorative — `aria-hidden="true"`
-        and not in the tab-order. Implementations that
-        ship ellipsis-as-button (Material UI's
-        non-canonical extension) confuse keyboard users
-        with extra tab stops and unclear behaviour.
-      source: canon
-      consequence: >-
-        Without the rule, keyboard users encounter
-        intermediate tab stops between boundary pages
-        and sibling pages with no clear semantic. AT
-        users hear "ellipsis, button" with no affordance
-        contract. The decorative-ellipsis discipline is
-        canonical.
-
-    - rule: >-
-        Page-numbers are `<a href>` for server-paginated
-        or URL-deep-linkable contexts; `<button>` only
-        for SPA-only contexts where URL change is
-        undesirable. SPA framework `<Link>` components
-        (Next Link, React Router Link) render as
-        anchors and satisfy the rule.
-      source: html-spec
-      sourceRef: 'HTML standard — anchor element semantics for navigation'
-      consequence: >-
-        Without the rule, right-click → "Open in new
-        tab" does nothing; hover shows no URL preview;
-        share-link copies the wrong URL. The
-        affordance functions for keyboard / click but
-        loses every URL-based interaction users expect
-        from page navigation.
-
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: 'aria-current="page" + nav-landmark'
@@ -1305,3 +1226,82 @@ notes: >-
   the most-overlooked implementation failure mode.
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: pagination-wrapped-nav-specific-aria-label
+    statement: >-
+      Pagination is wrapped in `<nav>` with a specific
+      `aria-label` ("Pagination" or the locale-
+      translated equivalent). The label distinguishes
+      the pagination from other navigation landmarks
+      on the page.
+    source: wcag
+    sourceRef: 'WCAG 1.3.1 Info and Relationships'
+    consequence: >-
+      Without the landmark, SR users cannot jump to
+      the pagination via landmark navigation — the
+      affordance becomes invisible to AT until users
+      encounter it by accident in linear reading
+      order. WCAG 1.3.1 violation.
+  - id: current-page-carries-aria-current-page
+    statement: >-
+      The current page carries `aria-current="page"`
+      and is rendered as static text or as a non-
+      navigating anchor — never as `<a href>` to the
+      current URL. Implementations that ship a self-
+      link create a useless tab stop and the
+      page-reload-on-click is hostile.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 Name, Role, Value'
+    consequence: >-
+      Without `aria-current="page"`, SR users hear
+      "Page 3, link" on every page-button without
+      any indication of which page they are
+      currently viewing. Self-link to current page
+      wastes user effort and breaks the navigation
+      model.
+  - id: disabled-previous-next-first-last-buttons
+    statement: >-
+      Disabled previous / next / first / last buttons
+      retain DOM presence with `aria-disabled="true"`
+      — never removed via `display: none` or omitted
+      from rendering on boundary pages.
+    source: canon
+    consequence: >-
+      Without the rule, the pagination's tab-order
+      shifts between pages — users learn one keyboard
+      pattern then have it broken on transitions.
+      AT users hear different element-counts in the
+      landmark across page boundaries. The
+      disabled-not-removed contract is canonical.
+  - id: ellipses-decorative
+    statement: >-
+      Ellipses are decorative — `aria-hidden="true"`
+      and not in the tab-order. Implementations that
+      ship ellipsis-as-button (Material UI's
+      non-canonical extension) confuse keyboard users
+      with extra tab stops and unclear behaviour.
+    source: canon
+    consequence: >-
+      Without the rule, keyboard users encounter
+      intermediate tab stops between boundary pages
+      and sibling pages with no clear semantic. AT
+      users hear "ellipsis, button" with no affordance
+      contract. The decorative-ellipsis discipline is
+      canonical.
+  - id: page-numbers-href-server-paginated-url
+    statement: >-
+      Page-numbers are `<a href>` for server-paginated
+      or URL-deep-linkable contexts; `<button>` only
+      for SPA-only contexts where URL change is
+      undesirable. SPA framework `<Link>` components
+      (Next Link, React Router Link) render as
+      anchors and satisfy the rule.
+    source: html-spec
+    sourceRef: 'HTML standard — anchor element semantics for navigation'
+    consequence: >-
+      Without the rule, right-click → "Open in new
+      tab" does nothing; hover shows no URL preview;
+      share-link copies the wrong URL. The
+      affordance functions for keyboard / click but
+      loses every URL-based interaction users expect
+      from page navigation.

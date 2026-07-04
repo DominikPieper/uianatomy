@@ -304,10 +304,10 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg]
-    - { name: indeterminate, kind: primitive, of: boolean }
-    - { name: required, kind: primitive, of: boolean }
-    - { name: disabled, kind: primitive, of: boolean }
-    - { name: invalid, kind: primitive, of: boolean }
+    - {name: indeterminate, kind: primitive, of: boolean}
+    - {name: required, kind: primitive, of: boolean}
+    - {name: disabled, kind: primitive, of: boolean}
+    - {name: invalid, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -752,48 +752,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The input's accessible name resolves from a programmatic
-        label association (`<label for="<id>">` or a wrapping
-        `<label>`) — never from adjacent text, placeholder
-        styling, or visual proximity alone.
-      source: apg
-      sourceRef: 'APG: Checkbox pattern'
-      consequence: >-
-        Failure mode and fix are detailed in mistake
-        `checkbox-no-label-assoc` and in the "label drawn as
-        inline text disconnected from the input" mismatch —
-        this contract states the invariant those two entries
-        test against.
-    - rule: >-
-        Parent group-checkbox reflects the mixed (indeterminate)
-        state when its child set is partial. Set
-        `parent.indeterminate = anyChecked && !allChecked`; the
-        browser surfaces this as `aria-checked="mixed"` and the
-        indicator slot renders the dash glyph. Implementations
-        that show checked or unchecked when partial lie about
-        state.
-      source: apg
-      sourceRef: 'APG: Checkbox tri-state'
-      consequence: >-
-        Without the mixed propagation, the "select all" pattern
-        becomes misleading — users see a checked parent but
-        only some children are selected. SR users hear
-        contradictory state on parent activation. The tri-state
-        contract is a canonical APG requirement.
-    - rule: >-
-        The effective hit-target (input plus wrapping label and
-        padding) is ≥ 24×24 CSS pixels, independent of the
-        painted visual-square size.
-      source: wcag
-      sourceRef: 'WCAG 2.5.8 Target Size (Minimum)'
-      consequence: >-
-        Failure mode and fix are detailed in mistake
-        `checkbox-target-too-small` and in the "hit-target
-        painted as the 16×16 visual square" mismatch — this
-        contract states the invariant those two entries test
-        against.
   vocabularyDrift:
     - system: HTML
       theirTerm: '`<input type="checkbox">`'
@@ -851,3 +809,48 @@ sources:
   - https://mui.com/material-ui/react-checkbox/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: inputs-accessible-name-resolves-from
+    statement: >-
+      The input's accessible name resolves from a programmatic
+      label association (`<label for="<id>">` or a wrapping
+      `<label>`) — never from adjacent text, placeholder
+      styling, or visual proximity alone.
+    source: apg
+    sourceRef: 'APG: Checkbox pattern'
+    consequence: >-
+      Failure mode and fix are detailed in mistake
+      `checkbox-no-label-assoc` and in the "label drawn as
+      inline text disconnected from the input" mismatch —
+      this contract states the invariant those two entries
+      test against.
+  - id: parent-group-checkbox-reflects-mixed
+    statement: >-
+      Parent group-checkbox reflects the mixed (indeterminate)
+      state when its child set is partial. Set
+      `parent.indeterminate = anyChecked && !allChecked`; the
+      browser surfaces this as `aria-checked="mixed"` and the
+      indicator slot renders the dash glyph. Implementations
+      that show checked or unchecked when partial lie about
+      state.
+    source: apg
+    sourceRef: 'APG: Checkbox tri-state'
+    consequence: >-
+      Without the mixed propagation, the "select all" pattern
+      becomes misleading — users see a checked parent but
+      only some children are selected. SR users hear
+      contradictory state on parent activation. The tri-state
+      contract is a canonical APG requirement.
+  - id: effective-hit-target-input-plus-wrapping
+    statement: >-
+      The effective hit-target (input plus wrapping label and
+      padding) is ≥ 24×24 CSS pixels, independent of the
+      painted visual-square size.
+    source: wcag
+    sourceRef: 'WCAG 2.5.8 Target Size (Minimum)'
+    consequence: >-
+      Failure mode and fix are detailed in mistake
+      `checkbox-target-too-small` and in the "hit-target
+      painted as the 16×16 visual square" mismatch — this
+      contract states the invariant those two entries test
+      against.

@@ -241,8 +241,8 @@ axes:
     - name: dot
     - name: vertical
   properties:
-    - { name: linear, kind: primitive, of: boolean }
-    - { name: hasDescriptions, kind: primitive, of: boolean }
+    - {name: linear, kind: primitive, of: boolean}
+    - {name: hasDescriptions, kind: primitive, of: boolean}
     - name: size
       kind: enum
       values: [sm, md, lg]
@@ -753,21 +753,6 @@ whenToUse:
         depends on step-N-1.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Active step carries `aria-current="step"`; the sequential
-        order semantic is preserved (steps reachable in their
-        defined order in linear mode, with `aria-disabled` on
-        not-yet-reachable steps).
-      source: apg
-      sourceRef: 'WAI-ARIA aria-current property'
-      consequence: >-
-        Implementations that render a Stepper as styled Tabs lose
-        both the order semantic and the `aria-current="step"`
-        accessible state — assistive tech announces the surface
-        as a tab system and the canonical sequential-flow
-        contract breaks. The Stepper-vs-Tabs distinction is the
-        most-load-bearing canonical decision for this component.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Stepper
@@ -795,3 +780,19 @@ sources:
   - https://www.gov.uk/service-manual/design/check-a-users-answers
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: active-step-carries-aria-current-step
+    statement: >-
+      Active step carries `aria-current="step"`; the sequential
+      order semantic is preserved (steps reachable in their
+      defined order in linear mode, with `aria-disabled` on
+      not-yet-reachable steps).
+    source: apg
+    sourceRef: 'WAI-ARIA aria-current property'
+    consequence: >-
+      Implementations that render a Stepper as styled Tabs lose
+      both the order semantic and the `aria-current="step"`
+      accessible state — assistive tech announces the surface
+      as a tab system and the canonical sequential-flow
+      contract breaks. The Stepper-vs-Tabs distinction is the
+      most-load-bearing canonical decision for this component.

@@ -20,6 +20,7 @@ import {
   axesSchema,
   frameworkMapSchema,
   contractsSchema,
+  ruleSchema,
 } from '@uianatomy/shared/schema';
 
 // A permissive object schema for surfaces whose shape is large or dynamic
@@ -55,6 +56,8 @@ export const frameworkMapOutput = frameworkMapSchema;
 export const contractsOutput = z.object({
   id: z.string(),
   kind: z.enum(['component', 'pattern']),
+  // P6-201 Step 2 (ADR-039) — rules promoted out of contracts.nonNegotiable.
+  rules: z.array(ruleSchema).nullable(),
   contracts: contractsSchema.nullable(),
 });
 

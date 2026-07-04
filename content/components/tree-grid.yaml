@@ -461,10 +461,10 @@ axes:
     - name: size
       kind: enum
       values: [sm, md]
-    - { name: multiSelect, kind: primitive, of: boolean }
-    - { name: virtualized, kind: primitive, of: boolean }
-    - { name: stickyHeader, kind: primitive, of: boolean }
-    - { name: sortable, kind: primitive, of: boolean }
+    - {name: multiSelect, kind: primitive, of: boolean}
+    - {name: virtualized, kind: primitive, of: boolean}
+    - {name: stickyHeader, kind: primitive, of: boolean}
+    - {name: sortable, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -1289,129 +1289,6 @@ performance:
       conservative.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Every row carries `aria-level` (1-based
-        depth, 1 is a top-level row). The level
-        drives both the visual indent and the AT
-        announcement. Implementations that ship
-        visual indent without `aria-level`
-        violate WCAG 1.3.1 — sighted users see
-        hierarchy, AT users hear flat row-list.
-      source: apg
-      sourceRef: 'APG: TreeGrid pattern aria-level requirement'
-      consequence: >-
-        Without `aria-level`, the hierarchical
-        semantic is invisible to AT — see mistake
-        `treegrid-no-aria-level` for the resulting
-        failure mode.
-
-    - rule: >-
-        Parent rows (rows with descendants) carry
-        `aria-expanded` reflecting the current
-        expansion state — `true` when children
-        are visible, `false` when collapsed. Leaf
-        rows OMIT `aria-expanded` (the absence is
-        the canonical signal that the row has no
-        descendants).
-      source: apg
-      sourceRef: 'APG: TreeGrid pattern aria-expanded requirement'
-      consequence: >-
-        Without `aria-expanded` on parent rows,
-        AT users cannot tell which rows are
-        expandable or whether a row is currently
-        expanded. ArrowRight / ArrowLeft
-        navigation has no programmatic state to
-        observe. The expansion-toggle gesture
-        becomes invisible to AT.
-
-    - rule: >-
-        ArrowRight / ArrowLeft implement tree-
-        navigation on top of the grid keyboard
-        model — ArrowRight expands collapsed
-        parents OR moves to first child of
-        expanded parents; ArrowLeft collapses
-        expanded parents OR moves to parent of
-        leaf rows.
-      source: apg
-      sourceRef: 'APG: TreeGrid pattern keyboard interaction'
-      consequence: >-
-        Without the tree-keyboard handlers, see
-        mistake
-        `treegrid-arrow-not-tree-keyboard-model`
-        for the resulting failure. This is the
-        defining affordance that distinguishes
-        TreeGrid's keyboard model from Grid's —
-        losing it undermines the escalation
-        rationale documented in `vsRelated`.
-
-    - rule: >-
-        TreeGrid inherits Grid's keyboard-model
-        and role-hierarchy contracts in full —
-        roving-tabindex, 2D arrow-key
-        navigation, F2 / Enter / Escape edit-
-        mode lifecycle, and the gridcell /
-        columnheader / rowheader role
-        hierarchy. See Grid's own
-        `contracts.nonNegotiable` for the
-        atomic, independently-testable
-        statement of each; TreeGrid does not
-        relax or modify any of them. The
-        role-hierarchy failure mode is also
-        documented locally as mistake
-        `treegrid-cell-not-gridcell-role`.
-      source: apg
-      sourceRef: 'APG: TreeGrid extends Grid pattern'
-      consequence: >-
-        Without inheriting Grid's contracts in
-        full, the treegrid loses the foundation
-        that the ArrowRight / ArrowLeft tree-
-        navigation builds on top of — see the
-        Grid pattern's contracts (and, for the
-        role-hierarchy case, the cross-
-        referenced mistake) for what each
-        specific omission breaks.
-
-    - rule: >-
-        Virtualized treegrids recompute
-        `aria-rowcount` / `aria-rowindex`
-        against the currently-visible row set
-        as expansion state changes — the count
-        is NOT the total of all rows including
-        collapsed children. This extends
-        Grid's generic virtualization contract
-        with the expansion-state dependency
-        unique to trees.
-      source: canon
-      consequence: >-
-        See mistake
-        `treegrid-no-aria-rowcount-virtualized`
-        for the resulting failure — AT users
-        would otherwise perceive different
-        row-counts at different expansion
-        states with no indication of the
-        underlying truth.
-
-    - rule: >-
-        Visual indent per row derives from
-        `aria-level` (single source-of-truth) —
-        `padding-inline-start: calc(var(--level)
-        * indentStep)` or equivalent. Visual and
-        AT cannot diverge; both read from the
-        same value.
-      source: canon
-      consequence: >-
-        Without the single-source-of-truth
-        rule, implementations may compute
-        indent from a separate state value
-        (e.g., the row's array-position) and
-        the visual hierarchy diverges from
-        the `aria-level` AT semantic. The
-        canonical discipline keeps them in
-        sync by construction — change the
-        level, the indent updates; AT users
-        and sighted users see the same
-        structure.
   vocabularyDrift:
     - system: WAI-ARIA
       theirTerm: 'role=treegrid + aria-level + aria-expanded'
@@ -1517,3 +1394,127 @@ notes: >-
   detail.
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: every-row-carries-aria-level-1
+    statement: >-
+      Every row carries `aria-level` (1-based
+      depth, 1 is a top-level row). The level
+      drives both the visual indent and the AT
+      announcement. Implementations that ship
+      visual indent without `aria-level`
+      violate WCAG 1.3.1 — sighted users see
+      hierarchy, AT users hear flat row-list.
+    source: apg
+    sourceRef: 'APG: TreeGrid pattern aria-level requirement'
+    consequence: >-
+      Without `aria-level`, the hierarchical
+      semantic is invisible to AT — see mistake
+      `treegrid-no-aria-level` for the resulting
+      failure mode.
+  - id: parent-rows-rows-descendants-carry-aria
+    statement: >-
+      Parent rows (rows with descendants) carry
+      `aria-expanded` reflecting the current
+      expansion state — `true` when children
+      are visible, `false` when collapsed. Leaf
+      rows OMIT `aria-expanded` (the absence is
+      the canonical signal that the row has no
+      descendants).
+    source: apg
+    sourceRef: 'APG: TreeGrid pattern aria-expanded requirement'
+    consequence: >-
+      Without `aria-expanded` on parent rows,
+      AT users cannot tell which rows are
+      expandable or whether a row is currently
+      expanded. ArrowRight / ArrowLeft
+      navigation has no programmatic state to
+      observe. The expansion-toggle gesture
+      becomes invisible to AT.
+  - id: arrowright-arrowleft-implement-tree-navigation
+    statement: >-
+      ArrowRight / ArrowLeft implement tree-
+      navigation on top of the grid keyboard
+      model — ArrowRight expands collapsed
+      parents OR moves to first child of
+      expanded parents; ArrowLeft collapses
+      expanded parents OR moves to parent of
+      leaf rows.
+    source: apg
+    sourceRef: 'APG: TreeGrid pattern keyboard interaction'
+    consequence: >-
+      Without the tree-keyboard handlers, see
+      mistake
+      `treegrid-arrow-not-tree-keyboard-model`
+      for the resulting failure. This is the
+      defining affordance that distinguishes
+      TreeGrid's keyboard model from Grid's —
+      losing it undermines the escalation
+      rationale documented in `vsRelated`.
+  - id: treegrid-inherits-grids-keyboard-model-role
+    statement: >-
+      TreeGrid inherits Grid's keyboard-model
+      and role-hierarchy contracts in full —
+      roving-tabindex, 2D arrow-key
+      navigation, F2 / Enter / Escape edit-
+      mode lifecycle, and the gridcell /
+      columnheader / rowheader role
+      hierarchy. See Grid's own
+      `rules` for the
+      atomic, independently-testable
+      statement of each; TreeGrid does not
+      relax or modify any of them. The
+      role-hierarchy failure mode is also
+      documented locally as mistake
+      `treegrid-cell-not-gridcell-role`.
+    source: apg
+    sourceRef: 'APG: TreeGrid extends Grid pattern'
+    consequence: >-
+      Without inheriting Grid's contracts in
+      full, the treegrid loses the foundation
+      that the ArrowRight / ArrowLeft tree-
+      navigation builds on top of — see the
+      Grid pattern's contracts (and, for the
+      role-hierarchy case, the cross-
+      referenced mistake) for what each
+      specific omission breaks.
+  - id: virtualized-treegrids-recompute-aria-rowcount
+    statement: >-
+      Virtualized treegrids recompute
+      `aria-rowcount` / `aria-rowindex`
+      against the currently-visible row set
+      as expansion state changes — the count
+      is NOT the total of all rows including
+      collapsed children. This extends
+      Grid's generic virtualization contract
+      with the expansion-state dependency
+      unique to trees.
+    source: canon
+    consequence: >-
+      See mistake
+      `treegrid-no-aria-rowcount-virtualized`
+      for the resulting failure — AT users
+      would otherwise perceive different
+      row-counts at different expansion
+      states with no indication of the
+      underlying truth.
+  - id: visual-indent-per-row-derives-from
+    statement: >-
+      Visual indent per row derives from
+      `aria-level` (single source-of-truth) —
+      `padding-inline-start: calc(var(--level)
+      * indentStep)` or equivalent. Visual and
+      AT cannot diverge; both read from the
+      same value.
+    source: canon
+    consequence: >-
+      Without the single-source-of-truth
+      rule, implementations may compute
+      indent from a separate state value
+      (e.g., the row's array-position) and
+      the visual hierarchy diverges from
+      the `aria-level` AT semantic. The
+      canonical discipline keeps them in
+      sync by construction — change the
+      level, the indent updates; AT users
+      and sighted users see the same
+      structure.

@@ -157,8 +157,8 @@ axes:
     - name: size
       kind: enum
       values: [sm, md, lg]
-    - { name: iconOnly, kind: primitive, of: boolean }
-    - { name: fullWidth, kind: primitive, of: boolean }
+    - {name: iconOnly, kind: primitive, of: boolean}
+    - {name: fullWidth, kind: primitive, of: boolean}
     - name: type
       kind: enum
       values: [button, submit, reset]
@@ -493,62 +493,6 @@ a11yAcceptance:
     - focus-order-semantics
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The control is a native `<button>` (or `<input type="button|submit">`).
-        A non-button element pressed into service (`<div>`, `<a>` without
-        href, `<span>`) must carry `role="button"`, `tabindex="0"`, and a
-        keydown handler for both Enter and Space — and even then is a
-        last resort, not a pattern.
-      source: apg
-      sourceRef: 'APG: Button pattern (keyboard interaction)'
-      consequence: >-
-        A `<div onclick>` is invisible to keyboard and SR users: no focus,
-        no Enter/Space activation, no implicit `role=button` announcement.
-        Re-implementing the three native behaviors (focusability, dual-key
-        activation, role) by hand is error-prone and almost always ships
-        with at least one gap.
-    - rule: >-
-        Every button has a non-empty accessible name. Text content suffices;
-        an icon-only button requires `aria-label` (or `aria-labelledby`, or
-        visually-hidden text). The name describes the action, not the icon.
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 (Name, Role, Value) + 2.4.6'
-      consequence: >-
-        An unnamed icon-only button is announced as just "button" — the SR
-        user cannot tell delete from edit from share. This is the single
-        most common button a11y defect in the wild.
-    - rule: >-
-        `type` is set explicitly. A `<button>` inside a `<form>` defaults to
-        `type="submit"`; every non-submit button (cancel, toggle, open-menu)
-        must declare `type="button"`.
-      source: html-spec
-      sourceRef: 'HTML button type attribute (WHATWG)'
-      consequence: >-
-        An untyped button in a form submits it. A "Show password" toggle or
-        "Add row" button silently posts the form and reloads/navigates —
-        a data-loss bug that only surfaces once the button lives inside a form.
-    - rule: >-
-        The interactive hit target is at least 24×24 CSS px (44×44 for the
-        primary touch target on mobile-first surfaces). Visual size may be
-        smaller if padding/`::before` expands the hit area.
-      source: wcag
-      sourceRef: 'WCAG 2.5.8 (Target Size, Minimum) — AA'
-      consequence: >-
-        Sub-24px targets fail AA and produce mis-taps for motor-impaired
-        and touch users; dense icon-button toolbars are the usual offender.
-    - rule: >-
-        A disabled button uses `disabled` (removed from tab order, not
-        clickable) only when the user needs no explanation. When discovery
-        of *why* it is disabled matters — or the button must stay
-        announceable — use `aria-disabled="true"` + a guard in the handler
-        instead, keeping it focusable.
-      source: canon
-      consequence: >-
-        `disabled` removes the element from the accessibility tree's
-        interaction model and from tab order, so SR users tabbing through
-        never encounter it and never learn the blocked action exists. For
-        gating-style buttons (submit blocked until valid) this hides the goal.
   vocabularyDrift:
     - system: Material Design 3
       theirTerm: 'Common buttons — filled / outlined / text / elevated / tonal'
@@ -601,3 +545,64 @@ sources:
     verifiedAt: '2026-05-05'
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: control-native-button-input-type-button
+    statement: >-
+      The control is a native `<button>` (or `<input type="button|submit">`).
+      A non-button element pressed into service (`<div>`, `<a>` without
+      href, `<span>`) must carry `role="button"`, `tabindex="0"`, and a
+      keydown handler for both Enter and Space — and even then is a
+      last resort, not a pattern.
+    source: apg
+    sourceRef: 'APG: Button pattern (keyboard interaction)'
+    consequence: >-
+      A `<div onclick>` is invisible to keyboard and SR users: no focus,
+      no Enter/Space activation, no implicit `role=button` announcement.
+      Re-implementing the three native behaviors (focusability, dual-key
+      activation, role) by hand is error-prone and almost always ships
+      with at least one gap.
+  - id: every-button-non-empty-accessible-name
+    statement: >-
+      Every button has a non-empty accessible name. Text content suffices;
+      an icon-only button requires `aria-label` (or `aria-labelledby`, or
+      visually-hidden text). The name describes the action, not the icon.
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 (Name, Role, Value) + 2.4.6'
+    consequence: >-
+      An unnamed icon-only button is announced as just "button" — the SR
+      user cannot tell delete from edit from share. This is the single
+      most common button a11y defect in the wild.
+  - id: type-set-explicitly
+    statement: >-
+      `type` is set explicitly. A `<button>` inside a `<form>` defaults to
+      `type="submit"`; every non-submit button (cancel, toggle, open-menu)
+      must declare `type="button"`.
+    source: html-spec
+    sourceRef: 'HTML button type attribute (WHATWG)'
+    consequence: >-
+      An untyped button in a form submits it. A "Show password" toggle or
+      "Add row" button silently posts the form and reloads/navigates —
+      a data-loss bug that only surfaces once the button lives inside a form.
+  - id: interactive-hit-target-least-24-24
+    statement: >-
+      The interactive hit target is at least 24×24 CSS px (44×44 for the
+      primary touch target on mobile-first surfaces). Visual size may be
+      smaller if padding/`::before` expands the hit area.
+    source: wcag
+    sourceRef: 'WCAG 2.5.8 (Target Size, Minimum) — AA'
+    consequence: >-
+      Sub-24px targets fail AA and produce mis-taps for motor-impaired
+      and touch users; dense icon-button toolbars are the usual offender.
+  - id: disabled-button-uses-disabled-removed-from
+    statement: >-
+      A disabled button uses `disabled` (removed from tab order, not
+      clickable) only when the user needs no explanation. When discovery
+      of *why* it is disabled matters — or the button must stay
+      announceable — use `aria-disabled="true"` + a guard in the handler
+      instead, keeping it focusable.
+    source: canon
+    consequence: >-
+      `disabled` removes the element from the accessibility tree's
+      interaction model and from tab order, so SR users tabbing through
+      never encounter it and never learn the blocked action exists. For
+      gating-style buttons (submit blocked until valid) this hides the goal.

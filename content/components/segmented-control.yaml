@@ -208,7 +208,7 @@ axes:
     - name: orientation
       kind: enum
       values: [horizontal, vertical]
-    - { name: hasIndicator, kind: primitive, of: boolean }
+    - {name: hasIndicator, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -605,19 +605,6 @@ whenToUse:
         uses `role="radiogroup"`; Switch uses `role="switch"`
         — different roles, different keyboard contracts.
 contracts:
-  nonNegotiable:
-    - rule: >-
-        SegmentedControl uses `role="radiogroup"` for view-toggle
-        semantics — exactly one option active at a time, exclusive
-        choice. `role="tablist"` is reserved for content-switching
-        tabs.
-      source: apg
-      sourceRef: 'APG: Radio Group pattern'
-      consequence: >-
-        A tablist styled as a segmented control for what is really
-        a view-toggle breaks the SR contract — assistive tech
-        announces the surface as a tab system and users expect
-        keyboard semantics that do not apply.
   vocabularyDrift:
     - system: Apple HIG
       theirTerm: Segmented Control
@@ -646,3 +633,17 @@ sources:
   - https://developer.apple.com/design/human-interface-guidelines/segmented-controls
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: segmentedcontrol-uses-role-radiogroup-view
+    statement: >-
+      SegmentedControl uses `role="radiogroup"` for view-toggle
+      semantics — exactly one option active at a time, exclusive
+      choice. `role="tablist"` is reserved for content-switching
+      tabs.
+    source: apg
+    sourceRef: 'APG: Radio Group pattern'
+    consequence: >-
+      A tablist styled as a segmented control for what is really
+      a view-toggle breaks the SR contract — assistive tech
+      announces the surface as a tab system and users expect
+      keyboard semantics that do not apply.

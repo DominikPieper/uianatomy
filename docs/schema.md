@@ -19,7 +19,8 @@ mistakes: [...]             # Common implementation errors
 frameworkMap: {...}         # Cross-framework expression
 motion: {...}               # Optional. Durations, easing, reduced-motion fallback
 responsive: {...}           # Optional. Behaviour changes at viewport breakpoints
-contracts: {...}            # Optional. Hard-binding rules + per-system vocabulary drift
+rules: [...]                 # Optional. Hard-binding rules (ADR-039)
+contracts: {...}            # Optional. Per-system vocabulary drift
 ```
 
 ## `anatomy`
@@ -677,6 +678,7 @@ The bridge between figma and code worlds. Documents typical translation problems
 ```yaml
 mismatches:
   - id: card-hover-focus-variant-explosion  # optional (P6-201)
+    ruleId: some-rule-id                    # optional (P6-201 Step 2 / ADR-039)
     figma: Variants for hover/focus
     code: CSS pseudo-classes
     consequence: Figma variant explosion (24 variants instead of 3)
@@ -685,7 +687,9 @@ mismatches:
 
 This is the highest-value section for designer-developer collaboration. Most other reference sites document one side or the other; the mismatches are where teams actually struggle.
 
-**`id` (optional, P6-201):** symmetric with `mistakes[].id`. Lets a `contracts.nonNegotiable[].relatedMistakes`-style structural reference (or a future mismatch-to-mismatch cross-ref) point at a specific mismatch instead of restating its prose inline. Not backfilled across the existing corpus — new mismatches that a contract rule needs to reference should carry one; components with no such reference can leave it out.
+**`id` (optional, P6-201):** symmetric with `mistakes[].id`. Lets a future mismatch-to-mismatch cross-ref point at a specific mismatch instead of restating its prose inline. Not backfilled across the existing corpus.
+
+**`ruleId` (optional, P6-201 Step 2 / ADR-039):** forward-reference to `rules[].id` on the same component — names the one hard-binding rule this mismatch is a translation gap around, instead of restating the rule's prose inline. See the `rules` section below.
 
 ## `mistakes`
 
@@ -694,6 +698,7 @@ Common implementation errors with corrections.
 ```yaml
 mistakes:
   - id: card-as-link-nested-buttons
+    ruleId: some-rule-id              # optional (P6-201 Step 2 / ADR-039)
     severity: blocker                # blocker | major | minor
     title: Card-as-link with nested buttons
     description: Wrapping the entire card in <a> breaks keyboard access...
@@ -701,6 +706,8 @@ mistakes:
 ```
 
 Each mistake has a stable `id` so it can be referenced from other components or external links.
+
+**`ruleId` (optional, P6-201 Step 2 / ADR-039):** forward-reference to `rules[].id` on the same component — names the one hard-binding rule this mistake violates, instead of restating the rule's prose inline. See the `rules` section below.
 
 **`severity` (required, closed enum):** Three tiers reflect the cost of shipping the mistake.
 
@@ -710,29 +717,38 @@ Each mistake has a stable `id` so it can be referenced from other components or 
 
 Renderers sort by severity descending (blockers first); within a tier, declaration order is preserved. The `MistakesList` component shows the severity tag inline next to the mistake id.
 
+## `rules` (optional, top-level, P6-201 Step 2 / ADR-039)
+
+Hard-binding rules — the parts of a component's contract that are not negotiable design taste, distinct from `mistakes` (implementation errors) and `mismatches` (Figma↔code translation friction). Promoted out of `contracts.nonNegotiable` (ADR-027's original home for this content) to the same tier as `mistakes[]`/`mismatches[]`/`anatomy[]`, because a rule is an atomic canonical fact other sections reference, not a property of "the contracts section."
+
+```yaml
+rules:
+  - id: combobox-role-aria-expanded-aria-controls  # slug, unique within the component
+    statement: Trigger carries role="combobox", aria-expanded, and aria-controls
+    source: apg                      # apg | wcag | html-spec | platform | canon
+    sourceRef: 'APG: Combobox Pattern' # optional, shape-checked against `source`
+    consequence: Screen readers cannot announce the popup relationship or its open state
+```
+
+- **`id`** — stable slug, unique within the component/pattern. `mistakes[].ruleId` and `mismatches[].ruleId` (both optional) forward-reference it — a mistake or mismatch names the one rule it's about instead of restating the rule's prose inline (the ADR-027 antipattern `contracts.nonNegotiable` used to invite, partially fixed by P6-185's prose dedup before this structural fix existed). A consistency test (`shared/tests/consistency.test.ts`) enforces that every `ruleId` resolves to a `rules[].id` on the same component. Not backfilled across the corpus — populate `ruleId` when authoring or editing a mistake/mismatch that has a specific rule behind it.
+- **`statement`** — the rule's normative text.
+- **`source`** — which authority backs the rule.
+- **`sourceRef`** (optional) — shape-validated per source: `apg` needs an `APG:`/`WAI-ARIA` prefix, `wcag` needs a numbered criterion, `html-spec` needs to name HTML/WHATWG/DOM; `platform`/`canon` are free-form.
+- **`consequence`** — what breaks on violation.
+
+Implementation audits (`implementations/<lib>/<id>.yaml`) can reference a rule structurally via `divergence[].from: rules[<id>]` — resolved strictly against `rules[].id` by the P6-202 consistency test (a real stored key, unlike the free-form descriptive slugs `contracts.nonNegotiable[X]` used before this promotion).
+
 ## `contracts` (optional, top-level, P6-73)
 
-Hard-binding rules and per-system naming drift — the parts of a component's contract that are not negotiable design taste, distinct from `mistakes` (implementation errors) and `mismatches` (Figma↔code translation friction).
+Per-system naming drift. Narrowed to just `vocabularyDrift` by ADR-039 — the `nonNegotiable` half of this section moved to the top-level `rules` field above.
 
 ```yaml
 contracts:
-  nonNegotiable:
-    - rule: Trigger carries role="combobox", aria-expanded, and aria-controls
-      source: apg                      # apg | wcag | html-spec | platform | canon
-      sourceRef: 'APG: Combobox Pattern' # optional, shape-checked against `source`
-      consequence: Screen readers cannot announce the popup relationship or its open state
-      relatedMistakes: [combobox-missing-aria-expanded]  # optional (P6-201)
   vocabularyDrift:
     - system: Material 3
       theirTerm: Exposed Dropdown Menu
       notes: Ships as a text field + menu composite, not a dedicated combobox primitive
 ```
-
-At least one of `nonNegotiable` / `vocabularyDrift` must be present.
-
-**`nonNegotiable[]`** — rules with `source` (which authority backs the rule), an optional `sourceRef` (shape-validated per source: `apg` needs an `APG:`/`WAI-ARIA` prefix, `wcag` needs a numbered criterion, `html-spec` needs to name HTML/WHATWG/DOM; `platform`/`canon` are free-form), and a `consequence` describing what breaks on violation.
-
-- **`relatedMistakes` (optional, P6-201):** array of `mistakes[].id` on the *same* component. Points a rule at the mistake(s) that document its violation instead of restating the mistake's prose inline — the ADR-027 antipattern (`contracts.nonNegotiable` echoing `mistakes`/`mismatches` almost verbatim) that P6-185 partially fixed via prose dedup on 15 components. A consistency test (`shared/tests/consistency.test.ts`) enforces that every id resolves. Not backfilled across the corpus — add it when authoring or editing a rule that has a documented mistake behind it.
 
 **`vocabularyDrift[]`** — per-design-system naming attributed to a `system`, with `theirTerm` and optional `notes`. Distinct from `frameworkMap` (cross-*framework* expression mechanism) — this is cross-*design-system* naming.
 

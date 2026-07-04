@@ -308,9 +308,9 @@ axes:
     - name: filterMode
       kind: enum
       values: [startsWith, contains, fuzzy, none]
-    - { name: strict, kind: primitive, of: boolean }
-    - { name: virtualised, kind: primitive, of: boolean }
-    - { name: async, kind: primitive, of: boolean }
+    - {name: strict, kind: primitive, of: boolean}
+    - {name: virtualised, kind: primitive, of: boolean}
+    - {name: async, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -791,60 +791,6 @@ a11yAcceptance:
     - focus-order-semantics
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The text field carries `role="combobox"`, `aria-expanded`
-        reflecting popup visibility, and `aria-controls` pointing to the
-        popup's `id`. The field — not a wrapper `<div>` — owns the combobox
-        role (ARIA 1.2 collapsed the 1.1 wrapper pattern).
-      source: apg
-      sourceRef: 'APG: Combobox pattern (ARIA 1.2)'
-      consequence: >-
-        Without `role=combobox` + `aria-expanded`, SR users hear a plain
-        text input and never learn a suggestion list exists; `aria-controls`
-        is what ties keystrokes to the results that appear.
-    - rule: >-
-        The highlighted option is tracked with `aria-activedescendant` on the
-        input (DOM focus stays in the field) — not by moving focus into the
-        listbox. Arrow keys change `aria-activedescendant`; the input never
-        loses focus.
-      source: apg
-      sourceRef: 'APG: Combobox — keyboard focus and aria-activedescendant'
-      consequence: >-
-        Moving real focus into the list breaks typing — the user can no
-        longer edit the query while browsing results. This is the defining
-        interaction of an editable combobox; getting it wrong turns it into
-        a broken listbox.
-    - rule: >-
-        The popup is a real listbox: `role="listbox"` on the container,
-        `role="option"` on each row, and `aria-selected` on the chosen
-        option. Grid/tree popups use the corresponding role instead.
-      source: apg
-      sourceRef: 'WAI-ARIA listbox / option roles'
-      consequence: >-
-        A `<ul><li>` popup with no listbox/option roles is announced as
-        static text; SR users get no position-in-set, no selection state,
-        no "N of M" count.
-    - rule: >-
-        Keyboard contract is complete: Down opens the popup / moves to the
-        next option, Up moves previous, Enter selects the active option,
-        Escape closes the popup (and on a second press clears the field for
-        autocomplete variants), Home/End jump within the field text.
-      source: apg
-      sourceRef: 'APG: Combobox keyboard interaction'
-      consequence: >-
-        Partial keyboard support (mouse-only selection, no Escape-to-close)
-        traps keyboard users with a popup they cannot dismiss or commit.
-    - rule: >-
-        The field has a programmatic accessible name (visible `<label for>`,
-        `aria-label`, or `aria-labelledby`) and declares its autocomplete
-        behavior via `aria-autocomplete` (`list`, `both`, or `none`).
-      source: wcag
-      sourceRef: 'WCAG 4.1.2 (Name, Role, Value) + 1.3.1'
-      consequence: >-
-        An unlabeled combobox is announced as "combobox" with no purpose;
-        a missing `aria-autocomplete` leaves AT unable to tell the user
-        whether typing filters the list or inline-completes the value.
   vocabularyDrift:
     - system: Material Design 3
       theirTerm: 'Autocomplete / Exposed dropdown menu'
@@ -896,3 +842,62 @@ sources:
   - https://inclusive-components.design/menus-menu-buttons/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: text-field-carries-role-combobox-aria
+    statement: >-
+      The text field carries `role="combobox"`, `aria-expanded`
+      reflecting popup visibility, and `aria-controls` pointing to the
+      popup's `id`. The field — not a wrapper `<div>` — owns the combobox
+      role (ARIA 1.2 collapsed the 1.1 wrapper pattern).
+    source: apg
+    sourceRef: 'APG: Combobox pattern (ARIA 1.2)'
+    consequence: >-
+      Without `role=combobox` + `aria-expanded`, SR users hear a plain
+      text input and never learn a suggestion list exists; `aria-controls`
+      is what ties keystrokes to the results that appear.
+  - id: highlighted-option-tracked-aria-activedescendant
+    statement: >-
+      The highlighted option is tracked with `aria-activedescendant` on the
+      input (DOM focus stays in the field) — not by moving focus into the
+      listbox. Arrow keys change `aria-activedescendant`; the input never
+      loses focus.
+    source: apg
+    sourceRef: 'APG: Combobox — keyboard focus and aria-activedescendant'
+    consequence: >-
+      Moving real focus into the list breaks typing — the user can no
+      longer edit the query while browsing results. This is the defining
+      interaction of an editable combobox; getting it wrong turns it into
+      a broken listbox.
+  - id: popup-real-listbox-role-listbox-container
+    statement: >-
+      The popup is a real listbox: `role="listbox"` on the container,
+      `role="option"` on each row, and `aria-selected` on the chosen
+      option. Grid/tree popups use the corresponding role instead.
+    source: apg
+    sourceRef: 'WAI-ARIA listbox / option roles'
+    consequence: >-
+      A `<ul><li>` popup with no listbox/option roles is announced as
+      static text; SR users get no position-in-set, no selection state,
+      no "N of M" count.
+  - id: keyboard-contract-complete-down-opens-popup
+    statement: >-
+      Keyboard contract is complete: Down opens the popup / moves to the
+      next option, Up moves previous, Enter selects the active option,
+      Escape closes the popup (and on a second press clears the field for
+      autocomplete variants), Home/End jump within the field text.
+    source: apg
+    sourceRef: 'APG: Combobox keyboard interaction'
+    consequence: >-
+      Partial keyboard support (mouse-only selection, no Escape-to-close)
+      traps keyboard users with a popup they cannot dismiss or commit.
+  - id: field-programmatic-accessible-name-visible-label
+    statement: >-
+      The field has a programmatic accessible name (visible `<label for>`,
+      `aria-label`, or `aria-labelledby`) and declares its autocomplete
+      behavior via `aria-autocomplete` (`list`, `both`, or `none`).
+    source: wcag
+    sourceRef: 'WCAG 4.1.2 (Name, Role, Value) + 1.3.1'
+    consequence: >-
+      An unlabeled combobox is announced as "combobox" with no purpose;
+      a missing `aria-autocomplete` leaves AT unable to tell the user
+      whether typing filters the list or inline-completes the value.

@@ -334,7 +334,7 @@ export function createServer(options?: { version?: string }): McpServer {
     {
       title: 'Get Component Section(s)',
       description:
-        'Return one or more named sections of a component in a single round-trip — the bandwidth-friendly alternative to fetching the full record via `get_component`. Pass `sections` as a list; the result is an object keyed by the requested section names. `motion`/`responsive`/`transitions`/`events`/`whenToUse`/`a11yAcceptance`/`propertyMap`/`formIntegration`/`i18n`/`performance`/`sources` are null when the component declares none. `tokens` returns only slots that bind tokens (`[{ slotId, tokens }]`). For anatomy-only or mismatch-only needs prefer the `get_anatomy` / `get_mismatches` shortcuts; for contracts use `get_contracts` (it also covers patterns).',
+        'Return one or more named sections of a component in a single round-trip — the bandwidth-friendly alternative to fetching the full record via `get_component`. Pass `sections` as a list; the result is an object keyed by the requested section names. `motion`/`responsive`/`transitions`/`events`/`whenToUse`/`a11yAcceptance`/`propertyMap`/`formIntegration`/`i18n`/`performance`/`sources`/`rules` are null when the component declares none. `tokens` returns only slots that bind tokens (`[{ slotId, tokens }]`). `rules` is the component-only slice (P6-201 Step 2 / ADR-039) — use `get_contracts` instead when the target might be a pattern. For anatomy-only or mismatch-only needs prefer the `get_anatomy` / `get_mismatches` shortcuts.',
       inputSchema: z.strictObject({
         id: componentIdField,
         sections: z
@@ -357,6 +357,7 @@ export function createServer(options?: { version?: string }): McpServer {
               'i18n',
               'performance',
               'sources',
+              'rules',
             ]),
           )
           .min(1)
@@ -426,6 +427,9 @@ export function createServer(options?: { version?: string }): McpServer {
             break;
           case 'sources':
             pick.sources = c.sources ?? null;
+            break;
+          case 'rules':
+            pick.rules = c.rules ?? null;
             break;
         }
       }
@@ -659,7 +663,7 @@ export function createServer(options?: { version?: string }): McpServer {
     {
       title: 'Get Contracts',
       description:
-        'Return the contracts block for a component or pattern: `{ id, kind: "component" | "pattern", contracts: { nonNegotiable[], vocabularyDrift[] } | null }`. `nonNegotiable` is hard-binding rules with `source` (apg | wcag | html-spec | platform | canon), optional `sourceRef`, and a `consequence` describing what breaks on violation. `vocabularyDrift` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ contracts: null }` when the entity exists but declares no contracts. Errors when the id resolves to neither a component nor a pattern. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
+        'Return the hard-binding rules and vocabulary drift for a component or pattern: `{ id, kind: "component" | "pattern", rules: Rule[] | null, contracts: { vocabularyDrift[] } | null }` (P6-201 Step 2 / ADR-039 — `rules` was promoted out of the former `contracts.nonNegotiable`). Each rule has `id`, `statement`, `source` (apg | wcag | html-spec | platform | canon), optional `sourceRef`, and a `consequence` describing what breaks on violation; `mistakes[].ruleId` / `mismatches[].ruleId` on the full record (`get_component`) reference these ids. `contracts.vocabularyDrift` is per-system attributed naming (Material 3 → Snackbar, Atlassian → Flag, …) with optional notes. Returns `{ rules: null }` / `{ contracts: null }` independently when the entity declares neither. Errors when the id resolves to neither a component nor a pattern. Slice tool — use for narrow round-trip needs. For full-record audits prefer `get_component`.',
       inputSchema: z.strictObject({
         id: z
           .string()
@@ -673,9 +677,9 @@ export function createServer(options?: { version?: string }): McpServer {
       const components = await getComponents();
       const patterns = await getPatterns();
       const c = components.get(id);
-      if (c) return objectResult({ id, kind: 'component', contracts: c.contracts ?? null });
+      if (c) return objectResult({ id, kind: 'component', rules: c.rules ?? null, contracts: c.contracts ?? null });
       const p = patterns.get(id);
-      if (p) return objectResult({ id, kind: 'pattern', contracts: p.contracts ?? null });
+      if (p) return objectResult({ id, kind: 'pattern', rules: p.rules ?? null, contracts: p.contracts ?? null });
       return notFoundResult(
         'component or pattern',
         id,

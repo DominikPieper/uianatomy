@@ -228,8 +228,8 @@ axes:
     - name: contained
     - name: flush
   properties:
-    - { name: multi, kind: primitive, of: boolean }
-    - { name: collapsible, kind: primitive, of: boolean }
+    - {name: multi, kind: primitive, of: boolean}
+    - {name: collapsible, kind: primitive, of: boolean}
     - name: density
       kind: enum
       values: [comfortable, compact]
@@ -704,30 +704,6 @@ whenToUse:
         ordering and validation contract differs.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Each accordion trigger is wrapped in a heading element
-        (`<h2>`–`<h6>`) at the appropriate document-outline level.
-      source: apg
-      sourceRef: 'APG: Accordion pattern — Heading element wrapping the button'
-      consequence: >-
-        Without the heading wrapper, the accordion items vanish
-        from the AT headings list and the entire section is
-        unreachable for screen-reader users navigating by
-        heading. Routinely violated in production — the canonical
-        reference documents this as a hard contract, not styling
-        guidance.
-    - rule: >-
-        `aria-expanded` on the trigger is the single source of
-        truth for the open/closed state; CSS or JS state must
-        derive from it, not the other way around.
-      source: apg
-      sourceRef: 'APG: Accordion pattern — aria-expanded on the button'
-      consequence: >-
-        When `aria-expanded` is treated as a presentational
-        mirror rather than the authoritative state, AT
-        announcements drift from the visible state and keyboard-
-        only flows lose orientation between expansions.
   vocabularyDrift:
     - system: APG
       theirTerm: Accordion
@@ -781,3 +757,29 @@ sources:
   - https://inclusive-components.design/collapsible-sections/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: each-accordion-trigger-wrapped-heading-element
+    statement: >-
+      Each accordion trigger is wrapped in a heading element
+      (`<h2>`–`<h6>`) at the appropriate document-outline level.
+    source: apg
+    sourceRef: 'APG: Accordion pattern — Heading element wrapping the button'
+    consequence: >-
+      Without the heading wrapper, the accordion items vanish
+      from the AT headings list and the entire section is
+      unreachable for screen-reader users navigating by
+      heading. Routinely violated in production — the canonical
+      reference documents this as a hard contract, not styling
+      guidance.
+  - id: aria-expanded-trigger-single-source-truth
+    statement: >-
+      `aria-expanded` on the trigger is the single source of
+      truth for the open/closed state; CSS or JS state must
+      derive from it, not the other way around.
+    source: apg
+    sourceRef: 'APG: Accordion pattern — aria-expanded on the button'
+    consequence: >-
+      When `aria-expanded` is treated as a presentational
+      mirror rather than the authoritative state, AT
+      announcements drift from the visible state and keyboard-
+      only flows lose orientation between expansions.

@@ -233,12 +233,12 @@ axes:
     - name: default
     - name: inline
   properties:
-    - { name: multi, kind: primitive, of: boolean }
-    - { name: required, kind: primitive, of: boolean }
+    - {name: multi, kind: primitive, of: boolean}
+    - {name: required, kind: primitive, of: boolean}
     - name: size
       kind: enum
       values: [sm, md, lg]
-    - { name: native, kind: primitive, of: boolean }
+    - {name: native, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -810,18 +810,6 @@ whenToUse:
         the choice deserves visible weight.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Select implements typeahead-by-first-letter — typing a
-        character on the focused trigger jumps to and selects the
-        next option whose label starts with that character.
-      source: apg
-      sourceRef: 'APG: Listbox / Combobox-with-Listbox'
-      consequence: >-
-        The most-overlooked APG behaviour for this pattern.
-        Without it, keyboard-only users must arrow through the
-        full list to select, which scales poorly past ~10 options
-        and breaks the canonical keyboard discoverability flow.
   vocabularyDrift:
     - system: APG
       theirTerm: Listbox / Combobox without textbox
@@ -853,3 +841,16 @@ sources:
   - https://m3.material.io/components/menus/overview
 
 lastReviewed: '2026-05-04'
+rules:
+  - id: select-implements-typeahead-first-letter
+    statement: >-
+      Select implements typeahead-by-first-letter — typing a
+      character on the focused trigger jumps to and selects the
+      next option whose label starts with that character.
+    source: apg
+    sourceRef: 'APG: Listbox / Combobox-with-Listbox'
+    consequence: >-
+      The most-overlooked APG behaviour for this pattern.
+      Without it, keyboard-only users must arrow through the
+      full list to select, which scales poorly past ~10 options
+      and breaks the canonical keyboard discoverability flow.

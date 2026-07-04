@@ -221,10 +221,10 @@ axes:
     - name: error
       alternativeNames: [danger, destructive, critical]
   properties:
-    - { name: dismissible, kind: primitive, of: boolean }
-    - { name: persistent, kind: primitive, of: boolean }
-    - { name: hasIcon, kind: primitive, of: boolean }
-    - { name: hasTitle, kind: primitive, of: boolean }
+    - {name: dismissible, kind: primitive, of: boolean}
+    - {name: persistent, kind: primitive, of: boolean}
+    - {name: hasIcon, kind: primitive, of: boolean}
+    - {name: hasTitle, kind: primitive, of: boolean}
     - name: layout
       kind: enum
       values: [horizontal, stacked]
@@ -625,19 +625,6 @@ whenToUse:
         plus an in-page Modal triggered from it).
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Cookie-consent banners offer a Decline option of equal
-        prominence to Accept (or an equivalent rejection path with
-        no coercive design).
-      source: canon
-      sourceRef: 'GDPR Art. 7 / EDPB Guidelines 05/2020 (region-binding)'
-      consequence: >-
-        Asymmetric prominence ("Accept" highlighted, "Decline"
-        buried or hidden) is a legal-compliance violation in GDPR
-        jurisdictions and a documented dark pattern globally.
-        Implementation audits flag libraries that do not enforce
-        the equal-prominence affordance.
   vocabularyDrift:
     - system: APG
       theirTerm: Region / Status
@@ -677,3 +664,17 @@ sources:
     verifiedAt: '2026-05-05'
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: cookie-consent-banners-offer-decline-option
+    statement: >-
+      Cookie-consent banners offer a Decline option of equal
+      prominence to Accept (or an equivalent rejection path with
+      no coercive design).
+    source: canon
+    sourceRef: 'GDPR Art. 7 / EDPB Guidelines 05/2020 (region-binding)'
+    consequence: >-
+      Asymmetric prominence ("Accept" highlighted, "Decline"
+      buried or hidden) is a legal-compliance violation in GDPR
+      jurisdictions and a documented dark pattern globally.
+      Implementation audits flag libraries that do not enforce
+      the equal-prominence affordance.

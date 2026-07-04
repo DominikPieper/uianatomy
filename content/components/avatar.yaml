@@ -229,7 +229,7 @@ axes:
     - name: status
       kind: enum
       values: [online, offline, away, busy]
-    - { name: hasStatusIndicator, kind: primitive, of: boolean }
+    - {name: hasStatusIndicator, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -285,10 +285,8 @@ mismatches:
       placeholder strings for design illustration; the algorithm
       lives in code with the `name` prop driving it.
 
-  - figma: Avatar image asset uploaded as a pre-cropped square, subject
-      manually centred by the designer
-    code: '`<img>` with `object-fit: cover` cropping the source image''s
-      native, often non-square, aspect ratio at render time'
+  - figma: Avatar image asset uploaded as a pre-cropped square, subject manually centred by the designer
+    code: '`<img>` with `object-fit: cover` cropping the source image''s native, often non-square, aspect ratio at render time'
     consequence: >-
       Designers place an art-directed square crop in the Figma frame —
       the subject's face perfectly centred by eye; developers receive
@@ -531,46 +529,6 @@ a11yAcceptance:
     - color-contrast
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Fallback chain is image → initials → icon, in that order.
-        Image rung activates when `src` is present and the load
-        succeeds; initials rung activates when `name` is present and
-        the image rung failed; icon rung is the ultimate fallback.
-        Implementations that pick a different order ship inconsistent
-        avatar surfaces under network failure or missing-data.
-      source: canon
-      consequence: >-
-        Without a deterministic order, the same entity may appear as
-        initials in one surface and as the generic icon in another;
-        the avatar's identity becomes unstable. Users lose trust in
-        the avatar as a reliable entity-marker.
-    - rule: >-
-        Initials and icon variants carry `role="img"` plus
-        `aria-label` with the full entity name on the container.
-        Image variants use `<img alt>` for the same purpose. The
-        accessible name is always the entity name — never the
-        initials letters, never the icon glyph name, never the file
-        path.
-      source: apg
-      sourceRef: 'WAI-ARIA role=img + img alt patterns'
-      consequence: >-
-        Without the entity-name accessible-name, SR users hear
-        "image" or "AB" — neither identifies the entity. The avatar
-        becomes a sighted-only marker. Decorative avatars escape
-        the rule by setting `aria-hidden="true"` and relying on the
-        host's name; meaningful avatars must carry the name
-        themselves.
-    - rule: >-
-        Status indicator carries `aria-label` with the status word
-        ("online", "offline", "away", "busy"). The coloured dot is
-        sighted-only; AT needs the word.
-      source: canon
-      consequence: >-
-        Without the label, presence is invisible to SR users —
-        critical for collaborator-aware contexts where presence
-        determines whether to message synchronously or
-        asynchronously.
   vocabularyDrift:
     - system: Material 3
       theirTerm: Avatar
@@ -607,3 +565,46 @@ sources:
   - https://mantine.dev/core/avatar/
 
 lastReviewed: '2026-05-05'
+rules:
+  - id: fallback-chain-image-initials-icon-order
+    statement: >-
+      Fallback chain is image → initials → icon, in that order.
+      Image rung activates when `src` is present and the load
+      succeeds; initials rung activates when `name` is present and
+      the image rung failed; icon rung is the ultimate fallback.
+      Implementations that pick a different order ship inconsistent
+      avatar surfaces under network failure or missing-data.
+    source: canon
+    consequence: >-
+      Without a deterministic order, the same entity may appear as
+      initials in one surface and as the generic icon in another;
+      the avatar's identity becomes unstable. Users lose trust in
+      the avatar as a reliable entity-marker.
+  - id: initials-icon-variants-carry-role-img
+    statement: >-
+      Initials and icon variants carry `role="img"` plus
+      `aria-label` with the full entity name on the container.
+      Image variants use `<img alt>` for the same purpose. The
+      accessible name is always the entity name — never the
+      initials letters, never the icon glyph name, never the file
+      path.
+    source: apg
+    sourceRef: 'WAI-ARIA role=img + img alt patterns'
+    consequence: >-
+      Without the entity-name accessible-name, SR users hear
+      "image" or "AB" — neither identifies the entity. The avatar
+      becomes a sighted-only marker. Decorative avatars escape
+      the rule by setting `aria-hidden="true"` and relying on the
+      host's name; meaningful avatars must carry the name
+      themselves.
+  - id: status-indicator-carries-aria-label-status
+    statement: >-
+      Status indicator carries `aria-label` with the status word
+      ("online", "offline", "away", "busy"). The coloured dot is
+      sighted-only; AT needs the word.
+    source: canon
+    consequence: >-
+      Without the label, presence is invisible to SR users —
+      critical for collaborator-aware contexts where presence
+      determines whether to message synchronously or
+      asynchronously.

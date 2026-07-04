@@ -291,10 +291,12 @@ export const axesSchema = z
   });
 
 export const mismatchSchema = z.object({
-  // P6-201 — optional, symmetric with mistakeSchema.id. Lets a contract's
-  // nonNegotiable rule (or a future mismatch-to-mismatch cross-ref) point at
-  // a specific mismatch instead of restating its prose inline.
+  // P6-201 — optional, symmetric with mistakeSchema.id.
   id: slug.optional(),
+  // P6-201 Step 2 (ADR-039) — forward-reference to rules[].id on the same
+  // component/pattern. Points at the rule this mismatch is a translation
+  // gap around, instead of restating the rule's prose inline.
+  ruleId: slug.optional(),
   figma: z.string().min(1),
   code: z.string().min(1),
   consequence: z.string().min(1),
@@ -305,6 +307,10 @@ export const mistakeSeveritySchema = z.enum(['blocker', 'major', 'minor']);
 
 export const mistakeSchema = z.object({
   id: slug,
+  // P6-201 Step 2 (ADR-039) — forward-reference to rules[].id on the same
+  // component/pattern, replacing the retired
+  // contracts.nonNegotiable[].relatedMistakes (which pointed the other way).
+  ruleId: slug.optional(),
   severity: mistakeSeveritySchema,
   title: z.string().min(1),
   description: z.string().min(1),
@@ -701,18 +707,22 @@ export const sourceEntrySchema = z.union([
     ),
 ]);
 
-export const nonNegotiableContractSchema = z
+// P6-201 Step 2 (ADR-039) — promoted from the retired
+// nonNegotiableContractSchema (formerly nested under contracts.nonNegotiable)
+// to a first-class top-level record, the same tier as mistakes[]/
+// mismatches[]/anatomy[]. `rule` renamed to `statement` (an element of
+// rules[] naming its own text field `rule` was redundant next to `id`).
+// `relatedMistakes` is retired — see mistakeSchema.ruleId /
+// mismatchSchema.ruleId, which point the reference the other way (a mistake
+// or mismatch names the one rule it's about, not the rule enumerating every
+// mistake that violates it).
+export const ruleSchema = z
   .object({
-    rule: z.string().min(1),
+    id: slug,
+    statement: z.string().min(1),
     source: contractSourceSchema,
     sourceRef: z.string().min(1).optional(),
     consequence: z.string().min(1),
-    // P6-201 — structural link to the mistake(s) this rule guards against,
-    // in place of restating the mistake's prose inline (the ADR-027
-    // antipattern P6-185 partially fixed). Ids must resolve to
-    // mistakes[].id on the same component — enforced by a consistency test,
-    // not here, since that check needs the full component record.
-    relatedMistakes: z.array(slug).min(1).optional(),
   })
   .strict()
   .refine(
@@ -737,19 +747,13 @@ export const vocabularyDriftEntrySchema = z
   })
   .strict();
 
+// P6-201 Step 2 (ADR-039) — nonNegotiable moved out to the top-level
+// rules[] field; contracts now carries only vocabularyDrift.
 export const contractsSchema = z
   .object({
-    nonNegotiable: z.array(nonNegotiableContractSchema).min(1).optional(),
     vocabularyDrift: z.array(vocabularyDriftEntrySchema).min(1).optional(),
   })
-  .strict()
-  .refine(
-    (v) => v.nonNegotiable !== undefined || v.vocabularyDrift !== undefined,
-    {
-      message:
-        'contracts must declare at least one of nonNegotiable, vocabularyDrift',
-    },
-  );
+  .strict();
 
 export const patternSchema = z
   .object({
@@ -766,6 +770,8 @@ export const patternSchema = z
     decisions: z.array(patternDecisionSchema).min(1),
     mistakes: z.array(mistakeSchema).min(3),
     frameworkSkeletons: frameworkSkeletonsSchema,
+    // P6-201 Step 2 (ADR-039) — promoted out of contracts.nonNegotiable.
+    rules: z.array(ruleSchema).min(1).optional(),
     contracts: contractsSchema.optional(),
     // P6-172 — patterns may cite sources like components (same shape).
     // Optional and un-counted: patterns synthesize spec flows (APG, WCAG
@@ -824,6 +830,8 @@ export const componentSchema = z.object({
   formIntegration: formIntegrationSchema.optional(),
   i18n: i18nSchema.optional(),
   performance: performanceSchema.optional(),
+  // P6-201 Step 2 (ADR-039) — promoted out of contracts.nonNegotiable.
+  rules: z.array(ruleSchema).min(1).optional(),
   contracts: contractsSchema.optional(),
 });
 
@@ -849,7 +857,7 @@ export type Mismatch = z.infer<typeof mismatchSchema>;
 export type Mistake = z.infer<typeof mistakeSchema>;
 export type MistakeSeverity = z.infer<typeof mistakeSeveritySchema>;
 export type Contracts = z.infer<typeof contractsSchema>;
-export type NonNegotiableContract = z.infer<typeof nonNegotiableContractSchema>;
+export type Rule = z.infer<typeof ruleSchema>;
 export type VocabularyDriftEntry = z.infer<typeof vocabularyDriftEntrySchema>;
 export type ContractSource = z.infer<typeof contractSourceSchema>;
 export type FrameworkMap = z.infer<typeof frameworkMapSchema>;

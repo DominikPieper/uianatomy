@@ -235,8 +235,8 @@ axes:
     - name: align
       kind: enum
       values: [start, center, end]
-    - { name: dismissible, kind: primitive, of: boolean }
-    - { name: flip, kind: primitive, of: boolean }
+    - {name: dismissible, kind: primitive, of: boolean}
+    - {name: flip, kind: primitive, of: boolean}
   states:
     interactive:
       - focus-visible
@@ -758,53 +758,6 @@ whenToUse:
         Menu for command lists (single-action picks).
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        Popover installs no focus trap: Tab and Shift+Tab move
-        focus into, through, and back out of the popover content
-        into surrounding document order exactly as they would if
-        the popover were not intercepting keyboard navigation.
-        Closure is triggered by Escape, an outside pointer-down,
-        or focus leaving both the popover and its trigger — never
-        by a trap-and-require-explicit-close model.
-      source: canon
-      consequence: >-
-        Breaking either half reproduces a known failure mode:
-        trapping focus reduces Popover to an unannounced Modal
-        (mistake `popover-as-modal`); omitting the dismiss
-        handlers leaves users unable to close the surface without
-        re-activating the trigger (mistake
-        `popover-no-light-dismiss`).
-    - rule: >-
-        The popover container is not a descendant of any layout
-        subtree the trigger participates in — it mounts at the
-        document root (a portal, a dedicated overlay container,
-        or the native `popover="auto"` attribute) so no ancestor's
-        `overflow`, `transform`, or stacking context can clip or
-        misstack it.
-      source: html-spec
-      sourceRef: 'HTML Popover API + portal/Teleport for legacy'
-      consequence: >-
-        Rendering inline reproduces mistake
-        `popover-z-index-clipping` — the panel is silently
-        clipped by the first ancestor with `overflow: hidden`,
-        and no `z-index` value recovers it because the clipping
-        happens at paint time, not stacking time.
-    - rule: >-
-        The trigger element carries three ARIA attributes at all
-        times: a static `aria-haspopup` (`"dialog"` for content
-        popovers, `"menu"` for menu-style popovers), `aria-expanded`
-        kept in sync with the popover's open/closed state on every
-        transition, and `aria-controls` holding the popover
-        container's `id`.
-      source: apg
-      sourceRef: 'APG: Dialog (Modal) + Disclosure patterns — trigger semantics'
-      consequence: >-
-        Omitting any one reproduces mistake
-        `popover-no-aria-expanded` — screen-reader users lose the
-        signal that the trigger reveals content, whether it is
-        currently revealed, and the programmatic link between
-        trigger and panel.
   vocabularyDrift:
     - system: HTML
       theirTerm: 'popover attribute / popover="auto"'
@@ -859,3 +812,53 @@ sources:
   - https://m3.material.io/components/menus/overview
 
 lastReviewed: '2026-07-03'
+rules:
+  - id: popover-installs-focus-trap-tab-shift
+    statement: >-
+      Popover installs no focus trap: Tab and Shift+Tab move
+      focus into, through, and back out of the popover content
+      into surrounding document order exactly as they would if
+      the popover were not intercepting keyboard navigation.
+      Closure is triggered by Escape, an outside pointer-down,
+      or focus leaving both the popover and its trigger — never
+      by a trap-and-require-explicit-close model.
+    source: canon
+    consequence: >-
+      Breaking either half reproduces a known failure mode:
+      trapping focus reduces Popover to an unannounced Modal
+      (mistake `popover-as-modal`); omitting the dismiss
+      handlers leaves users unable to close the surface without
+      re-activating the trigger (mistake
+      `popover-no-light-dismiss`).
+  - id: popover-container-descendant-any-layout-subtree
+    statement: >-
+      The popover container is not a descendant of any layout
+      subtree the trigger participates in — it mounts at the
+      document root (a portal, a dedicated overlay container,
+      or the native `popover="auto"` attribute) so no ancestor's
+      `overflow`, `transform`, or stacking context can clip or
+      misstack it.
+    source: html-spec
+    sourceRef: 'HTML Popover API + portal/Teleport for legacy'
+    consequence: >-
+      Rendering inline reproduces mistake
+      `popover-z-index-clipping` — the panel is silently
+      clipped by the first ancestor with `overflow: hidden`,
+      and no `z-index` value recovers it because the clipping
+      happens at paint time, not stacking time.
+  - id: trigger-element-carries-three-aria-attributes
+    statement: >-
+      The trigger element carries three ARIA attributes at all
+      times: a static `aria-haspopup` (`"dialog"` for content
+      popovers, `"menu"` for menu-style popovers), `aria-expanded`
+      kept in sync with the popover's open/closed state on every
+      transition, and `aria-controls` holding the popover
+      container's `id`.
+    source: apg
+    sourceRef: 'APG: Dialog (Modal) + Disclosure patterns — trigger semantics'
+    consequence: >-
+      Omitting any one reproduces mistake
+      `popover-no-aria-expanded` — screen-reader users lose the
+      signal that the trigger reveals content, whether it is
+      currently revealed, and the programmatic link between
+      trigger and panel.

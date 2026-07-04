@@ -292,10 +292,10 @@ axes:
     - name: resize
       kind: enum
       values: [none, vertical, horizontal, both]
-    - { name: disabled, kind: primitive, of: boolean }
-    - { name: readonly, kind: primitive, of: boolean }
-    - { name: required, kind: primitive, of: boolean }
-    - { name: invalid, kind: primitive, of: boolean }
+    - {name: disabled, kind: primitive, of: boolean}
+    - {name: readonly, kind: primitive, of: boolean}
+    - {name: required, kind: primitive, of: boolean}
+    - {name: invalid, kind: primitive, of: boolean}
   states:
     interactive:
       - hover
@@ -796,53 +796,6 @@ performance:
       character-counter slot.
 
 contracts:
-  nonNegotiable:
-    - rule: >-
-        The textarea has a programmatically-associated label
-        — either `<label for="<id>">` or a wrapping `<label>`.
-        Adjacent prose and placeholder text are not
-        substitutes. The label is the canonical accessible
-        name.
-      source: apg
-      sourceRef: 'WAI-ARIA textbox + label patterns'
-      consequence: >-
-        Without the association, SR users hear "edit text,
-        multi-line" without the field meaning. The
-        programmatic contract is what AT relies on; visual
-        proximity is sighted-only and breaks under voice
-        navigation, mobile SR, and accessibility tooling.
-    - rule: >-
-        `resize: none` is restricted to layouts that auto-
-        resize themselves OR fields with short `maxlength`
-        bounds. Default `resize: vertical` so users with
-        zoom requirements (WCAG 1.4.10 Reflow) can adjust
-        the field. Implementations that lock resize without
-        compensating for low-vision zoom block accessible
-        content entry.
-      source: wcag
-      sourceRef: 'WCAG 1.4.10 Reflow'
-      consequence: >-
-        Without resize freedom, low-vision users at 200%
-        zoom encounter content that does not fit or is
-        truncated. The reflow contract is one of the
-        canonical 2.x AA requirements; locking resize is
-        the most common single textarea regression in
-        accessibility audits.
-    - rule: >-
-        Auto-resize implementations coalesce height-recalc
-        to one measurement per ~50 ms (or per
-        `requestAnimationFrame`). Recalculating on every
-        input event without throttle drops frames on
-        commodity hardware and breaks typing cadence on
-        slower devices.
-      source: canon
-      consequence: >-
-        Without coalescing, textareas with auto-resize
-        become unusable on tablets, low-end Android, and
-        older laptops. The performance threshold is
-        invisible in static design review but surfaces
-        immediately in real-device QA — and by then the
-        implementation is harder to fix.
   vocabularyDrift:
     - system: HTML
       theirTerm: '`<textarea>`'
@@ -901,3 +854,53 @@ sources:
   - https://www.w3.org/TR/wai-aria-1.2/#textbox
 
 lastReviewed: '2026-05-03'
+rules:
+  - id: textarea-programmatically-associated-label
+    statement: >-
+      The textarea has a programmatically-associated label
+      — either `<label for="<id>">` or a wrapping `<label>`.
+      Adjacent prose and placeholder text are not
+      substitutes. The label is the canonical accessible
+      name.
+    source: apg
+    sourceRef: 'WAI-ARIA textbox + label patterns'
+    consequence: >-
+      Without the association, SR users hear "edit text,
+      multi-line" without the field meaning. The
+      programmatic contract is what AT relies on; visual
+      proximity is sighted-only and breaks under voice
+      navigation, mobile SR, and accessibility tooling.
+  - id: resize-none-restricted-layouts-auto-resize
+    statement: >-
+      `resize: none` is restricted to layouts that auto-
+      resize themselves OR fields with short `maxlength`
+      bounds. Default `resize: vertical` so users with
+      zoom requirements (WCAG 1.4.10 Reflow) can adjust
+      the field. Implementations that lock resize without
+      compensating for low-vision zoom block accessible
+      content entry.
+    source: wcag
+    sourceRef: 'WCAG 1.4.10 Reflow'
+    consequence: >-
+      Without resize freedom, low-vision users at 200%
+      zoom encounter content that does not fit or is
+      truncated. The reflow contract is one of the
+      canonical 2.x AA requirements; locking resize is
+      the most common single textarea regression in
+      accessibility audits.
+  - id: auto-resize-implementations-coalesce-height
+    statement: >-
+      Auto-resize implementations coalesce height-recalc
+      to one measurement per ~50 ms (or per
+      `requestAnimationFrame`). Recalculating on every
+      input event without throttle drops frames on
+      commodity hardware and breaks typing cadence on
+      slower devices.
+    source: canon
+    consequence: >-
+      Without coalescing, textareas with auto-resize
+      become unusable on tablets, low-end Android, and
+      older laptops. The performance threshold is
+      invisible in static design review but surfaces
+      immediately in real-device QA — and by then the
+      implementation is harder to fix.
