@@ -53,13 +53,17 @@ indexiert Dev-Content nicht (P6-191), MCP-Alias-Suche broken (P6-192), stale
 MCP-Roster-Claims (P6-193). **Alle 5 Design-Review-Empfehlungen umgesetzt
 2026-07-03…04:** Bug-Batch P6-190…193, MCP-Token-Diät P6-194…196 (tools/list
 64.7KB→29.6KB), ADR-035 (Depth-Smoke-Floor), ADR-036 (react-required/Rest-
-optional Frameworks), ADR-037 (MCP-Telemetrie), **ADR-038 (IA-Konsolidierung
-P6-197+P6-198 — 3 View-URLs → 1 Seite + Rollen-Lens, 138→52 Pages)**. 240
-shared + 86 mcp Tests grün, Site-Build + Preview-Smoke-Test + `wrangler
-deploy --dry-run` verifiziert. **Offen aus dieser Review:** P6-201 Schritt 2
-(volles `rules[]`, L), P6-213 (a11y-Subpage, aus P6-197 zurückgestellt),
-P6-202/203/210/211/212 (Cleanup, alle S/M). Danach P6-44 Distribution **vor**
-neuer Breite (P6-188 defer).
+optional Frameworks), ADR-037 (MCP-Telemetrie), ADR-038 (IA-Konsolidierung
+P6-197+P6-198 — 3 View-URLs → 1 Seite + Rollen-Lens, 138→52 Pages), plus
+komplette Cleanup-Bucket P6-202/203/210/211/212 (Divergence-Path-Resolver +
+1 echter Bug gefunden, dormante Versioning-Felder raus, Repo-Hygiene,
+Build-Hygiene automatisiert, Content-Hash-Versioning). **Review-Backlog
+2026-07-03 komplett abgearbeitet.** 224 shared + 88 mcp Tests grün, Site-
+Build + Preview-Smoke-Test + `wrangler deploy --dry-run` durchgängig
+verifiziert. **Bewusst zurückgestellt:** P6-201 Schritt 2 (volles `rules[]`,
+L), P6-213 (a11y-Subpage, aus P6-197). **Nächster Schritt laut Strategie-
+Review:** P6-44 Distribution — Corpus ist fertig, Demand-Seite fehlt —
+**vor** neuer Breite (P6-188 bleibt geparkt).
 
 ---
 
@@ -151,7 +155,7 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 - [x] **P6-203 Dormante Versioning-Schema-Felder gelöscht** — `since`/`changelog`(+`changelogSchema`/`changelogEntrySchema`)/per-slot+per-property `deprecated`(+`deprecationSchema`)/`axes.variantDeprecations`(+`variantDeprecationSchema`)/`semver`-Helper komplett raus (0/41 Adoption, Render+MCP seit P6-163 weg). **Abweichung vom Review-Vorschlag:** `staleAfter` bewusst **nicht** gelöscht — hat echten MCP-Consumer (`get_component`/`list_components`-Staleness-Signal, P6-125), 0/41-Adoption dort ist erwartetes Verhalten für ein optionales Feld mit sinnvollem Default, keine Totheit. 18 obsolete Tests (ganzer `describe('versioning')`-Block) entfernt statt angepasst. ADR-023 zweites Amendment (Status: „schema removed"). ~110 Zeilen schema.md-Versioning-Sektion durch Verweis auf ADR-023 ersetzt. 222 shared Tests grün (240→222, korrekt). Erledigt 2026-07-04. Dateien: `shared/src/schema.ts`, `shared/tests/schema.test.ts`, `docs/schema.md`, `docs/adr/023-versioning.md`.
 - [x] **P6-210 Repo-Hygiene** — `files.zip` gelöscht (war ignored); `UIAnatomy Design System/` (23 git-tracked Files) komplett gelöscht statt verschoben — Wordmark/Glyph bereits identisch in `site/public/brand/`, Rest reine April-Handoff-Previews, nichts im Build referenziert den Ordner (Owner-Entscheidung: löschen statt nach docs/brand/); `scripts/migrate-variants-shape.py` (One-Shot, done) gelöscht; stale `mcp-server/dist/` (ignored, 28-Tool-Build + `netlify/`-Remnant) gelöscht + neu gebaut, jetzt clean. Erledigt 2026-07-04. Dateien: Repo-Root, `scripts/`, `mcp-server/dist/`.
 - [x] **P6-211 Build-Hygiene-Gotcha in Tooling gegossen** — `site/package.json` bekommt `predev`/`prebuild: rm -rf .astro` — läuft jetzt automatisch bei jedem `pnpm dev`/`pnpm build`. Verbleibender manueller Schritt (shared neu bauen bei Schema-Änderung — site kennt seine Workspace-Dependency nicht) bleibt, da pnpms `-r`-Topologie das beim Root-Build schon korrekt macht; nur der Astro-Cache-Teil war das tribal-knowledge-Risiko. Beide SKILL.md (`schema-field-add`, `component-review`) nachgezogen. Verifiziert: `pnpm run predev` löscht `.astro` nachweislich. Erledigt 2026-07-04. Dateien: `site/package.json`, `.claude/skills/{schema-field-add,component-review}/SKILL.md`.
-- [ ] **P6-212 Corpus-Version als Content-Hash** — alles ist `0.0.0`, Bundles tragen keine Version; build-time Hash+Datum in `content-bundle.json` + MCP-Server-Version = minimum viable Versioning (volle Changelog-Maschinerie bleibt geparkt, ADR-023). Dateien: `shared/scripts/bundle-*.mjs`, `mcp-server/src/server.ts`.
+- [x] **P6-212 Corpus-Version als Content-Hash** — separates `shared/dist/meta-bundle.json` (`{contentHash, generatedAt}`, SHA-256 über die 4 Content-Bundles, gitignored wie alle dist-Artefakte) statt Einbettung in `content-bundle.json` (hätte den flachen `id→Component`-Konsumer-Vertrag gebrochen, den `loadComponentsFromBundle` etc. voraussetzen). `createServer({version?})` optional, Worker übergibt den Hash als MCP-`serverInfo.version` (per `client.getServerVersion()` lesbar) — lokal/stdio bleibt `0.0.0` (kein sinnvolles Bundle-Konzept dort). `server-card.json`-Generator von fragiler Regex-Extraktion aus `server.ts` auf `meta-bundle.json`-Read umgestellt (musste ohnehin angepasst werden, da die Regex auf den jetzt dynamischen Version-Ausdruck nicht mehr matchte) — Static Card und Live-Runtime-Version jetzt garantiert identisch. 2 neue Tests (Custom-Version + Default). 224 shared + 88 mcp Tests grün, `wrangler deploy --dry-run` bestätigt Server-Card-Version == meta-bundle-Hash. Erledigt 2026-07-04. Dateien: `shared/scripts/bundle-meta.mjs` (neu), `shared/package.json`, `mcp-server/src/server.ts`, `mcp-server/tests/server.test.ts`, `worker/index.ts`, `site/scripts/build-mcp-card.mjs`, `site/public/.well-known/agent-skills/uianatomy-mcp/SKILL.md`.
 - [ ] **P6-213 `/components/<id>/a11y`-Contract-Subpage** — aus P6-197/UX-Review M4 zurückgestellt: dedizierte, teilbare a11y-Contract-Seite (Acceptance-Table + keyboardWalk + announcements + axe-Rules + Link auf `a11y-fixture.json`) für QA/Audit-Workflows, distinct von der jetzt konsolidierten Hauptseite. Datei: `site/src/pages/components/[id]/a11y.astro` (neu).
 
 ---

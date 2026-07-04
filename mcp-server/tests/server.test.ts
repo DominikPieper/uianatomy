@@ -86,6 +86,20 @@ describe('mcp server', () => {
     expect(parsed.summary).toContain('not as a fixed rule book');
   });
 
+  it('createServer honours a custom version (P6-212 — worker reports the content hash here)', async () => {
+    const server = createServer({ version: 'abc123def456' });
+    const client = new Client({ name: 'test', version: '0.0.0' });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    expect(client.getServerVersion()?.version).toBe('abc123def456');
+  });
+
+  it('createServer defaults to 0.0.0 when no version is passed', async () => {
+    const { client } = await connect();
+    expect(client.getServerVersion()?.version).toBe('0.0.0');
+  });
+
   it('list_components returns Card', async () => {
     const { client } = await connect();
     const result = await client.callTool({ name: 'list_components', arguments: {} });

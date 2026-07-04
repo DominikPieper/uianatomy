@@ -32,6 +32,7 @@ import implBundleJson from '@uianatomy/shared/implementations-bundle.json';
 import patternsBundleJson from '@uianatomy/shared/patterns-bundle.json';
 import subAnatomiesBundleJson from '@uianatomy/shared/sub-anatomies-bundle.json';
 import aboutBundleJson from '@uianatomy/shared/about-bundle.json';
+import metaBundleJson from '@uianatomy/shared/meta-bundle.json';
 
 // P6-126 / ADR-030 — content-bundle is pre-resolved at bundle-write time
 // (sub-anatomy `$ref` entries flattened into anatomy[]) so the worker
@@ -135,7 +136,10 @@ async function handleMcp(request: Request, env: Env): Promise<Response> {
     }
   }
   const transport = new WebStandardStreamableHTTPServerTransport();
-  const server = createServer();
+  // P6-212 — reports the build-time content hash as the MCP server version,
+  // so a client reading initialize.serverInfo.version can tell the corpus
+  // changed without a dedicated endpoint.
+  const server = createServer({ version: (metaBundleJson as { contentHash: string }).contentHash });
   await server.connect(transport);
   return transport.handleRequest(request);
 }

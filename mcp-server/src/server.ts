@@ -160,8 +160,13 @@ const componentIdField = z
   .min(1)
   .describe("Canonical component id, e.g. 'modal' or 'tabs'. Call list_components for valid ids.");
 
-export function createServer(): McpServer {
-  const server = new McpServer({ name: 'uianatomy', version: '0.0.0' });
+// P6-212 — version defaults to '0.0.0' (local/stdio: no meaningful bundle to
+// hash, the developer already knows they just edited YAML). The Worker
+// passes the build-time content hash from meta-bundle.json instead, so an
+// agent can read `initialize.serverInfo.version` (client.getServerVersion())
+// to notice the corpus changed without a dedicated endpoint.
+export function createServer(options?: { version?: string }): McpServer {
+  const server = new McpServer({ name: 'uianatomy', version: options?.version ?? '0.0.0' });
 
   server.registerTool(
     'get_about',

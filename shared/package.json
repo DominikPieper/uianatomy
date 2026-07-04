@@ -25,6 +25,7 @@
     "./patterns-bundle.json": "./dist/patterns-bundle.json",
     "./sub-anatomies-bundle.json": "./dist/sub-anatomies-bundle.json",
     "./about-bundle.json": "./dist/about-bundle.json",
+    "./meta-bundle.json": "./dist/meta-bundle.json",
     "./svg": {
       "types": "./dist/svg.d.ts",
       "import": "./dist/svg.js"
@@ -47,7 +48,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/bundle-content.mjs && node scripts/bundle-implementations.mjs && node scripts/bundle-patterns.mjs && node scripts/bundle-about.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/bundle-content.mjs && node scripts/bundle-implementations.mjs && node scripts/bundle-patterns.mjs && node scripts/bundle-about.mjs && node scripts/bundle-meta.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

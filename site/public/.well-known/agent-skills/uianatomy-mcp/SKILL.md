@@ -17,6 +17,7 @@ The MCP server exposes this knowledge as a set of read-only tools (listed below)
 - Transport: Streamable HTTP (`@modelcontextprotocol/sdk` ≥ 1.29)
 - Auth: none (public read-only)
 - Server card: `https://uianatomy.dev/.well-known/mcp/server-card.json`
+- Version: `initialize.serverInfo.version` (and the server card's `serverInfo.version`) is a build-time content hash of the canon, not a semver — it changes whenever the corpus changes. Useful as a cheap "has anything changed since I last cached this" signal (P6-212); not meant to be parsed as a version number.
 
 ## Install in another project
 
