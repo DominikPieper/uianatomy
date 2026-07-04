@@ -28,11 +28,11 @@ whenToUse:
     When the user selects a value from a finite or near-finite set
     that benefits from typeahead filtering. The text-input front
     differentiates it from `Select`: users can type to narrow before
-    committing. Best for option counts of ~10–10,000 with optional
+    committing. Best for option counts of ~25–10,000 with optional
     async filter.
   avoid: >-
     For free-text input with no constrained set of values — that is
-    `Input` or `SearchInput`. For a fixed short list (under ~10
+    `Input` or `SearchInput`. For a fixed short list (under ~25
     options) where typeahead adds no value — `Select`. For
     multi-tag input where the set is open-ended and tags are
     user-created — `TagInput`.
@@ -43,7 +43,7 @@ whenToUse:
         fixed list via click or keyboard. `Combobox` adds a
         typeahead input plus async and strict modes. Migrate from
         Select to Combobox when the option count crosses the
-        "scrollable popup is annoying" threshold (~10 items in
+        "scrollable popup is annoying" threshold (~25 items in
         practice).
     - id: search-input
       difference: >-
