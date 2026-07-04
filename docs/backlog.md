@@ -50,14 +50,16 @@ Hauptbefunde: (1) Demand-Seite fehlt komplett — Distribution P6-44 nie exekuti
 liefert ~70% identische Seiten 3× — auf 1 Seite + Rollen-Lens konsolidieren
 (P6-197, ADR); (3) harte Bugs: Sidebar verliert 7 Komponenten (P6-190), Suche
 indexiert Dev-Content nicht (P6-191), MCP-Alias-Suche broken (P6-192), stale
-MCP-Roster-Claims (P6-193). **Bug-Batch P6-190…193 erledigt 2026-07-03, MCP-
-Token-Diät P6-194…196 + die 4 „kleinen" ADR-Items P6-201(Schritt 1)/204/205/206
-erledigt 2026-07-04** (ADR-035 Depth-Smoke-Floor, ADR-036 react-required/Rest-
-optional, ADR-037 MCP-Telemetrie; tools/list 64.7KB→29.6KB; 240 shared + 86 mcp
-Tests grün, Site-Build + `wrangler deploy --dry-run` verifiziert). **Offen:
-P6-197** (3 View-URLs → 1 Seite + Rollen-Lens — größter verbleibender Umbau,
-bewusst zuletzt) **+ P6-201 Schritt 2** (volles `rules[]`, L). Danach P6-44
-Distribution **vor** neuer Breite (P6-188 defer).
+MCP-Roster-Claims (P6-193). **Alle 5 Design-Review-Empfehlungen umgesetzt
+2026-07-03…04:** Bug-Batch P6-190…193, MCP-Token-Diät P6-194…196 (tools/list
+64.7KB→29.6KB), ADR-035 (Depth-Smoke-Floor), ADR-036 (react-required/Rest-
+optional Frameworks), ADR-037 (MCP-Telemetrie), **ADR-038 (IA-Konsolidierung
+P6-197+P6-198 — 3 View-URLs → 1 Seite + Rollen-Lens, 138→52 Pages)**. 240
+shared + 86 mcp Tests grün, Site-Build + Preview-Smoke-Test + `wrangler
+deploy --dry-run` verifiziert. **Offen aus dieser Review:** P6-201 Schritt 2
+(volles `rules[]`, L), P6-213 (a11y-Subpage, aus P6-197 zurückgestellt),
+P6-202/203/210/211/212 (Cleanup, alle S/M). Danach P6-44 Distribution **vor**
+neuer Breite (P6-188 defer).
 
 ---
 
@@ -131,13 +133,13 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 
 ### UX — Quick Wins (unabhängig von IA-Entscheidung)
 
-- [ ] **P6-198 „On this page"-TOC auf Komponenten-Seiten** — ~10k-Wort-Seiten mit 13-17 h2 ohne Orientierung; sticky Anchor-Liste mit Rollen-Badges, Section-ids existieren schon. Datei: `site/src/components/ComponentPageShell.astro`.
+- [x] **P6-198 „On this page"-TOC auf Komponenten-Seiten** — im Zuge von P6-197 mitgelöst: `ComponentTOC.astro`, client-seitig aus gerenderten `.section-header`-Elementen generiert (kein hardcodeter Section-Katalog → kann nicht von der tatsächlichen Seite abdriften), Rollen-Dimming auf TOC-Einträgen gespiegelt. Erledigt 2026-07-04. Datei: `site/src/components/ComponentTOC.astro`.
 - [ ] **P6-199 vsRelated-Rows verlinken `/compare`** — Compare ist am Moment des Intents (vsRelated-Block) unauffindbar; pro Row Link auf `/compare?a=X&b=Y`. Datei: `site/src/components/sections/WhenToUseSection.astro`.
 - [ ] **P6-200 Homepage: Kategorie-Gruppierung + Inline-Suche** — flacher A-Z-Wall aus 41 Cards mit je vollem Anatomy-SVG (552KB HTML); `categories.ts`-Gruppierung wiederverwenden, Suchfeld inline statt nur Header-Icon, Card-Thumbs vereinfachen/lazy-loaden. Dateien: `site/src/pages/index.astro`, `site/src/components/ComponentCard.astro`.
 
 ### Entscheidungen (ADR nötig)
 
-- [ ] **P6-197 IA-Konsolidierung: 3 View-URLs → 1 Seite + Rollen-Lens** — Views sind gemessen ~70% identisch (combobox: 3×~10k Wörter), views.md beschreibt unshipped Produkt (Switcher-Persistenz/Prompt/Mistake-Filtering existieren nicht), Search+MD-Exports 3× dupliziert; Ziel: `/components/<id>` einzige Seite, Rolle = `data-view`-Lens via localStorage (CSS-Infra existiert), `/components/<id>/a11y` als einzige echte Sub-Page, 301s für /dev+/bridge, 138→~60 Pages; views.md-Rewrite gehört dazu. ADR via `adr-author`. Dateien: `site/src/**`, `docs/views.md`, `docs/adr/`.
+- [x] **P6-197 IA-Konsolidierung: 3 View-URLs → 1 Seite + Rollen-Lens (ADR-038)** — `ComponentView.astro` ersetzt Designer/Dev/BridgeView (jede Section 1×, Mismatches promoted an Position 1); Rolle = client-seitige `data-view`-Lens auf `<html>` (localStorage, vor First-Paint gesetzt, kein Page-Reload) statt 3 Routen; `RoleLens.astro` ersetzt `ViewSwitcher.astro` (Buttons statt Links); Dimming (opacity, nie hide — Search/A11y-Tree bleiben vollständig) via `.canon-section[data-role]`. Bonus-Fund: zwei tote CSS-Blöcke (`[data-view-eyebrow]`/`[data-anatomy-caption]`) waren exakt für diesen Mechanismus vorgebaut, nie verdrahtet — jetzt aktiviert statt neu gebaut. Patterns gleich mitkonsolidiert (`patterns/[id].astro` rendert jetzt composition+whenToUse+decisions+mistakes+skeletons zusammen, keine Lens da keine role-tags). 301-Redirects für alte `/dev`+`/bridge`-URLs im Worker (`retiredViewRedirect`). `docs/views.md` komplett neu geschrieben (beschreibt jetzt Shipped-Realität statt Aspiration). 138→52 Pages, Pagefind 48 statt fragmentiert, 1 MD-Export + 1 OG-Image + 1 JSON-LD-Headline pro Komponente/Pattern statt 3×. Build+Preview-Smoke-Test (HTTP 200, Lens/TOC/Sections im DOM verifiziert), Tests 240+86 grün, `wrangler deploy --dry-run` clean. **Nicht umgesetzt:** `/components/<id>/a11y`-Subpage (M4-Finding aus UX-Review) — bewusst außerhalb Scope, siehe P6-213. Erledigt 2026-07-04. Dateien: `site/src/{pages,components,layouts,lib,styles}/**` (siehe Commit-Diff), `worker/index.ts`, `docs/{views.md,adr/038-single-component-page-role-lens.md}`.
 - [~] **P6-201 `rules[]` als First-Class-Records (Triple-Encoding auflösen)** — **Schritt 1 erledigt 2026-07-04** (additiv, kein ADR nötig): `mismatchSchema.id` optional (Symmetrie zu `mistakeSchema.id`), `nonNegotiableContractSchema.relatedMistakes: [slug]` optional, Resolution-Lint in `consistency.test.ts` (relatedMistakes muss auf `mistakes[].id` derselben Komponente auflösen — Sibling-Check zum vsRelated-Lint). Kein YAML-Backfill (0/41 Adoption bewusst — Felder sind jetzt legal+guarded, Migration folgt bei Bedarf). `contracts` bekam dabei erstmals eine eigene schema.md-Sektion (fehlte komplett trotz P6-73). 232 shared Tests grün (+7), Site-Build clean. **Offen: Schritt 2** (L, ADR nötig) — volles `rules[]` mit id/statement/source, mistakes/mismatches referenzieren statt restaten. Dateien: `shared/src/schema.ts`, `shared/tests/{schema,consistency}.test.ts`, `docs/schema.md`.
 - [x] **P6-204 Depth-Contract: MIN=4 → Smoke-Floor=2 (ADR-035)** — `mistakes`/`mismatches` 4→2 (die zwei Prosa-Listen-Sektionen, auf denen P6-186 Padding fand); `anatomySlots`/`variants`/`properties`/`statesCombined`/`sources` unverändert. Citation-/ruleId-Lint bewusst **nicht** umgesetzt — bräuchte neues per-Entry-Schema-Feld (eigener schema-field-add-Zyklus), als Alternative in der ADR dokumentiert statt gebündelt. Kein Migrationsbedarf (alle 41 Komponenten hatten bereits ≥4). 232 Tests grün. Erledigt 2026-07-04. Dateien: `docs/adr/035-depth-contract-smoke-floor.md`, `shared/tests/depth.test.ts`.
 - [x] **P6-205 4-Framework-Prosa-Pflicht gelockert (ADR-036)** — `frameworkMapSchema`/`eventFrameworkNotesSchema`/`formIntegrationBridgesSchema`/`frameworkSkeletonsSchema`: `react` required, `webComponents`/`angularSignals`/`vue` optional (React = best-researched Framework im Corpus). Konventions-Tabelle in `vocabulary.ts` bewusst **nicht** umgesetzt — eigener größerer Schema-Zyklus (discriminated union nötig), als Alternative in ADR dokumentiert statt gebündelt. Kein YAML-Backfill (reine Lockerung, alle 41+2 Records erfüllen die neue Schwelle bereits). 3 Render-Components (`FrameworkMapTable`/`EventsTable`/`PatternFrameworkSkeletons`) filtern jetzt fehlende Frameworks statt leere Zellen zu rendern. 3 alte „any-missing-key-rejected"-Tests auf neues Verhalten geflippt + 8 neue ADR-036-Tests. 240 shared Tests grün, Typecheck clean, Site-Build 138 Pages clean. Erledigt 2026-07-04. Dateien: `docs/adr/036-optional-non-react-framework-notes.md`, `shared/src/schema.ts`, `shared/tests/schema.test.ts`, `docs/schema.md`, `site/src/components/sections/{FrameworkMapTable,EventsTable,PatternFrameworkSkeletons}.astro`.
@@ -150,6 +152,7 @@ Vom Owner explizit erfragt: was kostet mehr als es bringt.
 - [ ] **P6-210 Repo-Hygiene** — `files.zip` (April-Seed, ignored) löschen; `UIAnatomy Design System/` (23 git-tracked Brand-Files im Root) nach `docs/brand/` oder raus; `scripts/migrate-variants-shape.py` (One-Shot, done) löschen; stale `mcp-server/dist/` (28-Tool-Build + netlify-Remnant) klären. Dateien: Repo-Root, `scripts/`, `mcp-server/dist/`.
 - [ ] **P6-211 Build-Hygiene-Gotcha in Tooling gießen** — `pnpm -F @uianatomy/shared build && rm -rf site/.astro` lebt als Tribal Knowledge in 2 SKILL.md; root `predev`/`prebuild` bzw. `clean:astro` verdrahten. Dateien: `package.json`, `site/package.json`.
 - [ ] **P6-212 Corpus-Version als Content-Hash** — alles ist `0.0.0`, Bundles tragen keine Version; build-time Hash+Datum in `content-bundle.json` + MCP-Server-Version = minimum viable Versioning (volle Changelog-Maschinerie bleibt geparkt, ADR-023). Dateien: `shared/scripts/bundle-*.mjs`, `mcp-server/src/server.ts`.
+- [ ] **P6-213 `/components/<id>/a11y`-Contract-Subpage** — aus P6-197/UX-Review M4 zurückgestellt: dedizierte, teilbare a11y-Contract-Seite (Acceptance-Table + keyboardWalk + announcements + axe-Rules + Link auf `a11y-fixture.json`) für QA/Audit-Workflows, distinct von der jetzt konsolidierten Hauptseite. Datei: `site/src/pages/components/[id]/a11y.astro` (neu).
 
 ---
 

@@ -1,54 +1,31 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import ViewSwitcher from './ViewSwitcher.astro';
+import ComponentTOC from './ComponentTOC.astro';
 import Icon from './Icon.astro';
-
-type View = 'designer' | 'dev' | 'bridge';
 
 interface Props {
   entry: CollectionEntry<'patterns'>;
-  view: View;
 }
 
-const { entry, view } = Astro.props;
+const { entry } = Astro.props;
 const pattern = entry.data;
 
 const SITE_ORIGIN = 'https://uianatomy.dev';
-const VIEW_PATH: Record<View, string> = {
-  designer: '',
-  dev: '/dev',
-  bridge: '/bridge',
-};
-const url = `${SITE_ORIGIN}/patterns/${pattern.id}${VIEW_PATH[view]}`;
+const url = `${SITE_ORIGIN}/patterns/${pattern.id}`;
 
 const components = await getCollection('components');
 const componentById = new Map(components.map((c) => [c.data.id, c.data]));
 
-const VIEW_LABEL: Record<View, string> = {
-  designer: 'Designer view',
-  dev: 'Dev view',
-  bridge: 'Bridge view',
-};
-const VIEW_TITLE: Record<View, string> = {
-  designer: pattern.name,
-  dev: `${pattern.name} · Dev view`,
-  bridge: `${pattern.name} · Bridge view`,
-};
-const VIEW_DESCRIPTION: Record<View, string> = {
-  designer: pattern.description,
-  dev: `Framework skeletons and implementation wiring for the ${pattern.name} pattern. ${pattern.description}`,
-  bridge: `Common mistakes and canonical decisions when implementing the ${pattern.name} pattern. ${pattern.description}`,
-};
-
+// ADR-038 — one page per pattern now; role is a client-side lens, not a route.
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'TechArticle',
       '@id': `${url}#article`,
-      headline: `${pattern.name} — ${VIEW_LABEL[view]}`,
-      description: VIEW_DESCRIPTION[view],
+      headline: `${pattern.name} — composition, decisions, and cross-framework skeletons`,
+      description: pattern.description,
       url,
       inLanguage: 'en-US',
       datePublished: pattern.lastReviewed,
@@ -88,27 +65,24 @@ const jsonLd = {
 };
 ---
 <Base
-  title={VIEW_TITLE[view]}
-  description={VIEW_DESCRIPTION[view]}
+  title={pattern.name}
+  description={pattern.description}
   breadcrumb={[
     { name: 'Components', href: '/' },
     { name: 'Patterns', href: '/patterns' },
     { name: pattern.name },
   ]}
-  view={view}
   ogType="article"
   articleModifiedTime={pattern.lastReviewed}
   jsonLd={jsonLd}
 >
-  <article class="shell pattern" data-pagefind-body={view === 'designer' ? '' : undefined} data-pagefind-ignore={view === 'designer' ? undefined : ''}>
+  <article class="shell pattern" data-pagefind-body data-pagefind-meta={`title:${pattern.name}`}>
     <header class="pattern__hero">
-      <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
       <h1 class="pattern__name">{pattern.name}</h1>
       <p class="pattern__description">{pattern.description}</p>
-      <div class="pattern__view-switch">
-        <ViewSwitcher componentId={pattern.id} activeView={view} basePath="/patterns" />
-      </div>
     </header>
+
+    <ComponentTOC />
 
     <slot />
 
@@ -148,9 +122,6 @@ const jsonLd = {
     margin: 0 0 24px;
     font-size: 1.05em;
     line-height: 1.6;
-  }
-  .pattern__view-switch {
-    margin: 16px 0 0;
   }
   .pattern__footer {
     margin-top: 48px;

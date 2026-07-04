@@ -14,7 +14,7 @@ Designs new components or extends existing ones; needs the canonical anatomy + t
 
 **Today**
 
-- `/components/<id>` Designer view — anatomy SVG, slot definitions with Figma hints, tokens table, motion + responsive blocks, property-map (Figma → code), i18n notes.
+- `/components/<id>` (Designer lens) — anatomy SVG, slot definitions with Figma hints, tokens table, motion + responsive blocks, property-map (Figma → code), i18n notes. One page per component now (ADR-038); the Designer lens dims code-side sections rather than routing to a separate page.
 - Generated OG image per page for sharing in Slack / Linear.
 - Pagefind-powered `/search` for component lookup.
 
@@ -33,7 +33,7 @@ Implements canonical components in React / Vue / Angular / web components; needs
 
 **Today**
 
-- `/components/<id>/dev` view — code-side hints per slot, framework-map (RFC for state / props / events across frameworks), events array with per-framework notes, form-integration prose, a11y-acceptance (keyboardWalk + announcements + axe rules), performance thresholds.
+- `/components/<id>` (Dev lens) — code-side hints per slot, framework-map (RFC for state / props / events across frameworks), events array with per-framework notes, form-integration prose, a11y-acceptance (keyboardWalk + announcements + axe rules), performance thresholds. Same page as Designer now (ADR-038); the Dev lens dims Figma-side sections instead.
 - Three Modal library audits (Radix React, Headless UI Vue, Angular CDK) with `divergence` discriminated-union entries and `exampleCode`.
 - Static JSON API at `/api/components/<id>.json`.
 - Code blocks rendered with astro-expressive-code (frame chrome + copy button).
@@ -53,7 +53,7 @@ Owns a real design system; needs to verify their components stay aligned with ca
 
 **Today**
 
-- `/components/<id>` Bridge view — Figma ↔ code mismatches and common implementation mistakes catalogued explicitly.
+- `/components/<id>` — Figma ↔ code mismatches lead the page (promoted to position one, ADR-038) and common implementation mistakes are catalogued explicitly further down; no separate Bridge route needed since the single page already carries both roles' content.
 - Library audits as a model of "this is what divergence looks like, documented in the open."
 
 **Gaps**

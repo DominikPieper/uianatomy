@@ -343,7 +343,7 @@ performance:                          # optional, non-empty when present
 - `unit` is free-text describing the unit of measurement (`items`, `ms`, `kb`, `tabs`, `modals`); not a closed enum because the vocabulary is open and component-specific.
 - `rationale` is required prose explaining *why* this threshold matters and what happens at the boundary.
 
-**Render:** `PerformanceSection.astro` renders in Dev view (after FormIntegration, before Accessibility) and Bridge view (after FormIntegration, before I18n). Designer view does not render the section — the UX rule derived from a threshold lives in `whenToUse.avoid`.
+**Render:** `PerformanceSection.astro` renders once, in `ComponentView.astro` (ADR-038), tagged `data-role="dev"` — dimmed under the Designer lens rather than omitted, positioned after Form integration and before Motion. The UX rule derived from a threshold lives in `whenToUse.avoid`.
 
 ## `i18n` (optional, top-level)
 
@@ -368,7 +368,7 @@ i18n:                                   # optional
 - `rtl` is nested as a sub-namespace to allow future facets (`numerals`, `dates`, `dir-attribute-handling`) without flat-namespace churn. Phase 1 ships `mirroring` only.
 - `textExpansion` is component-wide prose covering label growth, truncation policy, and density-token impact in long-text languages.
 
-**Render:** `I18nSection.astro` renders in Designer view (after Responsive, before Axes) and Bridge view (after FormIntegration, before Accessibility). Dev view does not render the section — i18n is primarily visual / cross-team content; dev-side guidance lives in `mistakes`, `a11y.hint`, and `frameworkMap`.
+**Render:** `I18nSection.astro` renders once, in `ComponentView.astro` (ADR-038), tagged `data-role="both"` (never dimmed by the lens) — positioned after Responsive and before Accessibility. i18n is primarily visual / cross-team content; dev-side guidance additionally lives in `mistakes`, `a11y.hint`, and `frameworkMap`.
 
 ## `formIntegration` (optional, top-level)
 
@@ -419,7 +419,7 @@ formIntegration:
 
 The structured fields complement the prose fields rather than replacing them: prose explains the contract narratively; structured fields make the same contract queryable. P6-121 backlog item tracks the migration of existing components to add structured-field coverage.
 
-**Render:** `FormIntegrationSection.astro` renders in Dev view (after Events, before Accessibility) and Bridge view (after Events, before Accessibility). Designer view does not render the section.
+**Render:** `FormIntegrationSection.astro` renders once, in `ComponentView.astro` (ADR-038), tagged `data-role="dev"` — dimmed under the Designer lens rather than omitted, positioned after Events and before Performance.
 
 ## `propertyMap` (optional, top-level)
 
@@ -455,7 +455,7 @@ propertyMap:                          # optional, non-empty when present
 - `code` is the corresponding code-side handle. May be a prop name (`iconLeading`), a slot identifier (`children`, `body`), or a DOM attribute name (`data-state`). Not validated against `axes.properties[].name` — propertyMap is a bridge view, not a contract.
 - `notes` is optional prose for asymmetric mappings (slot-visibility toggles, instance-swap-to-children translations, layout-time-only enums). Trivial entries (Variant ↔ variant) omit it.
 
-**Render:** `PropertyMapTable.astro` renders in Designer view (between TokensTable and MotionTable) and Bridge view (after AxesTable). Dev view does not render the table — code-side prop signatures live in `axes.properties` plus `frameworkMap`.
+**Render:** `PropertyMapTable.astro` renders once, in `ComponentView.astro` (ADR-038), tagged `data-role="both"` (never dimmed by the lens) — positioned after Axes/transitions and before Figma anatomy. Code-side prop signatures additionally live in `axes.properties` plus `frameworkMap`.
 
 ## `a11yAcceptance` (optional, top-level)
 
@@ -488,7 +488,7 @@ a11yAcceptance:                       # optional
 
 **YAML gotcha:** colons inside prose values (e.g. `` `dismissible: true` ``) require single-quoting the surrounding string, or rephrasing to drop the colon. The YAML parser otherwise interprets the colon as a mapping separator and fails the file at the indentation check.
 
-**Render:** `A11yAcceptanceTable.astro` renders in Dev view and Bridge view after the per-slot `A11yTable`. Designer view is intentionally not changed; per-slot `a11y.hint` continues to cover designer needs.
+**Render:** `A11yAcceptanceTable.astro` renders once, in `ComponentView.astro` (ADR-038), tagged `data-role="both"` (never dimmed by the lens) — positioned after the per-slot `A11yTable`. Per-slot `a11y.hint` continues to cover designer needs alongside it.
 
 ## `axes`
 

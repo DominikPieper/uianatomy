@@ -4,19 +4,17 @@ import Base from '../layouts/Base.astro';
 import AnatomyDiagram from './AnatomyDiagram.astro';
 import AnatomyFilterBar from './AnatomyFilterBar.astro';
 import SiteSidebar from './SiteSidebar.astro';
+import ComponentTOC from './ComponentTOC.astro';
 import WhenToUseSection from './sections/WhenToUseSection.astro';
 import ImplementationsSection from './sections/ImplementationsSection.astro';
 import Icon from './Icon.astro';
 import { componentJsonLd } from '../lib/jsonLd';
 
-type View = 'designer' | 'dev' | 'bridge';
-
 interface Props {
   entry: CollectionEntry<'components'>;
-  view: View;
 }
 
-const { entry, view } = Astro.props;
+const { entry } = Astro.props;
 const component = entry.data;
 
 const implementations = await getCollection(
@@ -24,36 +22,17 @@ const implementations = await getCollection(
   (e) => e.data.componentId === component.id,
 );
 
-const VIEW_LABEL: Record<View, string> = {
-  designer: 'Designer view',
-  dev: 'Dev view',
-  bridge: 'Bridge view',
-};
-
-// View-aware title + description so the three URLs per component show
-// distinct entries in search results (avoiding "thin variation"
-// duplicate-content signals). Designer is the default landing surface
-// and keeps the bare component name; dev / bridge tag the variant.
-const VIEW_TITLE: Record<View, string> = {
-  designer: component.name,
-  dev: `${component.name} · Dev view`,
-  bridge: `${component.name} · Bridge view`,
-};
-const VIEW_DESCRIPTION: Record<View, string> = {
-  designer: component.description,
-  dev: `Code-side hints, framework mapping, events, form integration, accessibility acceptance, and performance thresholds for ${component.name}. ${component.description}`,
-  bridge: `Figma↔code mismatches, common implementation mistakes, and cross-framework expression mapping for ${component.name}. ${component.description}`,
-};
-
+// ADR-038 — one page, one title/description per component (the three-URL
+// per-view variants this used to carry are gone; role is a client-side lens
+// now, not a distinct crawlable page).
 const trimmedPath = Astro.url.pathname.replace(/\/$/, '') || '/';
-const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
+const jsonLd = componentJsonLd({ component, pathname: trimmedPath });
 ---
 <Base
-  title={VIEW_TITLE[view]}
-  description={VIEW_DESCRIPTION[view]}
+  title={component.name}
+  description={component.description}
   breadcrumb={[{ name: 'Components', href: '/' }, { name: component.name }]}
   componentId={component.id}
-  view={view}
   ogType="article"
   articleModifiedTime={component.lastReviewed}
   jsonLd={jsonLd}
@@ -61,19 +40,9 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
   <div class="component-shell">
     <SiteSidebar />
     <SiteSidebar variant="mobile" />
-    {/* P6-191 — the designer page is indexed whole; the dev page contributes
-        only its dev-exclusive sections via data-pagefind-body fragments inside
-        DevView (so the article must NOT carry data-pagefind-ignore there).
-        Bridge stays ignored: it re-renders shared content and would only
-        produce duplicate results. */}
-    <article
-      class="component-shell__content"
-      data-pagefind-body={view === 'designer' ? '' : undefined}
-      data-pagefind-ignore={view === 'bridge' ? '' : undefined}
-      data-pagefind-meta={view === 'designer' ? `title:${component.name}` : undefined}
-    >
+    <article class="component-shell__content" data-pagefind-body data-pagefind-meta={`title:${component.name}`}>
       <section class="component-hero">
-        <p class="hero-eyebrow">{VIEW_LABEL[view]}</p>
+        <p class="hero-eyebrow"><span data-view-eyebrow></span></p>
         <h1 class="component-name">
           {component.name}
         </h1>
@@ -91,6 +60,8 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
         )}
       </section>
 
+      <ComponentTOC />
+
       <WhenToUseSection component={component} />
 
       {component.intro && (
@@ -103,7 +74,7 @@ const jsonLd = componentJsonLd({ component, view, pathname: trimmedPath });
         <figure class="figure anatomy-frame">
           <AnatomyFilterBar componentName={component.name} />
           <AnatomyDiagram component={component} />
-          <figcaption class="figure-caption">Fig 1.1 · {component.name} · {VIEW_LABEL[view]}</figcaption>
+          <figcaption class="figure-caption">Fig 1.1 · {component.name} · <span data-anatomy-caption></span></figcaption>
         </figure>
       </section>
 

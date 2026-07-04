@@ -1,7 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import ComponentPageShell from '../../components/ComponentPageShell.astro';
-import DesignerView from '../../components/views/DesignerView.astro';
+import ComponentView from '../../components/views/ComponentView.astro';
 
 export async function getStaticPaths() {
   const components = await getCollection('components');
@@ -11,6 +11,6 @@ export async function getStaticPaths() {
 interface Props { entry: CollectionEntry<'components'> }
 const { entry } = Astro.props;
 ---
-<ComponentPageShell entry={entry} view="designer">
-  <DesignerView component={entry.data} />
+<ComponentPageShell entry={entry}>
+  <ComponentView component={entry.data} />
 </ComponentPageShell>

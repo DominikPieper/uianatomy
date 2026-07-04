@@ -1,6 +1,6 @@
 # UI Anatomy
 
-A canonical reference for UI component anatomy — the same truth, in three views (Designer / Dev / Bridge).
+A canonical reference for UI component anatomy — one page per component, with a Designer/Dev role lens (ADR-038).
 
 See [`docs/README.md`](./docs/README.md) for the full pitch and [`docs/CLAUDE.md`](./docs/CLAUDE.md) for contributor orientation.
 

@@ -176,9 +176,27 @@ async function maybeMarkdown(request: Request, env: Env): Promise<Response | nul
   });
 }
 
+// ADR-038 — /components/<id>/dev and /components/<id>/bridge (and the same
+// shape under /patterns/<id>) were retired: role is now a client-side lens
+// on one page, not a route. 301 the old URLs to the base path rather than
+// letting them 404 — they were live, indexed, and linked-to.
+const RETIRED_VIEW_SUFFIX = /^\/(components|patterns)\/([^/]+)\/(dev|bridge)\/?$/;
+
+function retiredViewRedirect(pathname: string): string | null {
+  const match = pathname.match(RETIRED_VIEW_SUFFIX);
+  if (!match) return null;
+  return `/${match[1]}/${match[2]}`;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    const redirectTo = retiredViewRedirect(url.pathname);
+    if (redirectTo) {
+      url.pathname = redirectTo;
+      return Response.redirect(url.toString(), 301);
+    }
 
     if (url.pathname === '/mcp') {
       return handleMcp(request, env);

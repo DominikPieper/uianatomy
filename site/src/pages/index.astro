@@ -9,7 +9,7 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
 <Base
   title="Components"
-  description="Canonical reference for UI component anatomy — the same truth, in three views (designer, developer, bridge), queryable via MCP and a JSON API."
+  description="Canonical reference for UI component anatomy — one page per component for designers and developers alike, queryable via MCP and a JSON API."
   jsonLd={siteJsonLd({ components: components.map((e) => e.data) })}
 >
   <article class="shell">
@@ -17,8 +17,8 @@ components.sort((a, b) => a.data.name.localeCompare(b.data.name));
       <p class="hero-eyebrow">A canonical reference</p>
       <h1 class="hero-title">UI Anatomy</h1>
       <p class="hero-lede">
-        Component anatomy documented as <em>canon</em> — slots, axes, and translation. Switch
-        between Designer, Dev, and Bridge views to read the same truth from your perspective.
+        Component anatomy documented as <em>canon</em> — slots, axes, and translation. Toggle
+        the Designer / Dev lens on any component page to bring your side of the work forward.
         <strong>Best-practice convergence, not a fixed rule book</strong> — synthesised from W3C
         APG, MDN, WCAG, mature headless libraries, and production design systems.
       </p>

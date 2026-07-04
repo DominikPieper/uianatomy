@@ -1,0 +1,100 @@
+---
+// ADR-038 — replaces ViewSwitcher.astro. The three roles are no longer three
+// pages; this is a pure client-side lens that flips :root[data-view] and
+// persists the choice to localStorage. No navigation, so the old
+// scroll-position-restore dance (needed when switching pages) is gone —
+// there is no page to return to, the content dims/highlights in place.
+import Icon from './Icon.astro';
+
+type Lens = 'designer' | 'dev' | 'bridge';
+
+type IconName = 'palette' | 'code' | 'git-compare';
+
+// Internal value stays 'bridge' for the unfiltered/"All" lens — it's the
+// pre-existing value every [data-view='bridge'] CSS rule (accent colour,
+// anatomy label set, eyebrow text) already keys on; renaming it would touch
+// every one of those selectors for a label-only change. Only the visible
+// button text says "All".
+const LENSES: Array<{ value: Lens; label: string; icon: IconName }> = [
+  { value: 'designer', label: 'Designer', icon: 'palette' },
+  { value: 'dev', label: 'Dev', icon: 'code' },
+  { value: 'bridge', label: 'All', icon: 'git-compare' },
+];
+---
+<nav class="role-lens" aria-label="Role lens" data-role-lens>
+  {LENSES.map(({ value, label, icon }) => (
+    <button type="button" data-lens-value={value} aria-pressed="false">
+      <Icon name={icon} size={14} />
+      <span class="label">{label}</span>
+    </button>
+  ))}
+</nav>
+
+<script is:inline>
+  (() => {
+    const STORAGE_KEY = 'uianatomy:lens';
+    const nav = document.querySelector('nav.role-lens[data-role-lens]');
+    if (!nav) return;
+
+    function applyLens(value) {
+      document.documentElement.setAttribute('data-view', value);
+      nav.querySelectorAll('button[data-lens-value]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.lensValue === value));
+      });
+    }
+
+    // Base.astro's head-inline script already set :root[data-view] before
+    // paint (from the same localStorage key) — mirror that value onto the
+    // buttons' aria-pressed state now that the DOM exists.
+    applyLens(document.documentElement.getAttribute('data-view') || 'bridge');
+
+    nav.querySelectorAll('button[data-lens-value]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const value = btn.dataset.lensValue;
+        if (!value) return;
+        try {
+          localStorage.setItem(STORAGE_KEY, value);
+        } catch (_) {}
+        applyLens(value);
+      });
+    });
+  })();
+</script>
+
+<style>
+  .role-lens {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--r-2, 8px);
+    background: var(--paper-100, var(--surface-sunken));
+  }
+  .role-lens button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--r-1, 6px);
+    background: transparent;
+    color: var(--ink-500, var(--fg-muted));
+    font-family: var(--font-sans);
+    font-size: var(--fs-13, 13px);
+    cursor: pointer;
+    transition: background var(--dur-1, 120ms) var(--ease-out, ease-out), color var(--dur-1, 120ms) var(--ease-out, ease-out);
+  }
+  .role-lens button:hover {
+    color: var(--ink-900, var(--fg));
+  }
+  .role-lens button[aria-pressed='true'] {
+    background: var(--paper-50, var(--surface-bg));
+    color: var(--accent-active);
+    box-shadow: var(--shadow-1, 0 1px 2px rgba(0, 0, 0, 0.08));
+  }
+  @media (max-width: 720px) {
+    .role-lens button .label {
+      display: none;
+    }
+  }
+</style>

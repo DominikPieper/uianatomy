@@ -44,7 +44,7 @@ When asked to add or modify a component in `content/components/`:
 2. Research from at least three categories: spec (APG/MDN), mature libraries (Radix, React Aria, Headless UI, Spectrum), and design systems (Polaris, Carbon, Material 3, Atlassian).
 3. Write the YAML conforming to the schema in `shared/schema.ts`.
 4. Validate with Zod before committing.
-5. Verify the site renders all three views correctly.
+5. Verify the component page renders correctly (ADR-038 — one page; role is a client-side lens, not a separate view).
 6. Verify the anatomy SVG generates correctly (or that an override is in place).
 
 ## Working on implementations
@@ -100,7 +100,7 @@ Embrace:
 - Direct, declarative prose. No hedging unless the topic genuinely requires it.
 - Lowercase headings? No — sentence case.
 - "Components" as a plural noun, "component" as singular. Not "Components page" but "components page."
-- "Designer view" / "Dev view" / "Bridge view" — these are proper nouns in this project.
+- "Designer lens" / "Dev lens" — proper nouns for the role toggle (ADR-038). There is one page per component; role is a lens, not a separate "view" or URL.
 - "Anatomy" refers to the slot/region structure, never to visual styling.
 - "Variant" / "Property" / "State" are technical terms with specific meanings (see schema.md). Use them precisely.
 

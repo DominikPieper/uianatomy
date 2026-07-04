@@ -1,96 +1,46 @@
-# The Three Views
+# Designer / Dev roles
 
-Every component is presented in three switchable views, plus a global view switcher that sets the default for the entire site.
+Every component and pattern renders as **one page**. Role — designer or developer — is a client-side lens, not a route.
 
-## Why three views
+## Why not three pages
 
-The same component anatomy is read differently by different roles:
+The original design (this document, pre-2026-07) specified three separate URLs per component (`/components/<id>`, `/components/<id>/dev`, `/components/<id>/bridge`) with a persistent global switcher, a first-visit "Who are you?" prompt, and per-view mistake filtering. None of that shipped as designed: the switcher never persisted past a page load, there was no first-visit prompt, and Bridge — meant to be the shared-content view — carried its own subset (missing tokens, motion, and responsive) rather than being the true superset. Measured on Combobox, the three pages were roughly 70% identical content reordered three ways.
 
-- A **designer** opening the Card page wants to see Figma variant structure, component properties setup, token references, and figma-side pitfalls
-- A **developer** wants the code structure, cross-framework mapping, slot mechanisms, and code-side pitfalls
-- Someone **bridging both worlds** (frontend developer in a design-system role, design-engineering hybrid, design-system maintainer) wants the translation layer — where do the two worlds typically misalign and how is the misalignment resolved
+The 2026-07-03 design review's UX pass ([backlog P6-197](./backlog.md)) found the consequences: search indexed only the designer page, so dev-only sections (framework map, events, a11y acceptance) were unfindable; three near-identical markdown exports per component wasted agent context; every internal link already pointed at the base URL anyway, so the split served no real navigation purpose. [ADR-038](./adr/038-single-component-page-role-lens.md) records the consolidation this document now describes.
 
-A single view that tries to serve all three results in noise for everyone. Three views with shared underlying data give each role what they need.
+## The one page
 
-## The views
+A component page renders every section once, in a fixed order — Figma↔code mismatches first (the canon's actual differentiator), then variants/axes, then Figma-side detail, code-side detail, and cross-cutting sections (accessibility, contracts, common mistakes) last. Patterns follow the same principle: composition, when-to-use, decisions, common mistakes, and framework skeletons all render on `/patterns/<id>`.
 
-### Designer view
+An "On this page" list ([`ComponentTOC.astro`](../site/src/components/ComponentTOC.astro)) is generated client-side from whichever sections actually rendered — it can't drift from the page, because it reads the page rather than a separately maintained list.
 
-Primary content:
+## The role lens
 
-- Anatomy diagram (canonical SVG)
-- Figma component setup (variants, properties, slot frames)
-- Token references (which design tokens this component touches)
-- Common Figma-side mistakes (e.g., variant explosion from modeling states as variants)
-
-Code-side details are collapsed by default. Available, but not in the way.
-
-### Dev view
-
-Primary content:
-
-- Anatomy diagram (same canonical SVG)
-- Cross-framework expression (Web Components, React, Angular Signals, Vue)
-- Slot/composition mechanism per framework
-- ARIA / a11y considerations
-- Common code-side mistakes
-
-Figma-side details are collapsed by default.
-
-### Bridge view
-
-Primary content:
-
-- Side-by-side translation table (Figma concept ↔ Code concept)
-- Mismatches section prominently displayed
-- Both designer and dev details available without expansion
-
-This is the view most useful for design-system maintainers and frontend developers who collaborate closely with designers.
-
-## Global switcher
-
-The site has a global view switcher (typically in the header) that sets the default tab on every component page.
+A three-way toggle in the header — **Designer / Dev / All** — flips a `data-view` attribute on `<html>` and persists the choice to `localStorage`. No navigation happens; the same page dims sections tagged for the other role instead of hiding or reordering them. Dimmed sections stay in the DOM at full opacity to search engines, screen readers, and Pagefind — the lens is a visual emphasis aid for a sighted, JS-enabled reader, not a content filter, so nothing is ever unavailable because of the active lens.
 
 **Behavior:**
 
-- First-time visitors see a brief "Who are you?" prompt (Designer / Dev / Both — defaults to Both if dismissed)
-- Selection persists in `localStorage`
-- Each component page opens with the selected view as the default tab
-- Per-page tab selection still works — the global switcher only sets the *default*, doesn't lock the choice
+- Set before first paint via an inline script in [`Base.astro`](../site/src/layouts/Base.astro), reading the same `localStorage` key the lens buttons write — no flash of the wrong lens on load.
+- Defaults to **All** (unfiltered) when nothing is stored yet.
+- Every section carries a `data-role` (`designer` | `dev` | `both`, set by [`SectionHeader.astro`](../site/src/components/SectionHeader.astro) and mirrored on its wrapping `.canon-section`). Sections tagged `both` are never dimmed.
+- Hovering or focusing a dimmed section restores full opacity — dimmed content is de-emphasized, never truly unreadable.
 
 **Visual treatment:**
 
-- Subtle accent color shift per mode (warm tone for Designer, cool tone for Dev, neutral for Bridge)
-- Background, typography, and structure remain constant — this is not a theme switch, it's an emphasis shift
-- Accent shows up in: section headers, link underlines, selected-tab indicator, anatomy diagram highlights
+- Accent color shift per lens (warm for Designer, cool for Dev, neutral for All) — the same mechanism that existed under the three-page design, now driven by a client-side attribute instead of which page you're on.
+- The anatomy diagram's slot labels flip between Figma terminology and code terminology with the lens (`.label-figma` / `.label-code` / `.label-bridge` in `global.css`).
+- A small eyebrow above the component name and a caption under the anatomy diagram both read the active lens reactively via CSS `::before` content — no JavaScript text update needed when the lens flips.
 
-The accent shift is functional, not decorative — it's a visual confirmation of which mode is active, not a re-skinning of the site.
+Patterns carry no role-tagged sections (composition/decisions/mistakes/skeletons are not designer-or-dev-specific), so pattern pages show no lens control.
 
-## What changes between views
+## What changed for search and agents
 
-| Element                     | Designer | Dev      | Bridge   |
-|----------------------------|----------|----------|----------|
-| Anatomy diagram             | shown    | shown    | shown    |
-| Figma details               | expanded | collapsed| expanded |
-| Code details                | collapsed| expanded | expanded |
-| Mismatches section          | shown    | shown    | prominent|
-| Cross-framework map         | collapsed| expanded | expanded |
-| Token references            | expanded | available| expanded |
-| ARIA / a11y notes           | available| expanded | expanded |
-| Common mistakes (Figma)     | shown    | available| shown    |
-| Common mistakes (code)      | available| shown    | shown    |
-| Accent color                | warm     | cool     | neutral  |
+- Pagefind indexes the single component page once — no more designer-only indexing gap, no more three-way duplicate-content signal.
+- One markdown export per component (via `astro-llms-md`) instead of three near-identical files.
+- One JSON-LD `TechArticle` per component/pattern instead of three headline variants.
+- Old `/components/<id>/dev` and `/components/<id>/bridge` URLs (and the pattern equivalent) 301-redirect to the base path at the Worker level (`worker/index.ts`) — they were live, linked, and indexed, so they don't just 404.
 
-## What stays constant
+## Why not more roles, and why not zero
 
-- The component name, description, and related-components links
-- The anatomy diagram (rendered identically; only the highlighted slot may differ on hover)
-- The component's identity — switching views never feels like a different site
-
-## Why not more views
-
-- An "A11y view" sounds plausible but a11y concerns are entwined with both design and code; pulling them out creates artificial separation. Better to surface a11y notes in both Designer and Dev views.
-- A "Token view" is interesting for design-system maintainers but very narrow; better as a section within Designer view.
-- A "Storybook view" could embed live reference-implementation components from one of the audited libraries (Radix, Headless UI, Angular Material/CDK, Vaul). Deferred — implementation audits are surfaced today as YAML divergence reports rendered into the canonical component page rather than as live Storybook embeds.
-
-Three views is the right number for this scope. More fragments the experience; fewer fails to serve distinct audiences.
+- An "A11y lens" was considered during the original three-view design and rejected then for the same reason it stays rejected now: accessibility concerns are entwined with both design and code, not a third independent axis.
+- Removing the role distinction entirely was also considered (see ADR-038's alternatives) — rejected because the designer/dev split is real and worth signaling even on a single page; it just doesn't need three URLs to do it.

@@ -1,17 +1,16 @@
 ---
 import '../styles/global.css';
-import ViewSwitcher from '../components/ViewSwitcher.astro';
+import RoleLens from '../components/RoleLens.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Icon from '../components/Icon.astro';
-
-type View = 'designer' | 'dev' | 'bridge';
 
 interface Props {
   title: string;
   description?: string;
   breadcrumb?: { name: string; href?: string }[];
+  // ADR-038 — presence alone gates the RoleLens header control; the actual
+  // active lens is client-side state (localStorage), not a server prop.
   componentId?: string;
-  view?: View;
   /**
    * OpenGraph type. Defaults to "website"; component pages override to
    * "article" so og:type matches the article:modified_time signal.
@@ -34,17 +33,14 @@ const {
   description,
   breadcrumb,
   componentId,
-  view,
   ogType = 'website',
   articleModifiedTime,
   jsonLd,
 } = Astro.props;
-const dataView = view ?? 'bridge';
 
 // Per-page OpenGraph image. URL convention mirrors the page tree:
 //   /                        -> /og/index.png
 //   /components/modal        -> /og/components/modal.png
-//   /components/modal/dev    -> /og/components/modal/dev.png
 const trimmedPath = Astro.url.pathname.replace(/\/$/, '');
 const ogPath = trimmedPath === '' ? '/og/index.png' : `/og${trimmedPath}.png`;
 const ogImage = Astro.site ? new URL(ogPath, Astro.site).toString() : ogPath;
@@ -60,7 +56,7 @@ const canonicalUrl = Astro.site
 ---
 
 <!doctype html>
-<html lang="en" data-view={dataView}>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -93,6 +89,18 @@ const canonicalUrl = Astro.site
             document.documentElement.setAttribute('data-theme', theme);
           }
         } catch (_) {}
+        // ADR-038 — set the role lens before paint (avoids a flash of the
+        // default lens). 'bridge' (unfiltered/"All") is the default when
+        // nothing is stored yet, matching the prior per-page default.
+        try {
+          const lens = localStorage.getItem('uianatomy:lens');
+          document.documentElement.setAttribute(
+            'data-view',
+            lens === 'designer' || lens === 'dev' || lens === 'bridge' ? lens : 'bridge',
+          );
+        } catch (_) {
+          document.documentElement.setAttribute('data-view', 'bridge');
+        }
       })();
     </script>
   </head>
@@ -114,7 +122,7 @@ const canonicalUrl = Astro.site
           </nav>
         )}
         <div class="site-header__cluster">
-          {componentId && view && <ViewSwitcher componentId={componentId} activeView={view} />}
+          {componentId && <RoleLens />}
           <a href="/compare" class="site-header__compare" aria-label="Compare two components">
             <Icon name="git-compare" size={16} />
           </a>

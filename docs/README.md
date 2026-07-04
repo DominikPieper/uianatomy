@@ -1,6 +1,6 @@
 # UI Anatomy
 
-A canonical reference for UI component anatomy — the same truth, in three views.
+A canonical reference for UI component anatomy — one page per component, for designers and developers alike.
 
 ## What this is
 
@@ -10,11 +10,7 @@ UI Anatomy is a curated reference site that documents UI components on three axe
 - **Axes** — variants vs. properties vs. states, with the rationale for each cut
 - **Translation** — how each component is expressed in Figma, in code, and where the two worlds typically misalign
 
-Every component is presented in three switchable views:
-
-- **Designer view** — Figma anatomy, component properties, variants, token references
-- **Dev view** — code structure, cross-framework mapping, common implementation pitfalls
-- **Bridge view** — side-by-side translation, with the typical mismatches that break designer-developer handoff
+Every component renders as one page, with mismatches — the translation layer — first. A Designer/Dev role lens (ADR-038) lets either side visually emphasize their half without navigating anywhere; nothing is ever hidden, only de-emphasized.
 
 ## What this is not
 

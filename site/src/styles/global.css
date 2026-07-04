@@ -249,6 +249,24 @@
   --accent-active-soft: var(--bridge-100);
 }
 
+/* ADR-038 — role lens. Dims (never hides) sections whose data-role doesn't
+   match the active lens, so content stays in the accessibility tree and
+   searchable/indexable regardless of lens state — the lens is a visual
+   emphasis aid, not a content filter. 'both'-tagged sections are never
+   dimmed. Restores full opacity on hover/focus so a dimmed section is never
+   actually unreadable, just de-emphasized. */
+:root[data-view='designer'] .canon-section[data-role='dev'],
+:root[data-view='dev'] .canon-section[data-role='designer'] {
+  opacity: 0.45;
+  transition: opacity var(--dur-2, 160ms) var(--ease-out, ease-out);
+}
+:root[data-view='designer'] .canon-section[data-role='dev']:hover,
+:root[data-view='designer'] .canon-section[data-role='dev']:focus-within,
+:root[data-view='dev'] .canon-section[data-role='designer']:hover,
+:root[data-view='dev'] .canon-section[data-role='designer']:focus-within {
+  opacity: 1;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -561,71 +579,6 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-/* Segmented control: ViewSwitcher — pill segmented control. */
-.view-tabs {
-  display: inline-flex;
-  position: relative;
-  padding: 3px;
-  background: var(--paper-100);
-  border: var(--bw-hair) solid var(--paper-300);
-  border-radius: var(--r-pill);
-}
-.view-tabs a {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  border-radius: var(--r-pill);
-  padding: 7px 14px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-12);
-  font-weight: 500;
-  letter-spacing: var(--ls-caps);
-  text-transform: uppercase;
-  color: var(--ink-500);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
-}
-.view-tabs a:hover {
-  color: var(--ink-900);
-  text-decoration: none;
-}
-.view-tabs a[aria-current='page'] {
-  background: var(--paper-50);
-  color: var(--ink-900);
-  box-shadow: inset 0 0 0 1px var(--paper-300);
-}
-.view-tabs a[data-view-value='designer'][aria-current='page'] {
-  background: var(--designer-50);
-  color: var(--designer-700);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--designer-700) 35%, transparent);
-}
-.view-tabs a[data-view-value='dev'][aria-current='page'] {
-  background: var(--dev-50);
-  color: var(--dev-700);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--dev-700) 35%, transparent);
-}
-.view-tabs a[data-view-value='bridge'][aria-current='page'] {
-  background: var(--bridge-50);
-  color: var(--bridge-700);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--bridge-700) 35%, transparent);
-}
-.view-tabs a .label {
-  display: none;
-}
-@media (min-width: 640px) {
-  .view-tabs a .label {
-    display: inline;
-  }
-}
-.view-tabs a:focus-visible {
-  outline: 2px solid var(--accent-active);
-  outline-offset: 2px;
 }
 
 /* Search trigger in header */
@@ -1423,11 +1376,13 @@ li.is-cross-pinned {
   background: var(--accent-active);
 }
 
-/* View-driven labels (replaces a per-page MutationObserver). The string */
-/* lives in CSS so the label updates the moment :root[data-view] flips. */
-[data-view-eyebrow]::before { content: 'Bridge view'; }
-:root[data-view='designer'] [data-view-eyebrow]::before { content: 'Designer view'; }
-:root[data-view='dev'] [data-view-eyebrow]::before { content: 'Dev view'; }
+/* ADR-038 — role-lens-driven labels. The string lives in CSS so the label
+   updates the instant :root[data-view] flips client-side (RoleLens.astro),
+   no JS text update needed. 'bridge' is the internal value for the "All"
+   lens state (unfiltered — see RoleLens.astro). */
+[data-view-eyebrow]::before { content: 'All roles'; }
+:root[data-view='designer'] [data-view-eyebrow]::before { content: 'Designer lens'; }
+:root[data-view='dev'] [data-view-eyebrow]::before { content: 'Dev lens'; }
 
 [data-anatomy-caption]::before { content: 'Both label sets'; }
 :root[data-view='designer'] [data-anatomy-caption]::before { content: 'Slot labels per Figma conventions'; }

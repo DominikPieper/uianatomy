@@ -30,8 +30,6 @@ const AUTHOR = {
   sameAs: ['https://github.com/DominikPieper'],
 } as const;
 
-export type ViewKey = 'designer' | 'dev' | 'bridge';
-
 export interface BreadcrumbItem {
   name: string;
   url: string;
@@ -191,15 +189,14 @@ export function siteJsonLd({ components }: SiteJsonLdInput = {}) {
 
 export interface ComponentJsonLdInput {
   component: Component;
-  view: ViewKey;
   pathname: string;
 }
 
-const VIEW_HEADLINE: Record<ViewKey, (name: string) => string> = {
-  designer: (name) => `${name} — anatomy, axes, and design tokens`,
-  dev: (name) => `${name} — code-side hints, framework map, accessibility contract`,
-  bridge: (name) => `${name} — Figma↔code mismatches and common implementation mistakes`,
-};
+// ADR-038 — one page per component now; the headline covers the union of
+// what the three retired per-view headlines used to say separately.
+function componentHeadline(name: string): string {
+  return `${name} — anatomy, axes, Figma↔code mismatches, and cross-framework mapping`;
+}
 
 function faqEntries(component: Component): Array<{ q: string; a: string }> {
   const entries: Array<{ q: string; a: string }> = [];
@@ -246,12 +243,12 @@ function faqPage(component: Component, url: string) {
   };
 }
 
-export function componentJsonLd({ component, view, pathname }: ComponentJsonLdInput) {
+export function componentJsonLd({ component, pathname }: ComponentJsonLdInput) {
   const url = `${SITE_ORIGIN}${pathname}`;
   const article = {
     '@type': 'TechArticle',
     '@id': `${url}#article`,
-    headline: VIEW_HEADLINE[view](component.name),
+    headline: componentHeadline(component.name),
     description: component.description,
     url,
     inLanguage: 'en-US',

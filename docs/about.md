@@ -1,16 +1,16 @@
 # About UI Anatomy
 
-UI Anatomy is a **canonical, library-agnostic reference for UI component anatomy**. For every component (Button, Modal, Tabs, Combobox, …) it documents the slots and regions, the variants / properties / states / transitions, the typical Figma↔code mismatches, the common implementation mistakes, the cross-framework expression, the tokens, the motion, the responsive behaviour, the events, and the accessibility contract — in a single canonical YAML, surfaced through three role-specific views (Designer / Dev / Bridge), a JSON API, and an MCP server.
+UI Anatomy is a **canonical, library-agnostic reference for UI component anatomy**. For every component (Button, Modal, Tabs, Combobox, …) it documents the slots and regions, the variants / properties / states / transitions, the typical Figma↔code mismatches, the common implementation mistakes, the cross-framework expression, the tokens, the motion, the responsive behaviour, the events, and the accessibility contract — in a single canonical YAML, surfaced through one page per component (with a Designer/Dev role lens, ADR-038), a JSON API, and an MCP server.
 
 ## What this site is for
 
 The site exists for three concrete uses:
 
-1. **A reference designers and developers can read together.** Each component renders in three views — the Designer view foregrounds Figma-side slots, tokens, motion, responsive behaviour; the Dev view foregrounds code-side slots, framework mapping, events, form integration, accessibility acceptance; the Bridge view foregrounds the mismatches and common mistakes that surface in the gap between the two roles. Same canonical record, three projections — never a separate "design doc" and "dev doc" that drift apart.
+1. **A reference designers and developers can read together.** Each component renders on one page, mismatches-first — the Figma↔code translation layer leads, followed by variants/axes, Figma-side detail, code-side detail, and cross-cutting sections (accessibility, contracts, common mistakes). A Designer/Dev role lens lets either side visually emphasize their half without navigating anywhere or losing access to the rest. Same canonical record, one page, never a separate "design doc" and "dev doc" that drift apart.
 
 2. **A reviewable target for implementations.** When you ship a Modal in Radix, in Headless UI, in your own internal library — you can compare your implementation against the canon and document where it omits, renames, extends, or reshapes the canonical anatomy. The Phase-2 `implementations/` layer captures these audits explicitly.
 
-3. **An LLM-queryable knowledge base.** The MCP server (`https://uianatomy.dev/mcp`) exposes the same canon as 29 tools so an agent can answer "what slots does Modal have?", "what mistakes are typical for Tabs?", "how does Radix Dialog diverge from canonical Modal?" without scraping prose. The same data is also available as static JSON for clients that cannot speak MCP.
+3. **An LLM-queryable knowledge base.** The MCP server (`https://uianatomy.dev/mcp`) exposes the same canon as a set of tools so an agent can answer "what slots does Modal have?", "what mistakes are typical for Tabs?", "how does Radix Dialog diverge from canonical Modal?" without scraping prose. The same data is also available as static JSON for clients that cannot speak MCP.
 
 ## What this site is *not*
 

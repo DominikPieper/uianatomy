@@ -5,6 +5,8 @@ import PatternComposition from '../../components/sections/PatternComposition.ast
 import PatternCompositionDiagram from '../../components/PatternCompositionDiagram.astro';
 import PatternWhenToUse from '../../components/sections/PatternWhenToUse.astro';
 import PatternDecisions from '../../components/sections/PatternDecisions.astro';
+import PatternMistakes from '../../components/sections/PatternMistakes.astro';
+import PatternFrameworkSkeletons from '../../components/sections/PatternFrameworkSkeletons.astro';
 
 export async function getStaticPaths() {
   const patterns = await getCollection('patterns');
@@ -15,9 +17,11 @@ const { id } = Astro.params;
 const entry = await getEntry('patterns', id!);
 if (!entry) throw new Error(`Pattern ${id} not found`);
 ---
-<PatternPageShell entry={entry} view="designer">
+<PatternPageShell entry={entry}>
   <PatternCompositionDiagram entry={entry} />
   <PatternComposition entry={entry} />
   <PatternWhenToUse entry={entry} />
   <PatternDecisions entry={entry} />
+  <PatternMistakes entry={entry} />
+  <PatternFrameworkSkeletons entry={entry} />
 </PatternPageShell>

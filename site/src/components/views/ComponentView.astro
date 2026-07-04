@@ -1,0 +1,152 @@
+---
+// ADR-038 — single component view, replacing DesignerView/DevView/BridgeView.
+// Every section renders once; the designer/dev/both role tag on each section
+// (still carried by SectionHeader) drives a client-side visual lens instead
+// of which of three separate pages a section appeared on. Order mirrors the
+// former Bridge view (mismatches-first — the canon's actual differentiator)
+// with the three sections Bridge never carried (tokens, motion, responsive)
+// threaded in next to their nearest Figma-side neighbour.
+import type { Component } from '@uianatomy/shared/schema';
+import SectionHeader from '../SectionHeader.astro';
+import FigmaSlotTable from '../sections/FigmaSlotTable.astro';
+import CodeSlotTable from '../sections/CodeSlotTable.astro';
+import TokensTable from '../sections/TokensTable.astro';
+import AxesTable from '../sections/AxesTable.astro';
+import TransitionsTable from '../sections/TransitionsTable.astro';
+import FrameworkMapTable from '../sections/FrameworkMapTable.astro';
+import EventsTable from '../sections/EventsTable.astro';
+import PropertyMapTable from '../sections/PropertyMapTable.astro';
+import A11yAcceptanceTable from '../sections/A11yAcceptanceTable.astro';
+import FormIntegrationSection from '../sections/FormIntegrationSection.astro';
+import PerformanceSection from '../sections/PerformanceSection.astro';
+import MotionTable from '../sections/MotionTable.astro';
+import ResponsiveTable from '../sections/ResponsiveTable.astro';
+import I18nSection from '../sections/I18nSection.astro';
+import MismatchesTable from '../sections/MismatchesTable.astro';
+import MistakesList from '../sections/MistakesList.astro';
+import ContractsSection from '../sections/ContractsSection.astro';
+import A11yTable from '../sections/A11yTable.astro';
+import UsedInPatternsSection from '../sections/UsedInPatternsSection.astro';
+
+interface Props { component: Component }
+const { component } = Astro.props;
+---
+<div class="canon-section" data-role="both">
+  <SectionHeader role="both" title="Figma↔Code mismatches" id="mismatches" />
+  <p class="canon-lede">Where designer and developer worlds typically misalign on this component.</p>
+  <MismatchesTable component={component} />
+</div>
+
+<div class="canon-section" data-role="both">
+  <SectionHeader role="both" title="Variants, properties, states" id="axes" />
+  <AxesTable component={component} />
+</div>
+
+{component.propertyMap && component.propertyMap.length > 0 && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="Figma ↔ Code property map" id="property-map" />
+    <PropertyMapTable component={component} />
+  </div>
+)}
+
+{component.axes.states.transitions && component.axes.states.transitions.length > 0 && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="State transitions" id="transitions" />
+    <TransitionsTable component={component} />
+  </div>
+)}
+
+<div class="canon-section" data-role="designer">
+  <SectionHeader role="designer" title="Figma anatomy" id="figma-anatomy" />
+  <FigmaSlotTable component={component} />
+</div>
+
+<div class="canon-section" data-role="designer">
+  <SectionHeader role="designer" title="Token usage per slot" id="tokens" />
+  <TokensTable component={component} />
+</div>
+
+<div class="canon-section" data-role="dev">
+  <SectionHeader role="dev" title="Code anatomy" id="code-anatomy" />
+  <CodeSlotTable component={component} />
+</div>
+
+<div class="canon-section" data-role="dev">
+  <SectionHeader role="dev" title="Cross-framework expression" id="framework-map" />
+  <FrameworkMapTable component={component} />
+</div>
+
+{component.events && component.events.length > 0 && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="Events" id="events" />
+    <EventsTable component={component} />
+  </div>
+)}
+
+{component.formIntegration && (
+  <div class="canon-section" data-role="dev">
+    <SectionHeader role="dev" title="Form integration" id="form-integration" />
+    <FormIntegrationSection component={component} />
+  </div>
+)}
+
+{component.performance && component.performance.length > 0 && (
+  <div class="canon-section" data-role="dev">
+    <SectionHeader role="dev" title="Performance thresholds" id="performance" />
+    <PerformanceSection component={component} />
+  </div>
+)}
+
+{component.motion && (
+  <div class="canon-section" data-role="designer">
+    <SectionHeader role="designer" title="Motion" id="motion" />
+    <MotionTable component={component} />
+  </div>
+)}
+
+{component.responsive && (
+  <div class="canon-section" data-role="designer">
+    <SectionHeader role="designer" title="Responsive behaviour" id="responsive" />
+    <ResponsiveTable component={component} />
+  </div>
+)}
+
+{component.i18n && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="Internationalisation" id="i18n" />
+    <I18nSection component={component} />
+  </div>
+)}
+
+<div class="canon-section" data-role="both">
+  <SectionHeader role="both" title="Accessibility" id="a11y" />
+  <A11yTable component={component} />
+</div>
+
+{component.a11yAcceptance && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="Accessibility acceptance" id="a11y-acceptance" />
+    <A11yAcceptanceTable component={component} />
+  </div>
+)}
+
+{component.contracts && (
+  <div class="canon-section" data-role="both">
+    <SectionHeader role="both" title="Contracts" id="contracts" />
+    <ContractsSection entry={component} />
+  </div>
+)}
+
+<div class="canon-section" data-role="both">
+  <SectionHeader role="both" title="Common mistakes" id="mistakes" />
+  <MistakesList component={component} />
+</div>
+
+<UsedInPatternsSection componentId={component.id} />
+
+<style>
+  .canon-lede {
+    max-width: var(--measure-prose);
+    color: var(--fg-muted);
+  }
+</style>

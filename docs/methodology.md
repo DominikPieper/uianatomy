@@ -85,7 +85,7 @@ Before a component is considered ready:
 - [ ] All library-specific claims verified against current docs (with date)
 - [ ] Schema validation passes
 - [ ] Anatomy SVG generates correctly
-- [ ] All three views render coherently
+- [ ] The component page renders coherently (ADR-038 — one page, role is a client-side lens)
 
 ## Minimum depth contract
 
